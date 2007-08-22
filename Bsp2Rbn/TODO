@@ -1,0 +1,128 @@
+head	1.5;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.5
+date	2004.07.27.21.07.50;	author eric;	state Exp;
+branches;
+next	1.4;
+deltatype	text;
+permissions	644;
+commitid	5b524106c3e45cff;
+kopt	kv;
+filename	TODO;
+
+1.4
+date	2004.07.27.07.43.35;	author eric;	state Exp;
+branches;
+next	1.3;
+deltatype	text;
+permissions	644;
+commitid	61a2410606d4d4c0;
+kopt	kv;
+filename	TODO;
+
+1.3
+date	2004.07.22.06.43.03;	author eric;	state Exp;
+branches;
+next	1.2;
+deltatype	text;
+permissions	644;
+commitid	7bf440ff61e13506;
+kopt	kv;
+filename	TODO;
+
+1.2
+date	2004.07.20.12.36.10;	author eric;	state Exp;
+branches;
+next	1.1;
+deltatype	text;
+permissions	644;
+commitid	505040fd119de67a;
+kopt	kv;
+filename	TODO;
+
+1.1
+date	2004.07.07.22.33.27;	author eric;	state Exp;
+branches;
+next	;
+deltatype	text;
+permissions	644;
+commitid	64d40ec7a25252a;
+kopt	kv;
+filename	TODO;
+
+
+desc
+@@
+
+
+1.5
+log
+@- version is 0.9.7
+- only one added feature: detecting CONTENT_WATER by checking all func_water
+  entities
+@
+text
+@- incorporate into realbot dll
+- reduce the number of nodes (specially useless ones) perhaps by making two passes
+  and removing nodes without path to spawnpoints
+- compute the RBX based on risk (i.e. how many nodes can attack this nodes)
+- handle ducking (like the airduct in cs_siege)
+- create important sniper point based on how many nodes can be seen from this node
+- ...
+@
+
+
+1.4
+log
+@- bumped version to 0.9.6
+- slightly better 'GUI' to show progress
+- it took long, I lost hair ;-), but TraceHull is now fully implemented
+  without the HL engine, just by looking into BSP, w00t !
+- added a COPYING file for GPL
+- better wall avoidance when creating a node
+- handling of func_wall & func_illusionary (for de_aztec bridge)
+@
+text
+@a0 1
+- handle tracelines into water (handle entity func_water)
+@
+
+
+1.3
+log
+@News stuff TODO related to water and de_aztec bridge
+@
+text
+@a0 3
+- handle a real hull instead of traceline (not easy without the HL engine)
+  this would probably require handling 'consistent' func_wall or func_illusionary
+  in addition to worldspan
+@
+
+
+1.2
+log
+@- bumped version to 0.9.3
+- it compiles eventually on Windows with mingw...
+@
+text
+@d2 3
+a4 1
+- handle tracelines into water
+@
+
+
+1.1
+log
+@First attempt... See README and TODO files
+@
+text
+@a1 1
+- handle all kind of entities (hostage, ...)
+@
+
