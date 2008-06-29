@@ -193,7 +193,7 @@ public:
    int add(Vector vOrigin, int iType, edict_t * pEntity);
    int Reachable(const int iStart, const int iEnd);
    int add2(Vector vOrigin, int iType, edict_t * pEntity);
-   int close(Vector vOrigin, float fDist, edict_t * pEdict);    // returns a close node
+   int getCloseNode(Vector vOrigin, float fDist, edict_t * pEdict);    // returns a close node
 
    // -----------------
    bool add_neighbour_node(int iNode, int iToNode);

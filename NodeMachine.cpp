@@ -361,7 +361,7 @@ bool cNodeMachine::node_on_crate(Vector vOrigin, edict_t * pEdict) {
       //  if (tr.pHit == pEdict)
       //  return false;
 
-      // thanks a million to PMB , so i know what the fucking difference
+      // thanks a million to PMB , so i know what the difference
       // is between something straight (crate) and steep... although i have
       // no clue yet how to compute these values myself.
       if ( /*tr.vecPlaneNormal.z >= 0.7 && */ tr.vecPlaneNormal.z == 1.0) {
@@ -374,7 +374,7 @@ bool cNodeMachine::node_on_crate(Vector vOrigin, edict_t * pEdict) {
 }
 
 // Find close node
-int cNodeMachine::close(Vector vOrigin, float fDist, edict_t * pEdict) {
+int cNodeMachine::getCloseNode(Vector vOrigin, float fDist, edict_t * pEdict) {
    // REDO: Need faster method to find a node
    // TOADD: For secure results all nodes should be checked to figure out the real
    //        'closest' node.
@@ -398,25 +398,28 @@ int cNodeMachine::close(Vector vOrigin, float fDist, edict_t * pEdict) {
                //DONT_IGNORE_MONSTERS, we reached it only when there are no other bots standing in our way!
                //UTIL_TraceHull(vOrigin, vNode, dont_ignore_monsters, point_hull, pEdict, &tr);
                //UTIL_TraceHull(vOrigin, vNode, dont_ignore_monsters, human_hull, pEdict, &tr);
-               if (pEdict)
+			   if (pEdict) {
                   UTIL_TraceHull(vOrigin, vNode, dont_ignore_monsters,
                                  head_hull, pEdict->v.pContainingEntity,
-                                 &tr);
-               else
+                                 &tr);               
+			   } else {
                   UTIL_TraceHull(vOrigin, vNode, dont_ignore_monsters,
                                  head_hull, NULL, &tr);
+			   }
 
                // if nothing hit:
                if (tr.flFraction >= 1.0) {
                   if (pEdict != NULL) {
                      if (FInViewCone(&vNode, pEdict)
-                           && FVisible(vNode, pEdict))
+						 && FVisible(vNode, pEdict)) {
                         return iNode;
-                     else
+					 } else {
                         iNodeOutOfFOV = iNode;
+					}
 
-                  } else
-                     return iNode;
+				  } else {
+                     return iNode;					
+				  }
                }
                //return iNode;
             }
@@ -699,7 +702,7 @@ int cNodeMachine::add2(Vector vOrigin, int iType, edict_t * pEntity) {
 #endif
 
    // Do not add a node when there is already one close
-   if (close(vOrigin, NODE_ZONE, pEntity) > -1)
+   if (getCloseNode(vOrigin, NODE_ZONE, pEntity) > -1)
       return -1;
 
    for (i = 0; i < MAX_NODES; i++)
@@ -784,7 +787,7 @@ int cNodeMachine::add2(Vector vOrigin, int iType, edict_t * pEntity) {
 int cNodeMachine::add
    (Vector vOrigin, int iType, edict_t * pEntity) {
    // Do not add a node when there is already one close
-   if (close(vOrigin, NODE_ZONE, pEntity) > -1)
+   if (getCloseNode(vOrigin, NODE_ZONE, pEntity) > -1)
       return -1;
 
    int index = -1;
@@ -1082,7 +1085,7 @@ void cNodeMachine::players_plot() {
 
 // Draw connections of the node we are standing on
 void cNodeMachine::connections(edict_t * pEntity) {
-   int i = close(pEntity->v.origin, NODE_ZONE, pEntity);
+   int i = getCloseNode(pEntity->v.origin, NODE_ZONE, pEntity);
    if (i > -1) {
       for (int j = 0; j < MAX_NEIGHBOURS; j++) {
          if (Nodes[i].iNeighbour[j] > -1) {
@@ -1137,7 +1140,7 @@ void cNodeMachine::draw(edict_t * pEntity) {
          }
       }                         // for
    }
-   int iNodeClose = close(pEntity->v.origin, NODE_ZONE, pEntity);
+   int iNodeClose = getCloseNode(pEntity->v.origin, NODE_ZONE, pEntity);
 
    char msg[50];
    char Flags[10];
@@ -1496,7 +1499,7 @@ void cNodeMachine::path_draw(edict_t * pEntity) {
          }
       }                         // for
    }
-   int iNodeClose = close(pEntity->v.origin, 35, pEntity);
+   int iNodeClose = getCloseNode(pEntity->v.origin, 35, pEntity);
 
    char msg[30];
    sprintf(msg, "Node %d\n", iNodeClose);
@@ -1616,7 +1619,7 @@ void cNodeMachine::goal_add(edict_t * pEdict, int iType, Vector vVec) {
 
    //if (iType == GOAL_IMPORTANT)
    //      iDist = 75;
-   int nNode = close(vVec, iDist, pEdict);
+   int nNode = getCloseNode(vVec, iDist, pEdict);
 
    if (nNode < 0) {
       // 11/06/04 - stefan - when no goal exists, add it.
@@ -1690,7 +1693,7 @@ int cNodeMachine::goal_hostage(cBot * pBot) {
             || (FUNC_UsedHostage(pBot, pent) == true))
          continue;
 
-      int iClose = close(pent->v.origin, 100, pent);
+      int iClose = getCloseNode(pent->v.origin, 100, pent);
       if (iClose > -1) {
          iGoals[iIndex] = iClose;
          iIndex++;
@@ -2182,7 +2185,7 @@ int cNodeMachine::node_look_camp(Vector vOrigin, int iTeam,
 
    // Theory:
    // Find a node, far, and a lot danger...
-   int iFrom = close(vOrigin, 75, pEdict);
+   int iFrom = getCloseNode(vOrigin, 75, pEdict);
    // Search in this meredian
    for (int i = 0; i < MAX_NODES; i++) {
       int iNode = i;
@@ -2249,23 +2252,9 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
 
    pBot->f_move_speed = pBot->f_max_speed;
 
-   // 25/06/04 - Stefan - Updated
-   // When our leader walks slow, we walk slow
-   /*
-   if ((pBot->pSwatLeader != NULL) && (IsAlive(pBot->pSwatLeader))) {
-      // Only immitate the player movements when he is MOVING (ie, do not duck
-      // when the leader is sitting in a corner taking position)
-      if (FUNC_PlayerSpeed(pBot->pSwatLeader) > 20)     // upped, a slightest movement caused improper behaviour
-      {
-         if (pBot->pSwatLeader->v.button & IN_DUCK)
-            pBot->f_hold_duck = gpGlobals->time + 0.5;
-
-         pBot->f_move_speed = FUNC_PlayerSpeed(pBot->pSwatLeader);
-      }
-   }*/
    // Walk the path
    int iCurrentNode = iPath[BotIndex][pBot->bot_pathid];        // Node we are heading for
-   int iNextNode = iPath[BotIndex][pBot->bot_pathid + 1];       // EVY TESTING
+   int iNextNode = iPath[BotIndex][pBot->bot_pathid + 1];
    //  int iNextNode = iPath[BotIndex][pBot->bot_pathid + 3];
 
    // when pButtonEdict is filled in, we check if we are close!
@@ -2275,9 +2264,7 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
       float fDistance = 90;
       bool bTrigger = false;
 
-      if (strcmp
-            (STRING(pBot->pButtonEdict->v.classname),
-             "trigger_multiple") == 0) {
+      if (strcmp(STRING(pBot->pButtonEdict->v.classname),"trigger_multiple") == 0) {
          fDistance = 32;
          bTrigger = true;
       }
@@ -2285,14 +2272,15 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
       if (func_distance(pBot->pEdict->v.origin, vButtonVector) < fDistance) {
          TraceResult trb;
          // TRACELINE ON PURPOSE!
-         if (bTrigger)
+		 if (bTrigger) {
             UTIL_TraceLine(pBot->pEdict->v.origin, vButtonVector,
                            dont_ignore_monsters, dont_ignore_glass,
                            pBot->pEdict, &trb);
-         else
-            UTIL_TraceLine(pBot->pEdict->v.origin, vButtonVector,
+		 } else {
+			 UTIL_TraceLine(pBot->pEdict->v.origin, vButtonVector,
                            ignore_monsters, dont_ignore_glass,
                            pBot->pEdict, &trb);
+		 }
 
          bool isGood = false;
 
@@ -2316,8 +2304,7 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
             if (bTrigger == false)
                UTIL_BotPressKey(pBot, IN_USE);
 
-            SERVER_PRINT
-            ("This button i was looking for, is close, i can see it, i use it!!!\n");
+            SERVER_PRINT("This button i was looking for, is close, i can see it, i use it!!!\n");
 
             // wait a little
             pBot->f_wait_time = gpGlobals->time + 0.5;
@@ -2325,8 +2312,9 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
             pBot->f_node_timer = gpGlobals->time + 3;
             pBot->bot_pathid = -1;
             return;
-         } else
+		 } else {
             SERVER_PRINT("TRACELINE FUCKED UP!\n");
+		 }
          return;
       }
    }
@@ -2567,6 +2555,7 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
       pBot->iDuckTries = 0;
       pBot->iJumpTries = 0;
    }
+
    // When we have to many duck/jump tries, we reset path stuff
    if (pBot->iDuckTries > 7 || pBot->iJumpTries > 7) {
       pBot->bot_pathid = -1;    // reset path
@@ -2589,21 +2578,16 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
       bool bDoor = false;
 
       // normal door (can be used as an elevator)
-      if (strcmp(STRING(pEntityHit->v.classname), "func_door") == 0)
-         bDoor = true;
+      if (strcmp(STRING(pEntityHit->v.classname), "func_door") == 0)  bDoor = true;
       // I am not 100% sure about func_wall, but include it anyway
-      if (strcmp(STRING(pEntityHit->v.classname), "func_wall") == 0)
-         bDoor = true;
+      if (strcmp(STRING(pEntityHit->v.classname), "func_wall") == 0)  bDoor = true;
       // rotating door
-      if (strcmp(STRING(pEntityHit->v.classname), "func_door_rotating") ==
-            0)
-         bDoor = true;
+      if (strcmp(STRING(pEntityHit->v.classname), "func_door_rotating") ==  0) bDoor = true;
 
       if (bDoor) {
          // check if we have to 'use' it
-         if (FBitSet(pEntityHit->v.spawnflags, SF_DOOR_USE_ONLY)
-               &&
-               !(FBitSet(pEntityHit->v.spawnflags, SF_DOOR_NO_AUTO_RETURN))) {
+         if (FBitSet(pEntityHit->v.spawnflags, SF_DOOR_USE_ONLY) &&
+           !(FBitSet(pEntityHit->v.spawnflags, SF_DOOR_NO_AUTO_RETURN))) {
             // use only, press use and wait
             pBot->vHead = VecBModelOrigin(pEntityHit);
             pBot->vBody = pBot->vHead;
@@ -2739,8 +2723,7 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
                            // Somehow the button is not detectable. Find a node, that is close to it.
                            // then retry the traceline. It should NOT hit a thing now.
                            // On success, it is still our button
-                           int iClose =
-                              close(vPentVector, NODE_ZONE, pent);
+                           int iClose = getCloseNode(vPentVector, NODE_ZONE, pent);
 
                            if (iClose > -1) {
                               // retry the tracehull
@@ -2769,14 +2752,12 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
                Vector vButtonVector = VecBModelOrigin(pButtonEdict);
 
                // Search a node close to it
-               int iButtonNode =
-                  close(vButtonVector, NODE_ZONE, pButtonEdict);
+               int iButtonNode = getCloseNode(vButtonVector, NODE_ZONE, pButtonEdict);
 
                // When node found, create path to it
                if (iButtonNode > -1) {
                   // Get current node
-                  int iCurrentNode =
-                     close(pBot->pEdict->v.origin, NODE_ZONE,
+                  int iCurrentNode = getCloseNode(pBot->pEdict->v.origin, NODE_ZONE,
                            pBot->pEdict);
 
                   // when valid...
@@ -3096,8 +3077,7 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
             }
          } */
          // Depending on team we have a goal
-         int iCurrentNode =
-            close(pBot->pEdict->v.origin, 75, pBot->pEdict);
+         int iCurrentNode = getCloseNode(pBot->pEdict->v.origin, 75, pBot->pEdict);
 
          if (iCurrentNode < 0) {
             iCurrentNode = add(pBot->pEdict->v.origin, 0, pBot->pEdict);
@@ -3304,17 +3284,18 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
             if (Game.vDroppedC4 != Vector(9999, 9999, 9999)) {
                if (RANDOM_LONG(0, 100) < pBot->ipDroppedBomb) {
                   // Dropped c4
-                  iGoalNode = close(Game.vDroppedC4, 75, NULL);
+                  iGoalNode = getCloseNode(Game.vDroppedC4, 75, NULL);
                }
             }
 
-         if (pBot->pButtonEdict)
-            iGoalNode =
-               close(VecBModelOrigin(pBot->pButtonEdict), NODE_ZONE,
-                     pBot->pButtonEdict);
+			if (pBot->pButtonEdict) {
+				iGoalNode = getCloseNode(VecBModelOrigin(pBot->pButtonEdict), NODE_ZONE,
+										pBot->pButtonEdict);
+			}
 
-         if (RANDOM_LONG(0, 100) < pBot->ipFearRate)
-            pBot->iPathFlags = PATH_DANGER;
+			if (RANDOM_LONG(0, 100) < pBot->ipFearRate) {
+				pBot->iPathFlags = PATH_DANGER;
+			}
 
          if (iGoalNode > -1) {
             //        UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: Found goal, going to create path\n");
@@ -3400,8 +3381,7 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
          // there is a goal
          // there is no path
 
-         int iCurrentNode =
-            close(pBot->pEdict->v.origin, 50, pBot->pEdict);
+         int iCurrentNode = getCloseNode(pBot->pEdict->v.origin, 50, pBot->pEdict);
 
          // there is no current node, thats odd, but we should take care of it.
          if (iCurrentNode < 0) {

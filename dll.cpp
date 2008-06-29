@@ -1633,8 +1633,9 @@ void RealBot_ServerCommand(void) {
    else if (FStrEq(pcmd, "nodes")) {
       int iOnNode = -1;
 
-      if (pHostEdict != NULL)
-         iOnNode = NodeMachine.close(pHostEdict->v.origin, 35, pHostEdict);
+	  if (pHostEdict != NULL) {
+         iOnNode = NodeMachine.getCloseNode(pHostEdict->v.origin, 35, pHostEdict);
+	  }
 
       if (iOnNode > -1) {
          // Arg 1 is command:

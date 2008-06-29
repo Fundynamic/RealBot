@@ -769,7 +769,7 @@ int FUNC_GiveHostage(cBot * pBot) {
          continue;              // somebody else is taking this hostage already.
       }
 
-      iNode = NodeMachine.close(pent->v.origin, 75, pBot->pEdict);
+      iNode = NodeMachine.getCloseNode(pent->v.origin, 75, pBot->pEdict);
 
       if (iNode > -1)
          return iNode;
@@ -1047,8 +1047,8 @@ bool BOT_DecideTakeCover(cBot * pBot) {
    /*
       	UTIL_ClientPrintAll( HUD_PRINTCENTER, "DECISION TO TAKE COVER\n" );
     
-   	int iNodeEnemy = NodeMachine.close(pBot->pBotEnemy->v.origin, NODE_ZONE);
-   	int iNodeHere  = NodeMachine.close(pBot->pEdict->v.origin, NODE_ZONE);
+   	int iNodeEnemy = NodeMachine.getCloseNode(pBot->pBotEnemy->v.origin, NODE_ZONE);
+   	int iNodeHere  = NodeMachine.getCloseNode(pBot->pEdict->v.origin, NODE_ZONE);
    	int iCoverNode = NodeMachine.node_cover(iNodeHere, iNodeEnemy, pBot->pEdict);
     
    	if (iCoverNode > -1)

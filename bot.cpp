@@ -143,15 +143,17 @@ void cBot::SpawnInit() {
    // ------------------------
    // INTEGERS
    // ------------------------
+   iGoalNode = -1;
+   iCloseNode = -1;
+   iDiedNode = -1;
+
    iTeam = -1;
    bot_class = -1;
    i_camp_style = 0;
    iPrimaryWeapon = -1;
    iSecondaryWeapon = -1;
    zoomed = ZOOM_NONE;
-   iGoalNode = -1;
-   play_rounds =
-      RANDOM_LONG(Game.GetMinPlayRounds(), Game.GetMaxPlayRounds());
+   play_rounds = RANDOM_LONG(Game.GetMinPlayRounds(), Game.GetMaxPlayRounds());
    bot_health = 0;
    prev_health = 0;
    bot_armor = 0;
@@ -160,7 +162,6 @@ void cBot::SpawnInit() {
    console_nr = 0;
    bot_pathid = -1;
    iPathFlags = PATH_DANGER;
-   iDiedNode = -1;
 
    // Smarter Stuck stuff
    iDuckTries = 0;
@@ -314,6 +315,8 @@ void cBot::NewRound() {
    console_nr = 0;
    bot_pathid = -1;
    iGoalNode = -1;
+   iCloseNode = -1;
+
 
    // Smarter Stuck stuff
    iDuckTries = 0;
@@ -500,8 +503,7 @@ int cBot::FindEnemy() {
 
    // We found a new enemy & the new enemy is different then previous pointer
    if ((pNewEnemy) && (pNewEnemy != pBotEnemy)) {
-      int iCurrentNode =
-         NodeMachine.close(pEdict->v.origin, (NODE_ZONE * 2), pEdict);
+      int iCurrentNode =   NodeMachine.getCloseNode(pEdict->v.origin, (NODE_ZONE * 2), pEdict);
 
 
       // Add 'contact' data
@@ -698,7 +700,7 @@ void cBot::FightEnemy() {
          // we calculate a path to the last seen position
          if (bFirstOutOfSight == false) {
             // Only change path when we update our information here
-            int iGoal = NodeMachine.close(v_enemy, NODE_ZONE, pEdict);
+            int iGoal = NodeMachine.getCloseNode(v_enemy, NODE_ZONE, pEdict);
             if (iGoal > -1) {
                iGoalNode = iGoal;
                bot_pathid = -1; // force recalculation of path
@@ -1199,8 +1201,8 @@ void cBot::FindCover() {
       }
    }
 
-   int iNodeEnemy = NodeMachine.close(pBotEnemy->v.origin, 60, pBotEnemy);
-   int iNodeFrom = NodeMachine.close(pEdict->v.origin, NODE_ZONE, pEdict);
+   int iNodeEnemy = NodeMachine.getCloseNode(pBotEnemy->v.origin, 60, pBotEnemy);
+   int iNodeFrom = NodeMachine.getCloseNode(pEdict->v.origin, NODE_ZONE, pEdict);
 
    // --------------
    // TEST TEST TEST
@@ -1221,7 +1223,7 @@ void cBot::FindCover() {
       // If cover_vect is found, we find a node close to it
       // --------------------------------------------------
       if (cover_vect != Vector(9999, 9999, 9999)) {
-         int iNodeCover = NodeMachine.close(cover_vect, 60, pEdict);
+         int iNodeCover = NodeMachine.getCloseNode(cover_vect, 60, pEdict);
          if (iNodeCover > -1) {
             iGoalNode = iNodeCover;
             bot_pathid = -1;
@@ -1417,7 +1419,7 @@ void cBot::InteractWithPlayers() {
          }
 
          // INITIALIZATION:
-         int iGoal = NodeMachine.close(pBotEnemy->v.origin, NODE_ZONE, pBotEnemy);
+         int iGoal = NodeMachine.getCloseNode(pBotEnemy->v.origin, NODE_ZONE, pBotEnemy);
          if (iGoal > -1)
          {
          iGoalNode = iGoal;
@@ -1440,7 +1442,7 @@ void cBot::InteractWithPlayers() {
       }
       // INITIALIZATION:
       int iGoal =
-         NodeMachine.close(pBotEnemy->v.origin, NODE_ZONE, pBotEnemy);
+         NodeMachine.getCloseNode(pBotEnemy->v.origin, NODE_ZONE, pBotEnemy);
       if (iGoal > -1) {
          iGoalNode = iGoal;
          bot_pathid = -1;
@@ -1485,7 +1487,7 @@ void cBot::InteractWithPlayers() {
 
       // INITIALIZATION:
       int iGoal =
-         NodeMachine.close(pBotEnemy->v.origin, NODE_ZONE, pBotEnemy);
+         NodeMachine.getCloseNode(pBotEnemy->v.origin, NODE_ZONE, pBotEnemy);
 
       if (iGoal > -1) {
          iGoalNode = iGoal;
@@ -1676,7 +1678,7 @@ bool cBot::Defuse() {
                      // camp around the area (when we want to)
                      if (RANDOM_LONG(0, 100) < ipCampRate) {
                         bot->iGoalNode =
-                           NodeMachine.close(bot->pEdict->v.origin, 75,
+                           NodeMachine.getCloseNode(bot->pEdict->v.origin, 75,
                                              bot->pEdict);
                         bot->iPathFlags = PATH_CAMP;
                         Game.bBombDiscovered = true;
@@ -1829,7 +1831,7 @@ void cBot::Act() {
          // When we no longer have the C4 , we stop doing this stupid shit
          if (FUNC_BotHasWeapon(this, CS_WEAPON_C4) == false) {
             f_c4_time = gpGlobals->time;
-            iGoalNode = NodeMachine.close(pEdict->v.origin, 200, pEdict);
+            iGoalNode = NodeMachine.getCloseNode(pEdict->v.origin, 200, pEdict);
             iPathFlags = PATH_CAMP;
             bot_pathid = -1;
             f_c4_time = gpGlobals->time;
@@ -2206,7 +2208,7 @@ void cBot::Memory() {
                            point_hull, pEdict, &tr);
 
             int iNodeHearPlayer =
-               NodeMachine.close(vHear, NODE_ZONE * 2, pHearPlayer);
+               NodeMachine.getCloseNode(vHear, NODE_ZONE * 2, pHearPlayer);
 
             // if nothing hit:
             if (tr.flFraction >= 1.0) {
@@ -2251,8 +2253,8 @@ void cBot::Memory() {
          /*
 
 
-            int iNodeHearPlayer = NodeMachine.close (vHear, NODE_ZONE*2, pHearPlayer);
-            int iNodeFrom = NodeMachine.close (pEdict->v.origin, NODE_ZONE*2, pEdict);           
+            int iNodeHearPlayer = NodeMachine.getCloseNode (vHear, NODE_ZONE*2, pHearPlayer);
+            int iNodeFrom = NodeMachine.getCloseNode (pEdict->v.origin, NODE_ZONE*2, pEdict);           
             int iHearToNode = NodeMachine.node_look_at_hear(iNodeHearPlayer, iNodeFrom, pEdict);
 
             // look at hearto node
@@ -2291,7 +2293,7 @@ void cBot::Memory() {
                if (func_distance(vC4, NodeMachine.node_vector(iGoalNode))
                      > 100 && func_distance(pEdict->v.origin, vC4) < 1024) {
                   // set new goal node
-                  iGoalNode = NodeMachine.close(vC4, NODE_ZONE, NULL);
+                  iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE, NULL);
                   bot_pathid = -1;
                }
             }
@@ -2380,6 +2382,14 @@ void cBot::ThinkAboutGoals() {
    // in Act() we find the 'acting' code when timers above are set.
 }
 
+/**
+This method will set the iCloseNode method, which is the node most closest to
+the bot.
+**/
+void cBot::setCurrentNode() {
+	iCloseNode = NodeMachine.getCloseNode(pEdict->v.origin, 100, pEdict);
+}
+
 // BOT: Think
 void cBot::Think() {
    float moved_distance;        // length of v_diff vector (distance bot moved)
@@ -2389,6 +2399,10 @@ void cBot::Think() {
       StartGame();
       return;
    }
+
+   // Set closest node
+   setCurrentNode();
+
    // BOT: If a bot is dead, re-initialize
    if ((pEdict->v.health < 1) || (pEdict->v.deadflag != DEAD_NO)) {
       if (bInitialize) {
@@ -2419,11 +2433,10 @@ void cBot::Think() {
                HUD_DrawString(r, g, b, msg, killer_edict);
             }
          }
-         int iCurrentNode =
-            NodeMachine.close(pEdict->v.origin, 100, pEdict);
-         if (iCurrentNode > -1 && end_round == false) {
-            iDiedNode = iCurrentNode;   // We died here
-            NodeMachine.danger(iCurrentNode, UTIL_GetTeam(pEdict));
+         
+         if (iCloseNode > -1 && end_round == false) {
+            iDiedNode = iCloseNode;   // We died here
+            NodeMachine.danger(iCloseNode, UTIL_GetTeam(pEdict));
          }
 
          if (console_nr == 0) {
@@ -2950,7 +2963,7 @@ bool BotRadioAction() {
 
                      // get to the leader position
                      BotPointer->iGoalNode =
-                        NodeMachine.close(plr->v.origin, NODE_ZONE * 2,
+                        NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE * 2,
                                           plr);
                      BotPointer->bot_pathid = -1;
                   }
@@ -2962,7 +2975,7 @@ bool BotRadioAction() {
                   if (BotPointer->pSwatLeader == plr) {
                      // the team leader issued this command, and it is our leader.
                      BotPointer->iGoalNode =
-                        NodeMachine.close(BotPointer->pEdict->v.origin,
+                        NodeMachine.getCloseNode(BotPointer->pEdict->v.origin,
                                           100, BotPointer->pEdict);
                      BotPointer->iPathFlags = PATH_CAMP;
                   }
@@ -2984,7 +2997,7 @@ bool BotRadioAction() {
                   if (bBotIsLeader) {
                      // Find player who issues this message and go to it
                      int iBackupNode =
-                        NodeMachine.close(plr->v.origin, NODE_ZONE, plr);
+                        NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE, plr);
 
                      // Help this player
                      if (iBackupNode > -1) {
@@ -3026,7 +3039,7 @@ bool BotRadioAction() {
 
                      // get source of backup
                      int iBackupNode =
-                        NodeMachine.close(plr->v.origin, NODE_ZONE, plr);
+                        NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE, plr);
 
                      if (iBackupNode > -1) {
                         BotPointer->iGoalNode = iBackupNode;
@@ -3228,7 +3241,7 @@ void BotThink(cBot * pBot) {
 void cBot::Dump(void) {
    char buffer[181];
    int iCurrentNode =
-      NodeMachine.close(pEdict->v.origin, (NODE_ZONE * 2), pEdict);
+      NodeMachine.getCloseNode(pEdict->v.origin, (NODE_ZONE * 2), pEdict);
 
    _snprintf(buffer, 180,
             "%s (#%d %s): timers, now= %.0f, c4_time=%.0f, camp_time=%.0f, wait_time=%.0f, cover_time=%.0f, wander=%.0f, MoveToNodeTime=%.0f\n",

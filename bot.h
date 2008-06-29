@@ -30,6 +30,8 @@
 #ifndef BOT_H
 #define BOT_H
 
+//#pragma warning( disable : 4005 ) 
+
 // Weapon price table (filled by the INI PARSER)
 typedef struct {
    int iId;                     // the weapon ID value
@@ -269,8 +271,6 @@ public:
    // ------------------------
    // BOOLEANS
    // ------------------------
-
-
    bool buy_primary;
    bool buy_secondary;
    bool buy_ammo_primary;
@@ -313,6 +313,7 @@ public:
    // TheFatal - END
 
    int iGoalNode;               // Goal Node #
+   int iCloseNode;				// The closest node to this bot.
    float fWanderTime;           // Wandering around time
 
    // Nav
@@ -386,6 +387,10 @@ public:
    bool CanSeeEntity(edict_t * pEntity);
    void InteractWithFriends();
    void PrepareChat(char sentence[128]);        // prepares bot to alk in act()
+
+
+   // Set methods
+   void setCurrentNode();
 
    // Goal specific stuff
    Vector BombSpotNear(float fDistance);        // Is a bombspot near in fDistance?
