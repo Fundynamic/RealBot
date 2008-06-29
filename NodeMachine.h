@@ -65,7 +65,7 @@
 #define PATH_CAMP       31      // camp path
 
 // Visibility flags
-#define VIS_INVALID	96      // BERKED
+#define VIS_INVALID		96      // BERKED
 #define VIS_UNKNOWN     97
 #define VIS_VISIBLE     98
 #define VIS_BLOCKED     99
@@ -74,18 +74,18 @@
 #define MAX_GOALS		75
 
 #define GOAL_SPAWNCT	1
-#define GOAL_SPAWNT	2
+#define GOAL_SPAWNT		2
 #define GOAL_BOMBSPOT	3
-#define GOAL_BOMB	4       // updates all the time
+#define GOAL_BOMB		4       // updates all the time
 #define GOAL_HOSTAGE	5       // updates all the time
 #define GOAL_RESCUEZONE 6       // rescue zone
 #define GOAL_CONTACT	7       // zones where teams often have contact
 #define GOAL_IMPORTANT	8
-#define GOAL_VIP	9       // as_ maps VIP starting point
+#define GOAL_VIP		9       // as_ maps VIP starting point
 #define GOAL_VIPSAFETY	10      // as_ maps VIP safety zone
 #define GOAL_ESCAPEZONE	11      // es_ maps escape zone
-#define GOAL_WEAPON	12      // pre-dropped weapons like in awp_map
-#define GOAL_NONE	99
+#define GOAL_WEAPON		12      // pre-dropped weapons like in awp_map
+#define GOAL_NONE		99
 
 // Node costs
 #define NODE_DANGER		 8192   // Value
@@ -113,7 +113,7 @@
 //#define NODES_MEREDIANS       80      // (size meredian / zone (~6) times 2 (surface) , rounded to 80
 
 // Pathfinder
-#define OPEN			1       // open
+#define OPEN			1   // open
 #define CLOSED		    2   // closed, but may open
 
 const unsigned long g_iMaxVisibilityByte = (MAX_NODES * MAX_NODES) / 8;
@@ -190,8 +190,7 @@ tGoal;
 class cNodeMachine {
 public:
    // -----------------
-   int add
-      (Vector vOrigin, int iType, edict_t * pEntity);
+   int add(Vector vOrigin, int iType, edict_t * pEntity);
    int Reachable(const int iStart, const int iEnd);
    int add2(Vector vOrigin, int iType, edict_t * pEntity);
    int close(Vector vOrigin, float fDist, edict_t * pEdict);    // returns a close node
