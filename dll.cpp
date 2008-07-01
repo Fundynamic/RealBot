@@ -905,7 +905,6 @@ void StartFrame(void) {
       if (Game.NewRound()) {
          NodeMachine.scale_danger();    // Scale danger
          NodeMachine.scale_contact();   // same for contact
-         Game.CreateSwatTeams();
          Game.SetNewRound(false);
       }
       // are we currently respawning bots and is it time to spawn one yet?
@@ -1936,13 +1935,13 @@ void RealBot_ServerCommand(void) {
          } else
             sprintf(cMessage, "RBDEBUG: No argument given.");
       } else {
-         sprintf(cMessage, "RBDEBUG: Unknown debug command.");
+		  sprintf(cMessage, "RBDEBUG: Unknown debug command.\n\nKnown commands are:\ndontshoot, pistols, nodes, print");
       }
    } else {
 
       // Not a valid command
       sprintf(cMessage,
-              "REALBOT: Unknown command.\nValid commands are:\nhelp, add, remove, skill, max");
+              "REALBOT: Unknown command.\nValid commands are:\nhelp, add, remove, skill, max, debug, server");
       bValidCommand = false;
    }
 

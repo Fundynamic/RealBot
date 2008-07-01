@@ -2998,21 +2998,16 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
 // Think about path creation here
 void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
 
-   if (pBot->pBotHostage != NULL && pBot->CanSeeEntity(pBot->pBotHostage))
+	if (pBot->pBotHostage != NULL && pBot->CanSeeEntity(pBot->pBotHostage)) {
+		REALBOT_PRINT(pBot, "cNodeMachine::path_think", "has hostage and can see hostage, will not do anything\n");
       return;                   // bot has hostage, can see hostage
+	}
 
    if (pBot->f_c4_time > gpGlobals->time) {
       //SERVER_PRINT("BOT: Not allowed to 'path_think', f_c4_time set.\n");
+		REALBOT_PRINT(pBot, "cNodeMachine::path_think", "Not allowed to think , c4 is planted\n");
       return;
    }
-
-/*
-   if (pBot->fWanderTime > gpGlobals->time) {
-      wander_think(pBot, moved_distance);       // don't be busy with paths and such, just do stupid
-      pBot->bot_pathid = -1;
-      //pBot->iGoalNode = -1;
-      return;
-   } */
 
    // When camping we do not think about paths, we think where to look at
    if (pBot->f_camp_time > gpGlobals->time) {
@@ -3021,7 +3016,7 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
             node_look_camp(pBot->pEdict->v.origin,
                            UTIL_GetTeam(pBot->pEdict), pBot->pEdict);
       }
-
+	   REALBOT_PRINT(pBot, "cNodeMachine::path_think", "Not allowed to think , camping\n");
       return;
    }
 
@@ -3029,55 +3024,16 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
 
    // When no path, create one.
    if (pBot->bot_pathid < 0) {
-      pBot->f_move_speed = 0.0;
+   	   REALBOT_PRINT(pBot, "cNodeMachine::path_think", "No path; going to figure out what to do\n");
+
+	   pBot->f_move_speed = 0.0;
 
       // Find a new goal
       if (pBot->iGoalNode < 0 && pBot->pBotEnemy == NULL) {
-         // 20/06/04 - stefan
-		  /*
-         if (pBot->pSwatLeader != NULL) {
-            // The swat leader can be human or a bot. When it is a bot, we just get his goal
-            // and the other bots move to the same goal. When it is human, we follow the
-            // human player.
-
-            cBot *BotPointer = UTIL_GetBotPointer(pBot->pSwatLeader);
-
-            // it is a bot
-            if (BotPointer) {
-               pBot->iGoalNode = BotPointer->iGoalNode;
-               pBot->bot_pathid = -1;
-
-               if (pBot->iGoalNode < 0) {
-                  pBot->fWanderTime = gpGlobals->time + 1.0;
-               }
-               // next frame we calculate path
-               return;
-            } 
-		else {
-               if (func_distance
-                     (pBot->pSwatLeader->v.origin,
-                      pBot->pEdict->v.origin) > NODE_ZONE * 4) {
-                  pBot->iGoalNode =
-                     close(pBot->pSwatLeader->v.origin, NODE_ZONE * 3,
-                           pBot->pSwatLeader);
-
-                  if (pBot->iGoalNode < 0) {
-                     pBot->fWanderTime = gpGlobals->time + 1.0;
-                  }
-               } else {
-                  // TODO: take in tactical positions?
-                  if (FUNC_PlayerSpeed(pBot->pSwatLeader) < 40)
-                     pBot->f_wait_time = gpGlobals->time + 2.0;
-                  else
-                     pBot->f_wait_time = gpGlobals->time + 0.5;
-               }
-
-
-               return;
-            }
-         } */
-         // Depending on team we have a goal
-         int iCurrentNode = getCloseNode(pBot->pEdict->v.origin, 75, pBot->pEdict);
+   		REALBOT_PRINT(pBot, "cNodeMachine::path_think", "No goal yet\n");
+		
+		// Depending on team we have a goal
+        int iCurrentNode = getCloseNode(pBot->pEdict->v.origin, 75, pBot->pEdict);
 
          if (iCurrentNode < 0) {
             iCurrentNode = add(pBot->pEdict->v.origin, 0, pBot->pEdict);
@@ -3191,30 +3147,11 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
                   // go to this one
                   if (fDistanceToGoal < 500)
                      iScore += 5000;
-               } else
+			   } else {
                   iScore *= (int) fDistanceToGoal / 8124.0;
-            } else if (Goals[iGn].iType == GOAL_IMPORTANT) {
-               //iScore += RANDOM_LONG(0, 1024);
-
-               // "important goals" should not always be chosen, somehow
-               // i am not really confident how this works. This seems
-               // to overrule everything or something. Yikes.
-               // using ugly RANDOM_LONG to bypass most checks, but still
-               // keep them in the game
-
-               if (RANDOM_LONG(0, 100) < 25) {
-
-
-                  if (fDistanceToGoal > 500)
-                     iScore =
-                        iScore +
-                        (iScore * (1 - (int) fDistanceToGoal / 8124.0));
-                  else
-                     iScore *= (int) fDistanceToGoal / 8124.0;
-
-               }
-
-            }
+			   }
+            } 
+		
             // 17/07/04
             // Basic attempts to handle other kind of goals...
             else if (Goals[iGn].iType == GOAL_VIPSAFETY)        // basic goals added for as_ maps
@@ -3279,8 +3216,8 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
           */
 
 
-         // When we are terrorist
-         if (pBot->iTeam == 1)
+         // Terrorists should focus on dropped bomb
+		 if (pBot->iTeam == 1) {
             if (Game.vDroppedC4 != Vector(9999, 9999, 9999)) {
                if (RANDOM_LONG(0, 100) < pBot->ipDroppedBomb) {
                   // Dropped c4
@@ -3296,11 +3233,15 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
 			if (RANDOM_LONG(0, 100) < pBot->ipFearRate) {
 				pBot->iPathFlags = PATH_DANGER;
 			}
+		 }
 
          if (iGoalNode > -1) {
             //        UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: Found goal, going to create path\n");
-         } else
+		
+		 } else {
             pBot->fWanderTime = gpGlobals->time + 1;    // no goal found
+	        REALBOT_PRINT(pBot, "cNodeMachine::path_think", "No goal found, this is bad");
+		 }
 
          // When camp flag is set, so we should camp at our 'destination' then we should determine
          // where to camp there.
@@ -3318,17 +3259,16 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
 
          pBot->iGoalNode = iGoalNode;
 
-         // REALBOT_PRINT(pBot, "cNodeMachine::path_think", "I have choosen to go to goalnode:");
 
-         /*
-            if (iFinalGoalNode == iGoalNode)
-            sprintf(msg, "Node %d, Node Type = %d, iScore=%d, Distance=%f\n", iGoalNode, Goals[iFinalGoalID].iType, iFinalGoalScore, func_distance(pBot->pEdict->v.origin, Nodes[iGoalNode].origin));    
-            else
-            sprintf(msg, "Node %d, Distance=%f\n", iGoalNode, func_distance(pBot->pEdict->v.origin, Nodes[iGoalNode].origin));
+         char msg[255];
 
-            //log(msg);
-            //SERVER_PRINT(msg);
-          */
+		 if (iFinalGoalNode == iGoalNode) {
+			 sprintf(msg, "I have choosen to go to goalnode: Node %d, Node Type = %d, iScore=%d, Distance=%f\n", iGoalNode, Goals[iFinalGoalID].iType, iFinalGoalScore, func_distance(pBot->pEdict->v.origin, Nodes[iGoalNode].origin));    
+		 } else {
+            sprintf(msg, "I have choosen to go to goalnode: Node %d, Distance=%f\n", iGoalNode, func_distance(pBot->pEdict->v.origin, Nodes[iGoalNode].origin));
+		 }
+        REALBOT_PRINT(pBot, "cNodeMachine::path_think", msg);
+         
 
          // create path
          path(iCurrentNode, pBot->iGoalNode, BotIndex, pBot,
@@ -3409,391 +3349,6 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
       }
    } else
       path_walk(pBot, moved_distance);  // walk the path
-}
-
-/*
-// Think about path creation here
-void cNodeMachine::path_think(cBot *pBot, float moved_distance)
-{
-    if (pBot->pBotHostage != NULL && pBot->CanSeeEntity(pBot->pBotHostage))
-        return; // bot has hostage, can see hostage
- 
-    if (pBot->f_c4_time > gpGlobals->time)
-    {
-        //SERVER_PRINT("BOT: Not allowed to 'path_think', f_c4_time set.\n");
-        return;
-    }
- 
-	if (pBot->fWanderTime > gpGlobals->time)
-	{
-		wander_think(pBot, moved_distance); // don't be busy with paths and such, just do stupid
-		pBot->bot_pathid = -1;		
-        //pBot->iGoalNode = -1;
-		return;
-	}
- 
-    // When camping we do not think about paths, we think where to look at
-    if (pBot->f_camp_time > gpGlobals->time)
-    {
-        if (pBot->iGoalNode == -1 )
-        {
-            pBot->iGoalNode = node_look_camp(pBot->pEdict->v.origin, UTIL_GetTeam(pBot->pEdict), pBot->pEdict);
-        }
- 
-        return;
-    }
- 
- 
-	int BotIndex = pBot->iIndex;		
-	
-    // When no path, create one.
-	if (pBot->bot_pathid < 0)
-	{		
-        pBot->f_move_speed = 0.0;        
-		// Find a new goal
-		if (pBot->iGoalNode < 0 && 
-            pBot->pBotEnemy == NULL)
-		{            
-			//UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: No path & no goal, going to find goal\n");
-			// Depending on team we have a goal
-            int iCurrentNode = close(pBot->pEdict->v.origin, 75, pBot->pEdict);
- 
-            if (iCurrentNode < 0)
-			{
-				pBot->fWanderTime = gpGlobals->time + 1;
-                pBot->iGoalNode=-1;
-				return;
-			}
- 
-			int iGoalNode = -1;
- 
-			if (pBot->iTeam == 1)
-				iGoalNode = node_goal(GOAL_SPAWNCT);
-			else
-				iGoalNode = node_goal(GOAL_SPAWNT);
- 
-            // When basic goals are not available, do not look further
-			if (iGoalNode < 0)
-			{
-				pBot->fWanderTime = gpGlobals->time + 2;
-				return;
-			}
- 
-			// Check if we are close
-			if (func_distance(Nodes[iGoalNode].origin, pBot->pEdict->v.origin) < 1500)
-			{
-                // switch goal nodes
-                if (pBot->iTeam == 1)
-                    iGoalNode = node_goal(GOAL_SPAWNT);
-                else
-                    iGoalNode = node_goal(GOAL_SPAWNCT);
-			}
- 
-            // Now we have had the most basic goal selection (spawn points)
-            // ============================================================
-           
-            // Randomly we choose random goals! yeah.
-            if (RANDOM_LONG(0,100) < pBot->ipRandom)
-            {
-                iGoalNode = RANDOM_LONG(0,iMaxUsedNodes);
-                REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Goalnode is random.");
-            }
- 
-            // Depending on team first
-            if (pBot->iTeam == 1)
-            {
- 
-                // T
-                // Check bombsite if it exists
-                int iBombNode = node_goal(GOAL_BOMBSPOT);
-                int iGoForIt = pBot->ipBombspot;
-                bool bHasBomb = FUNC_BotHasWeapon(pBot, CS_WEAPON_C4);
- 
-                // We have the bomb or not
-                if (bHasBomb)
-                {
-                    iGoForIt += 50; // 50% more chance
-                    REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "I have C4.");
- 
-                    if (RANDOM_LONG(0,100) < iGoForIt)
-                    {
-                        iGoalNode = iBombNode;                        
-                        pBot->iPathFlags = PATH_NONE;
-                        REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Goalnode set to bombspot.");
-                    }
-                }
-                else if (Game.vDroppedC4 != Vector(9999,9999,9999))
-                {        
-                    if (RANDOM_LONG(0,100) < pBot->ipDroppedBomb)
-                    {
-                        // Dropped c4
-                        iGoalNode = close(Game.vDroppedC4, 75, NULL);
-                        REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Goalnode set to node near dropped bomb.");
-                    }
-                }
-                else
-                {
-                    if (RANDOM_LONG(0,100) < iGoForIt &&
-                        func_distance(Nodes[iBombNode].origin, pBot->pEdict->v.origin) > 400)
-                    {
-                        iGoalNode = iBombNode;
-                        REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Goalnode set to bombspot (2).");
-                    }
- 
-                }
-                
-            }
-            else if (pBot->iTeam == 2)
-            {
-                // CT / make vip seperated code
-                if (pBot->vip)
-                {
-                       REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "I am VIP.");
-                }
-                else
-                {
-                
-                    int iHostageNode = goal_hostage(pBot);
- 
-                    if (pBot->pBotHostage != NULL)
-                    {
-                        int iReplace = close(pBot->pBotHostage->v.origin, 75, pBot->pBotHostage);
-                        if (iReplace > -1)
-                        {
-                            iHostageNode = iReplace;
-                            REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Override hostage node by 'goal hostage'.");
-                        }
-                    }   
- 
-                    if (iHostageNode > -1)
-                    {                        
-                        if (RANDOM_LONG(0,100) < pBot->ipHostage)
-                        {
-                            REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Goalnode set to hostage.");
-                            iGoalNode = iHostageNode;
-                        }
-                    }
-                    else
-                    {
-                        // Check bombsite if it exists
-                        int iBombNode = node_goal(GOAL_BOMBSPOT);
-                        int iGoForIt = pBot->ipBombspot;
-                        int iResNode = node_goal(GOAL_RESCUEZONE);
-                        
-                        // Is the bomb dropped?
-                        if (Game.vDroppedC4 != Vector(9999,9999,9999))
-                        {
-                            if (RANDOM_LONG(0,100) < pBot->ipDroppedBomb)
-                            {
-                                // Dropped c4
-                                iGoalNode = close(Game.vDroppedC4, 75, NULL);
-                                REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Goalnode set to dropped bomb.");
- 
-                            }
-                        }
- 
-                        // Does a bombsite exist? if so, a bomb can be planted
-                        if (iBombNode > -1)
-                        {
-                            if (RANDOM_LONG(0,100) < pBot->ipBombspot)
-                            {
-                                iGoalNode = iBombNode;
-                                REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Goalnode set to bombsite.");
-                            }
-                        }
- 
-                        // When a rescue zone is found, go for it
-                        // when we have atleast one hostage. We go for the rescue
-                        // zone because if there where still unrescued hostages
-                        // the iHostageNode should be > -1.
-                        if (iResNode > -1)
-                            if (FUNC_AmountHostages(pBot) > 0)
-                            {
-                                iGoalNode = iResNode;
-                                REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Goalnode set to rescue zone.");
-                            }                       
-                        
-                        // When bomb planted, go for bombnode for sure
-                        if (Game.bBombPlanted && iBombNode > -1)
-                        {
-                            iGoalNode = iBombNode;
-                            REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Goalnode set to bombsite (bomb is planted).");
-                            pBot->iPathFlags = PATH_NONE;
-                        }                       
-                        
-                        
-                    }
-                }
-            }
- 
-            
- 
-            if (RANDOM_LONG(0,100) < pBot->ipFearRate)            
-                pBot->iPathFlags = PATH_DANGER;
- 
-			if (iGoalNode > -1)
-            {
-		    	//	UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: Found goal, going to create path\n");
-            }
-			else			
-				pBot->fWanderTime = gpGlobals->time + 2;
- 
-			
-            // When camp flag is set, so we should camp at our 'destination' then we should determine
-            // where to camp there.
-            if (pBot->iPathFlags == PATH_CAMP && iGoalNode > -1)
-            {            
-                int iSearchNode = node_dangerous(UTIL_GetTeam(pBot->pEdict), Nodes[iGoalNode].origin, 736);
-                
-                if (iSearchNode > -1)
-                    iGoalNode = node_camp(Nodes[iSearchNode].origin, UTIL_GetTeam(pBot->pEdict));
-                else
-                    iGoalNode = node_camp(Nodes[pBot->iDiedNode].origin, UTIL_GetTeam(pBot->pEdict));
-            }
- 
-			pBot->iGoalNode = iGoalNode;			
-            
-            path(iCurrentNode, pBot->iGoalNode, BotIndex, pBot, pBot->iPathFlags);
- 
-            
-            // If we still did not find a path, we set wander time            
-            if (pBot->bot_pathid < 0)
-            {
-                pBot->fWanderTime = gpGlobals->time + 1;
-                pBot->iGoalNode=-1;
-                //UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "NODEMACHINE: wander time activated\n");
-            }
-            
-		}
-		else
-		{
-			// create path to goal
-			//UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: No path, already have goal, going to create path\n");
-			
-			int iCurrentNode = close(pBot->pEdict->v.origin, 50, pBot->pEdict);
-			if (iCurrentNode < 0)
-			{
-				pBot->iGoalNode = -1;
-				pBot->fWanderTime = gpGlobals->time + 1;
-				return;
-			}
- 
-            if ((func_distance(pBot->pEdict->v.origin, Nodes[pBot->iGoalNode].origin) < 50) || 
-                iCurrentNode == pBot->iGoalNode)
-            {
-                pBot->iGoalNode = -1;
-                pBot->bot_pathid = -1;
-                path_clear(pBot->iIndex);
-                return;
-            }
-			
-			path(iCurrentNode, pBot->iGoalNode, BotIndex, pBot, pBot->iPathFlags);
-			
-            if (pBot->bot_pathid < 0)
-            {
-				pBot->iGoalNode = -1; // reset goal
-            }
- 
-			// kill goal
-			//pBot->iGoalNode = -1;
-			//pBot->fWanderTime = gpGlobals->time + 10;
-			
- 
-		}
-		
-	}
-	else
-		path_walk(pBot, moved_distance); // walk the path
- 
-} 
-*/
-// Wander around code
-void cNodeMachine::wander_think(cBot * pBot, float moved_distance) {
-   // set wait time (stand still, looks like bot is thinking hehe)
-   pBot->f_wait_time = pBot->fWanderTime;
-
-   pBot->f_move_speed = 0.0;
-
-
-   //SERVER_PRINT("WANDER_THINK: executing\n");
-   /*
-      if (pBot->iGoalNode < 0)
-      {
-      pBot->f_move_speed = 0.0;    // do nothing yet
-
-      // Find a node we can move to.
-      // Use Meredians to search for nodes
-      int iX, iY;
-      Vector vOrigin = pBot->pEdict->v.origin;
-      VectorToMeredian (vOrigin, &iX, &iY);
-
-      int iList[100];
-      for (int iNr = 0; iNr < 100; iNr++)
-      iList[iNr] = -1;
-
-      int iIndex = 0;
-      float fDist = 90;
-
-      if (iX > -1 && iY > -1)
-      {
-      // Search in this meredian
-      for (int i = 0; i < NODES_MEREDIANS; i++)
-      if (Meredians[iX][iY].iNodes[i] > -1)
-      {
-      int iNode = Meredians[iX][iY].iNodes[i];
-      if (fabs (vOrigin.z - Nodes[iNode].origin.z) < 45)   // around same height
-      if (func_distance (vOrigin, Nodes[iNode].origin) > fDist)    // not to close
-      if (func_distance (vOrigin, Nodes[iNode].origin) < 512)      // not to far
-      {
-      TraceResult tr;
-      Vector vNode = Nodes[iNode].origin;
-
-      //Using TraceHull to detect de_aztec bridge and other entities.
-      //DONT_IGNORE_MONSTERS, we reached it only when there are no other bots standing in our way!
-      //UTIL_TraceHull(vOrigin, vNode, dont_ignore_monsters, point_hull, pBot->pEdict, &tr);
-      UTIL_TraceHull (vOrigin, vNode, dont_ignore_monsters,
-      human_hull, pBot->pEdict, &tr);
-
-      // if nothing hit: 
-      if (tr.flFraction >= 1.0)
-      {
-      iList[iIndex] = iNode;
-      iIndex++;
-      fDist =
-      func_distance (vOrigin, Nodes[iNode].origin);
-      }
-
-      if (iIndex > 99)
-      break;
-
-      //return iNode;
-      }
-      }
-      }
-
-      iIndex--;
-      pBot->iGoalNode = iList[RANDOM_LONG (0, iIndex)];
-      // SET TO MOVE SOMEWHERE!
-
-      }
-      else
-      {
-      // look at this node
-      pBot->f_move_speed = pBot->f_max_speed;
-
-      pBot->vHead = Nodes[pBot->iGoalNode].origin;
-      pBot->vBody = Nodes[pBot->iGoalNode].origin;
-
-      if (func_distance
-      (pBot->pEdict->v.origin, Nodes[pBot->iGoalNode].origin) < 50)
-      {
-      //    UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "NODEMACHINE: CLOSE AT WANDER GOAL\n");
-      pBot->iGoalNode = -1;
-      }
-      }
-    */
-
-   // TODO TODO TODO , waypointless navigation
 }
 
 // Find cover

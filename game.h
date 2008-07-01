@@ -78,10 +78,6 @@ public:
    int GetMinPlayRounds();
    int GetMaxPlayRounds();
 
-   // 20/06/04 - Stefan, swat behaviour
-   // ---------------------------------
-   void CreateSwatTeams();      // create swat teams every round
-
    bool NewRound();             // New round?
    float RoundTime();           // When did the round start? (time)
 

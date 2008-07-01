@@ -38,8 +38,7 @@ typedef struct {
    int price;                   // Price of weapon
    int priority;                // Priority to buy this weapon
    int iIdIndex;
-}
-weapon_price_table;
+} weapon_price_table;
 
 // 30/07/04
 // Declare the external here
@@ -163,12 +162,12 @@ public:
    float fDoRadio;              // how much time we have before we can issue another radio message
    float fNotStuckTime;         // last time we got stuck
    float f_goback_time;         // time to go back (-movespeed)
-   float f_allow_keypress;      // Timer to avoid 'to quick' using/defusing/etc
+   float f_allow_keypress;      // Timer to avoid 'too quick' using/defusing/etc
    float f_defuse;              // Timer to press the use key for defusing
 
    float f_node_timer;          // timer, to ensure navigation when something goes wrong
    float f_use_timer;           // time for use button (hostage rescuem, preventing to fast using)
-   float f_blinded_time;        // How long it is blinded ( when > globals->time)
+   float fBlindedTime;        // How long it is blinded ( when > globals->time)
 
    float f_max_speed;           // Max speed is the max speed it can get when holding that particular weapon
    float f_move_speed;          // The bots move speed
@@ -392,6 +391,12 @@ public:
    // Set methods
    void setCurrentNode();
 
+   // Get methods
+
+   // "is" Methods (booleans, statements, etc)
+   bool isDead();
+   bool OnLadder();             // Bot on ladder or not?
+
    // Goal specific stuff
    Vector BombSpotNear(float fDistance);        // Is a bombspot near in fDistance?
 
@@ -403,7 +408,7 @@ public:
    void SetBody();              // Set
 
    // -------------------
-   bool OnLadder();             // Bot on ladder or not?
+
 
    // -------------------
    void SpawnInit();            // When bot spawns again (added/revived)

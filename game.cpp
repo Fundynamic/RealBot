@@ -89,8 +89,8 @@ cGame::Init() {
    iProducedSentences = 0;      // currently produced sentences
 
    // DEBUG RELATED
-   bDoNotShoot = false;         // ... guess
-   bDebug = false;              // ... prints debug messages
+   bDoNotShoot = true;         // ... guess
+   bDebug = true;              // ... prints debug messages
    bEngineDebug = false;        // ... prints engine debug messages (for figuring out engine interceptions)
    bPistols = false;            // pistols only mode
 
@@ -103,19 +103,14 @@ cGame::Init() {
    strcpy(cSpeechSentences[5], "is there a doctor in the area");
    strcpy(cSpeechSentences[6], "warning, experimental materials detected");
    strcpy(cSpeechSentences[7], "high amigo, shoot some but");
-   strcpy(cSpeechSentences[8],
-          "attention, hours of work software, detected");
+   strcpy(cSpeechSentences[8], "attention, hours of work software, detected");
    strcpy(cSpeechSentences[9], "time for some bad ass explosion");
-   strcpy(cSpeechSentences[10],
-          "bad ass son of a breach device activated");
-   strcpy(cSpeechSentences[11],
-          "high, do not question this great service");
-   strcpy(cSpeechSentences[12], "engine is operative, hello and goodbye");
-   strcpy(cSpeechSentences[13],
-          "high amigo, your administration has been great last day");
-   strcpy(cSpeechSentences[14],
-          "attention, expect experimental armed hostile presence");
-   strcpy(cSpeechSentences[15], "warning,medical attention required");
+   strcpy(cSpeechSentences[10],"bad ass son of a breach device activated");
+   strcpy(cSpeechSentences[11],"high, do not question this great service");
+   strcpy(cSpeechSentences[12],"engine is operative, hello and goodbye");
+   strcpy(cSpeechSentences[13],"high amigo, your administration has been great last day");
+   strcpy(cSpeechSentences[14],"attention, expect experimental armed hostile presence");
+   strcpy(cSpeechSentences[15],"warning,medical attention required");
 
 }                               // Init()
 
@@ -357,12 +352,10 @@ void cGame::UpdateGameStatus() {
                   fDist = func_distance(vVec, pPlayer->v.origin);       // update distance
                }
             }
-         }                      // End of search
+         } // End of search
 
          // all counter-terrorists should know this, and they should head for the bomb
-         if (bPlanted &&        // bomb planted
-               bPlanted != bBombPlanted) {
-
+         if (bPlanted && bPlanted != bBombPlanted) {
             int i;
             for (i = 1; i <= gpGlobals->maxClients; i++) {
                edict_t *pPlayer = INDEXENT(i);
@@ -388,9 +381,10 @@ void cGame::UpdateGameStatus() {
    }
 
    // When bPlanted = false, we set bBombPlanted to false
-   if (bPlanted == false)
-      bBombPlanted = false;
-}                               // UpdateGameStatus()
+   if (bPlanted == false) {
+	   bBombPlanted = false;
+   }
+}	// UpdateGameStatus()
 
 // Add bot -> ARG1(team), ARG2(skill), ARG3(model), ARG4(name)
 int cGame::CreateBot(edict_t * pPlayer, const char *arg1, const char *arg2,
@@ -480,10 +474,11 @@ int cGame::CreateBot(edict_t * pPlayer, const char *arg1, const char *arg2,
       (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "tracker", "0");
       (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "cl_dlmax", "128");
 
-      if (RANDOM_LONG(0, 100) < 50)
+	  if (RANDOM_LONG(0, 100) < 50) {
          (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "lefthand", "1");
-      else
+	  } else {
          (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "lefthand", "0");
+	  }
 
       (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "friends", "0");
       (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "dm", "0");
@@ -567,82 +562,6 @@ int cGame::CreateBot(edict_t * pPlayer, const char *arg1, const char *arg2,
    }
 }                               // CreateBot()
 
-// Purpose: create some swat teams
-void cGame::CreateSwatTeams() {
-   REALBOT_PRINT(NULL, "CreateSwatTeams()", "Creating teams");
-   // loop through all bots, create teams with sizes 2 to 4 bots.
-   int iSize = 0, iBot = 0, iLeaderTries = 0;
-   edict_t *pLeader = EDICT_LEADER(iBot + 1);
-   int iMaxSize = RANDOM_LONG(1, 3);
-   char msg[128];
-
-   while (iBot < 32) {
-      // get out
-      if (iBot > 31)
-         break;
-
-      // when this is not a valid bot
-      if (bots[iBot].bIsUsed == false) {
-         iBot++;
-         continue;              // continue to next..
-      }
-      // From here its a valid bot
-      if (pLeader != NULL) {
-         // loop through all bots & assign a leader pointer.
-         cBot *pBot = &bots[iBot];
-
-         if (pBot->pEdict == pLeader) {
-            iBot++;             // check next bot
-            continue;
-         }
-         // this bot is not a leader already
-         if (!BOT_IsLeader(pBot)) {
-            // get teams
-            if (UTIL_GetTeam(pLeader) == UTIL_GetTeam(pBot->pEdict)) {
-               // assign this bot to this leader
-               pBot->pSwatLeader = pLeader;
-
-               memset(msg, 0, sizeof(msg));
-               sprintf(msg, "Assigned '%s' to leader '%s'\n",
-                       STRING(pBot->pEdict->v.netname),
-                       STRING(pLeader->v.netname));
-               rblog(msg);
-               iBot++;
-               iSize++;
-            } else {
-               //log("CST: Teams do not match\n");
-               iBot++;
-            }
-         }
-      } else {
-         rblog("GAME: There is no team leader set!!!\n");
-         pLeader = EDICT_LEADER(iBot + 1);
-         if (pLeader) {
-            char name[80];
-            sprintf(name, "GAME: Leader is '%s'\n",
-                    STRING(pLeader->v.netname));
-            rblog(name);
-         }
-         iLeaderTries++;
-         iSize = 0;
-      }
-
-      // if ever this messes up, escape
-      if (iLeaderTries > 10)
-         break;
-
-      // do not create teams greater then... 2 bots
-      if (iSize >= iMaxSize) {
-         pLeader = NULL;
-         iLeaderTries = 0;
-         iMaxSize = RANDOM_LONG(1, 3);
-      }
-   }
-
-   REALBOT_PRINT(NULL, "CreateSwatTeams()", "Finished");
-}                               // CreateSwatTeams()
-
-
 // Debug message
 void REALBOT_PRINT(cBot * pBot, char *Function, char *msg) {
    // Message format:
@@ -676,7 +595,7 @@ void REALBOT_PRINT(cBot * pBot, char *Function, char *msg) {
 
    // print this realbot message also in the LOG file.
    rblog(cMessage);
-}                               // REALBOT_PRINT()
+}  // REALBOT_PRINT()
 
 // $Log: game.cpp,v $
 // Revision 1.18  2004/09/07 15:44:34  eric

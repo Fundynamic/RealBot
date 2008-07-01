@@ -819,7 +819,7 @@ void BotClient_Valve_ScreenFade(void *p, int bot_index) {
 
       length -= ((10 / iDevide) * 0.5);
 
-      bots[bot_index].f_blinded_time = gpGlobals->time + length;
+      bots[bot_index].fBlindedTime = gpGlobals->time + length;
 
       // Get pointer and do some radio stuff here - Added by Stefan
       cBot *pBot;

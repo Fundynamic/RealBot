@@ -112,7 +112,7 @@ void cBot::SpawnInit() {
    f_shoot_time = gpGlobals->time;
    fMoveToNodeTime = gpGlobals->time;
    prev_time = gpGlobals->time;
-   f_blinded_time = gpGlobals->time;
+   fBlindedTime = gpGlobals->time;
    f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.1, 0.9);
    fWanderTime = gpGlobals->time;
    f_strafe_time = gpGlobals->time;
@@ -284,7 +284,7 @@ void cBot::NewRound() {
    f_shoot_time = gpGlobals->time;
    fMoveToNodeTime = gpGlobals->time;
    prev_time = gpGlobals->time;
-   f_blinded_time = gpGlobals->time;
+   fBlindedTime = gpGlobals->time;
    f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.1, 0.9);
    fWanderTime = gpGlobals->time;
    f_strafe_time = gpGlobals->time;
@@ -457,7 +457,7 @@ int cBot::FindEnemy() {
       return -1;
 
    // When blinded we cannot search for enemies
-   if (f_blinded_time > gpGlobals->time)
+   if (fBlindedTime > gpGlobals->time)
       return -1;
    float fNearestDistance = 9999;       // Nearest distance
    edict_t *pNewEnemy = NULL;   // New enemy found
@@ -558,7 +558,7 @@ void cBot::AimAtEnemy() {
    Vector vVecEnd = pBotEnemy->v.origin + pBotEnemy->v.view_ofs;
 
    // We cannot see our enemy? -> bail out
-   if ((f_blinded_time > gpGlobals->time) ||
+   if ((fBlindedTime > gpGlobals->time) ||
          (!(FInViewCone(&vVecEnd, pEdict) && FVisible(vVecEnd, pEdict)))) {
       Aim(v_enemy);
       return;
@@ -638,7 +638,7 @@ void cBot::FightEnemy() {
    Vector vVecEnd = pBotEnemy->v.origin + pBotEnemy->v.view_ofs;
 
    // We can see our enemy
-   if ((f_blinded_time < gpGlobals->time) &&
+   if ((fBlindedTime < gpGlobals->time) &&
          (FInViewCone(&vVecEnd, pEdict) && FVisible(vVecEnd, pEdict))) {
       // GET OUT OF CAMP MODE
       if (f_camp_time > gpGlobals->time)
@@ -2069,17 +2069,19 @@ bool cBot::TakeCover() {
    return true;
 }
 
-// BOT: Memory()
-void cBot::Memory() {
-   // wait , and rest for impulses
-   if (fMemoryTime > gpGlobals->time)
-      return;
 
-   // In this function the bot will recieve data; this can be any kind of data.
-   // For hearing, the bot will check for sounds it should pay attention to and
-   // store this into its 'hearing vector'. The hearing vector will be used only
-   // when walking and not when fighting an enemy. Do note that this hearing vector
-   // is only filled when it is important enough, so all the decisions are made here.
+// BOT: Memory()
+// In this function the bot will recieve data; this can be any kind of data.
+// For hearing, the bot will check for sounds it should pay attention to and
+// store this into its 'hearing vector'. The hearing vector will be used only
+// when walking and not when fighting an enemy. Do note that this hearing vector
+// is only filled when it is important enough, so all the decisions are made here.
+void cBot::Memory() {
+   
+	// Skip method when it is too soon.
+	if (fMemoryTime > gpGlobals->time) {
+      return;
+	}
 
    // Hear players: (loop through all players, determine if they are running and if
    // we can hear them (estimated distance)).
@@ -2269,9 +2271,9 @@ void cBot::Memory() {
             f_camp_time = gpGlobals->time + 2.5;
           */
 
-         if (f_update_weapon_time + 2 < gpGlobals->time)
+		if (f_update_weapon_time + 2 < gpGlobals->time) {
             PickBestWeapon();
-
+		}
       } else {
          vEar = Vector(9999, 9999, 9999);
 
@@ -2300,12 +2302,9 @@ void cBot::Memory() {
          }
       }
 
-   } else
+   } else {
       vEar = Vector(9999, 9999, 9999);
-
-
-
-
+   }
 }
 
 
@@ -2355,10 +2354,10 @@ int cBot::CarryWeaponType() {
 // This function only takes action when the bot is close a goal. The function
 // NodeMachine.path_think() handles WHERE the bot goes. Not WHAT to do at a goal.
 void cBot::ThinkAboutGoals() {
-
+	REALBOT_PRINT(this, "thinkAboutGoals()", "start");
    // Depending on bot team we handle goals differently:
-   if (iTeam == 1)              // TERRORISTS
-   {
+   // TERRORISTS
+   if (iTeam == 1) {
       // Plant the bomb when the HUD says we can -- BERKED
       if (bHUD_C4_plantable)
          f_c4_time = gpGlobals->time + 1;       // plant bomb
@@ -2366,14 +2365,14 @@ void cBot::ThinkAboutGoals() {
       // A dropped C4 is not a 'goal' (ie. it won't let you win the game
       // when you pick up the bomb. Therefor the 'pickup the dropped bomb
       // code is in cNodeMachine::path_walk().
-   } else if (iTeam == 2)         // COUNTER-TERRORISTS
-   {
-      if (vip)                  // VIP
-      {
+   } else if (iTeam == 2) {
+	  // COUNTER-TERRORISTS
+      if (vip) {
+		// VIP
       } else {
-         if (Game.bBombPlanted)
+		  if (Game.bBombPlanted) {
             Defuse();           // defuse (or set timers for it)
-         else {
+		  } else {
             HostageNear(this);
             FUNC_BotUpdateHostages(this);
          }
@@ -2390,6 +2389,11 @@ void cBot::setCurrentNode() {
 	iCloseNode = NodeMachine.getCloseNode(pEdict->v.origin, 100, pEdict);
 }
 
+// Is this bot dead?
+bool cBot::isDead() {
+	return (pEdict->v.health < 1) || (pEdict->v.deadflag != DEAD_NO);
+}
+
 // BOT: Think
 void cBot::Think() {
    float moved_distance;        // length of v_diff vector (distance bot moved)
@@ -2404,7 +2408,7 @@ void cBot::Think() {
    setCurrentNode();
 
    // BOT: If a bot is dead, re-initialize
-   if ((pEdict->v.health < 1) || (pEdict->v.deadflag != DEAD_NO)) {
+   if (isDead()) {
       if (bInitialize) {
          // AUTOSKILL
          cBot *checkpointer = UTIL_GetBotPointer(killer_edict);
@@ -2458,8 +2462,7 @@ void cBot::Think() {
                   int iMax = -1;
 
                   for (int tc = 0; tc < 50; tc++) {
-                     if (ChatEngine.ReplyBlock[99].sentence[tc][0] != '\0')
-                        iMax++;
+                     if (ChatEngine.ReplyBlock[99].sentence[tc][0] != '\0') iMax++;
                   }
 
                   int the_c = RANDOM_LONG(0, iMax);
@@ -2494,6 +2497,7 @@ void cBot::Think() {
       pEdict->v.frags += 1;
       return;
    }
+
    // BOT: Played enough rounds
    if (played_rounds > play_rounds && internet_play) {
       bIsUsed = FALSE;          // no longer used
@@ -2502,6 +2506,7 @@ void cBot::Think() {
       SERVER_COMMAND(cmd);      // kick the bot using (kick "name")
       return;
    }
+
    // Move speed... moved_distance.
    if (prev_time <= gpGlobals->time) {
 
@@ -2512,8 +2517,9 @@ void cBot::Think() {
       // save current position as previous
       v_prev_origin = pEdict->v.origin;
       prev_time = gpGlobals->time + 0.1;
-   } else
+   } else {
       moved_distance = 0.5;
+   }
 
    // NEW ROUND
    if (Game.NewRound() && mod_id == CSTRIKE_DLL) {
@@ -2527,6 +2533,7 @@ void cBot::Think() {
       // TODO TODO TODO
       // Do memory stuff so we know what to do
    }
+
    // --------------------------------
    // MEMORY STEP
    // --------------------------------
@@ -2547,14 +2554,15 @@ void cBot::Think() {
          UTIL_BotRadioMessage(this, 3, "3", "");        // need f*cking backup
 
       BOT_DecideTakeCover(this);
-
    }
+
    prev_health = bot_health;
+
    // Do your console stuff
    BotConsole(this);
 
    // BOT: Blinded
-   if (f_blinded_time > gpGlobals->time) {
+   if (fBlindedTime > gpGlobals->time) {
       // Dude we are messed up.
 
       // 01/07/04 - Stefan - Pointed out on the forums by Josh Borke... (do not shoot when dontshoot is on)
@@ -2565,6 +2573,7 @@ void cBot::Think() {
 
       return;
    }
+
    // NEW: When round time is over and still busy playing, kill bots
    if (Game.RoundTime() + 10.0 + (CVAR_GET_FLOAT("mp_roundtime") * 60) +
          CVAR_GET_FLOAT("mp_freezetime") < gpGlobals->time)
@@ -2576,6 +2585,7 @@ void cBot::Think() {
       f_freeze_time = gpGlobals->time + RANDOM_FLOAT(0.1, 2.0);
       f_node_timer = gpGlobals->time + 5.0;
    }
+
    // 1 SECOND START OF ROUND
    if (Game.RoundTime() + CVAR_GET_FLOAT("mp_freezetime") + 1 >
          gpGlobals->time
@@ -2584,6 +2594,7 @@ void cBot::Think() {
 
       // TODO: Issue radio command?
    }
+
    // SITUATION: In freezetime
    if (f_freeze_time > gpGlobals->time) {
       f_move_speed = 0.0;

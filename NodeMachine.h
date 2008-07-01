@@ -252,9 +252,6 @@ public:
    void vis_calculate(int iFrom);
 
    // -----------------
-   void wander_think(cBot * pBot, float moved_distance);        // wander around
-
-   // -----------------
    void path(int iFrom, int iTo, int iPath, cBot * pBot, int iFlags);   // know the path
    void path_draw(edict_t * pEntity);   // draw the path
    void path_walk(cBot * pBot, float moved_distance);   // walk the path
