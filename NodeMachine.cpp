@@ -2257,6 +2257,17 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
    int iNextNode = iPath[BotIndex][pBot->bot_pathid + 1];
    //  int iNextNode = iPath[BotIndex][pBot->bot_pathid + 3];
 
+   if (iCurrentNode < 0) {
+	   REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "This is fucked, there is no node to go to!");
+
+	   if (pBot->iGoalNode > -1) {
+		 pBot->iPreviousGoalNode = pBot->iGoalNode;
+	   }
+	   pBot->iGoalNode = -1;
+	   pBot->bot_pathid = -1;
+	   return;
+   }
+
    // when pButtonEdict is filled in, we check if we are close!
    if (pBot->pButtonEdict) {
       Vector vButtonVector = VecBModelOrigin(pBot->pButtonEdict);
@@ -2318,90 +2329,7 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
          return;
       }
    }
-   // end of path
-   if (iCurrentNode < 0) {
-      // When f_cover_time is > gpGlobals, we are taking cover
-      // so we 'wait'
-      if (pBot->f_cover_time > gpGlobals->time) {
-         if (pBot->pBotEnemy != NULL && pBot->v_enemy != Vector(0, 0, 0))
-            pBot->vHead = pBot->v_enemy;
 
-         pBot->f_wait_time = pBot->f_cover_time - RANDOM_FLOAT(0.0, 3.0);
-         pBot->f_cover_time = gpGlobals->time;
-
-         if (RANDOM_LONG(0, 100) < 75)
-            pBot->f_hold_duck = gpGlobals->time + RANDOM_FLOAT(1.0, 4.0);
-      } else {
-         if (pBot->iPathFlags == PATH_CAMP) {
-            // Camp
-            pBot->f_camp_time = gpGlobals->time + RANDOM_FLOAT(10, 30);
-
-            if (RANDOM_LONG(0, 100) < pBot->ipFearRate)
-               pBot->iPathFlags = PATH_DANGER;
-            else
-               pBot->iPathFlags = PATH_NONE;    // do not go to contact areas
-
-            // RADIO: I am in position!
-            if (FUNC_DoRadio(pBot)) {
-               if (pBot->pSwatLeader != NULL)
-                  UTIL_BotRadioMessage(pBot, 3, "5", "");
-               else if (BOT_IsLeader(pBot))
-                  UTIL_BotRadioMessage(pBot, 1, "3", "");       // "HOLD THIS POSITION"
-            }
-
-
-
-         } else {
-            // Set on camp mode
-            if (RANDOM_LONG(0, 100) < pBot->ipCampRate
-                  && pBot->f_camp_time + ((100 - pBot->ipCampRate) / 2) <
-                  gpGlobals->time && FUNC_AmountHostages(pBot) < 1)
-               pBot->iPathFlags = PATH_CAMP;
-         }
-
-         if (Game.bBombPlanted && Game.bBombDiscovered == false) {
-            int iGoalType = goal_from_node(pBot->iGoalNode);
-
-            if (iGoalType == GOAL_BOMBSPOT && pBot->iTeam == 2) {
-               if (pBot->Defuse() == false) {
-                  // sector clear!
-                  if (FUNC_DoRadio(pBot))
-                     UTIL_BotRadioMessage(pBot, 3, "4", "");
-
-                  // find the corresponding goal
-                  /*
-                     for (int g=0; g < MAX_GOALS; g++)
-                     {
-                     if (Goals[g].iType == GOAL_BOMBSPOT && Goals[g].iNode == pBot->iGoalNode)
-                     {
-                     Goals[g].iChecked++;
-                     }
-                     }                                                                            
-                   */
-               }
-            } else if (iGoalType == GOAL_IMPORTANT) {
-               // find the corresponding goal
-               /*
-                  for (int g=0; g < MAX_GOALS; g++)
-                  {
-                  if (Goals[g].iType == GOAL_IMPORTANT && Goals[g].iNode == pBot->iGoalNode)
-                  {
-                  Goals[g].iChecked++;
-                  }
-                  }
-                */
-            }
-
-         }
-         // reached the end
-         pBot->iGoalNode = -1;
-         pBot->bot_pathid = -1;
-      }
-
-      // get out.
-      return;
-
-   }
    // Near Node
    bool bNearNode = false;
    bool bReachNode = false;
@@ -2487,6 +2415,8 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
       }
    }
 
+
+   // reached node
    if (bNearNode) {
       pBot->bot_pathid++;
       // Calculate vis table from here
@@ -2496,6 +2426,77 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
       // nodes are mostly 90 units apart from each other. We give the bot 2 seconds
       // to get to the next node.
       pBot->fMoveToNodeTime = gpGlobals->time + 3.0;
+
+
+	  if (iPath[BotIndex][pBot->bot_pathid] == pBot->iGoalNode) {
+		  REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Next node will be the destination!");
+	  }
+
+		// When our target was our goal, we are there
+		if (iCurrentNode == pBot->iGoalNode) {
+			REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Heading to destination!");
+
+			// When f_cover_time is > gpGlobals, we are taking cover
+			// so we 'wait'
+			if (pBot->f_cover_time > gpGlobals->time) {
+				if (pBot->pBotEnemy != NULL && pBot->v_enemy != Vector(0, 0, 0))
+					pBot->vHead = pBot->v_enemy;
+					pBot->f_wait_time = pBot->f_cover_time - RANDOM_FLOAT(0.0, 3.0);
+					pBot->f_cover_time = gpGlobals->time;
+
+					if (RANDOM_LONG(0, 100) < 75)
+					pBot->f_hold_duck = gpGlobals->time + RANDOM_FLOAT(1.0, 4.0);
+					} else {
+						if (pBot->iPathFlags == PATH_CAMP) {
+							// Camp
+							pBot->f_camp_time = gpGlobals->time + RANDOM_FLOAT(10, 30);
+
+							if (RANDOM_LONG(0, 100) < pBot->ipFearRate) {
+								pBot->iPathFlags = PATH_DANGER;
+							} else {
+								pBot->iPathFlags = PATH_NONE;    // do not go to contact areas
+							}
+
+							// RADIO: I am in position!
+							if (FUNC_DoRadio(pBot)) {
+								if (pBot->pSwatLeader != NULL) {
+									UTIL_BotRadioMessage(pBot, 3, "5", "");
+								} else if (BOT_IsLeader(pBot)) {
+									UTIL_BotRadioMessage(pBot, 1, "3", "");       // "HOLD THIS POSITION"
+								}
+							}
+						} else {
+						// Set on camp mode
+							if (RANDOM_LONG(0, 100) < pBot->ipCampRate && 
+								pBot->f_camp_time + ((100 - pBot->ipCampRate) / 2) <
+								gpGlobals->time && FUNC_AmountHostages(pBot) < 1) {
+								pBot->iPathFlags = PATH_CAMP;
+							}
+						}
+
+				if (Game.bBombPlanted && Game.bBombDiscovered == false) {
+					int iGoalType = goal_from_node(pBot->iGoalNode);
+	
+					if (iGoalType == GOAL_BOMBSPOT && pBot->iTeam == 2) {
+						if (pBot->Defuse() == false) {
+						// sector clear!
+						if (FUNC_DoRadio(pBot))
+						 UTIL_BotRadioMessage(pBot, 3, "4", "");
+						}
+				} else if (iGoalType == GOAL_IMPORTANT) {
+			
+				} else if (iGoalType == GOAL_RESCUEZONE) {
+					pBot->clearHostages(); // clear hostages
+				}
+			}
+			// reached the end
+			pBot->iPreviousGoalNode = pBot->iGoalNode;
+			pBot->iGoalNode = -1;
+			pBot->bot_pathid = -1;
+		}
+		// get out.
+		return;
+	}
    }
    // TODO TODO TODO Water Navigation
 
@@ -3048,135 +3049,125 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
          bool bHasBomb = FUNC_BotHasWeapon(pBot, CS_WEAPON_C4);
 
          // Loop through all goals.
+         float highestScore = 0.0;
+
          int iFinalGoalNode = -1;
-         long iFinalGoalScore = -1;
          int iFinalGoalID = -1;
-         int iFinalGoalBadScore = 100;
-         int iFinalGoalVisited = 9999;
 
          int iGn = 0;
+
+		 float MAX_DISTANCE = 16384.0; // theoretical max distance
+		 float MAX_GOAL_DISTANCE = MAX_DISTANCE / 2.0;
+
+		 // 01-07-2008; Instead of using 'scores', use a normalized score.
+		 // We do:
+		 // (current score + gained score) / 2.0;
+		 // Since both scores can be max 1.0, meaning we keep it between 0.0 and 1.0
+		 // A score of 1.0 is max.
          for (iGn = 0; iGn < MAX_GOALS; iGn++) {
-            // Okay: A goal can gain a specific score, the higher the score the more we want to head for that goal
-            // score depends on:
-            // - favoriteness (the more bots head for it, the less score)
-            // - danger (the more danger, the less score)
-            // - objective (objective scores higher)
-            // NOTE:
-            // - distance (everything closer then xyz distance is bad)
-
+            
             // Make sure this goal is valid
-            if (Goals[iGn].iNode < 0)
-               continue;
+            if (Goals[iGn].iNode < 0) continue;
 
-            // warning, do not use => or else we will be stuck to ONE goal for ALL bots (ouch)
-            if (Goals[iGn].iBadScore > iFinalGoalBadScore)
-               continue;
+            float score = 0.0f; // start with 0
 
-            if (Goals[iGn].iChecked > iFinalGoalVisited)
-               continue;
+			float fDistanceToGoal = 
+				func_distance(pBot->pEdict->v.origin, node_vector(Goals[iGn].iNode));
 
-            // step 1: check if any other bot already has this goal
-            long iScore = 3200;
+			// First score is distance, so just set it:
+			score = fDistanceToGoal / MAX_DISTANCE;
+
+            // Danger
+			score = (score + InfoNodes[Goals[iGn].iNode].fDanger[UTIL_GetTeam(pBot->pEdict)]) / 2.0;
+
+			// Favoriteness
+			float goalscore = 0.0;
             for (int iBots = 0; iBots < 32; iBots++) {
-               // decrease score when its famous
-               // 17/07/04
-               // should only be applicable when the other bot is in the same team...
-               if ((bots[iBots].iGoalNode == Goals[iGn].iNode)
-                     && (bots[iBots].iTeam == pBot->iTeam))
-                  iScore -= 100;
+				if (&bots[iBots] == NULL ||
+					bots[iBots].bIsUsed == false) { 
+					goalscore++;
+					continue;
+				}
+				
+				// real bots..
+				if ((bots[iBots].iGoalNode == Goals[iGn].iNode) && 
+					(bots[iBots].iTeam == pBot->iTeam)) {
+                  goalscore++;
+				}
             }
 
-            // step 2: danger
-            iScore -=
-               (1000 -
-                (int) InfoNodes[Goals[iGn].iNode].
-                fDanger[UTIL_GetTeam(pBot->pEdict)] * 1000);
+			// add favoriteness
+			score = (score + (1.0 - (goalscore / 32.0)) ) / 2.0;
 
-            // step 3:objective stuff & distance
-            float fDistanceToGoal = func_distance(pBot->pEdict->v.origin,
-                                                  node_vector(Goals[iGn].
-                                                              iNode));
+			// Spawn points, when bomb is not planted
+            if ((Goals[iGn].iType == GOAL_SPAWNCT || 
+				 Goals[iGn].iType == GOAL_SPAWNT) && 
+				 Game.bBombPlanted == false) {
 
-
-            if ((Goals[iGn].iType == GOAL_SPAWNCT
-                  || Goals[iGn].iType == GOAL_SPAWNT)
-                  && Game.bBombPlanted == false) {
-               iScore += 1000;
-               iScore *= (int) fDistanceToGoal / 8124.0;
-
-               if (pBot->iTeam == 1 && Goals[iGn].iType == GOAL_SPAWNCT)
-                  if (fDistanceToGoal > 500 && fDistanceToGoal < 750)
-                     iScore += 4096;
-
-               if (pBot->iTeam == 2 && Goals[iGn].iType == GOAL_SPAWNT)
-                  if (fDistanceToGoal > 500 && fDistanceToGoal < 750)
-                     iScore += 4096;
+				float goalscore = fDistanceToGoal / MAX_GOAL_DISTANCE; 
+				score = (score + goalscore) / 2.0;
             } else if (Goals[iGn].iType == GOAL_BOMBSPOT) {
-
-               // i carry bomb, or the bomb is planted and i am ct
-               if ((pBot->iTeam == 1 && bHasBomb)
-                     || (pBot->iTeam == 2 && Game.bBombPlanted)) {
-                  iScore += 1000;
-                  // the closer to a bombspot, the better, but not too close!
-                  if (fDistanceToGoal > 500)
-                     iScore =
-                        iScore +
-                        (iScore * (1 - (int) fDistanceToGoal / 2048.0));
-
-                  // go to this bombspot!
-                  if (pBot->iTeam == 1 && fDistanceToGoal < 750)
-                     iScore += 10000;
+				float goalscore = 0.0;
+               // Whenever the bot has a bomb, or must defuse it, it will assign
+			   // a high priority to this goal.
+               if ((pBot->iTeam == 1 && bHasBomb) || 
+				   (pBot->iTeam == 2 && Game.bBombPlanted)) {
+					float mul = MAX_GOAL_DISTANCE / fDistanceToGoal;
+					goalscore = (0.8 * mul);
                } else {
-                  // When terror, a bombspot is okay
-                  if (pBot->iTeam == 1)
-                     iScore += 1500;
-                  else
-                     iScore += 550;
+                  // Bot does not have a bomb, or it has not been planted. These goals are still important
+				  // but less important.
 
-                  iScore *= (int) fDistanceToGoal / 8124.0;
-
+				  goalscore = 0.7;
                }
-            } else if (Goals[iGn].iType == GOAL_HOSTAGE) {
-               // when i am ct, this is very important
-               if (pBot->iTeam == 2) {
-                  if (fDistanceToGoal > 500)
-                     iScore =
-                        iScore +
-                        (iScore * (1 - (int) fDistanceToGoal / 8124.0));
 
-                  // go to this one
-                  if (fDistanceToGoal < 500)
-                     iScore += 5000;
-			   } else {
-                  iScore *= (int) fDistanceToGoal / 8124.0;
-			   }
+		      score = (score + goalscore) / 2.0;
+            } else if (Goals[iGn].iType == GOAL_HOSTAGE) {
+				// counter-terrorist should 
+				float goalscore = 0.0;
+				if (pBot->iTeam == 2 ) {
+					if (pBot->hasHostages() == false) {
+						// always go to the most furthest hostage spot, and add some randomness here, else
+						// all bots go to there.
+						if (fDistanceToGoal > 90) {
+							float mul = MAX_GOAL_DISTANCE / fDistanceToGoal;
+							goalscore = (0.8 * mul);
+						} else {
+							goalscore = 0.2;
+						}
+					} else {
+						goalscore = 0.5; // not that important anymore, rescueing is more important
+					}
+				} else {
+					if (RANDOM_LONG(0, 100) < 25) {
+						goalscore = RANDOM_FLOAT(0.1, 0.6);
+					}
+				}
+
+				score = (score + goalscore) / 2.0;
             } 
-		
-            // 17/07/04
+		    // 17/07/04
             // Basic attempts to handle other kind of goals...
             else if (Goals[iGn].iType == GOAL_VIPSAFETY)        // basic goals added for as_ maps
             {
                // Maximum importance when acting as CT should check whether we are the VIP!
-               if (pBot->iTeam == 2)
-                  iScore += 10000;
-               else             // We are T
-                  iScore *= (int) fDistanceToGoal / 8124.0;
+				if (pBot->iTeam == 2) {
+                  score = 2.0;
+				} else {            // We are T
+                  score = (score + 1.0) / 2.0;
+				}
             } else if (Goals[iGn].iType == GOAL_ESCAPEZONE)     // basic goals added for es_  maps
             {
                // Maximum importance when acting as T
-               if (pBot->iTeam == 1)
-                  iScore += 10000;
-            }
-            /*
-                                      else if (Goals[iGn].iType == GOAL_WEAPON) // finding weapons only when they are close 
-                                      {
-            				  if (fDistanceToGoal > 500) // should also depends on whether bot has already a weapon
-            					  iScore = iScore + (iScore*(1-(int)round(fDistanceToGoal / 8124.0)));
-            				  else
-            					  iScore += 5000;
-            			  }
-            */
-
+				if (pBot->iTeam == 1) {
+                  score = 2.0;
+				}
+			} else if (Goals[iGn].iType == GOAL_RESCUEZONE) {
+				if (pBot->hasHostages()) {
+					score = 2.0;
+				}
+			}
+            
             // checked , used for bombspots, when the checked value is filled, we will make the
             // score drasticly lower!
             /*
@@ -3190,13 +3181,16 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
              */
 
 
+			// was previous goal as well, don't go there
+			if (pBot->iPreviousGoalNode == iGn) {
+				score = 0.2; // low chance
+			}
+
             // finally update values, and get to goal
-            if (iScore > iFinalGoalScore) {
-               iFinalGoalScore = iScore;
+            if (score > highestScore) {
+               highestScore = score;
                iFinalGoalNode = Goals[iGn].iNode;
                iFinalGoalID = iGn;
-               iFinalGoalBadScore = Goals[iGn].iBadScore;
-               iFinalGoalVisited = Goals[iGn].iChecked;
             }
          }
 
@@ -3263,7 +3257,7 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
          char msg[255];
 
 		 if (iFinalGoalNode == iGoalNode) {
-			 sprintf(msg, "I have choosen to go to goalnode: Node %d, Node Type = %d, iScore=%d, Distance=%f\n", iGoalNode, Goals[iFinalGoalID].iType, iFinalGoalScore, func_distance(pBot->pEdict->v.origin, Nodes[iGoalNode].origin));    
+			 sprintf(msg, "I have choosen to go to goalnode: Node %d, Node Type = %d, iScore=%f, Distance=%f\n", iGoalNode, Goals[iFinalGoalID].iType, highestScore, func_distance(pBot->pEdict->v.origin, Nodes[iGoalNode].origin));    
 		 } else {
             sprintf(msg, "I have choosen to go to goalnode: Node %d, Distance=%f\n", iGoalNode, func_distance(pBot->pEdict->v.origin, Nodes[iGoalNode].origin));
 		 }
@@ -3271,64 +3265,35 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
          
 
          // create path
-         path(iCurrentNode, pBot->iGoalNode, BotIndex, pBot,
-              pBot->iPathFlags);
+         path(iCurrentNode, pBot->iGoalNode, BotIndex, pBot, pBot->iPathFlags);
 
          // If we still did not find a path, we set wander time
          // for 1 second we wait before a new attempt to find a goal and create a path.
          if (pBot->bot_pathid < 0) {
-            pBot->fWanderTime = gpGlobals->time + 0.1;
-
-            if (iFinalGoalBadScore > 8) {
-               pBot->fWanderTime =
-                  gpGlobals->time +
-                  ((10 - (iFinalGoalBadScore + 1)) * 15);
-
-               // TODO: Perhaps a bot should notify the players that it does not know
-               // how and where to move...? (using chatting?)
-            }
-
-
-            pBot->iGoalNode = -1;
-
-            // Note, we give this goal a BAD SCORE
-            if (iFinalGoalNode == iGoalNode) {
-               // fix: 14/06/04 - do not get over a score of 10, or we might screw up INT max ;)
-               if (Goals[iFinalGoalID].iBadScore < 10)
-                  Goals[iFinalGoalID].iBadScore++;      // increase badly!
-
-
-               Goals[iFinalGoalID].iChecked++;
-
-               // bombspots do not get high scores
-               if (Goals[iGn].iType == GOAL_BOMBSPOT)
-                  if (Goals[iGn].iChecked > 7)
-                     Goals[iGn].iChecked = RANDOM_LONG(0, 6);
-
-
-               if (Goals[iGn].iChecked > 10)
-                  Goals[iGn].iChecked = RANDOM_LONG(0, 10);
-            }
-         } else {
-            // 21/06/04
-            // success on creating path, order any teammmates on our team to move to this goal
-           // if (BOT_IsLeader(pBot))
-             //  ORDER_BotsOfLeader(pBot->pEdict, pBot->iGoalNode);
-         }
-      }                         // WE HAVE NO GOAL AND NO PATH
-      else {
+          	REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Ah damn, i finally knew where to go, now i don't know how. Well lets try something close first.");
+			pBot->iGoalNode = getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict);
+	        path(iCurrentNode, pBot->iGoalNode, BotIndex, pBot, pBot->iPathFlags);
+         } 
+      } else {                         // WE HAVE NO GOAL AND NO PATH
          // situation:
          // there is a goal
          // there is no path
 
          int iCurrentNode = getCloseNode(pBot->pEdict->v.origin, 50, pBot->pEdict);
 
+		 // if there is no currentNode, try again in a bit wider range
+		 if (iCurrentNode < 0) {
+			 iCurrentNode = getCloseNode(pBot->pEdict->v.origin, 100, pBot->pEdict);
+		 }
+
          // there is no current node, thats odd, but we should take care of it.
          if (iCurrentNode < 0) {
             pBot->iGoalNode = -1;
             pBot->fWanderTime = gpGlobals->time + 1;
+			REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "there is a goal, no path, and i don't have a close node. Going to wander and be stupid");
             return;
          }
+
          // we are already pretty close to our goal , or we are in fact ON our goal. So we
          // should not be here.
          if ((func_distance
@@ -3337,18 +3302,23 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
             pBot->iGoalNode = -1;
             pBot->bot_pathid = -1;
             path_clear(pBot->iIndex);
+			REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "there is a goal, no path, but we are so close already, we skip it and get the next frame a new goal");
             return;
          }
+
          // create path
          path(iCurrentNode, pBot->iGoalNode, BotIndex, pBot,
               pBot->iPathFlags);
 
          if (pBot->bot_pathid < 0) {
-            pBot->iGoalNode = -1;       // reset goal
+ 			REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "there is a goal, no path, and we could not get a path to our goal; so i have choosen to go to a nice nearby and try again");
+//            pBot->iGoalNode = -1;       // reset goal
+			pBot->iGoalNode = getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict);
          }
       }
-   } else
+   } else {
       path_walk(pBot, moved_distance);  // walk the path
+   }
 }
 
 // Find cover

@@ -78,7 +78,7 @@
 #define GOAL_BOMBSPOT	3
 #define GOAL_BOMB		4       // updates all the time
 #define GOAL_HOSTAGE	5       // updates all the time
-#define GOAL_RESCUEZONE 6       // rescue zone
+#define GOAL_RESCUEZONE 6       // rescue zone (for hostages)
 #define GOAL_CONTACT	7       // zones where teams often have contact
 #define GOAL_IMPORTANT	8
 #define GOAL_VIP		9       // as_ maps VIP starting point

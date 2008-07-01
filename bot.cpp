@@ -129,10 +129,7 @@ void cBot::SpawnInit() {
    // ------------------------
    pButtonEdict = NULL;
    pBotHostage = NULL;
-   hostage1 = NULL;
-   hostage2 = NULL;
-   hostage3 = NULL;
-   hostage4 = NULL;
+   clearHostages();
    pBotEnemy = NULL;
    pSwatLeader = NULL;
 
@@ -144,6 +141,7 @@ void cBot::SpawnInit() {
    // INTEGERS
    // ------------------------
    iGoalNode = -1;
+   iPreviousGoalNode = -1;
    iCloseNode = -1;
    iDiedNode = -1;
 
@@ -294,10 +292,7 @@ void cBot::NewRound() {
    // ------------------------
    pButtonEdict = NULL;
    pBotHostage = NULL;
-   hostage1 = NULL;
-   hostage2 = NULL;
-   hostage3 = NULL;
-   hostage4 = NULL;
+   clearHostages();
    pBotEnemy = NULL;
    pSwatLeader = NULL;
 
@@ -315,6 +310,7 @@ void cBot::NewRound() {
    console_nr = 0;
    bot_pathid = -1;
    iGoalNode = -1;
+   iPreviousGoalNode = -1;
    iCloseNode = -1;
 
 
@@ -2354,7 +2350,7 @@ int cBot::CarryWeaponType() {
 // This function only takes action when the bot is close a goal. The function
 // NodeMachine.path_think() handles WHERE the bot goes. Not WHAT to do at a goal.
 void cBot::ThinkAboutGoals() {
-	REALBOT_PRINT(this, "thinkAboutGoals()", "start");
+	//REALBOT_PRINT(this, "thinkAboutGoals()", "start");
    // Depending on bot team we handle goals differently:
    // TERRORISTS
    if (iTeam == 1) {
@@ -2704,6 +2700,20 @@ void cBot::Think() {
       CheckAround();
    }                            // SITUATION: Passed Freezetime
 }                               // THINK()
+
+/**
+Return true if one of the pointers is not NULL
+**/
+bool cBot::hasHostages() {
+	return hostage1 != NULL || hostage2 != NULL || hostage3 != NULL || hostage4 != NULL;
+}
+
+void cBot::clearHostages() {
+	hostage1 = NULL;
+	hostage2 = NULL;
+	hostage3 = NULL;
+	hostage4 = NULL;
+}
 
 // BOT: CheckGear, part of UpdateStatus()
 void cBot::CheckGear() {

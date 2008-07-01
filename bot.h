@@ -312,6 +312,7 @@ public:
    // TheFatal - END
 
    int iGoalNode;               // Goal Node #
+   int iPreviousGoalNode;		// Previous goal
    int iCloseNode;				// The closest node to this bot.
    float fWanderTime;           // Wandering around time
 
@@ -387,6 +388,7 @@ public:
    void InteractWithFriends();
    void PrepareChat(char sentence[128]);        // prepares bot to alk in act()
 
+   void clearHostages();
 
    // Set methods
    void setCurrentNode();
@@ -396,6 +398,7 @@ public:
    // "is" Methods (booleans, statements, etc)
    bool isDead();
    bool OnLadder();             // Bot on ladder or not?
+   bool hasHostages();			// Does the bot has used any hostages yet?
 
    // Goal specific stuff
    Vector BombSpotNear(float fDistance);        // Is a bombspot near in fDistance?

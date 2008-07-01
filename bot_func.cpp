@@ -922,10 +922,11 @@ void HostageNear(cBot * pBot) {
          REALBOT_PRINT(pBot, "HostageNear", "pBotHostage is in use\n");
          return;
       }
+
       // Prevent bots getting to close here
       if (func_distance
             (pBot->pEdict->v.origin, pBot->pBotHostage->v.origin) < 80)
-         pBot->f_move_speed = 0.0;      // do not get to close ;)
+         pBot->f_move_speed = 10.0;      // do not get to close ;)
 
       // From here, we should get the hostage when still visible
       if (pBot->CanSeeEntity(pBot->pBotHostage)) {
@@ -938,7 +939,7 @@ void HostageNear(cBot * pBot) {
                                  origin));
 
          if (func_distance
-               (pBot->pEdict->v.origin, pBot->pBotHostage->v.origin) < 90) {
+               (pBot->pEdict->v.origin, pBot->pBotHostage->v.origin) <= 80) {
             pBot->f_move_speed = 0.0;
             REALBOT_PRINT(pBot, "HostageNear()",
                           "I can see hostage, we are close, awaiting timer and angle status.");
