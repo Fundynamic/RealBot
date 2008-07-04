@@ -4,3 +4,8 @@
 - Improve pathfinder
 - Chat rate should be lower @ default
 - Improve code in overall, ugly!
+
+
+- improve the way bots walk path and decide it is a bad connection
+  - improve 'unstucking'... when not stuck by other players.
+  

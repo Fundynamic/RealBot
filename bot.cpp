@@ -27,6 +27,51 @@
   *
   **/
 
+  
+  /*
+  
+  //=========================================================
+// Returns if enemy can be shoot through some obstacle
+//=========================================================
+bool CBaseBot::IsShootableThruObstacle(Vector vecDest)
+{
+   if (!WeaponShootsThru(m_iCurrentWeapon))
+      return FALSE;
+
+   Vector vecSrc = EyePosition();
+   Vector vecDir = (vecDest - vecSrc).Normalize();  // 1 unit long
+   Vector vecPoint = g_vecZero;
+   int iThickness = 0;
+   int iHits = 0;
+
+   edict_t *pentIgnore = pev->pContainingEntity;
+   TraceResult tr;
+   UTIL_TraceLine(vecSrc, vecDest, ignore_monsters, ignore_glass, pentIgnore, &tr);
+
+   while (tr.flFraction != 1.0 && iHits < 3)
+   {
+      iHits++;
+      iThickness++;
+      vecPoint = tr.vecEndPos + vecDir;
+      while (POINT_CONTENTS(vecPoint) == CONTENTS_SOLID && iThickness < 64)
+      {
+         vecPoint = vecPoint + vecDir;
+         iThickness++;
+      }
+      UTIL_TraceLine(vecPoint, vecDest, ignore_monsters, ignore_glass, pentIgnore, &tr);
+   }
+
+   if (iHits < 3 && iThickness < 64)
+   {
+      if (LengthSquared(vecDest - vecPoint) < 12544)
+         return TRUE;
+   }
+
+   return FALSE;
+}
+
+*/
+  
 #include <string.h>
 #include <extdll.h>
 #include <dllapi.h>
