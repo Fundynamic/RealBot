@@ -1,0 +1,98 @@
+<!-- vi: set ts=4 sw=4 : -->
+<!-- vim: set tw=75 : -->
+
+<HTML>
+<head>
+<title>Metamod Adding Game/Mod Support</title>
+</head>
+<body>
+
+<h1>Adding Game/Mod Support
+</h1>
+
+<b>Note that the list of supported mods is now provided separately; see <a
+href="supportedmods.html">Supported Mods</a>.</b>
+
+<p>
+If you want to have support for your game/mod added, you'll need to send me
+(wd@metamod.org) the following information:
+
+<h3> Basic Info </h3>
+<ul>
+<li> <b>Game name:</b>
+<li> <b>Homepage URL:</b>
+<li> <b>Game version:</b>
+<li> <b>Game directory:</b>
+<li> <b>Win32 DLL name:</b>
+<li> <b>Linux SO name:</b>
+<p>
+<li> also, <b>List of game entities</b> <a href="#entlist">(see below)</a>
+</ul>
+
+For instance, Counter-Strike would be:
+
+<ul>
+<li> <b>Game name:</b> Counter-Strike
+<li> <b>Homepage URL:</b> http://www.counter-strike.net/
+<li> <b>Game version:</b> 1.1
+<li> <b>Game directory:</b> cstrike
+<li> <b>Win32 DLL name:</b> mp.dll
+<li> <b>Linux SO name:</b> cs_i386.so
+</ul>
+
+Many of these can be found in the <b>liblist.gam</b> file in the mod.
+
+<a name=entlist><h3>List of game entities</h3></a>
+<p>The <b>major</b> information that I'll need is the names of any non-standard
+entities the game uses, for instance TFC uses things like:
+<p><pre>
+   building_sentrygun
+   detpack
+   func_nobuild
+   ghost
+   info_player_teamspawn
+   info_tfgoal
+   item_artifact_envirosuit
+   i_p_t
+   item_tfgoal
+   i_t_t
+   teledeath
+   tf_ammo_rpgclip
+   tf_gl_grenade
+</pre>
+
+<p>You can see the complete lists of entities for supported mods in the <a
+href="http://metamod.org/dl/metamod/ents/">files in the "ents" directory</a>.
+
+<p>The reason these are needed is that the macro
+<b><tt>LINK_ENTITY_TO_CLASS</tt></b> in the HL SDK actually
+declares/defines a function with the name of the entity, which the engine
+will <tt>dlsym</tt> and call in the gameDLL.  Since Metamod is sitting
+between the engine and the gameDLL, it needs to pass on the call to the
+function - but can't do this unless it knows ahead of time (at compile) to
+declare/define a function for that entity name.  Thus, metamod needs a list
+of any entities that have functions declared/defined for them in the
+gameDLL via LINK_ENTITY_TO_CLASS.
+
+<p>Now, the simplest way to generate the list is to grep the source files
+for <tt><b>LINK_ENTITY_TO_CLASS</b></tt>.  If you're not familiar with
+grep, it's a tool under linux for searching contents of files.  For
+instance:
+
+<p><pre>
+   grep LINK_ENTITY_TO_CLASS *.cpp *.c *.h
+</pre>
+
+<p>If you don't have linux available, then you may have to use some other
+tool under win32 to find a similar list.  Or find a copy of grep for win32.
+:)
+
+<p>Note this all assumes you have access to the sourcecode for the mod.  If
+you don't have access to the code, you'll need to find someone who does and
+ask them to grep the source for the entities.
+
+<p>
+<hr>
+
+</body>
+</HTML>
