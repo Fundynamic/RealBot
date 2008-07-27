@@ -89,8 +89,8 @@ cGame::Init() {
    iProducedSentences = 0;      // currently produced sentences
 
    // DEBUG RELATED
-   bDoNotShoot = true;         // ... guess
-   bDebug = true;              // ... prints debug messages
+   bDoNotShoot = false;         // ... guess
+   bDebug = false;              // ... prints debug messages
    bEngineDebug = false;        // ... prints engine debug messages (for figuring out engine interceptions)
    bPistols = false;            // pistols only mode
 
