@@ -34,10 +34,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <CustomBuildStep>
-      <Command>copy $(TargetPath) "c:\Program Files (x86)\steam\steamapps\s.hendriks2%40chello.nl\counter-strike\realbot\dll\realbot_mm.dll"
-copy $(TargetPath) "c:\Program Files (x86)\steam\steamapps\s.hendriks2%40chello.nl\dedica~1\realbot\dll\realbot_mm.dll"
-copy $(TargetPath) "c:\Program Files (x86)\half-life\realbot\dll\realbot_mm.dll"
-copy $(TargetPath) "c:\Program Files (x86)\Steam\Steamapps\Counter-Strike\realbot\dll\realbot_mm.dll"
+      <Command>copy $(TargetPath) "c:\Program Files (x86)\steam\steamapps\common\half-life\realbot\dll\realbot_mm.dll"
 </Command>
       <Outputs>$(TargetName);%(Outputs)</Outputs>
     </CustomBuildStep>
