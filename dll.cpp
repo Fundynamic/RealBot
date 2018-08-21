@@ -247,7 +247,7 @@ C_DLLEXPORT int Meta_Detach(PLUG_LOADTIME now, PL_UNLOAD_REASON reason) {
 
 // END of Metamod stuff
 
-#ifndef __linux__
+#ifdef _WIN32
 // Required DLL entry point
 int WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
    return TRUE;

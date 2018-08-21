@@ -41,7 +41,6 @@
 #include <entity_state.h>
 
 // malloc stuff?
-#include "malloc.h"
 #include "stdlib.h"
 // ---
 
