@@ -56,7 +56,7 @@
 
 #include <ctype.h>
 
-#ifdef __linux__
+#ifndef _WIN32
 #define _snprintf snprintf
 #endif
 
@@ -488,7 +488,7 @@ void UTIL_BuildFileNameRB(char *subdir, char *filename) {
 #if DO_DEBUG != 0
    char *filenamedebug = filename;
 #endif
-#ifndef __linux__
+#ifdef _WIN32
 #define S '\\'
 #else
 #define S '/'

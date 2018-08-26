@@ -40,6 +40,11 @@
 #include "NodeMachine.h"        // NodeMachine
 #include "ChatEngine.h"
 
+// this makes sure function `min` is available (instead of fmin).
+#include <algorithm>
+
+using namespace std;
+
 DLL_FUNCTIONS gFunctionTable;
 DLL_FUNCTIONS gFunctionTable_post;
 
@@ -247,7 +252,7 @@ C_DLLEXPORT int Meta_Detach(PLUG_LOADTIME now, PL_UNLOAD_REASON reason) {
 
 // END of Metamod stuff
 
-#ifndef __linux__
+#ifdef _WIN32
 // Required DLL entry point
 int WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
    return TRUE;
@@ -972,8 +977,7 @@ void StartFrame(void) {
                   spawn_time_reset = TRUE;
 
                   if (respawn_time >= 1.0)
-                     respawn_time =
-                        min(respawn_time, gpGlobals->time + (float) 1.0);
+                     respawn_time = min(respawn_time, gpGlobals->time + (float) 1.0);
 
                   if (bot_cfg_pause_time >= 1.0)
                      bot_cfg_pause_time =

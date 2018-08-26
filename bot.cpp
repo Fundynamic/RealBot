@@ -112,7 +112,7 @@ cBot bots[32];                  // max of 32 bots in a game
 // External added variables
 extern bool end_round;          // End round
 
-#ifdef __linux__
+#ifndef _WIN32
 #define _snprintf snprintf
 #endif
 
