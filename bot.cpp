@@ -176,7 +176,6 @@ void cBot::SpawnInit() {
    pBotHostage = NULL;
    clearHostages();
    pBotEnemy = NULL;
-   pSwatLeader = NULL;
 
    // chat
    memset(chChatSentence, 0, sizeof(chChatSentence));
@@ -339,7 +338,6 @@ void cBot::NewRound() {
    pBotHostage = NULL;
    clearHostages();
    pBotEnemy = NULL;
-   pSwatLeader = NULL;
 
    // ------------------------
    // INTEGERS
@@ -1280,14 +1278,11 @@ void cBot::FindCover() {
 
    // when we have taken cover, and we are leader, command our team to get
    // into our position to cover area
-   if ((bTakenCover) && BOT_IsLeader(this)) {
-      if (FUNC_DoRadio(this)) {
-         // issue "Get in position and wait for my go"
-         UTIL_BotRadioMessage(this, 2, "4", "");        // ... yeah
-      }
+   if (bTakenCover) {
+      // do something...
    }
 
-}                               // FindCover()
+} // FindCover()
 
 void cBot::InteractWithFriends() {
 
@@ -2259,25 +2254,6 @@ void cBot::Memory() {
                vEar = vHear;
             }
             // we go to the destination
-            // 23/05/04 - Stefan - When we are having a team leader
-            // we do not go to this position, unless the team leader does so.
-            // In other words: Only a team leader can go to this hearing node and orders his
-            // team to walk with him.
-            // note: the bot will walk silent if he wants to , and when the leader does, the other
-            // bots copy this from him.
-            if (BOT_IsLeader(this) || pSwatLeader == NULL) {
-               int iOrgNode = iGoalNode;
-               if (func_distance
-                     (pHearPlayer->v.origin,
-                      NodeMachine.node_vector(iGoalNode)) > 200) {
-                  bot_pathid = -1;
-                  iGoalNode = iNodeHearPlayer;
-               }
-               // Bot goes to this node now, order team to move with him
-               if (iOrgNode != iGoalNode) {
-                  ORDER_BotsOfLeader(pEdict, iGoalNode);
-               }
-            }
 
             float fTime = 5 + (ipFearRate / 7);
 
@@ -2849,40 +2825,8 @@ Vector cBot::BombSpotNear(float fDistance) {
 // BOT: Update personal status
 void cBot::UpdateStatus() {
    if (pEdict == NULL)
-      rblog("BOT: pEdict is NULL. Seriously something ");
+      rblog("BOT: pEdict is NULL. Seriously something wrong?");
 
-   // 20/06/04 - Stefan
-   // When we have a swat leader to follow, check if it is still alive 
-   /*
-   if (pSwatLeader != NULL)
-      if (!IsAlive(pSwatLeader)) {
-         // 23/06/04 - Stefan
-         // Find all other bots who have this swat leader and become swat leader yourself (so we keep
-         // this leader thing in our bot, keep it organized).
-         for (int iBot = 0; iBot < 32; iBot++) {
-            // when this is not a valid bot
-            if (bots[iBot].bIsUsed == false)
-               continue;        // continue to next..
-
-            if (bots[iBot].pEdict == pEdict)
-               continue;        // it is this bot, skip
-
-            if (bots[iBot].pSwatLeader == pSwatLeader) {
-               // the bot is valid
-               // the bot is not self
-               // the bot swat leader match
-               // this bot should have a new leader, that is THIS->pEdict
-               bots[iBot].pSwatLeader = pEdict;
-            }
-         }
-
-         pSwatLeader = NULL;    // reset / become leader
-         char msg[128];
-         sprintf(msg, "GAME: Leader died, %s becomes swat leader\n",
-                 STRING(pEdict->v.netname));
-         rblog(msg);
-      }
-	  */
    // name filled in yet?
    if (name[0] == 0)
       strcpy(name, STRING(pEdict->v.netname));
@@ -2987,7 +2931,6 @@ bool BotRadioAction() {
 
             bool want_to_answer = false;        // want to answer radio call
             bool report_back = false;   // for reporting in
-            bool bBotIsLeader = BOT_IsLeader(BotPointer);
             float distance = func_distance(plr->v.origin, BotPointer->pEdict->v.origin);        // distance between the 2
 
             // Same team, randomly, do we even listen to the radio?
@@ -2997,11 +2940,6 @@ bool BotRadioAction() {
             // Reply on distance check
             if (RANDOM_LONG(0, 8192) > distance)
                bWantToListen = true;
-
-            // When it is the leader who issued a radio command, and we are his servant, we
-            // definatly hear him.
-            //if (BotPointer->pSwatLeader == plr)
-             //  bWantToListen = true;
 
             // Hearrate (personality setting)
             if (RANDOM_LONG(0, 100) < BotPointer->ipHearRate &&
@@ -3015,36 +2953,24 @@ bool BotRadioAction() {
                // Report in team!
                if (strstr(message, "#Report_in_team") != NULL) {
                   // gives human knowledge who is on his team
-                  if (BotPointer->pSwatLeader == plr) {
-                     report_back = true;
-                     unstood = true;
-                     want_to_answer = true;     // answers back
-                  }
                }
+
                // Regroup team!
                if (strstr(message, "#Regroup_team") != NULL) {
-                  if (BotPointer->pSwatLeader == plr) {
-                     // regroup now!
-                     unstood = true;
+                  // regroup now!
+                  unstood = true;
 
-                     // get to the leader position
-                     BotPointer->iGoalNode =
-                        NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE * 2,
-                                          plr);
-                     BotPointer->bot_pathid = -1;
-                  }
+                  // get to the leader position
+                  BotPointer->iGoalNode =
+                     NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE * 2,
+                                       plr);
+                  BotPointer->bot_pathid = -1;
                }
+
                // Hold this position
                if (strstr(message, "#Hold_this_position") != NULL ||
-                     strstr(message, "#Get_in_position_and_wait") != NULL) {
-                  // all players who belong to the teamleader, do this:
-                  if (BotPointer->pSwatLeader == plr) {
-                     // the team leader issued this command, and it is our leader.
-                     BotPointer->iGoalNode =
-                        NodeMachine.getCloseNode(BotPointer->pEdict->v.origin,
-                                          100, BotPointer->pEdict);
-                     BotPointer->iPathFlags = PATH_CAMP;
-                  }
+                   strstr(message, "#Get_in_position_and_wait") != NULL) {
+                  // do nothing
                }
                // Follow me!!
                if (strstr(message, "#Follow_me") != NULL) {}
@@ -3058,26 +2984,19 @@ bool BotRadioAction() {
                if (strstr(message, "#Enemy_spotted") != NULL) {
                   can_do_negative = false;
 
-                  // Only other leaders (bot leaders in this case)
-                  // can respond to this and order his team to help
-                  if (bBotIsLeader) {
-                     // Find player who issues this message and go to it
-                     int iBackupNode =
-                        NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE, plr);
+                  // Find player who issues this message and go to it
+                  int iBackupNode =
+                     NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE, plr);
 
-                     // Help this player
-                     if (iBackupNode > -1) {
+                  // Help this player
+                  if (iBackupNode > -1) {
 
-                        unstood = true;
+                     unstood = true;
 
-                        BotPointer->iGoalNode = iBackupNode;
-                        BotPointer->bot_pathid = -1;
-                        BotPointer->f_camp_time = gpGlobals->time - 1;
-                        BotPointer->f_walk_time = gpGlobals->time;
-
-                        ORDER_BotsOfLeader(BotPointer->pEdict,
-                                           iBackupNode);
-                     }
+                     BotPointer->iGoalNode = iBackupNode;
+                     BotPointer->bot_pathid = -1;
+                     BotPointer->f_camp_time = gpGlobals->time - 1;
+                     BotPointer->f_walk_time = gpGlobals->time;
                   }
                }
                // Enemy Down!
@@ -3098,27 +3017,19 @@ bool BotRadioAction() {
                if (strstr(message, "#Need_backup") != NULL ||
                      strstr(message, "#Taking_fire") != NULL) {
 
-                  // it either has a swat leader or not
-                  /*if (bBotIsLeader) {
-                     // TODO TODO TODO code here a reaction
-                     unstood = true;
+                  unstood = true;
 
-                     // get source of backup
-                     int iBackupNode =
-                        NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE, plr);
+                  // get source of backup
+                  int iBackupNode = NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE, plr);
 
-                     if (iBackupNode > -1) {
-                        BotPointer->iGoalNode = iBackupNode;
-                        BotPointer->bot_pathid = -1;
-                        BotPointer->f_camp_time = gpGlobals->time - 1;
-                        BotPointer->f_walk_time = gpGlobals->time;
+                  if (iBackupNode > -1) {
+                     BotPointer->iGoalNode = iBackupNode;
+                     BotPointer->bot_pathid = -1;
+                     BotPointer->f_camp_time = gpGlobals->time - 1;
+                     BotPointer->f_walk_time = gpGlobals->time;
+                  }
+            }
 
-                        ORDER_BotsOfLeader(BotPointer->pEdict,
-                                           iBackupNode);
-
-                     }
-                  }*/
-               }
                // Taking fire!
                if (strstr(message, "#Taking_fire") != NULL) {
                   // todo todo todo backup our friend
@@ -3285,13 +3196,6 @@ void BotThink(cBot * pBot) {
    // STEP 3: Act
    pBot->Act();
 
-   
-      // when swat leader, show it
-     // if (pBot->pSwatLeader == NULL && BOT_IsLeader(pBot))
-  //    {
-   //   WaypointDrawBeam(pHostEdict, pBot->pEdict->v.origin + Vector(0,0,16), pBot->pEdict->v.origin + Vector(0,0,36), 4, 0, 255, 255, 255, 255, 5);
-    //  }
-   
    // PASS THROUGH ENGINE
    g_engfuncs.pfnRunPlayerMove(pBot->pEdict, pBot->vecMoveAngles,
                                pBot->f_move_speed, pBot->f_strafe_speed,

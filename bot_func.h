@@ -121,11 +121,4 @@ void UTIL_BotPressKey(cBot * pBot, int type);
 // ..
 void CenterMessage(char *buffer);
 
-// 20/06/04 - Stefan
-bool BOT_IsLeader(cBot * pBot);
-edict_t *EDICT_LEADER(int iIndex);
-void ORDER_BotsOfLeader(edict_t * pEdict, int iGoalNode);
-
-
-
 #endif                          // BOT_FUNC_H

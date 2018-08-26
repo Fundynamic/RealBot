@@ -2451,7 +2451,7 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
 					} else {
 						if (pBot->iPathFlags == PATH_CAMP) {
 							// Camp
-							pBot->f_camp_time = gpGlobals->time + RANDOM_FLOAT(10, 30);
+							pBot->f_camp_time = gpGlobals->time + RANDOM_FLOAT(1, 5);
 
 							if (RANDOM_LONG(0, 100) < pBot->ipFearRate) {
 								pBot->iPathFlags = PATH_DANGER;
@@ -2461,11 +2461,6 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
 
 							// RADIO: I am in position!
 							if (FUNC_DoRadio(pBot)) {
-								if (pBot->pSwatLeader != NULL) {
-									UTIL_BotRadioMessage(pBot, 3, "5", "");
-								} else if (BOT_IsLeader(pBot)) {
-									UTIL_BotRadioMessage(pBot, 1, "3", "");       // "HOLD THIS POSITION"
-								}
 							}
 						} else {
 						// Set on camp mode

@@ -406,19 +406,13 @@ bool BotShouldDuck(cBot * pBot) {
 }
 
 bool FUNC_DoRadio(cBot * pBot) {
+
    if (pBot->fDoRadio > gpGlobals->time)
       return false;
 
    int iRadio = pBot->ipCreateRadio;
 
-   // when leader more chance to do radio to control team
-   if (BOT_IsLeader(pBot))
-      iRadio += 30;
-
-   if (RANDOM_LONG(0, 100) < iRadio)
-      return true;
-
-   return false;
+   return RANDOM_LONG(0, 100) < iRadio;
 }
 
 // DECIDE: Take cover or not
@@ -1063,93 +1057,6 @@ bool BOT_DecideTakeCover(cBot * pBot) {
    	*/
 
    return false;
-}
-
-
-// 20/06/04 - Stefan
-// check if there are any bots pointing to this one.
-bool BOT_IsLeader(cBot * pBot) {
-   int iBot;
-
-   for (iBot = 0; iBot < 32; iBot++) {
-      if (bots[iBot].bIsUsed) {
-         // pointer to this one
-         cBot *pThisBot = &bots[iBot];
-
-         // not a bot (not valid)
-         if (pThisBot == NULL)
-            continue;
-
-         // do not check self
-         if (pThisBot != pBot) {
-            if (pThisBot->pSwatLeader == pBot->pEdict)
-               return true;     // we found a bot that links to this bot!
-         }
-      }
-   }
-
-   return false;
-}
-
-// return a pointer that could be a leader!
-edict_t *EDICT_LEADER(int iIndex) {
-
-   // go through all clients
-   for (; iIndex <= gpGlobals->maxClients; iIndex++) {
-      edict_t *pPlayer = INDEXENT(iIndex);
-
-      // skip invalid players
-      if ((pPlayer) && (!pPlayer->free)) {
-         if (!IsAlive(pPlayer))
-            continue;
-
-         // randomly return this one...
-         cBot *pBot = UTIL_GetBotPointer(pPlayer);
-         bool bCanBeLeader = false;
-
-         if (pBot) {
-            // can be leader?
-            if (pBot->pSwatLeader == NULL)
-               bCanBeLeader = true;
-         } else
-            bCanBeLeader = true;
-
-         // found leader
-         if (bCanBeLeader)
-            return pPlayer;
-      }
-   }
-
-   return NULL;
-}
-
-// initialize the bots of leader edict
-void ORDER_BotsOfLeader(edict_t * pEdict, int iGoalNode) {
-   int iBot;
-   for (iBot = 0; (iBot < 32); iBot++) {
-      if (bots[iBot].bIsUsed) {
-         // pointer to this one
-         cBot *pBot = &bots[iBot];
-
-         if (pBot)
-            if (pBot->pSwatLeader == pEdict) {
-               // when this bot has leader set to this edict, clear path settings and go to iGoalNode
-               char msg[128];
-               sprintf(msg, "'%s' ordered '%s' to go to %d\n",
-                       STRING(pEdict->v.netname),
-                       STRING(pBot->pEdict->v.netname), iGoalNode);
-               rblog(msg);
-
-               if (pBot->iGoalNode != iGoalNode) {
-                  pBot->iGoalNode = iGoalNode;
-                  pBot->bot_pathid = -1;        // reset path id, create new one
-               }
-
-               pBot->f_wait_time =
-                  gpGlobals->time + RANDOM_FLOAT(1.0, 3.0);
-            }
-      }
-   }
 }
 
 // logs into a file

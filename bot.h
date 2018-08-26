@@ -350,9 +350,6 @@ public:
    edict_t *hostage3;           // any array
    edict_t *hostage4;           // here
 
-   // Swat Behaviour
-   edict_t *pSwatLeader;        // Pointer to leader of swat!
-
    Vector vecMoveAngles;        // Vector we move to
 
 
