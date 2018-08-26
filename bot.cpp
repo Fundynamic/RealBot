@@ -2106,6 +2106,11 @@ bool cBot::TakeCover() {
 }
 
 
+// Returns true if bot has a path to follow
+bool cBot::hasPath() {
+    return this->bot_pathid > -1;
+}
+
 // BOT: Memory()
 // In this function the bot will recieve data; this can be any kind of data.
 // For hearing, the bot will check for sounds it should pay attention to and

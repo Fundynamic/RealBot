@@ -409,6 +409,8 @@ public:
 
    // -------------------
 
+   bool hasPath();
+
 
    // -------------------
    void SpawnInit();            // When bot spawns again (added/revived)
