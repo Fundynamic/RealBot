@@ -55,9 +55,7 @@ extern cBot bots[32];
 
 extern bool radio_message;
 
-// 05/07/04
-// Actual build_nr value moved to build.cpp for easier versioning
-extern char *rb_build_nr;
+extern char *rb_version_nr;
 extern char *message;
 
 // DLL specific variables
@@ -140,7 +138,7 @@ META_FUNCTIONS gMetaFunctionTable = {
 plugin_info_t Plugin_info = {
                                META_INTERFACE_VERSION,      // interface version
                                "RealBot",                   // plugin name
-                               rb_build_nr,                 // plugin version
+                               rb_version_nr,                 // plugin version
                                __DATE__,                    // date of creation
                                "Stefan Hendriks",           // plugin author
                                "http://realbot.bots-united.com/",   // plugin URL
@@ -276,10 +274,8 @@ void GameDLLInit(void) {
    fplog = fopen("reallog.txt", "wt");
 
    if (fplog) {
-      fprintf(fplog, "---------------\n");
       fprintf(fplog, "Realbot Logbook\n");
-      fprintf(fplog, "---------------\n");
-      fprintf(fplog, "BUILD %s\n\n", rb_build_nr);
+      fprintf(fplog, "Version %s\n\n", rb_version_nr);
       fclose(fplog);
    }
 
@@ -662,8 +658,7 @@ void StartFrame(void) {
             // let's send a welcome message to this client...
             char total_welcome[256];
             sprintf(total_welcome,
-                    "RealBot - Work In Progress On MAC! (BUILD %s)\nBy Stefan Hendriks\n",
-                    rb_build_nr);
+                    "RealBot - Version %s\nBy Stefan Hendriks\n", rb_version_nr);
             int r, g, b;
             /*
                r = RANDOM_LONG(30, 255);

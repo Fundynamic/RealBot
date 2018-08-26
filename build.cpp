@@ -7,6 +7,5 @@
 // Build has moved away from dll.cpp for easier versioning
 // 07/07/04 - Comment changed, it was moved from dll.cpp, not bot.cpp ;) (nitpicking) :D
 
-
 // BUILD NR & Version
-char *rb_build_nr = "3072";
+char *rb_version_nr = "4.0";
