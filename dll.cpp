@@ -150,8 +150,7 @@ plugin_info_t Plugin_info = {
                             };
 
 
-C_DLLEXPORT int
-Meta_Query(char *ifvers, plugin_info_t ** pPlugInfo,
+C_DLLEXPORT int Meta_Query(const char *ifvers, plugin_info_t ** pPlugInfo,
            mutil_funcs_t * pMetaUtilFuncs) {
    // this function is the first function ever called by metamod in the plugin DLL. Its purpose
    // is for metamod to retrieve basic information about the plugin, such as its meta-interface
@@ -663,7 +662,7 @@ void StartFrame(void) {
             // let's send a welcome message to this client...
             char total_welcome[256];
             sprintf(total_welcome,
-                    "RealBot - Work In Progress (BUILD %s)\nBy Stefan Hendriks\n",
+                    "RealBot - Work In Progress On MAC! (BUILD %s)\nBy Stefan Hendriks\n",
                     rb_build_nr);
             int r, g, b;
             /*

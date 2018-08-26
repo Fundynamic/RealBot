@@ -37,7 +37,7 @@ void pfnSetModel(edict_t * e, const char *m);
 int pfnModelIndex(const char *m);
 int pfnModelFrames(int modelIndex);
 void pfnSetSize(edict_t * e, const float *rgflMin, const float *rgflMax);
-void pfnChangeLevel(char *s1, char *s2);
+void pfnChangeLevel(const char *s1, const char *s2);
 void pfnGetSpawnParms(edict_t * ent);
 void pfnSaveSpawnParms(edict_t * ent);
 float pfnVecToYaw(const float *rgflVector);
@@ -87,7 +87,7 @@ void pfnTraceSphere(const float *v1, const float *v2, int fNoMonsters,
 void pfnGetAimVector(edict_t * ent, float speed, float *rgflReturn);
 void pfnServerCommand(char *str);
 void pfnServerExecute(void);
-void pfnClientCommand(edict_t * pEdict, char *szFmt, ...);
+void pfnClientCommand(edict_t * pEdict, const char *szFmt, ...);
 void pfnParticleEffect(const float *org, const float *dir, float color,
                        float count);
 void pfnLightStyle(int style, char *val);

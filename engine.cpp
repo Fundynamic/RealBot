@@ -63,7 +63,7 @@ void (*botMsgFunction) (void *, int) = NULL;
 void (*botMsgEndFunction) (void *, int) = NULL;
 int botMsgIndex;
 
-void pfnChangeLevel(char *s1, char *s2) {
+void pfnChangeLevel(const char *s1, const char *s2) {
    // kick any bot off of the server after time/frag limit...
    for (int index = 0; index < 32; index++) {
       if (bots[index].bIsUsed)  // is this slot used?
@@ -124,7 +124,7 @@ void pfnRemoveEntity(edict_t * e) {
    RETURN_META(MRES_IGNORED);
 }
 
-void pfnClientCommand(edict_t * pEdict, char *szFmt, ...) {
+void pfnClientCommand(edict_t * pEdict, const char *szFmt, ...) {
    // new?
    if (pEdict->v.flags & (FL_FAKECLIENT | FL_THIRDPARTYBOT))
       RETURN_META(MRES_SUPERCEDE);

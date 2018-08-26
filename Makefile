@@ -2,11 +2,11 @@ CPP = g++
 
 ARCHFLAG = -m32
 
-METAMOD_SRCDIR = ./dependencies/metamod-1.19/metamod
+METAMOD_SRCDIR = ./dependencies/metamod-hl1/metamod
 HLSDK_BASEDIR = ./dependencies/hlsdk
 
 BASEFLAGS = -Dstricmp=strcasecmp -Dstrcmpi=strcasecmp -Dlinux=1
-CPPFLAGS = ${BASEFLAGS} ${ARCHFLAG} -O2 -w -I"${METAMOD_SRCDIR}" -I"${HLSDK_BASEDIR}/multiplayer/common" -I"${HLSDK_BASEDIR}/multiplayer/dlls" -I"${HLSDK_BASEDIR}/multiplayer/engine" -I"${HLSDK_BASEDIR}/multiplayer/pm_shared"
+CPPFLAGS = ${BASEFLAGS} ${ARCHFLAG} -O2 -w -I"${METAMOD_SRCDIR}" -I"${HLSDK_BASEDIR}/common" -I"${HLSDK_BASEDIR}/dlls" -I"${HLSDK_BASEDIR}/engine" -I"${HLSDK_BASEDIR}/pm_shared" -I"${HLSDK_BASEDIR}/public"
 
 OBJ = NodeMachine.o \
 	bot.o \
