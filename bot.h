@@ -408,9 +408,24 @@ public:
    void SetBody();              // Set
 
    // -------------------
-
    bool hasPath();
+   bool hasEnemy();
+   bool hasGoal();
+   bool shouldBeWandering();
 
+   bool hasBomb();
+
+   // ------------
+   void stopMoving();
+   void setMoveSpeed(float value);
+   void startWandering(float time);
+   void forgetGoal();
+   void forgetPath();
+
+   void setGoalNode(int value);
+
+   void rprint(char *Function, char *msg);
+   void rprint(char *msg);
 
    // -------------------
    void SpawnInit();            // When bot spawns again (added/revived)

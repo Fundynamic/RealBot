@@ -2108,7 +2108,62 @@ bool cBot::TakeCover() {
 
 // Returns true if bot has a path to follow
 bool cBot::hasPath() {
-    return this->bot_pathid > -1;
+   return this->bot_pathid > -1;
+}
+
+// Returns true if bot has goal node
+bool cBot::hasGoal() {
+   return this->iGoalNode > -1;
+}
+
+// Returns true if bot has a path to follow
+bool cBot::hasEnemy() {
+   return this->pBotEnemy != NULL;
+}
+
+// Returns true if bot has a path to follow
+bool cBot::shouldBeWandering() {
+   return this->fWanderTime > gpGlobals->time;
+}
+
+void cBot::setMoveSpeed(float value) {
+   this->f_move_speed = value;
+}
+
+void cBot::startWandering(float time) {
+   this->fWanderTime = gpGlobals->time + time;
+}
+
+void cBot::stopMoving() {
+   this->setMoveSpeed(0.0);
+}
+
+void cBot::forgetGoal() {
+   this->iGoalNode = -1;
+}
+
+void cBot::forgetPath() {
+   this->bot_pathid = -1;
+   NodeMachine.path_clear(this->iIndex);
+}
+
+void cBot::setGoalNode(int value) {
+    if (value < 0) {
+        rprint("setGoalNode()", "Setting a goal lower than 0, assuming this is not intentional");
+    }
+   this->iGoalNode = value;
+}
+
+void cBot::rprint(char *Function, char *msg) {
+    REALBOT_PRINT(this, Function, msg);
+}
+
+void cBot::rprint(char *msg) {
+    REALBOT_PRINT(this, "rprint()", msg);
+}
+
+bool cBot::hasBomb() {
+    return FUNC_BotHasWeapon(this, CS_WEAPON_C4);
 }
 
 // BOT: Memory()
