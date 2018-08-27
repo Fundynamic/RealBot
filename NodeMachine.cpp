@@ -1969,23 +1969,24 @@ void cNodeMachine::path(int iFrom, int iTo, int iPathId, cBot * pBot, int iFlags
                
 			   for (j = 0; j < MAX_NEIGHBOURS; j++) {
                   if (Nodes[i].iNeighbour[j] > -1) {
-                     int nNode = Nodes[i].iNeighbour[j];
-                     if (astar_list[nNode].state == CLOSED) {
+                     int neighbourNodeIndex = Nodes[i].iNeighbour[j];
+
+                     if (astar_list[neighbourNodeIndex].state == CLOSED) {
                         cost =
                            astar_list[i].cost + 
-                           (double) func_distance(Nodes[nNode].origin,
+                           (double) func_distance(Nodes[neighbourNodeIndex].origin,
                                                   Nodes[iTo].origin);
 
-                        int iTeam = UTIL_GetTeam(pBot->pEdict);
+                        int iTeam = UTIL_GetTeam(pBot->pEdict); // Stefan: yes we use 0-1 based, not 1-2 based
 
-						float dangerCost = InfoNodes[i].fDanger[iTeam] * cost;
-						float contactCost = InfoNodes[i].fContact[iTeam] * cost;
+						double dangerCost = InfoNodes[neighbourNodeIndex].fDanger[iTeam] * cost;
+						double contactCost = InfoNodes[neighbourNodeIndex].fContact[iTeam] * cost;
 
                         cost += dangerCost;
                         cost += contactCost;
 
                         if (cost < lowest_cost) {
-                           the_wpt = nNode;
+                           the_wpt = neighbourNodeIndex;
                            lowest_cost = cost;
                         }
                      }
