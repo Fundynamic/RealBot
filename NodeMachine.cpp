@@ -1821,19 +1821,21 @@ int cNodeMachine::node_goal(int iType) {
    for (int c = 0; c < MAX_GOALS; c++)
       goals_list[c] = -1;
 
-   int iId = 0;
-   for (int g = 0; g < MAX_GOALS; g++)
+   int itemsFound = 0;
+   for (int g = 0; g < MAX_GOALS; g++) {
       if (Goals[g].iType == iType && Goals[g].iNode > -1) {
-         goals_list[iId] = Goals[g].iNode;
-         iId++;
+         goals_list[itemsFound] = Goals[g].iNode;
+         itemsFound++;
       }
+   }
 
-   if (iId == 0)
+   if (itemsFound == 0)
       return -1;                // nothing found :(
 
-   iId--;
-   // we have an amount of goals (iId has them)
-   int the_goal = RANDOM_LONG(0, iId);
+   itemsFound--;
+
+   // we have an amount of goals, pick one randomly
+   int the_goal = RANDOM_LONG(0, itemsFound);
 
    return goals_list[the_goal];
 }
@@ -2425,10 +2427,9 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
       vis_calculate(iCurrentNode);
 
       // calculate how long we should take to get to next node
-      // nodes are mostly 90 units apart from each other. We give the bot 2 seconds
+      // nodes are mostly 90 units apart from each other. We give the bot 3 seconds
       // to get to the next node.
       pBot->fMoveToNodeTime = gpGlobals->time + 3.0;
-
 
 	  if (iPath[BotIndex][pBot->bot_pathid] == pBot->iGoalNode) {
 		  REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Next node will be the destination!");
@@ -2471,14 +2472,14 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
 							}
 						}
 
-				if (Game.bBombPlanted && Game.bBombDiscovered == false) {
-					int iGoalType = goal_from_node(pBot->iGoalNode);
+             if (Game.bBombPlanted && Game.bBombDiscovered == false) {
+                 int iGoalType = goal_from_node(pBot->iGoalNode);
 	
-					if (iGoalType == GOAL_BOMBSPOT && pBot->iTeam == 2) {
+                 if (iGoalType == GOAL_BOMBSPOT && pBot->iTeam == 2) {
 						if (pBot->Defuse() == false) {
-						// sector clear!
-						if (FUNC_DoRadio(pBot))
-						 UTIL_BotRadioMessage(pBot, 3, "4", "");
+                           // sector clear!
+                           if (FUNC_DoRadio(pBot))
+                              UTIL_BotRadioMessage(pBot, 3, "4", "");
 						}
 				} else if (iGoalType == GOAL_IMPORTANT) {
 			
@@ -3007,8 +3008,8 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
 
    // When camping we do not think about paths, we think where to look at
    if (pBot->f_camp_time > gpGlobals->time) {
-      if (pBot->iGoalNode == -1) {
-         pBot->iGoalNode = node_look_camp(pBot->pEdict->v.origin, UTIL_GetTeam(pBot->pEdict), pBot->pEdict);
+      if (!pBot->hasGoal()) {
+         pBot->setGoalNode(node_look_camp(pBot->pEdict->v.origin, UTIL_GetTeam(pBot->pEdict), pBot->pEdict));
       }
       REALBOT_PRINT(pBot, "cNodeMachine::path_think", "Not allowed to think because I'm camping\n");
       return;
@@ -3104,6 +3105,7 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
    // (current score + gained score) / 2.0;
    // Since both scores can be max 1.0, meaning we keep it between 0.0 and 1.0
    // A score of 1.0 is max.
+   int maxCheckedScore = 25;
    for (iGn = 0; iGn < MAX_GOALS; iGn++) {
 
       // Make sure this goal is valid
@@ -3111,13 +3113,15 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
 
       float score = 0.0f; // start with 0
 
-      float fDistanceToGoal =
-              func_distance(pBot->pEdict->v.origin, node_vector(Goals[iGn].iNode));
+      float fDistanceToGoal = func_distance(
+              pBot->pEdict->v.origin,
+              node_vector(Goals[iGn].iNode)
+            );
 
       // First score is distance, so just set it:
       score = fDistanceToGoal / MAX_DISTANCE;
 
-      if (Goals[iGn].iChecked > 25) {
+      if (Goals[iGn].iChecked > maxCheckedScore) {
          // it has been very popular, reset
          Goals[iGn].iChecked = 0;
       }
@@ -3136,7 +3140,7 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
 //            }
 
       // Take into consideration how many times this goal has been selected
-      score = (score + (1.0f - (Goals[iGn].iChecked / 25))) / 2.0f;
+      score = (score + (1.0f - (Goals[iGn].iChecked / maxCheckedScore))) / 2.0f;
 
       // Danger (is important)
       score = (score + InfoNodes[Goals[iGn].iNode].fDanger[UTIL_GetTeam(pBot->pEdict)]) / 1.5;
@@ -3273,14 +3277,13 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
       iFinalGoalNode = getCloseNode(VecBModelOrigin(pBot->pButtonEdict), NODE_ZONE, pBot->pButtonEdict);
    }
 
+   // this is the goal we are going to
    iGoalNode = iFinalGoalNode;
 
    if (iGoalNode > -1) {
-      //        UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: Found goal, going to create path\n");
       Goals[iGoalNode].iChecked++;
    } else {
-      pBot->fWanderTime = gpGlobals->time + 1;    // no goal found
-      REALBOT_PRINT(pBot, "cNodeMachine::path_think", "No goal found, this is bad");
+      pBot->startWandering(1);
    }
 
    // When camp flag is set, so we should camp at our 'destination' then we should determine
@@ -3297,7 +3300,7 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
       }
     */
 
-   pBot->iGoalNode = iGoalNode;
+   pBot->setGoalNode(iGoalNode);
 
    char msg[255];
 
@@ -3310,21 +3313,23 @@ void cNodeMachine::path_think(cBot * pBot, float moved_distance) {
               func_distance(pBot->pEdict->v.origin, Nodes[iGoalNode].origin));
    }
 
-   REALBOT_PRINT(pBot, "cNodeMachine::path_think", msg);
+   pBot->rprint("cNodeMachine::path_think", msg);
 
    // create path
    path(iCurrentNode, pBot->iGoalNode, BotIndex, pBot, pBot->iPathFlags);
 
    // If we still did not find a path, we set wander time
    // for 1 second we wait before a new attempt to find a goal and create a path.
-   if (pBot->bot_pathid < 0) {
+   if (!pBot->hasPath()) {
       REALBOT_PRINT(pBot, "cNodeMachine::path_think()",
                     "Ah damn, i finally knew where to go, now i don't know how. Well lets try something close first.");
-      pBot->iGoalNode = getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict);
+      pBot->setGoalNode(getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict));
       path(iCurrentNode, pBot->iGoalNode, BotIndex, pBot, pBot->iPathFlags);
 
-      if (pBot->bot_pathid < 0) {
+      if (!pBot->hasPath()) {
          REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Ok, thats it; i am screwed!");
+         pBot->forgetPath();
+         pBot->forgetGoal();
       }
    }
 }

@@ -62,7 +62,6 @@ bool FUNC_TakeCover(cBot * pBot);
 
 bool FUNC_BotHasWeapon(cBot * pBot, int type);
 
-void FUNC_BotThinkAboutGoal(cBot * pBot);
 
 int FUNC_EdictHoldsWeapon(edict_t * pEdict);
 

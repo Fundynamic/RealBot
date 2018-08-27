@@ -1691,36 +1691,34 @@ int cBot::ReturnTurnedAngle(float speed, float current, float ideal) {
 
 // BOT: sub-function (DEFUSE) for ACT()
 bool cBot::Defuse() {
-   if (iTeam != 2)
-      return false;             // what are you doing here?
+   if (!isCounterTerrorist()) // non-Counter-Terrorists have no business here
+      return false;
 
    if (f_c4_time > gpGlobals->time && pEdict->v.button & IN_USE) {
       f_node_timer = gpGlobals->time + 3;
 
-      // DEFUSING BOMB
-      // make all other bots not defuse this..
+      // make all *OTHER* bots not try to defuse it (so they don't hijack defusion process)
       for (int i = 1; i <= gpGlobals->maxClients; i++) {
          edict_t *pPlayer = INDEXENT(i);
          cBot *bot = UTIL_GetBotPointer(pPlayer);
 
-         if (bot)
-            if (bot->iTeam == 2)
-               if (bot != this) {
+         // if bot and not the same as me (== this)
+         if (bot && bot != this)
+            if (bot->isCounterTerrorist()) // and on my team
 
-                  // when its not the same bot  but he is close
-                  if (func_distance
-                        (bot->pEdict->v.origin, pEdict->v.origin) < 250
-                        && bot->f_camp_time < gpGlobals->time) {
-                     // camp around the area (when we want to)
-                     if (RANDOM_LONG(0, 100) < ipCampRate) {
-                        bot->iGoalNode =
-                           NodeMachine.getCloseNode(bot->pEdict->v.origin, 75,
-                                             bot->pEdict);
-                        bot->iPathFlags = PATH_CAMP;
-                        Game.bBombDiscovered = true;
-                     }
-                  }
-               }
+              // and he is close to me, and not yet camping...
+              if (func_distance(bot->pEdict->v.origin, pEdict->v.origin) < 250
+                    && bot->f_camp_time < gpGlobals->time) {
+
+                 // camp in random occasion
+                 if (RANDOM_LONG(0, 100) < ipCampRate) {
+                    bot->iGoalNode =
+                       NodeMachine.getCloseNode(bot->pEdict->v.origin, 75,
+                                         bot->pEdict);
+                    bot->iPathFlags = PATH_CAMP;
+                    Game.bBombDiscovered = true;
+                 }
+           }
       }
 
       return true;              // we help the defuser, there is being reacted upon it.
@@ -1740,7 +1738,7 @@ bool cBot::Defuse() {
       }
    }                            // --- find the c4
 
-   // When we found it, the vector of c4_origin should be something else then (9999,9999,9999)
+   // When we found it, the vector of c4_origin should be something else than (9999,9999,9999)
    if (vC4.x != 9999.0) {
 
       // A c4 has been found, oh dear.
@@ -1765,14 +1763,18 @@ bool cBot::Defuse() {
             int angle_to_c4 =
                FUNC_InFieldOfView(pEdict, (vC4 - pEdict->v.origin));
 
+            // if defusion timer has not been set (ie, the bot is not yet going to defuse the bomb)
             if (f_defuse < gpGlobals->time && angle_to_c4 < 35) {
+                this->rprint("I'll commence defusing the bomb");
                // when we are 'about to' defuse, we simply set the timers
                f_defuse = gpGlobals->time + 90; // hold as long as you can
                f_allow_keypress = gpGlobals->time + 1.5;        // And stop any key pressing the first second
                // ABOUT TO DEFUSE BOMB
             }
 
+            // Defusion timer is set and c4 is within vision
             if (f_defuse > gpGlobals->time && angle_to_c4 < 35) {
+                this->rprint("I'm defusing the bomb");
                f_move_speed = 0.0;
                f_c4_time = gpGlobals->time + 6;
                UTIL_BotPressKey(this, IN_DUCK);
@@ -1782,9 +1784,10 @@ bool cBot::Defuse() {
                   f_move_speed = f_max_speed / 2;
             }
 
-            if (f_allow_keypress < gpGlobals->time
-                  && f_defuse > gpGlobals->time)
-               UTIL_BotPressKey(this, IN_USE);
+            if (f_allow_keypress < gpGlobals->time && f_defuse > gpGlobals->time) {
+                UTIL_BotPressKey(this, IN_USE);
+            }
+
          } else {
 
             // Check if we can walk to it
@@ -2166,8 +2169,16 @@ bool cBot::hasBomb() {
     return FUNC_BotHasWeapon(this, CS_WEAPON_C4);
 }
 
+bool cBot::isCounterTerrorist() {
+    return iTeam == 2;
+}
+
+bool cBot::isTerrorist() {
+    return iTeam == 1;
+}
+
 // BOT: Memory()
-// In this function the bot will recieve data; this can be any kind of data.
+// In this function the bot will receive data; this can be any kind of data.
 // For hearing, the bot will check for sounds it should pay attention to and
 // store this into its 'hearing vector'. The hearing vector will be used only
 // when walking and not when fighting an enemy. Do note that this hearing vector
@@ -2569,6 +2580,7 @@ void cBot::Think() {
    // set this for the next time the bot dies so it will initialize stuff
    if (bInitialize == false)
       bInitialize = true;
+
    if (end_round) {
       MDLL_ClientKill(pEdict);
       pEdict->v.frags += 1;
@@ -2713,74 +2725,78 @@ void cBot::Think() {
       // When we have a path made, we could face the first node...
       //if (NodeMachine.vFirstNodeInPath(this) != Vector(9999,9999,9999))
       //    vHead = NodeMachine.vFirstNodeInPath(this);
+      return;
+   }
+
+   // **---**---**---**---**---**---**
+   // MAIN STATE: We have no enemy...
+   // **---**---**---**---**---**---**
+   if (pBotEnemy == NULL) {
+      if (Game.bDoNotShoot == false) {
+         InteractWithPlayers();
+      }
+
+      bool bMayFromGame = true;
+
+      if (Game.fWalkWithKnife > 0)
+         if (Game.RoundTime() + Game.fWalkWithKnife < gpGlobals->time)
+            bMayFromGame = false;
+
+      if (Game.fWalkWithKnife == 0)
+         bMayFromGame = false;
+
+      if (bHasShield())
+         if (!bHasShieldDrawn() && f_allow_keypress < gpGlobals->time) {
+            rblog("BOT: I draw shield because i have no enemy\n");
+            UTIL_BotPressKey(this, IN_ATTACK2);      // draw shield
+            f_allow_keypress = gpGlobals->time + 0.7;
+         }
+
+      if (CarryWeapon(CS_WEAPON_KNIFE) == false
+            && f_camp_time < gpGlobals->time
+            && f_freeze_time < gpGlobals->time
+            && f_c4_time < gpGlobals->time
+            && f_update_weapon_time < gpGlobals->time && bWalkKnife
+            && bMayFromGame) {
+         UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(-1));   // -1 is knife
+         f_update_weapon_time = gpGlobals->time + 0.7;
+      }
+
+      // When holding a grenade (and not switching to another weapon)
+      if (CarryWeaponType() == GRENADE
+            && f_update_weapon_time < gpGlobals->time) {
+         if (iPrimaryWeapon > -1)
+            UTIL_SelectItem(pEdict,
+                            UTIL_GiveWeaponName(iPrimaryWeapon));
+
+         else                // pick secondary
+            UTIL_SelectItem(pEdict,
+                            UTIL_GiveWeaponName(iSecondaryWeapon));
+         f_update_weapon_time = gpGlobals->time + 0.7;
+      }
+
+      // Think about objectives
+      ThinkAboutGoals();
    } else {
 
       // **---**---**---**---**---**---**
-      // MAIN STATE: We have no enemy...
+      // MAIN STATE: We have an enemy!
       // **---**---**---**---**---**---**
-      if (pBotEnemy == NULL) {
-         if (Game.bDoNotShoot == false) {
-            InteractWithPlayers();
-         }
-         bool bMayFromGame = true;
 
-         if (Game.fWalkWithKnife > 0)
-            if (Game.RoundTime() + Game.fWalkWithKnife < gpGlobals->time)
-               bMayFromGame = false;
+      // Keep interacting with players:
+      InteractWithPlayers();
 
-         if (Game.fWalkWithKnife == 0)
-            bMayFromGame = false;
+      // And combat enemies
+      Combat();
+   }
 
-         if (bHasShield())
-            if (!bHasShieldDrawn() && f_allow_keypress < gpGlobals->time) {
-               rblog("BOT: I draw shield because i have no enemy\n");
-               UTIL_BotPressKey(this, IN_ATTACK2);      // draw shield
-               f_allow_keypress = gpGlobals->time + 0.7;
-            }
+   // WALK()
+   NodeMachine.path_think(this, moved_distance);
 
-         if (CarryWeapon(CS_WEAPON_KNIFE) == false
-               && f_camp_time < gpGlobals->time
-               && f_freeze_time < gpGlobals->time
-               && f_c4_time < gpGlobals->time
-               && f_update_weapon_time < gpGlobals->time && bWalkKnife
-               && bMayFromGame) {
-            UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(-1));   // -1 is knife
-            f_update_weapon_time = gpGlobals->time + 0.7;
-         }
-         // When holding a grenade (and not switching to another weapon)
-         if (CarryWeaponType() == GRENADE
-               && f_update_weapon_time < gpGlobals->time) {
-            if (iPrimaryWeapon > -1)
-               UTIL_SelectItem(pEdict,
-                               UTIL_GiveWeaponName(iPrimaryWeapon));
-
-            else                // pick secondary
-               UTIL_SelectItem(pEdict,
-                               UTIL_GiveWeaponName(iSecondaryWeapon));
-            f_update_weapon_time = gpGlobals->time + 0.7;
-         }
-         // Think about objectives
-         ThinkAboutGoals();
-      } else {
-
-         // **---**---**---**---**---**---**
-         // MAIN STATE: We have an enemy!
-         // **---**---**---**---**---**---**
-
-         // Keep interacting with players:
-         InteractWithPlayers();
-
-         // And combat enemies
-         Combat();
-      }
-
-      // WALK()
-      NodeMachine.path_think(this, moved_distance);
-
-      // CHECKAROUND()
-      CheckAround();
-   }                            // SITUATION: Passed Freezetime
-}                               // THINK()
+   // CHECKAROUND()
+   CheckAround();
+   // SITUATION: Passed Freezetime
+} // THINK()
 
 /**
 Return true if one of the pointers is not NULL
@@ -2853,10 +2869,11 @@ void cBot::CheckGear() {
    if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_glock18")))
       iSecondaryWeapon = UTIL_GiveWeaponId("weapon_glock18");
    // 30/07/04 by Josh
+
    // Handle shields as primary weapon
    if (bHasShield())
       iPrimaryWeapon = UTIL_GiveWeaponId("weapon_shield");
-}                               // CHECKGEAR()
+}  // CHECKGEAR()
 
 // BOT: Returns (vector) of any bombspot found within < fDistance
 Vector cBot::BombSpotNear(float fDistance) {
@@ -2967,8 +2984,7 @@ bool BotRadioAction() {
             team = UTIL_GetTeam(pPlayer);
          }
       }
-   }                            // ENd of For
-
+   }
 
    // Check players and check if radio message applies to them
    for (i = 1; i <= gpGlobals->maxClients; i++) {

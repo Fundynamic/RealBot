@@ -166,8 +166,8 @@ public:
    float f_defuse;              // Timer to press the use key for defusing
 
    float f_node_timer;          // timer, to ensure navigation when something goes wrong
-   float f_use_timer;           // time for use button (hostage rescuem, preventing to fast using)
-   float fBlindedTime;        // How long it is blinded ( when > globals->time)
+   float f_use_timer;           // time for use button (hostage rescue, preventing to fast using)
+   float fBlindedTime;          // How long it is blinded ( when > globals->time)
 
    float f_max_speed;           // Max speed is the max speed it can get when holding that particular weapon
    float f_move_speed;          // The bots move speed
@@ -215,11 +215,11 @@ public:
    // INTEGERS
    // ------------------------
    int iTeam;                   // team
-   int iIndex;                  // Index
+   int iIndex;                  // Index of Path Array in NodeMachine, assigned at bot creation (see CreateBot in game.cpp)
 
    int bot_class;               // class
    int bot_health;              // Amount of health
-   int bot_armor;               // Amount of armour
+   int bot_armor;               // Amount of armor
    int bot_weapons;             // bit map of weapons the bot is carrying
    int bot_money;               // for Counter-Strike
 
@@ -277,7 +277,7 @@ public:
    bool buy_armor;
    bool buy_grenade;
    bool buy_smokegrenade;       //31.08.04 Frashman added support for Smoke Grenade
-   bool bIsUsed;                // Bot is 'used'/'playing'
+   bool bIsUsed;                // Bot is 'used'/'playing' (if set to true, the bot is active)
    bool bInitialize;
    bool buy_defusekit;
    bool bWalkKnife;             // likes to walk around with knife
@@ -396,6 +396,9 @@ public:
    bool isDead();
    bool OnLadder();             // Bot on ladder or not?
    bool hasHostages();			// Does the bot has used any hostages yet?
+
+   bool isCounterTerrorist();
+   bool isTerrorist();
 
    // Goal specific stuff
    Vector BombSpotNear(float fDistance);        // Is a bombspot near in fDistance?

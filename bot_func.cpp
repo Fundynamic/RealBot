@@ -456,127 +456,10 @@ bool FUNC_BotHoldsWeapon(cBot * pBot, int type) {
    return false;
 }
 
-void C4Near(cBot * pBot) {
-   if (pBot->pBotEnemy != NULL)
-      return;
-
-   if (pBot->f_c4_time > gpGlobals->time
-         && pBot->pEdict->v.button & IN_USE) {
-      pBot->f_node_timer = gpGlobals->time + 3;
-
-      // DEFUSING BOMB
-      // make all other bots not defuse this..
-      for (int i = 1; i <= gpGlobals->maxClients; i++) {
-         edict_t *pPlayer = INDEXENT(i);
-         cBot *bot = UTIL_GetBotPointer(pPlayer);
-
-         if (bot)
-            if (bot->iTeam == 2)
-               if (bot != pBot) {
-                  // when its not the same bot  but he is close
-                  if (func_distance
-                        (bot->pEdict->v.origin, pBot->pEdict->v.origin) < 250
-                     && bot->f_camp_time < gpGlobals->time) {}
-
-               }
-
-      }
-   }
-   // NEW - Rewritten defuse code:
-   // What i do, i search for the c4 timer, store its origin and check if this bot is close
-   // If so, the bot should be defusing the bomb if the timers are set. The above check
-   // makes sure that no other bot will be defusing the bomb.
-
-   edict_t *pent = NULL;
-
-   Vector c4_origin = Vector(9999, 9999, 9999);
-
-   while ((pent = UTIL_FindEntityByClassname(pent, "grenade")) != NULL) {
-      if (UTIL_GetGrenadeType(pent) == 4)       // It is a C4
-      {
-         c4_origin = pent->v.origin;    // store origin
-         break;                 // done our part now
-      }
-   }                            // --- find the c4
-
-   // When we found it, the vector of c4_origin should be something else then (9999,9999,9999)
-   if (c4_origin != Vector(9999, 9999, 9999)) {
-      // A c4 has been found, oh dear.
-      // Remember, pent=c4 now!
-
-      // Calculate the distance between our position to the c4
-      float distance = func_distance(pBot->pEdict->v.origin, c4_origin);
-
-      // can we see it?
-      // FIXME: See the bomb you cow!
-      if (VectorIsVisibleWithEdict(pBot->pEdict, c4_origin, "none")) {
-         // We can do 2 things now
-         // - If we are not close, we check if we can walk to it, and if so we face to the c4
-         // - If we are close, we face it and (begin) defuse the bomb.
-
-         if (distance < 70) {
-            pBot->vHead = c4_origin;
-            pBot->vBody = c4_origin;
-
-            pBot->f_node_timer = gpGlobals->time + 3;   // we are going to do non-path-follow stuff, so keep timer updated
-
-            int angle_to_c4 = FUNC_InFieldOfView(pBot->pEdict,
-                                                 (c4_origin -
-                                                  pBot->pEdict->v.origin));
-
-            if (pBot->f_defuse < gpGlobals->time && angle_to_c4 < 35) {
-               // when we are 'about to' defuse, we simply set the timers
-               pBot->f_defuse = gpGlobals->time + 90;   // hold as long as you can
-               pBot->f_allow_keypress = gpGlobals->time + 1.5;  // And stop any key pressing the first second
-               // ABOUT TO DEFUSE BOMB
-            }
-
-            if (pBot->f_defuse > gpGlobals->time && angle_to_c4 < 35) {
-               pBot->f_move_speed = 0.0;
-               pBot->f_c4_time = gpGlobals->time + 6;
-               UTIL_BotPressKey(pBot, IN_DUCK);
-
-               if (func_distance(pBot->pEdict->v.origin, c4_origin) > 50
-                     && pBot->f_allow_keypress + 0.5 > gpGlobals->time)
-                  pBot->f_move_speed = pBot->f_max_speed / 2;
-            }
-
-            if (pBot->f_allow_keypress < gpGlobals->time
-                  && pBot->f_defuse > gpGlobals->time)
-               UTIL_BotPressKey(pBot, IN_USE);
-         } else {
-            // Check if we can walk to it
-            // TODO: work on this, it does not have to be nescesarily walkable.
-            // TODO TODO TODO , get this working with nodes
-            pBot->vHead = c4_origin;
-            pBot->vBody = c4_origin;
-         }
-      }
-
-   }
-
-   return;                      // defuse
-
-}
-
 int FUNC_BotEstimateHearVector(cBot * pBot, Vector v_sound) {
    // here we normally figure out where to look at when we hear an enemy, RealBot AI PR 2 lagged a lot on this so we need another approach
 
    return -1;
-}
-
-/*----------------
-REALBOT: Think about goals
-----------------*/
-void FUNC_BotThinkAboutGoal(cBot * pBot) {
-   // Depends on team
-   if (pBot->iTeam == 1) {}
-   else {}
-
-   /*----------------
-   REALBOT: Execute stuff
-   ----------------*/
-
 }
 
 // Added Stefan
@@ -718,21 +601,21 @@ bool FUNC_IsOnLadder(edict_t * pEntity) {
 
 // Amount of hostages of a bot
 int FUNC_AmountHostages(cBot * pBot) {
-   int a = 0;
+   int count = 0;
 
    if (pBot->hostage1 != NULL)
-      a++;
+      count++;
 
    if (pBot->hostage2 != NULL)
-      a++;
+      count++;
 
    if (pBot->hostage3 != NULL)
-      a++;
+      count++;
 
    if (pBot->hostage4 != NULL)
-      a++;
+      count++;
 
-   return a;
+   return count;
 }
 
 int FUNC_GiveHostage(cBot * pBot) {

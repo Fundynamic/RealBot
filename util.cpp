@@ -296,8 +296,7 @@ bool UTIL_IsVip(edict_t * pEntity) {
       char model_name[32];
 
       infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer) (pEntity);
-      strcpy(model_name,
-             (g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
+      strcpy(model_name, (g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
 
       if (strcmp(model_name, "vip") == 0)       // VIP
          return true;
@@ -323,7 +322,7 @@ int UTIL_GetTeam(edict_t * pEntity) {
             (strcmp(model_name, "arctic") == 0) ||        // Artic Avenger - fix for arctic? - seemed a typo?
             (strcmp(model_name, "guerilla") == 0))        // Gorilla Warfare
       {
-         return 0;
+         return 0; // team Terrorists
       } else if ((strcmp(model_name, "urban") == 0) ||  // Seal Team 6
                  (strcmp(model_name, "gsg9") == 0) ||   // German GSG-9
                  (strcmp(model_name, "sas") == 0) ||    // UK SAS
@@ -331,12 +330,13 @@ int UTIL_GetTeam(edict_t * pEntity) {
                  (strcmp(model_name, "vip") == 0) ||    // VIP
                  (strcmp(model_name, "spetsnatz") == 0))        // CZ Spetsnatz
       {
-         return 1;
+         return 1; // team Counter-Terrorists
       }
-      return -1;                // return zero if team is unknown
+
+      return -1; // unknown team
    }
 
-   return 0;
+   return -2; // unknown mod
 }
 
 // return class number 0 through N
@@ -362,17 +362,19 @@ int UTIL_GetBotIndex(edict_t * pEdict) {
    return -1;                   // return -1 if edict is not a bot
 }
 
+/**
+ * Returns bot pointer for possible pEdict (player)
+ * @param pEdict
+ * @return
+ */
 cBot *UTIL_GetBotPointer(edict_t * pEdict) {
    int index;
 
    for (index = 0; index < 32; index++) {
       if (bots[index].pEdict == pEdict) {
-         break;
+         return (&bots[index]);
       }
    }
-
-   if (index < 32)
-      return (&bots[index]);
 
    return NULL;                 // return NULL if edict is not a bot
 }

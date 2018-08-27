@@ -44,8 +44,7 @@ extern cGame Game;
 extern cBot bots[32];
 
 // GAME: Init
-void
-cGame::Init() {
+void cGame::Init() {
 
    // Default Bot Skill
    iDefaultBotSkill = -1;       // random
@@ -319,72 +318,42 @@ void cGame::UpdateGameStatus() {
    // Same as dropped c4, its NOT, unless stated otherwise.
    pEnt = NULL;
    Vector vVec = Vector(9999, 9999, 9999);
-   bool bPlanted = bBombPlanted;        // is it planted?
+   bool bPlanted = bBombPlanted;
 
    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "grenade")) != NULL) {
       if (UTIL_GetGrenadeType(pEnt) == 4) {
-         // Found planted bomb:
-         bPlanted = true;
-         float fDist = 200;
-         int iBot = -1, k = 1;
-         vVec = pEnt->v.origin;
-
-         // FIND:
-         // Find the player near this bomb
-         for (; k <= gpGlobals->maxClients; k++) {
-            edict_t *pPlayer = INDEXENT(k);
-            // skip invalid players
-            if ((pPlayer) && (!pPlayer->free)) {
-               // skip this player if not alive (i.e. dead or dying)
-               if (!IsAlive(pPlayer))
-                  continue;
-
-               if (!(pPlayer->v.flags & FL_THIRDPARTYBOT))
-                  continue;
-
-               // skip real players (or NOT realbot's)
-               if (UTIL_GetBotPointer(pPlayer) == NULL)
-                  continue;
-
-               // Check the distance
-               if (func_distance(vVec, pPlayer->v.origin) < fDist) {
-                  iBot = k;     // remember this ID
-                  fDist = func_distance(vVec, pPlayer->v.origin);       // update distance
-               }
-            }
-         } // End of search
-
-         // all counter-terrorists should know this, and they should head for the bomb
-         if (bPlanted && bPlanted != bBombPlanted) {
-            int i;
-            for (i = 1; i <= gpGlobals->maxClients; i++) {
-               edict_t *pPlayer = INDEXENT(i);
-               cBot *bot = UTIL_GetBotPointer(pPlayer);
-
-               if (bot)         // valid bot
-               {
-                  if (UTIL_GetTeam(bot->pEdict) == 1)   // Counter-Terrorists
-                  {
-                     bot->bot_pathid = -1;
-                     bot->iGoalNode = NodeMachine.node_goal(GOAL_BOMBSPOT);
-                  }             // ct
-               }                // bot
-            }                   // through all clients
-
-            // It is not yet discovered
-            bBombDiscovered = false;
-
-            // Now update bBombPlanted
-            bBombPlanted = bPlanted;
-         }                      // planted, and not planted before
+         bPlanted = true;         // Found planted bomb!
+         break;
       }
    }
 
-   // When bPlanted = false, we set bBombPlanted to false
-   if (bPlanted == false) {
-	   bBombPlanted = false;
-   }
-}	// UpdateGameStatus()
+   // Discovered the bomb is planted and it was a different value than before (not planted).
+   // all counter-terrorists should know this, and they should head for the bomb
+   if (bPlanted && // found a planted bomb
+       bPlanted != bBombPlanted // and a milisecond ago we didnt know that
+      ) {
+      int i;
+      for (i = 1; i <= gpGlobals->maxClients; i++) {
+         edict_t *pPlayer = INDEXENT(i);
+         cBot *bot = UTIL_GetBotPointer(pPlayer);
+
+         if (bot)         // valid bot
+         {
+            if (bot->isCounterTerrorist())
+            {
+               bot->forgetPath();
+               bot->setGoalNode(NodeMachine.node_goal(GOAL_BOMBSPOT)); // picks a random bomb spot
+            }             // ct
+         }                // bot
+      }                   // through all clients
+
+      // It is not yet discovered
+      bBombDiscovered = false;
+
+      // Now update bBombPlanted
+      bBombPlanted = bPlanted;
+   } // planted, and not planted before
+} // UpdateGameStatus()
 
 // Add bot -> ARG1(team), ARG2(skill), ARG3(model), ARG4(name)
 int cGame::CreateBot(edict_t * pPlayer, const char *arg1, const char *arg2,
