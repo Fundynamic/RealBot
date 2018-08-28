@@ -1,0 +1,102 @@
+HLSDK NEWAPI Notes
+=-=-=-=-=-=-=-=-=-=
+
+--------------------------------------------------------------------------
+
+  - OnFreeEntPrivateData
+  - GameShutdown
+  - ShouldCollide
+  - CvarValue
+  - CvarValue2
+
+NOTE: No examples of these found in SDK...
+
+--------------------------------------------------------------------------
+
+OnFreeEntPrivateData
+
+void OnFreeEntPrivateData(edict_t pEnt);
+
+from engine/eiface.h:
+
+    Called right before the object's memory is freed. Calls its
+    destructor.
+
+comments:
+
+    See also Ken Birdwell on constructors, from the HLCoders list.
+    Added in SDK 2.0.
+
+--------------------------------------------------------------------------
+
+GameShutdown
+
+void GameShutdown(void);
+
+comments:
+
+    Added in SDK 2.0.
+
+--------------------------------------------------------------------------
+
+ShouldCollide
+
+int ShouldCollide(edict_t *pentTouched, edict_t *pentOther);
+
+from kenb@valvesoftware.com, via HLCoders:
+
+    ..a hook that can override if any two entities should collide when
+    they try to pass through each other.
+
+comments:
+
+    Mugsy from DoD indicates that the return value for normal operation is
+    1.
+    Added in SDK 2.0.
+
+--------------------------------------------------------------------------
+
+CvarValue
+
+void (*pfnCvarValue)( const edict_t *pEnt, const char *value );
+
+from alfred@valvesoftware.com, via HLCoders:
+
+    When the client responds to the cvar request you will get a callback
+    to pfnCvarValue() with the edict of the player who is responding and
+    the cvars values.
+
+comments:
+
+    Added 2005-08-11, no SDK update. (Available in patched SDK as of
+    hlsdk-2.3-p2.)
+
+    Use of this function is DEPRECATED. It has been obsoleted by the
+    pfnCvarValue2() function. See below.
+
+--------------------------------------------------------------------------
+
+CvarValue2
+
+void (*pfnCvarValue2)( const edict_t *pEnt, int requestID, const char
+*cvarName, const char *value );
+
+from alfred@valvesoftware.com, via HLCoders:
+
+    When the pfnQueryClientCvarValue2() completes it will call
+    pfnCvarValue2() with the request ID you supplied earlier, the name of
+    the cvar you requested and the value of that cvar. On failure (i.e
+    that user is not connected or the cvar does not exist) the value of
+    the returned cvar will be "Bad CVAR request". If you specify an
+    invalid player edict you will get "Bad Player" as the value response.
+    If a client has a cvar value set to "Bad CVAR request" it cannot be
+    differentiated from a bad request for a cvar. This is considered okay
+    because that value is not considered to be useful as a valid cvar
+    value.
+
+comments:
+
+    Added 2005-11-22, no SDK update. (Available in patched SDK as of
+    hlsdk-2.3-p3.)
+
+--------------------------------------------------------------------------

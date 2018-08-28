@@ -1,0 +1,77 @@
+Adding Game/Mod Support
+=-=-=-=-=-=-=-=-=-=-=-=
+
+Note that the list of supported mods is now provided separately; see 
+Supported Mods.
+
+If you want to have support for your game/mod added, you'll need to send
+me (wd@metamod.org) the following information:
+
+Basic Info
+
+  - Game name:
+  - Homepage URL:
+  - Game version:
+  - Game directory:
+  - Win32 DLL name:
+  - Linux SO name:
+
+  - also, List of game entities (see below)
+
+For instance, Counter-Strike would be:
+
+  - Game name: Counter-Strike
+  - Homepage URL: http://www.counter-strike.net/
+  - Game version: 1.1
+  - Game directory: cstrike
+  - Win32 DLL name: mp.dll
+  - Linux SO name: cs_i386.so
+
+Many of these can be found in the liblist.gam file in the mod.
+
+List of game entities
+
+The major information that I'll need is the names of any non-standard
+entities the game uses, for instance TFC uses things like:
+
+   building_sentrygun
+   detpack
+   func_nobuild
+   ghost
+   info_player_teamspawn
+   info_tfgoal
+   item_artifact_envirosuit
+   i_p_t
+   item_tfgoal
+   i_t_t
+   teledeath
+   tf_ammo_rpgclip
+   tf_gl_grenade
+
+You can see the complete lists of entities for supported mods in the files
+in the "ents" directory.
+
+The reason these are needed is that the macro LINK_ENTITY_TO_CLASS in the
+HL SDK actually declares/defines a function with the name of the entity,
+which the engine will dlsym and call in the gameDLL. Since Metamod is
+sitting between the engine and the gameDLL, it needs to pass on the call
+to the function - but can't do this unless it knows ahead of time (at
+compile) to declare/define a function for that entity name. Thus, metamod
+needs a list of any entities that have functions declared/defined for them
+in the gameDLL via LINK_ENTITY_TO_CLASS.
+
+Now, the simplest way to generate the list is to grep the source files for
+LINK_ENTITY_TO_CLASS. If you're not familiar with grep, it's a tool under
+linux for searching contents of files. For instance:
+
+   grep LINK_ENTITY_TO_CLASS *.cpp *.c *.h
+
+If you don't have linux available, then you may have to use some other
+tool under win32 to find a similar list. Or find a copy of grep for win32.
+:)
+
+Note this all assumes you have access to the sourcecode for the mod. If
+you don't have access to the code, you'll need to find someone who does
+and ask them to grep the source for the entities.
+
+--------------------------------------------------------------------------

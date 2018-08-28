@@ -1,0 +1,132 @@
+commands_meta.cpp	META_ERROR("Required plugin '%s' did not load successfully!  (status=%s)  Exiting.", arg, findp->str_status(ST_SIMPLE));
+commands_meta.cpp	META_ERROR("Required plugin '%s' was not found!  Exiting.",
+commands_meta.cpp	META_ERROR("Unexpected plug_cmd: %d", pcmd);
+commands_meta.cpp	META_ERROR("Unique match for required plugin '%s' was not found!  Exiting.", arg);
+conf_meta.cpp	META_ERROR("'%s' line %d: bad config format: missing option", 
+conf_meta.cpp	META_ERROR("'%s' line %d: bad config format: missing value", 
+conf_meta.cpp	META_ERROR("'%s' line %d: unable to set option '%s' value '%s'", 
+conf_meta.cpp	META_ERROR("'%s' line %d: unknown option name '%s'", 
+conf_meta.cpp	META_ERROR("option '%s' invalid format '%s'", setp->name, 
+conf_meta.cpp	META_ERROR("option '%s' invalid format '%s'", setp->name, 
+conf_meta.cpp	META_ERROR("unable to open config file '%s': %s", loadfile, 
+conf_meta.cpp	META_ERROR("unrecognized config type '%d'", setp->type);
+dllapi.cpp	META_ERROR("GetEntityAPI called with null pFunctionTable");
+dllapi.cpp	META_ERROR("GetEntityAPI version mismatch; requested=%d ours=%d", interfaceVersion, INTERFACE_VERSION);
+dllapi.cpp	META_ERROR("GetEntityAPI2 called with null pFunctionTable");
+dllapi.cpp	META_ERROR("GetEntityAPI2 version mismatch; requested=%d ours=%d", *interfaceVersion, INTERFACE_VERSION);
+dllapi.cpp	META_ERROR("GetNewDLLFunctions called with null pNewFunctionTable");
+dllapi.cpp	META_ERROR("GetNewDLLFunctions version mismatch; requested=%d ours=%d", *interfaceVersion, NEW_DLL_FUNCTIONS_VERSION);
+engine_api.cpp	META_ERROR("malloc failed for logmsg to thread queue");
+engine_api.cpp	META_ERROR("user message id reused: msgid=%d, oldname=%s, newname=%s", imsgid, nmsg->name, pszName);
+game_support.cpp	META_ERROR("File '%s' is no longer supported; instead, specify override gamedll in %s or with '+localinfo mm_gamedll <dllfile>'", OLD_GAMEDLL_TXT, CONFIG_INI);
+linkent.cpp	META_ERROR("Couldn't find game entity '%s' in game DLL '%s': %s", entStr, GameDLL.name, DLERROR());
+linkent.h	META_ERROR("Can't link entity '%s' for plugin '%s'; loadable != startup: %s", entStr, pluginName, findp->str_loadable()); \
+linkent.h	META_ERROR("Couldn't find loaded plugin '%s' for plugin entity '%s'", pluginName, entStr); \
+linkent.h	META_ERROR("Couldn't find plugin entity '%s' in plugin DLL '%s'", entStr, findp->file); \
+log_meta.cpp	void META_ERROR(const char *fmt, ...) {
+log_meta.h	void META_ERROR(const char *fmt, ...);
+metamod.cpp	META_ERROR("Cannot exec absolute pathnames: %s", mmfile);
+metamod.cpp	META_ERROR("Empty/missing config.ini file: %s; falling back to %s",
+metamod.cpp	META_ERROR("Failure to init game DLL; exiting...");
+metamod.cpp	META_ERROR("Failure to load game DLL; exiting...");
+metamod.cpp	META_ERROR("Failure to load plugins...");
+metamod.cpp	META_ERROR("Plugins file is empty/missing: %s; falling back to %s", 
+metamod.cpp	META_ERROR("dll: Couldn't find GiveFnptrsToDll() in game DLL '%s': %s", 
+metamod.cpp	META_ERROR("dll: Couldn't find either GetEntityAPI nor GetEntityAPI2 in game DLL '%s'", GameDLL.name);
+metamod.cpp	META_ERROR("dll: Couldn't get cwd; %s", strerror(errno));
+metamod.cpp	META_ERROR("dll: Couldn't load game DLL %s: %s", GameDLL.pathname, 
+metamod.cpp	META_ERROR("dll: Failure calling %s in game '%s'", STR_GetFuncs, gamedll.name); \
+metamod.cpp	META_ERROR("dll: Interface version didn't match; we wanted %d, they had %d", vers_want, vers_int); \
+metamod.cpp	META_ERROR("dll: Unrecognized game: %s", GameDLL.name);
+metamod.cpp	META_ERROR("malloc failed for gamedll struct_field: %s", STR_GetFuncs); \
+metamod.h	META_ERROR("Couldn't find api call: %s:%s", GameDLL.file, pfn_string); \
+metamod.h	META_ERROR("Couldn't find api call: %s:%s", GameDLL.file, pfn_string); \
+metamod.h	META_ERROR("Couldn't find api call: engine:%s", pfn_string); \
+metamod.h	META_ERROR("Couldn't find api call: engine:%s", pfn_string); \
+metamod.h	META_ERROR("MRES_SUPERCEDE not valid in Post functions: %s:%s%s()", iplug->file, pfn_string, (post?"_Post":"")); \
+metamod.h	META_ERROR("MRES_SUPERCEDE not valid in Post functions: %s:%s%s()", iplug->file, pfn_string, (post?"_Post":"")); \
+metamod.h	META_ERROR("Plugin didn't set meta_result: %s:%s%s()", iplug->file, pfn_string, (post?"_Post":"")); \
+metamod.h	META_ERROR("Plugin didn't set meta_result: %s:%s%s()", iplug->file, pfn_string, (post?"_Post":"")); \
+mhook.cpp	META_ERROR("Couldn't add game event hook for plugin '%s'; malloc failed: %s", plinfo->name, strerror(errno));
+mhook.cpp	META_ERROR("Couldn't add game event hook for plugin '%s'; malloc failed: %s", plinfo->name, strerror(errno));
+mhook.cpp	META_ERROR("Couldn't add game event hook for plugin '%s'; reached max hooks (%d)", plinfo->name, size);
+mhook.cpp	META_ERROR("Couldn't add log hook '%s' for plugin '%s'; reached max hooks (%d)", match, plinfo->name, size);
+mhook.cpp	META_ERROR("Couldn't find plugin index '%d' for hook", pl_index);
+mhook.cpp	META_ERROR("Invalid hook type (%d) encountered", ihook->type);
+mhook.cpp	META_ERROR("Unrecognized hook type (%d) from plugin '%s'",
+mhook.cpp	META_ERROR("malloc failed for func_item_t");
+mlist.cpp	META_ERROR("Couldn't add plugin '%s' to list; reached max plugins (%d)", 
+mlist.cpp	META_ERROR("Problem loading plugins.ini: %s", inifile);
+mlist.cpp	META_ERROR("dll: Failed to load plugin '%s'", plist[i].file);
+mlist.cpp	META_ERROR("dll: Problem reloading plugins.ini: %s", inifile);
+mlist.cpp	META_ERROR("dll: Unexpected action for plugin '%s': '%s'", iplug->desc, iplug->str_action());
+mlist.cpp	META_ERROR("dll: Unrecognized action for plugin '%s': '%s'", iplug->desc, iplug->str_action());
+mlist.cpp	META_ERROR("ini: Metamod plugins file empty or missing: %s", inifile);
+mlist.cpp	META_ERROR("ini: Plugin '%s' has newer file, but unexpected status (%s)",
+mlist.cpp	META_ERROR("ini: Skipping malformed line %d of %s", 
+mlist.cpp	META_ERROR("ini: Skipping malformed line %d of %s", ln, 
+mlist.cpp	META_ERROR("ini: Skipping plugin, couldn't stat file '%s': %s",
+mlist.cpp	META_ERROR("ini: Unable to open plugins file '%s': %s", inifile, 
+mlist.cpp	META_ERROR("ini: Unable to open plugins file '%s': %s", inifile, 
+mlist.cpp	META_ERROR("ini: Warning; no plugins found to load?");
+mlist.cpp	META_ERROR("ini: Warning; no plugins found to load?");
+mplugin.cpp	// META_ERROR("dll: Couldn't find GiveFnptrsToDll() in plugin '%s': %s", desc, DLERROR());
+mplugin.cpp	META_ERROR("Cannot clear plugin '%s'; not marked as failed, empty, or open (status=%s)", desc, str_status());
+mplugin.cpp	META_ERROR("Cannot pause plugin '%s'; not allowed by plugin (allowed=%s)", desc, str_unloadable());
+mplugin.cpp	META_ERROR("Cannot pause plugin '%s'; not currently running (status=%s)", desc, str_status());
+mplugin.cpp	META_ERROR("Cannot unpause plugin '%s'; not currently paused (status=%s)", desc, str_status());
+mplugin.cpp	META_ERROR("No pending action to retry for plugin '%s'; (status=%s, action=%s)", desc, str_status(), str_action());
+mplugin.cpp	META_ERROR("Not pausing plugin '%s'; already paused", desc);
+mplugin.cpp	META_ERROR("dll: Couldn't close plugin file '%s': %s", 
+mplugin.cpp	META_ERROR("dll: Couldn't close plugin file '%s': %s", file, DLERROR());
+mplugin.cpp	META_ERROR("dll: Error detach plugin '%s': Couldn't find Meta_Detach(): %s", desc, DLERROR());
+mplugin.cpp	META_ERROR("dll: Failed attach plugin '%s': Couldn't find Meta_Attach(): %s", desc, DLERROR());
+mplugin.cpp	META_ERROR("dll: Failed attach plugin '%s': Error from Meta_Attach(): %d", desc, ret);
+mplugin.cpp	META_ERROR("dll: Failed attach plugin '%s': Failed malloc() for dllapi_table");
+mplugin.cpp	META_ERROR("dll: Failed attach plugin '%s': Failed malloc() for newapi_table");
+mplugin.cpp	META_ERROR("dll: Failed detach plugin '%s': Error from Meta_Detach(): %d", desc, ret);
+mplugin.cpp	META_ERROR("dll: Failed query plugin '%s'; Couldn't find GiveFnptrsToDll(): %s", desc, DLERROR());
+mplugin.cpp	META_ERROR("dll: Failed query plugin '%s'; Couldn't find Meta_Query(): %s", desc, DLERROR());
+mplugin.cpp	META_ERROR("dll: Failed query plugin '%s'; Couldn't open file '%s': %s",
+mplugin.cpp	META_ERROR("dll: Failed query plugin '%s'; Empty info structure", desc);
+mplugin.cpp	META_ERROR("dll: Failed query plugin '%s'; Meta_Query returned error", 
+mplugin.cpp	META_ERROR("dll: Failed to attach plugin '%s'", desc);
+mplugin.cpp	META_ERROR("dll: Failure calling %s in plugin '%s'", STR_GetFuncs, desc); \
+mplugin.cpp	META_ERROR("dll: Interface version didn't match; expected %d, found %d", vers_want, vers_int); \
+mplugin.cpp	META_ERROR("dll: Not loading plugin '%s'; already loaded (status=%s)", 
+mplugin.cpp	META_ERROR("dll: Not loading plugin '%s'; not marked for load (action=%s)", desc, str_action());
+mplugin.cpp	META_ERROR("dll: Not unloading plugin '%s'; already unloaded (status=%s)", desc, str_status());
+mplugin.cpp	META_ERROR("dll: Plugin '%s' is out of date and incompatible with this version of Metamod; please find a newer version of the plugin (plugin needs at least interface %s not the current %s)", desc, META_INTERFACE_VERSION, info->ifvers);
+mplugin.cpp	META_ERROR("dll: Plugin '%s' requires a newer version of Metamod (Metamod needs at least interface %s not the current %s)", desc, info->ifvers, META_INTERFACE_VERSION);
+mplugin.cpp	META_ERROR("dll: Rejected plugin '%s' due to interface version incompatibility (mm=%s, pl=%s)", desc, META_INTERFACE_VERSION, info->ifvers);
+mplugin.cpp	META_ERROR("dll: Skipping plugin '%s'; couldn't query", desc);
+mplugin.cpp	META_ERROR("dll: Tried to operate on plugin[%d] with a non-valid status (%d)", index, str_status());
+mplugin.cpp	META_ERROR("dll: Tried to operate on plugin[%d] with an empty file", 
+mplugin.cpp	META_ERROR("dll: Tried to operate on plugin[%d] with an empty filename",
+mplugin.cpp	META_ERROR("dll: Tried to operate on plugin[%d] with an empty pathname",
+mreg.cpp	META_ERROR("Couldn't add registered msg '%s' to list; reached max msgs (%d)",
+mreg.cpp	META_ERROR("Couldn't grow registered command list to %d for '%s': %s", newsize, addname, strerror(errno));
+mreg.cpp	META_ERROR("Couldn't grow registered cvar list to %d for '%s'; %s", newsize, addname, strerror(errno));
+mreg.cpp	META_ERROR("Couldn't malloc cvar for adding reg cvar name '%s': %s", 
+mreg.cpp	META_ERROR("Couldn't strdup for adding reg cmd name '%s': %s", 
+mreg.cpp	META_ERROR("Couldn't strdup for adding reg cvar name '%s': %s", 
+mreg.cpp	META_ERROR("Tried to set cvar with mismatched name; src=%s dst=%s",
+mutil.cpp	META_ERROR("Couldn't find game entity '%s' in game DLL '%s' for plugin '%s'", entStr, GameDLL.name, plinfo->name);
+mutil.cpp	META_ERROR("GetGameInfo: invalid request '%d' from plugin '%s'",
+mutil.cpp	META_ERROR("GetPluginPath: couldn't find plugin '%s'",
+osdep.h	META_ERROR("Failure detaching thread: %s", strerror(ret));
+osdep.h	META_ERROR("Failure starting thread: %s", str_GetLastError());
+osdep.h	META_ERROR("Failure starting thread: %s", strerror(ret));
+osdep.h	META_ERROR("cond_init failed: %s", str_GetLastError());
+osdep.h	META_ERROR("cond_init failed: %s", strerror(ret));
+osdep.h	META_ERROR("cond_signal failed: %s", str_GetLastError());
+osdep.h	META_ERROR("cond_signal failed: %s", strerror(ret));
+osdep.h	META_ERROR("cond_wait failed: %s", str_GetLastError());
+osdep.h	META_ERROR("cond_wait failed: %s", strerror(ret));
+osdep.h	META_ERROR("mutex_init failed: %s", strerror(ret));
+osdep.h	META_ERROR("mutex_lock failed: %s", strerror(ret));
+osdep.h	META_ERROR("mutex_unlock failed: %s", strerror(ret));
+reg_support.cpp	META_ERROR("Couldn't find registered plugin command: %s", cmd);
+reg_support.cpp	META_ERROR("Failed to find memloc for regcmd '%s'", cmd_name);
+reg_support.cpp	META_ERROR("Null command name in meta_command_handler() ??");
+thread_logparse.cpp	META_ERROR("Couldn't start thread for log parsing!  Exiting...");

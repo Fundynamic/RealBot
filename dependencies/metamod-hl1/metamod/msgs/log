@@ -1,0 +1,39 @@
+commands_meta.cpp	META_LOG("ClientCommand 'meta %s' from player '%s'", 
+commands_meta.cpp	META_LOG("Refresh failed.");
+commands_meta.cpp	META_LOG("Refreshing the plugins on demand...");
+game_support.cpp	META_LOG("Installed gamedll %s from cache.\n", to);
+game_support.cpp	META_LOG("Overriding game '%s' with dllfile '%s'", gamedll->name, 
+game_support.cpp	META_LOG("Recognized game '%s'; using dllfile '%s'", gamedll->name, 
+log_meta.cpp	void META_LOG(const char *fmt, ...) {
+log_meta.h	void META_LOG(const char *fmt, ...);
+metamod.cpp	META_LOG("   %s", VURL);
+metamod.cpp	META_LOG("%s v%s  %s", VNAME, VVERSION, VDATE);
+metamod.cpp	META_LOG("Configfile specified via localinfo: %s", cp);
+metamod.cpp	META_LOG("Debuglevel specified via localinfo: %s", cp);
+metamod.cpp	META_LOG("Exec'ing metamod exec.cfg: %s...", mmfile);
+metamod.cpp	META_LOG("Execcfg specified via localinfo: %s", cp);
+metamod.cpp	META_LOG("Game DLL for '%s' loaded successfully", GameDLL.desc);
+metamod.cpp	META_LOG("Gamedll specified via localinfo: %s", cp);
+metamod.cpp	META_LOG("Pluginsfile specified via localinfo: %s", cp);
+metamod.cpp	META_LOG("by %s", VAUTHOR);
+metamod.cpp	META_LOG("compiled: %s %s (%s)", COMPILE_TIME, COMPILE_TZONE, OPT_TYPE);
+metamod.cpp	META_LOG("engine: %s", Engine.info.type());
+mhook.cpp	META_LOG("Not currently handling REGEX hooks...");
+mlist.cpp	META_LOG("dll: Finished loading %d plugins", n);
+mlist.cpp	META_LOG("dll: Finished updating %d plugins; kept %d, loaded %d, unloaded %d, reloaded %d, delayed %d", 
+mlist.cpp	META_LOG("dll: Loading plugins...");
+mlist.cpp	META_LOG("dll: Updating plugins...");
+mlist.cpp	META_LOG("ini: Begin re-reading plugins list: %s", inifile);
+mlist.cpp	META_LOG("ini: Begin reading plugins list: %s", inifile);
+mlist.cpp	META_LOG("ini: Finished reading plugins list: %s; Found %d plugins to load",
+mlist.cpp	META_LOG("ini: Finished reading plugins list: %s; Found %d plugins", inifile, n);
+mlist.cpp	META_LOG("ini: Read plugin config for: %s", pl_found->desc);
+mlist.cpp	META_LOG("ini: Read plugin config for: %s", pl_temp.desc);
+mlist.cpp	META_LOG("ini: Read plugin config for: %s", plist[n].desc);
+mplugin.cpp	META_LOG("Paused plugin '%s'", desc);
+mplugin.cpp	META_LOG("Unpaused plugin '%s'", desc);
+mplugin.cpp	META_LOG("dll: Loaded plugin '%s': %s v%s %s, %s", desc, info->name, 
+mplugin.cpp	META_LOG("dll: Note: plugin '%s' is using an older interface version (%s), not the latest interface version (%s); there might be an updated version of the plugin", desc, info->ifvers, META_INTERFACE_VERSION);
+mplugin.cpp	META_LOG("dll: Plugin '%s' isn't catching _any_ functions ??", desc);
+mplugin.cpp	META_LOG("dll: Plugin '%s': unexpected version comparision; metavers=%s, mmajor=%d, mminor=%d; plugvers=%s, pmajor=%d, pminor=%d", 
+mplugin.cpp	META_LOG("dll: Unloaded plugin '%s' for reason '%s'", desc, str_reason(reason, real_reason));

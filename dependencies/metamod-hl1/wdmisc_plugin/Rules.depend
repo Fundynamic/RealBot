@@ -1,0 +1,102 @@
+debug.linux/sdk_util.o debug.darwin/sdk_util.o debug.win32/sdk_util.o:  sdk_util.cpp ../../hlsdk/dlls/extdll.h \
+  ../../hlsdk/public/archtypes.h ../../hlsdk/public/steam/steamtypes.h \
+  ../../hlsdk/dlls/vector.h ../../hlsdk/common/const.h \
+  ../../hlsdk/common/in_buttons.h ../../hlsdk/engine/progdefs.h \
+  ../../hlsdk/engine/edict.h ../../hlsdk/engine/eiface.h \
+  ../../hlsdk/engine/custom.h ../../hlsdk/common/crc.h \
+  ../../hlsdk/common/cvardef.h ../../hlsdk/common/Sequence.h \
+  ../../hlsdk/dlls/cdll_dll.h ../metamod/sdk_util.h \
+  ../metamod/enginecallbacks.h ../../hlsdk/dlls/enginecallback.h \
+  ../../hlsdk/common/event_flags.h ../../hlsdk/dlls/util.h \
+  ../../hlsdk/dlls/activity.h ../metamod/osdep.h ../metamod/types_meta.h \
+  ../metamod/mreg.h ../metamod/log_meta.h
+debug.linux/dll_plugin.o debug.darwin/dll_plugin.o debug.win32/dll_plugin.o:  dll_plugin.cpp ../../hlsdk/dlls/extdll.h \
+  ../../hlsdk/public/archtypes.h ../../hlsdk/public/steam/steamtypes.h \
+  ../../hlsdk/dlls/vector.h ../../hlsdk/common/const.h \
+  ../../hlsdk/common/in_buttons.h ../../hlsdk/engine/progdefs.h \
+  ../../hlsdk/engine/edict.h ../../hlsdk/engine/eiface.h \
+  ../../hlsdk/engine/custom.h ../../hlsdk/common/crc.h \
+  ../../hlsdk/common/cvardef.h ../../hlsdk/common/Sequence.h \
+  ../../hlsdk/dlls/cdll_dll.h ../metamod/sdk_util.h \
+  ../metamod/enginecallbacks.h ../../hlsdk/dlls/enginecallback.h \
+  ../../hlsdk/common/event_flags.h ../../hlsdk/dlls/util.h \
+  ../../hlsdk/dlls/activity.h ../metamod/meta_api.h ../metamod/dllapi.h \
+  ../metamod/osdep.h ../metamod/types_meta.h ../metamod/mreg.h \
+  ../metamod/log_meta.h ../metamod/engine_api.h ../metamod/plinfo.h \
+  ../metamod/mutil.h ../metamod/mhook.h wdmisc.h dll_plugin.h \
+  log_plugin.h ../metamod/api_info.h plugin.h
+debug.linux/engine_api.o debug.darwin/engine_api.o debug.win32/engine_api.o:  engine_api.cpp ../../hlsdk/dlls/extdll.h \
+  ../../hlsdk/public/archtypes.h ../../hlsdk/public/steam/steamtypes.h \
+  ../../hlsdk/dlls/vector.h ../../hlsdk/common/const.h \
+  ../../hlsdk/common/in_buttons.h ../../hlsdk/engine/progdefs.h \
+  ../../hlsdk/engine/edict.h ../../hlsdk/engine/eiface.h \
+  ../../hlsdk/engine/custom.h ../../hlsdk/common/crc.h \
+  ../../hlsdk/common/cvardef.h ../../hlsdk/common/Sequence.h \
+  ../../hlsdk/dlls/cdll_dll.h ../metamod/engine_api.h \
+  ../metamod/meta_api.h ../metamod/dllapi.h ../metamod/sdk_util.h \
+  ../metamod/enginecallbacks.h ../../hlsdk/dlls/enginecallback.h \
+  ../../hlsdk/common/event_flags.h ../../hlsdk/dlls/util.h \
+  ../../hlsdk/dlls/activity.h ../metamod/osdep.h ../metamod/types_meta.h \
+  ../metamod/mreg.h ../metamod/log_meta.h ../metamod/plinfo.h \
+  ../metamod/mutil.h ../metamod/mhook.h log_plugin.h \
+  ../metamod/api_info.h plugin.h
+debug.linux/h_export.o debug.darwin/h_export.o debug.win32/h_export.o:  h_export.cpp ../../hlsdk/dlls/extdll.h \
+  ../../hlsdk/public/archtypes.h ../../hlsdk/public/steam/steamtypes.h \
+  ../../hlsdk/dlls/vector.h ../../hlsdk/common/const.h \
+  ../../hlsdk/common/in_buttons.h ../../hlsdk/engine/progdefs.h \
+  ../../hlsdk/engine/edict.h ../../hlsdk/engine/eiface.h \
+  ../../hlsdk/engine/custom.h ../../hlsdk/common/crc.h \
+  ../../hlsdk/common/cvardef.h ../../hlsdk/common/Sequence.h \
+  ../../hlsdk/dlls/cdll_dll.h ../metamod/h_export.h ../metamod/osdep.h \
+  ../metamod/types_meta.h ../metamod/mreg.h ../metamod/log_meta.h \
+  ../metamod/enginecallbacks.h ../../hlsdk/dlls/enginecallback.h \
+  ../../hlsdk/common/event_flags.h ../metamod/sdk_util.h \
+  ../../hlsdk/dlls/util.h ../../hlsdk/dlls/activity.h \
+  ../metamod/meta_api.h ../metamod/dllapi.h ../metamod/engine_api.h \
+  ../metamod/plinfo.h ../metamod/mutil.h ../metamod/mhook.h
+debug.linux/log_plugin.o debug.darwin/log_plugin.o debug.win32/log_plugin.o:  log_plugin.cpp ../../hlsdk/dlls/extdll.h \
+  ../../hlsdk/public/archtypes.h ../../hlsdk/public/steam/steamtypes.h \
+  ../../hlsdk/dlls/vector.h ../../hlsdk/common/const.h \
+  ../../hlsdk/common/in_buttons.h ../../hlsdk/engine/progdefs.h \
+  ../../hlsdk/engine/edict.h ../../hlsdk/engine/eiface.h \
+  ../../hlsdk/engine/custom.h ../../hlsdk/common/crc.h \
+  ../../hlsdk/common/cvardef.h ../../hlsdk/common/Sequence.h \
+  ../../hlsdk/dlls/cdll_dll.h ../../hlsdk/dlls/enginecallback.h \
+  ../../hlsdk/common/event_flags.h ../metamod/meta_api.h \
+  ../metamod/dllapi.h ../metamod/sdk_util.h ../metamod/enginecallbacks.h \
+  ../../hlsdk/dlls/util.h ../../hlsdk/dlls/activity.h ../metamod/osdep.h \
+  ../metamod/types_meta.h ../metamod/mreg.h ../metamod/log_meta.h \
+  ../metamod/engine_api.h ../metamod/plinfo.h ../metamod/mutil.h \
+  ../metamod/mhook.h ../metamod/support_meta.h log_plugin.h \
+  ../metamod/api_info.h plugin.h
+debug.linux/meta_api.o debug.darwin/meta_api.o debug.win32/meta_api.o:  meta_api.cpp ../../hlsdk/dlls/extdll.h \
+  ../../hlsdk/public/archtypes.h ../../hlsdk/public/steam/steamtypes.h \
+  ../../hlsdk/dlls/vector.h ../../hlsdk/common/const.h \
+  ../../hlsdk/common/in_buttons.h ../../hlsdk/engine/progdefs.h \
+  ../../hlsdk/engine/edict.h ../../hlsdk/engine/eiface.h \
+  ../../hlsdk/engine/custom.h ../../hlsdk/common/crc.h \
+  ../../hlsdk/common/cvardef.h ../../hlsdk/common/Sequence.h \
+  ../../hlsdk/dlls/cdll_dll.h ../metamod/dllapi.h ../metamod/sdk_util.h \
+  ../metamod/enginecallbacks.h ../../hlsdk/dlls/enginecallback.h \
+  ../../hlsdk/common/event_flags.h ../../hlsdk/dlls/util.h \
+  ../../hlsdk/dlls/activity.h ../metamod/osdep.h ../metamod/types_meta.h \
+  ../metamod/mreg.h ../metamod/log_meta.h ../metamod/meta_api.h \
+  ../metamod/engine_api.h ../metamod/plinfo.h ../metamod/mutil.h \
+  ../metamod/mhook.h ../metamod/vdate.h plugin.h info_name.h \
+  ../metamod/vers_meta.h log_plugin.h ../metamod/api_info.h
+debug.linux/vdate.o debug.darwin/vdate.o debug.win32/vdate.o:  vdate.cpp info_name.h ../metamod/vers_meta.h
+debug.linux/wdmisc.o debug.darwin/wdmisc.o debug.win32/wdmisc.o:  wdmisc.cpp ../../hlsdk/dlls/extdll.h \
+  ../../hlsdk/public/archtypes.h ../../hlsdk/public/steam/steamtypes.h \
+  ../../hlsdk/dlls/vector.h ../../hlsdk/common/const.h \
+  ../../hlsdk/common/in_buttons.h ../../hlsdk/engine/progdefs.h \
+  ../../hlsdk/engine/edict.h ../../hlsdk/engine/eiface.h \
+  ../../hlsdk/engine/custom.h ../../hlsdk/common/crc.h \
+  ../../hlsdk/common/cvardef.h ../../hlsdk/common/Sequence.h \
+  ../../hlsdk/dlls/cdll_dll.h ../metamod/meta_api.h ../metamod/dllapi.h \
+  ../metamod/sdk_util.h ../metamod/enginecallbacks.h \
+  ../../hlsdk/dlls/enginecallback.h ../../hlsdk/common/event_flags.h \
+  ../../hlsdk/dlls/util.h ../../hlsdk/dlls/activity.h ../metamod/osdep.h \
+  ../metamod/types_meta.h ../metamod/mreg.h ../metamod/log_meta.h \
+  ../metamod/engine_api.h ../metamod/plinfo.h ../metamod/mutil.h \
+  ../metamod/mhook.h ../metamod/vdate.h ../metamod/support_meta.h \
+  wdmisc.h plugin.h log_plugin.h ../metamod/api_info.h

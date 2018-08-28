@@ -1,0 +1,103 @@
+log_meta.h	//    META_DEBUG(3, ("return code: %d", ret)); 
+mlist.cpp	META_DEBUG(1, ("Couldn't add plugin '%s' to list; see log", pl_temp.desc));
+mlist.cpp	META_DEBUG(1, ("Couldn't find plugin that gave this loading request!"));
+mlist.cpp	META_DEBUG(1, ("Couldn't load plugin '%s'; see log", pl_added->desc));
+mlist.cpp	META_DEBUG(1, ("Couldn't resolve given path into a file: %s", pl_temp.file));
+mlist.cpp	META_DEBUG(1, ("Keeping plugin '%s'", iplug->desc));
+mlist.cpp	META_DEBUG(1, ("Loaded plugin '%s' successfully", pl_added->desc));
+mlist.cpp	META_DEBUG(1, ("Loading plugin '%s'", iplug->desc));
+mlist.cpp	META_DEBUG(1, ("Opened plugin '%s', but failed to attach; see log", pl_added->desc));
+mlist.cpp	META_DEBUG(1, ("Plugin '%s' already in current list; file=%s desc='%s'", 
+mlist.cpp	META_DEBUG(1, ("Plugin '%s' couldn't attach; only allowed %s", 
+mlist.cpp	META_DEBUG(1, ("Reloading plugin '%s'", iplug->desc));
+mlist.cpp	META_DEBUG(1, ("Retrying attach plugin '%s'", iplug->desc));
+mlist.cpp	META_DEBUG(1, ("Retrying unload plugin '%s'", iplug->desc));
+mlist.cpp	META_DEBUG(1, ("Unloading plugin '%s'", iplug->desc));
+mlist.cpp	META_DEBUG(1, ("ini: Plugin in line %d overrides existing plugin with lower platform specific level %d, ours %d",
+mlist.cpp	META_DEBUG(1, ("ini: Plugin in line %d overrides loading of plugin with lower platform specific level %d, ours %d",
+mlist.cpp	META_DEBUG(1, ("ini: Plugin in line %d should override existing plugin with lower platform specific level %d, ours %d. Unable to comply.",
+mlist.cpp	META_DEBUG(1, ("ini: Skipping plugin, line %d of %s: plugin with higher platform specific level already exists. (%d >= %d)",
+mlist.cpp	META_DEBUG(1, ("ini: Skipping plugin, line %d of %s: plugin with higher platform specific level already exists. (%d >= %d)",
+reg_support.cpp	META_DEBUG(1, ("Failed to find memloc for regcvar '%s'", 
+mplugin.cpp	META_DEBUG(1,("Unloaded plugin '%s'", desc));
+conf_meta.cpp	META_DEBUG(2, ("Loading from config file: %s", loadfile));
+metamod.cpp	META_DEBUG(2, ("No config.ini file found: %s", CONFIG_INI));
+mlist.cpp	META_DEBUG(2, ("ini: Plugin '%s' has newer file on disk", pl_found->desc));
+mplugin.cpp	META_DEBUG(2, ("Couldn't resolve '%s' to file", filename));
+mplugin.cpp	META_DEBUG(2, ("Resolved '%s' to file '%s'", filename, found));
+mplugin.cpp	META_DEBUG(2, ("dll: Delaying load plugin '%s'; can't attach now: allowed=%s; now=%s", 
+mplugin.cpp	META_DEBUG(2, ("dll: Delaying reload plugin '%s'; would not be able to reattach now: allowed=%s; now=%s", desc, str_loadable(), str_loadtime(now, SL_SIMPLE)));
+mplugin.cpp	META_DEBUG(2, ("dll: Delaying unload plugin '%s'; can't detach now: allowed=%s; now=%s", desc, str_unloadable(), str_loadtime(now, SL_SIMPLE)));
+mplugin.cpp	META_DEBUG(2, ("dll: Failed load plugin '%s'; can't attach now: allowed=%s; now=%s", 
+mplugin.cpp	META_DEBUG(2, ("dll: Failed reload plugin '%s'; would not be able to reattach now: allowed=%s; now=%s", desc, str_loadable(), str_loadtime(now, SL_SIMPLE)));
+mplugin.cpp	META_DEBUG(2, ("dll: Failed unload plugin '%s'; can't detach now: allowed=%s; now=%s", desc, str_unloadable(), str_loadtime(PT_ANYTIME, SL_SIMPLE)));
+mplugin.cpp	META_DEBUG(2, ("dll: Failed unload plugin '%s'; can't detach now: allowed=%s; now=%s", desc, str_unloadable(), str_loadtime(now, SL_SIMPLE)));
+mplugin.cpp	META_DEBUG(2, ("dll: Forced unload plugin '%s' overriding allowed times: allowed=%s; now=%s", desc, str_unloadable(), str_loadtime(now, SL_SIMPLE)));
+mplugin.cpp	META_DEBUG(2, ("dll: Forced unload plugin '%s' overriding failed detach"));
+mplugin.cpp	META_DEBUG(2, ("dll: Reload plugin '%s' overriding failed detach", desc));
+commands_meta.cpp	META_DEBUG(3, ("Required plugin '%s' found loaded and running.",
+conf_meta.cpp	META_DEBUG(3, ("set config bool: %s = %s", setp->name, 
+conf_meta.cpp	META_DEBUG(3, ("set config command: %s, %s", 
+conf_meta.cpp	META_DEBUG(3, ("set config cvar: %s = %s", optcvar->name, setstr));
+conf_meta.cpp	META_DEBUG(3, ("set config int: %s = %d", setp->name, *optval));
+conf_meta.cpp	META_DEBUG(3, ("set config path: %s = %s", setp->name, *optstr));
+conf_meta.cpp	META_DEBUG(3, ("set config string: %s = %s", setp->name, *optstr));
+dllapi.cpp	META_DEBUG(3, ("called: GetEntityAPI2; version=%d", *interfaceVersion));
+dllapi.cpp	META_DEBUG(3, ("called: GetEntityAPI; version=%d", interfaceVersion));
+engine_api.cpp	META_DEBUG(3, ("user message registered again: name=%s, msgid=%d", pszName, imsgid));
+game_support.cpp	META_DEBUG(3, ("Failed to install gamedll from cache: file %s not found in cache.\n", from) );
+game_support.cpp	META_DEBUG(3, ("Installing gamedll from cache: Failed to create file %s: %s\n", to, strerror(errno)) );
+metamod.cpp	META_DEBUG(3, ("Game: %s", GameDLL.name));
+metamod.cpp	META_DEBUG(3, ("dll: Game '%s': Called GiveFnptrsToDll", 
+metamod.cpp	META_DEBUG(3, ("dll: Game '%s': Found %s", gamedll.name, STR_GetFuncs)); \
+mplugin.cpp	META_DEBUG(3, ("dll: Note: Plugin '%s' interface version didn't match; expected %s, found %s", desc, META_INTERFACE_VERSION, info->ifvers));
+mplugin.cpp	META_DEBUG(3, ("dll: Plugin '%s': Found %s", desc, STR_GetFuncs)); \
+game_support.cpp	META_DEBUG(3,("Installing gamedll from chache: Failed to write all %d bytes to file, only %d written: %s\n",
+game_support.cpp	META_DEBUG(4, ("Checking for new version game DLL name '%s'.\n", strippedfn) );
+game_support.cpp	META_DEBUG(4, ("Checking for old version game DLL name '%s'.\n", knownfn) );
+game_support.cpp	META_DEBUG(4, ("Known game DLL name does not qualify for checking for a stripped version, skipping: '%s'.\n",
+mreg.cpp	META_DEBUG(4, ("Plugin reg_cmd '%s' called after unloaded; removed from list", name));
+reg_support.cpp	META_DEBUG(4, ("called: meta_AddServerCommand; cmd_name=%s, function=%d", cmd_name, function));
+reg_support.cpp	META_DEBUG(4, ("called: meta_CVarRegister; name=%s", pCvar->name));
+support_meta.cpp	META_DEBUG(4, ("Unable to get realpath for '%s': %s", buf,
+metamod.cpp	META_DEBUG(5, ("dll: Game '%s': No %s", gamedll.name, STR_GetFuncs)); \
+mplugin.cpp	META_DEBUG(5, ("dll: Plugin '%s': No %s", desc, STR_GetFuncs)); \
+mplugin.cpp	META_DEBUG(5, ("dll: no Meta_Init present in plugin '%s'", desc));
+mplugin.cpp	META_DEBUG(5, ("newer_file? file=%s; load=%d, file=%d; ctime=%d, mtime=%d",
+reg_support.cpp	META_DEBUG(5, ("called: meta_command_handler; arg0=%s args='%s'", CMD_ARGV(0), CMD_ARGS()));
+support_meta.cpp	META_DEBUG(5, ("Empty file: %s", buf));
+support_meta.cpp	META_DEBUG(5, ("Not a regular file: %s", buf));
+support_meta.cpp	META_DEBUG(5, ("Unable to stat '%s': %s", buf, strerror(errno)));
+dllapi.cpp	META_DEBUG(6, ("called: GetNewDLLFunctions; version=%d", *interfaceVersion));
+mplugin.cpp	META_DEBUG(6, ("dll: Plugin '%s': Called GiveFnptrsToDll()", desc));
+mplugin.cpp	META_DEBUG(6, ("dll: Plugin '%s': Called Meta_Attach() successfully", desc));
+mplugin.cpp	META_DEBUG(6, ("dll: Plugin '%s': Called Meta_Detach() successfully", desc));
+mplugin.cpp	META_DEBUG(6, ("dll: Plugin '%s': Called Meta_Init()", desc));
+mplugin.cpp	META_DEBUG(6, ("dll: Plugin '%s': Called Meta_Query() successfully", 
+mplugin.cpp	META_DEBUG(6, ("dll: Plugin '%s': Query successful", desc));
+mreg.cpp	META_DEBUG(6, ("Growing reg cmd list from %d to %d", size, newsize));
+mreg.cpp	META_DEBUG(6, ("Growing reg cvar list from %d to %d", size, newsize));
+studioapi.cpp	META_DEBUG(6, ("Calling Server_GetBlendingInterface"));
+studioapi.cpp	META_DEBUG(6, ("Couldn't find Server_GetBlendingInterface in game DLL '%s': %s", GameDLL.name, DLERROR()));
+studioapi.cpp	META_DEBUG(6, ("Looking up Server_GetBlendingInterface"));
+studioapi.cpp	META_DEBUG(6, ("Skipping Server_GetBlendingInterface; was previously found missing"));
+studioapi.cpp	META_DEBUG(6, ("called: Server_GetBlendingInterface; version=%d", version));
+mplugin.cpp	META_DEBUG(7, ("ini: Ignoring commented line: %s", line));
+mplugin.cpp	META_DEBUG(7, ("ini: Ignoring empty line: %s", line));
+mplugin.cpp	META_DEBUG(7, ("ini: Ignoring entry for %s", token));
+mutil.cpp	META_DEBUG(7, ("Calling game entity '%s' for plugin '%s'", entStr,
+linkent.cpp	META_DEBUG(8, ("Linking game entity '%s'", entStr));
+linkent.h	META_DEBUG(8, ("Linking plugin entity '%s'", entStr)); \
+mlist.cpp	META_DEBUG(8, ("DLFNAME failed to find memloc %d", memptr));
+mlist.cpp	META_DEBUG(8, ("Found loaded plugin %s", plist[i].file));
+mlist.cpp	META_DEBUG(8, ("Looking for loaded plugin with dlfnamepath: %s", findpath));
+mlist.cpp	META_DEBUG(8, ("No loaded plugin found with path: %s", findpath));
+mutil.cpp	META_DEBUG(8, ("Looking up game entity '%s' for plugin '%s'", entStr,
+mutil.cpp	META_DEBUG(8, ("Looking up usermsg id '%d' for plugin '%s'", msgid,
+mutil.cpp	META_DEBUG(8, ("Looking up usermsg name '%s' for plugin '%s'", msgname,
+osdep.h	META_DEBUG(8, ("normalize: %s", path));
+osdep.h	META_DEBUG(8, ("normalized: %s", path));
+linkent.cpp	META_DEBUG(9, ("Looking up game entity '%s'", entStr));
+linkent.cpp	META_DEBUG(9, ("Skipping entity '%s'; was previously found missing", entStr));
+linkent.h	META_DEBUG(9, ("Looking up plugin entity '%s'", entStr)); \
+mlist.cpp	META_DEBUG(9, ("Looking at: plugin %s loadedpath: %s", plist[i].file, plist[i].pathname));
