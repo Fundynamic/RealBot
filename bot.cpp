@@ -234,7 +234,7 @@ void cBot::SpawnInit() {
          buy_defusekit = true;
 	   }
    }
-   // 31.08.04 Frashman removed ipBuyGrenade*1.5
+
    if (RANDOM_LONG(0, 100) < ipBuyGrenade) {
       buy_grenade = true;
    }
@@ -602,8 +602,8 @@ void cBot::AimAtEnemy() {
       Aim(v_enemy);
       return;
    }
+
    // ------------------------ we can see enemy -------------------------
-   Vector vTarget;
    float fDistance;
    float fScale = 0.0;
 
@@ -612,6 +612,7 @@ void cBot::AimAtEnemy() {
 
    // Scale this
    fScale = fDistance / 4096;
+
    // 20/06/04 - stefan - and then i wondered, why would i limit fScale that much?
    // (fScale > 0.9)
    //cale = 0.9;
@@ -623,30 +624,29 @@ void cBot::AimAtEnemy() {
       fScale = 0.01;
 
    // Set target here
+   Vector vTarget;
    vTarget = pBotEnemy->v.origin;
 
    if (bot_skill <= 1)
-      vTarget =
-         pBotEnemy->v.origin + pBotEnemy->v.view_ofs * RANDOM_FLOAT(0.5,
-               1.1);
+      vTarget = pBotEnemy->v.origin + pBotEnemy->v.view_ofs * RANDOM_FLOAT(-0.5, 1.1); // aim for the head
    else if (bot_skill > 1 && bot_skill < 4)
-      vTarget =
-         pBotEnemy->v.origin + pBotEnemy->v.view_ofs + Vector(0, 0, -16);
-   else if (bot_skill > 3 && bot_skill < 5)
-      vTarget = pBotEnemy->v.origin;
-   else if (bot_skill > 4)
-      vTarget = pBotEnemy->v.origin + Vector(0, 0, -32);
+      vTarget = pBotEnemy->v.origin + pBotEnemy->v.view_ofs * RANDOM_FLOAT(-2.5, 2.5); // aim for the head more fuzzy
+   else
+      vTarget = pBotEnemy->v.origin; // aim for body
 
    // Based uppon how far, we make this fuzzy
    float fDx, fDy, fDz;
    fDx = fDy = fDz = 0.0;
 
-   // Add own fuzzyness here (based uppon distance)
+   // Add own fuzzyness here (based upon distance)
+
    // Equals SKILL
-   fDx = fDy = fDz = (bot_skill * fScale);
-   vTarget =
-      vTarget + Vector(RANDOM_FLOAT(-fDx, fDx), RANDOM_FLOAT(-fDy, fDy),
-                       RANDOM_FLOAT(-fDz, fDz));
+   fDx = fDy = fDz = ((bot_skill + 1) * fScale);
+   vTarget = vTarget + Vector(
+           RANDOM_FLOAT(-fDx, fDx),
+           RANDOM_FLOAT(-fDy, fDy),
+           RANDOM_FLOAT(-fDz, fDz)
+        );
 
    // Add Offset
    fDx = fpXOffset;
@@ -659,13 +659,16 @@ void cBot::AimAtEnemy() {
       vTarget + Vector(RANDOM_FLOAT(-fDx, fDx), RANDOM_FLOAT(-fDy, fDy),
                        RANDOM_FLOAT(-fDz, fDz));
 
-   // When holding a grenade, do this aiming.
-   if (current_weapon.iId == CS_WEAPON_HEGRENADE
-         || current_weapon.iId == CS_WEAPON_FLASHBANG) {
+   if (holdingGrenadeOrFlashbang()) {
+      // aim a bit higher
       vTarget = vTarget + Vector(0, 0, 50);
    }
 
    Aim(vTarget);                // Aim
+}
+
+bool cBot::holdingGrenadeOrFlashbang() const {
+   return current_weapon.iId == CS_WEAPON_HEGRENADE || current_weapon.iId == CS_WEAPON_FLASHBANG;
 }
 
 /******************************************************************************

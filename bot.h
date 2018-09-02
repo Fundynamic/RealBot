@@ -445,6 +445,8 @@ public:
    // --------------------
    // 01/07/04 - Add some debugging options
    void Dump();
+
+    bool holdingGrenadeOrFlashbang() const;
 };
 
 // new UTIL.CPP functions...
