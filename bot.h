@@ -151,6 +151,9 @@ bot_current_weapon_t;
  Bot is a class now 
  */
 class cBot {
+private:
+    int iGoalNode;               // Goal Node #
+
 public:
 
    // ------------------------
@@ -311,7 +314,6 @@ public:
    int msecval;
    // TheFatal - END
 
-   int iGoalNode;               // Goal Node #
    int iPreviousGoalNode;		// Previous goal
    int iCloseNode;				// The closest node to this bot.
    float fWanderTime;           // Wandering around time
@@ -426,6 +428,7 @@ public:
    void forgetPath();
 
    void setGoalNode(int value);
+   int getGoalNode();
 
    void rprint(char *Function, char *msg);
    void rprint(char *msg);

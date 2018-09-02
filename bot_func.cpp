@@ -541,7 +541,7 @@ void FUNC_HearingTodo(cBot * pBot) {
    if (action == 0) {
       etime = RANDOM_LONG(2, 6);
       pBot->f_camp_time = gpGlobals->time + etime;
-      pBot->iGoalNode = -1;
+      pBot->forgetGoal();
    } else if (action == 1) {
       etime = RANDOM_LONG(1, 7);
       pBot->f_walk_time = gpGlobals->time + etime;
@@ -832,7 +832,7 @@ void HostageNear(cBot * pBot) {
                pBot->f_wait_time = gpGlobals->time + 0.5;
             }
          }
-         pBot->iGoalNode = -1;
+         pBot->forgetGoal();
       }
    }                            //
 }                               // HostageNear()
@@ -944,6 +944,10 @@ bool BOT_DecideTakeCover(cBot * pBot) {
 
 // logs into a file
 void rblog(char *txt) {
+   // output to stdout
+   printf(txt);
+
+   // and to reallog file
    FILE *fplog;
    fplog = fopen("reallog.txt", "at");
 

@@ -523,474 +523,472 @@ void ClientCommand(edict_t * pEntity) {
 
 // TODO: Revise this method
 void StartFrame(void) {
-   if (gpGlobals->deathmatch) {
-      edict_t *pPlayer;
-      static float check_server_cmd = 0.0;
-      static int i, index, player_index, bot_index;
-      static float previous_time = -1.0;
-      static float client_update_time = 0.0;
-      clientdata_s cd;
-      char msg[256];
-      int count = 0;
-      int waits = 0;            // How many bots had to wait.
-
-      // When a user - or anything else - specified a higher number of 0 to
-      // kick bots, then we will do as told.
-      if (kick_amount_bots > 0) {
-         int kicking_team = 0;  // What team should we kick?
-
-         if (kick_bots_team == 0 || kick_bots_team == 6)        // No kick_bots_team so we get
-            kick_bots_team = 6 + RANDOM_LONG(0, 1);     // a default one! (random)
-
-         if (kick_bots_team == 6)       // Its random.. (5 means CT)
-         {
-            kicking_team = 1;
-            kick_bots_team++;
-         } else if (kick_bots_team == 7) {
-            kicking_team = 2;
-            kick_bots_team = 6;
-         } else
-            kicking_team = kick_bots_team;
-
-         if (kick_bots_team > 7)
-            kick_bots_team = 6;
-
-         if (kick_bots_team == 1)
-            kicking_team = 1;
-
-         if (kick_bots_team == 2)
-            kicking_team = 2;
-
-         for (i = 0; i < 32; i++) {
-            if (bots[i].bIsUsed)        // is this slot used?
-            {
-               char cmd[80];
-
-               if (bots[i].iTeam == kicking_team) {
-                  sprintf(cmd, "kick \"%s\"\n", bots[i].name);
-                  SERVER_COMMAND(cmd);  // kick the bot using (kick "name")
-                  break;
-               }
-
-            }                   // Used?
-         }                      // I
-
-         kick_amount_bots--;    // next frame we kick another bot
-      } else
-         kick_bots_team = 0;    // its always 0 when we have no one to kick
-
-      // if a new map has started then (MUST BE FIRST IN StartFrame)...
-      if ((gpGlobals->time + 0.1) < previous_time) {
-         check_server_cmd = 0.0;        // reset at start of map
-
-         count = 0;
-
-         // mark the bots as needing to be respawned...
-         for (index = 0; index < 32; index++) {
-            if (count >= prev_num_bots) {
-               bots[index].bIsUsed = false;
-               bots[index].respawn_state = RESPAWN_NONE;
-               bots[index].fKickTime = 0.0;
-            }
-
-            if (bots[index].bIsUsed)    // is this slot used?
-            {
-               bots[index].respawn_state = RESPAWN_NEED_TO_RESPAWN;
-               count++;
-            }
-            // check for any bots that were very recently kicked...
-            if ((bots[index].fKickTime + 5.0) > previous_time) {
-               bots[index].respawn_state = RESPAWN_NEED_TO_RESPAWN;
-               count++;
-            } else
-               bots[index].fKickTime = 0.0;     // reset to prevent false spawns later
-
-            // set the respawn time
-            if (IS_DEDICATED_SERVER())
-               respawn_time = gpGlobals->time + 5.0;
-            else
-               respawn_time = gpGlobals->time + 20.0;
-
-            // Send welcome message
-            welcome_sent = false;
-            welcome_time = 0.0;
-         }
-
-         NodeMachine.init_players();
-         NodeMachine.init_round();
-         NodeMachine.goals();
-         NodeMachine.goal_reset();
-
-         //ChatEngine.fThinkTimer = gpGlobals->time;
-         client_update_time = gpGlobals->time + 10.0;   // start updating client data again
-
-         bot_check_time = gpGlobals->time + 30.0;
-      }
-      //
-      // SEND WELCOME MESSAGE
-      //
-      if (welcome_sent == false) {
-         int iIndex = 0;
-         if (welcome_time == 0.0) {
-
-            // go through all clients (except bots)
-            for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
-               edict_t *pPlayer = INDEXENT(iIndex);
-               // skip invalid players
-               if ((pPlayer) && (!pPlayer->free)) {
-                  // we found a player which is alive. w00t
-                  welcome_time = gpGlobals->time + 10.0;
-                  break;
-               }
-            }
-         }
-
-         /*
-            if ((pHostEdict != NULL) && (welcome_sent == FALSE) &&
-            (welcome_time < 1.0))
-            {
-            // are they out of observer mode yet?
-            if (IsAlive(pHostEdict))
-            welcome_time = gpGlobals->time + 10.0;  // welcome in 10 seconds
-            }
-          */
-         if ((welcome_time > 0.0) && (welcome_time < gpGlobals->time)) {
-            // let's send a welcome message to this client...
-            char total_welcome[256];
-            sprintf(total_welcome,
-                    "RealBot - Version %s\nBy Stefan Hendriks\n", rb_version_nr);
-            int r, g, b;
-            /*
-               r = RANDOM_LONG(30, 255);
-               g = RANDOM_LONG(30, 255);
-               b = RANDOM_LONG(30, 255);
-
-               // Send to listen server
-               if (pHostEdict)
-               HUD_DrawString(r,g,b, total_welcome, pHostEdict);
-
-             */
-            for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
-               edict_t *pPlayer = INDEXENT(iIndex);
-               // skip invalid players and skip self (i.e. this bot)
-               if ((pPlayer) && (!pPlayer->free)) {
-                  // skip bots!
-                  if (UTIL_GetBotPointer(pPlayer))
-                     continue;
-
-                  // skip fake clients
-                  if ((pPlayer->v.flags & FL_THIRDPARTYBOT)
-                        || (pPlayer->v.flags & FL_FAKECLIENT))
-                     continue;
-
-                  // random color
-                  r = RANDOM_LONG(30, 255);
-                  g = RANDOM_LONG(30, 255);
-                  b = RANDOM_LONG(30, 255);
-                  HUD_DrawString(r, g, b, total_welcome, pPlayer);
-
-                  // use speak command
-                  if (pPlayer == pHostEdict)
-                     UTIL_SpeechSynth(pHostEdict, Game.RandomSentence());
-               }
-            }
-
-            welcome_sent = true;        // clear this so we only do it once
-            welcome_time = 0.0;
-         }
-      }
-
-      if (client_update_time <= gpGlobals->time) {
-         client_update_time = gpGlobals->time + 1.0;
-
-         for (i = 0; i < 32; i++) {
-            if (bots[i].bIsUsed) {
-               memset(&cd, 0, sizeof(cd));
-
-               MDLL_UpdateClientData(bots[i].pEdict, 1, &cd);
-
-               // see if a weapon was dropped...
-               if (bots[i].bot_weapons != cd.weapons) {
-                  bots[i].bot_weapons = cd.weapons;
-               }
-            }
-         }
-      }
-      // a few seconds after map load we assign goals
-      if (f_load_time < gpGlobals->time && f_load_time != 0.0) {
-         f_load_time = 0.0;     // do not load again
-         NodeMachine.goals();
-      }
-      // Fix kill all with new round
-      if (Game.NewRound()) {
-         // Send a message to clients about RealBot every round
-         if (Game.iVersionBroadcasting == BROADCAST_ROUND) {
-            welcome_sent = false;
-            welcome_time = gpGlobals->time + 2;
-         }
-
-         NodeMachine.init_round();
-         NodeMachine.save();    // save information
-         NodeMachine.experience_save();
-         NodeMachine.goals();
-         Game.bBombPlanted = false;
-         Game.vDroppedC4 = Vector(9999, 9999, 9999);
-         end_round = false;
-      }                         // new round - before any bots realized yet
-
-      // When min players is set
-      if (min_players > 0 && f_minplayers_think < gpGlobals->time) {
-         internet_play = false; // whatever they say, when there is min_players set
-         // there is NO simulated internet_play!
-         int iHumans = 0, iBots = 0;
-
-         // Search for human players, simple method...
-         for (int i = 1; i <= gpGlobals->maxClients; i++) {
-            edict_t *pPlayer = INDEXENT(i);
-            // skip invalid players and skip self (i.e. this bot)
-            if ((pPlayer) && (!pPlayer->free)) {
-               // a bot
-               if (UTIL_GetBotPointer(pPlayer) != NULL)
-                  iBots++;
-               else {
-                  if (pPlayer->v.flags & FL_CLIENT)
-                     iHumans++; // it is 'human' (well unless some idiot uses another bot, i cannot detect that!)
-
-               }
-
-
-            }
-         }
-
-         //char msg[80];
-         //sprintf (msg, "Humans in game %d, Bots in game %d, players forced %d\n", iHumans, iBots, min_players);
-         //SERVER_PRINT(msg);
-
-         // There are not enough humans, so add/remove bots
-         if (iHumans < min_players) {
-            int iTotal = iHumans + iBots;
-
-            //      char msg[80];
-
-            // total players is higher then min_players due BOTS, remove a bot
-            if (iTotal > min_players) {
-               // find one bot and remove it (one by one)
-               SERVER_PRINT
-               ("RBSERVER: Too many players, kicking one bot.\n");
-               kick_amount_bots = 1;
-            }
-            // total players is lower then min_players due BOTS, add a bot
-            else if (iTotal < min_players) {
-               // add a bot
-               SERVER_PRINT
-               ("RBSERVER: Too few player slots filled, adding one bot.\n");
-               Game.CreateBot(NULL, NULL, NULL, NULL, NULL);
-            }
-         } else {
-            if (num_bots > 0) {
-               // there are enough human players, remove any bot
-               kick_amount_bots = 32;
-            }
-         }
-         // 2 seconds thinking
-         f_minplayers_think = gpGlobals->time + 2;
-      }
-      // INTERNET MODE:
-      if (internet_play == false)
-         add_timer = gpGlobals->time + 2.0;
-      else                      // ------------ INTERNET MODE IS ON ------------
-      {
-         bool max_serverbots = true;    // Reached MAX bots?
-
-         // When MAX_BOTS disabled...
-         if (max_bots < 0)
-            max_serverbots = false;
-
-         // When MAX_BOTS enabled...
-         if (max_bots > -1)
-            if (num_bots < max_bots)
-               max_serverbots = false;  // we may add bots
-
-         if (max_serverbots == false)   // we may add bots
-            if (num_bots + 1 >= gpGlobals->maxClients)
-               max_serverbots = true;   // we are actually full. Give one player the chance to fill in
-
-         // Keep adding bots until 'full'
-         if (max_serverbots == false) {
-            if (add_timer < gpGlobals->time) {
-               add_timer =
-                  gpGlobals->time + RANDOM_LONG(internet_min_interval,
-                                                internet_max_interval);
-               internet_addbot = true;  // add a bot! w00t
-            }
-         }
-      }
-      if (internet_addbot) {
-         // When timer is set, create a new bot.
-         if (add_timer > gpGlobals->time && internet_addbot) {
-            internet_addbot = false;
-            Game.CreateBot(NULL, NULL, NULL, NULL, NULL);
-            bot_check_time = gpGlobals->time + 5.0;
-         }
-
-      }
-      // We have updated our 'goal' waypoints. Now we can change goals.
-      NodeMachine.players_plot();       // NODE MACHINE, PLAYERS PLOT THE HELL OUTTA HERE
-      count = 0;
-      waits = 0;
-
-      // -------------------------------------------------------------
-      // GAME : Update game status first, before we go think about it
-      // -------------------------------------------------------------
-      Game.UpdateGameStatus();
-      for (bot_index = 0; bot_index < gpGlobals->maxClients; bot_index++) {
-         if ((bots[bot_index].bIsUsed) &&       // is this slot used AND
-               (bots[bot_index].respawn_state == RESPAWN_IDLE))   // not respawning
-         {
-            BotThink(&bots[bot_index]);
-            count++;
-         }
-      }                         // FOR
-
-
-      // -------------------------------------------------------------
-      // CHATENGINE : Think now
-      // -------------------------------------------------------------
-      ChatEngine.think();
-
-      // Keep number of bots up-to-date.
-      if (count > num_bots)
-         num_bots = count;
-
-      // handle radio commands
-      if (radio_message) {
-         BotRadioAction();
-         radio_message = false;
-      }
-      // FIX: Suggested by Greg, unnescesary loops.
-      if (draw_nodes) {
-         for (player_index = 1; player_index <= gpGlobals->maxClients;
-               player_index++) {
-            pPlayer = INDEXENT(player_index);
-
-            if (pPlayer && !pPlayer->free) {
-               if (FBitSet(pPlayer->v.flags, FL_CLIENT)) {
-                  NodeMachine.draw(pPlayer);
-                  break;
-               }
-            }
-         }
-      }
-
-
-      if (draw_connodes) {
-         for (player_index = 1; player_index <= gpGlobals->maxClients;
-               player_index++) {
-            pPlayer = INDEXENT(player_index);
-
-            if (pPlayer && !pPlayer->free) {
-               if (FBitSet(pPlayer->v.flags, FL_CLIENT)) {
-                  NodeMachine.connections(pPlayer);
-                  break;
-               }
-            }
-         }
-      }
-      // Draw node path
-      if (draw_nodepath > -1) {
-         NodeMachine.path_draw(pHostEdict);
-      }
-      // Counter-Strike - A new round has started
-      if (Game.NewRound()) {
-         NodeMachine.scale_danger();    // Scale danger
-         NodeMachine.scale_contact();   // same for contact
-         Game.SetNewRound(false);
-      }
-      // are we currently respawning bots and is it time to spawn one yet?
-      if ((respawn_time > 1.0) && (respawn_time <= gpGlobals->time)) {
-         int index = 0;
-         // find bot needing to be respawned...
-         while ((index < 32)
-                && (bots[index].respawn_state != RESPAWN_NEED_TO_RESPAWN))
-            index++;
-
-         if (index < 32) {
-            bots[index].respawn_state = RESPAWN_IS_RESPAWNING;
-            bots[index].bIsUsed = false;        // free up this slot
-
-            // respawn 1 bot then wait a while (otherwise engine crashes)
-            // 01/07/04 - Stefan - Thanks Evy for pointing out this one: On skill 10
-            // the c_skill (was [2]) would be messed up (perhaps this is some memory related bug  later on?)
-            char c_skill[3];
-            char c_team[2];
-            char c_class[3];
-
-            sprintf(c_skill, "%d", bots[index].bot_skill);
-            sprintf(c_team, "%d", bots[index].iTeam);
-            sprintf(c_class, "%d", bots[index].bot_class);
-
-            Game.CreateBot(NULL, c_team, c_skill, c_class,
-                           bots[index].name);
-
-            // 01/07/04 - Stefan - make 100% sure we do not crash on this part with the auto-add function
-            f_minplayers_think = gpGlobals->time + 15;  // do not check this for 15 seconds from now
-
-            respawn_time = gpGlobals->time + 2.0;       // set next respawn time
-            bot_check_time = gpGlobals->time + 5.0;
-         } else {
-            respawn_time = 0.0;
-         }
-      }
-
-      if (g_GameRules) {
-         if (need_to_open_cfg)  // have we open bot.cfg file yet?
-         {
-            char filename[256];
-
-            need_to_open_cfg = FALSE;   // only do this once!!!
-
-            UTIL_BuildFileNameRB("bot.cfg", filename);
-
-            sprintf(msg, "Executing %s\n", filename);
-            ALERT(at_console, msg);
-
-            bot_cfg_fp = fopen(filename, "r");
-
-            if (bot_cfg_fp == NULL)
-               ALERT(at_console, "bot.cfg file not found\n");
-
-            if (IS_DEDICATED_SERVER())
-               bot_cfg_pause_time = gpGlobals->time + 5.0;
-            else
-               bot_cfg_pause_time = gpGlobals->time + 20.0;
-         }
-
-         if (!IS_DEDICATED_SERVER() && !spawn_time_reset) {
-            if (pHostEdict != NULL) {
-               if (IsAlive(pHostEdict)) {
-                  spawn_time_reset = TRUE;
-
-                  if (respawn_time >= 1.0)
-                     respawn_time = min(respawn_time, gpGlobals->time + (float) 1.0);
-
-                  if (bot_cfg_pause_time >= 1.0)
-                     bot_cfg_pause_time =
-                        min(bot_cfg_pause_time,
-                            gpGlobals->time + (float) 1.0);
-               }
-            }
-         }
-         // DO BOT.CFG crap here
-         if ((bot_cfg_fp) && (bot_cfg_pause_time >= 1.0)
-               && (bot_cfg_pause_time <= gpGlobals->time)) {
-            // process bot.cfg file options...
-            ProcessBotCfgFile();
-         }
-
-      }
-
-      previous_time = gpGlobals->time;
-   }
+  if (!gpGlobals->deathmatch) return; // bots only work in 'deathmatch mode'
+
+  edict_t *pPlayer;
+  static float check_server_cmd = 0.0;
+  static int i, index, player_index, bot_index;
+  static float previous_time = -1.0;
+  static float client_update_time = 0.0;
+  clientdata_s cd;
+  char msg[256];
+  int count = 0;
+  int waits = 0;            // How many bots had to wait.
+
+  // When a user - or anything else - specified a higher number of 0 to
+  // kick bots, then we will do as told.
+  if (kick_amount_bots > 0) {
+     int kicking_team = 0;  // What team should we kick?
+
+     if (kick_bots_team == 0 || kick_bots_team == 6)        // No kick_bots_team so we get
+        kick_bots_team = 6 + RANDOM_LONG(0, 1);             // a default one! (random)
+
+     if (kick_bots_team == 6)       // Its random.. (5 means CT)
+     {
+        kicking_team = 1;
+        kick_bots_team++;
+     } else if (kick_bots_team == 7) {
+        kicking_team = 2;
+        kick_bots_team = 6;
+     } else
+        kicking_team = kick_bots_team;
+
+     if (kick_bots_team > 7)
+        kick_bots_team = 6;
+
+     if (kick_bots_team == 1)
+        kicking_team = 1;
+
+     if (kick_bots_team == 2)
+        kicking_team = 2;
+
+     for (i = 0; i < 32; i++) {
+        if (bots[i].bIsUsed)        // is this slot used?
+        {
+           char cmd[80];
+
+           if (bots[i].iTeam == kicking_team) {
+              sprintf(cmd, "kick \"%s\"\n", bots[i].name);
+              SERVER_COMMAND(cmd);  // kick the bot using (kick "name")
+              break;
+           }
+
+        }                   // Used?
+     }                      // I
+
+     kick_amount_bots--;    // next frame we kick another bot
+  } else
+     kick_bots_team = 0;    // its always 0 when we have no one to kick
+
+  // if a new map has started then (MUST BE FIRST IN StartFrame)...
+  if ((gpGlobals->time + 0.1) < previous_time) {
+     check_server_cmd = 0.0;        // reset at start of map
+
+     count = 0;
+
+     // mark the bots as needing to be respawned...
+     for (index = 0; index < 32; index++) {
+        if (count >= prev_num_bots) {
+           bots[index].bIsUsed = false;
+           bots[index].respawn_state = RESPAWN_NONE;
+           bots[index].fKickTime = 0.0;
+        }
+
+        if (bots[index].bIsUsed)    // is this slot used?
+        {
+           bots[index].respawn_state = RESPAWN_NEED_TO_RESPAWN;
+           count++;
+        }
+        // check for any bots that were very recently kicked...
+        if ((bots[index].fKickTime + 5.0) > previous_time) {
+           bots[index].respawn_state = RESPAWN_NEED_TO_RESPAWN;
+           count++;
+        } else
+           bots[index].fKickTime = 0.0;     // reset to prevent false spawns later
+
+        // set the respawn time
+        if (IS_DEDICATED_SERVER())
+           respawn_time = gpGlobals->time + 5.0;
+        else
+           respawn_time = gpGlobals->time + 20.0;
+
+        // Send welcome message
+        welcome_sent = false;
+        welcome_time = 0.0;
+     }
+
+     NodeMachine.init_players();
+     NodeMachine.init_round();
+     NodeMachine.goals();
+     NodeMachine.goal_reset();
+
+     //ChatEngine.fThinkTimer = gpGlobals->time;
+     client_update_time = gpGlobals->time + 10.0;   // start updating client data again
+
+     bot_check_time = gpGlobals->time + 30.0;
+  }
+  //
+  // SEND WELCOME MESSAGE
+  //
+  if (welcome_sent == false) {
+     int iIndex = 0;
+     if (welcome_time == 0.0) {
+
+        // go through all clients (except bots)
+        for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
+           edict_t *pPlayer = INDEXENT(iIndex);
+           // skip invalid players
+           if ((pPlayer) && (!pPlayer->free)) {
+              // we found a player which is alive. w00t
+              welcome_time = gpGlobals->time + 10.0;
+              break;
+           }
+        }
+     }
+
+     /*
+        if ((pHostEdict != NULL) && (welcome_sent == FALSE) &&
+        (welcome_time < 1.0))
+        {
+        // are they out of observer mode yet?
+        if (IsAlive(pHostEdict))
+        welcome_time = gpGlobals->time + 10.0;  // welcome in 10 seconds
+        }
+      */
+     if ((welcome_time > 0.0) && (welcome_time < gpGlobals->time)) {
+        // let's send a welcome message to this client...
+        char total_welcome[256];
+        sprintf(total_welcome,
+                "RealBot - Version %s\nBy Stefan Hendriks\n", rb_version_nr);
+        int r, g, b;
+        /*
+           r = RANDOM_LONG(30, 255);
+           g = RANDOM_LONG(30, 255);
+           b = RANDOM_LONG(30, 255);
+
+           // Send to listen server
+           if (pHostEdict)
+           HUD_DrawString(r,g,b, total_welcome, pHostEdict);
+
+         */
+        for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
+           edict_t *pPlayer = INDEXENT(iIndex);
+           // skip invalid players and skip self (i.e. this bot)
+           if ((pPlayer) && (!pPlayer->free)) {
+              // skip bots!
+              if (UTIL_GetBotPointer(pPlayer))
+                 continue;
+
+              // skip fake clients
+              if ((pPlayer->v.flags & FL_THIRDPARTYBOT)
+                    || (pPlayer->v.flags & FL_FAKECLIENT))
+                 continue;
+
+              // random color
+              r = RANDOM_LONG(30, 255);
+              g = RANDOM_LONG(30, 255);
+              b = RANDOM_LONG(30, 255);
+              HUD_DrawString(r, g, b, total_welcome, pPlayer);
+
+              // use speak command
+              if (pPlayer == pHostEdict)
+                 UTIL_SpeechSynth(pHostEdict, Game.RandomSentence());
+           }
+        }
+
+        welcome_sent = true;        // clear this so we only do it once
+        welcome_time = 0.0;
+     }
+  }
+
+  if (client_update_time <= gpGlobals->time) {
+     client_update_time = gpGlobals->time + 1.0;
+
+     for (i = 0; i < 32; i++) {
+        if (bots[i].bIsUsed) {
+           memset(&cd, 0, sizeof(cd));
+
+           MDLL_UpdateClientData(bots[i].pEdict, 1, &cd);
+
+           // see if a weapon was dropped...
+           if (bots[i].bot_weapons != cd.weapons) {
+              bots[i].bot_weapons = cd.weapons;
+           }
+        }
+     }
+  }
+  // a few seconds after map load we assign goals
+  if (f_load_time < gpGlobals->time && f_load_time != 0.0) {
+     f_load_time = 0.0;     // do not load again
+     NodeMachine.goals();
+  }
+
+  // Fix kill all with new round
+  if (Game.NewRound()) {
+     // Send a message to clients about RealBot every round
+     if (Game.iVersionBroadcasting == BROADCAST_ROUND) {
+        welcome_sent = false;
+        welcome_time = gpGlobals->time + 2;
+     }
+
+     NodeMachine.init_round();
+     NodeMachine.save();    // save information
+     NodeMachine.experience_save();
+     NodeMachine.goals();
+     Game.bBombPlanted = false;
+     Game.vDroppedC4 = Vector(9999, 9999, 9999);
+     end_round = false;
+  } // new round - before any bots realized yet
+
+  // When min players is set
+  if (min_players > 0 && f_minplayers_think < gpGlobals->time) {
+     internet_play = false; // whatever they say, when there is min_players set
+     // there is NO simulated internet_play!
+     int iHumans = 0, iBots = 0;
+
+     // Search for human players, simple method...
+     for (int i = 1; i <= gpGlobals->maxClients; i++) {
+        edict_t *pPlayer = INDEXENT(i);
+        // skip invalid players and skip self (i.e. this bot)
+        if ((pPlayer) && (!pPlayer->free)) {
+           // a bot
+           if (UTIL_GetBotPointer(pPlayer) != NULL)
+              iBots++;
+           else {
+              if (pPlayer->v.flags & FL_CLIENT)
+                 iHumans++; // it is 'human' (well unless some idiot uses another bot, i cannot detect that!)
+           }
+        }
+     }
+
+     //char msg[80];
+     //sprintf (msg, "Humans in game %d, Bots in game %d, players forced %d\n", iHumans, iBots, min_players);
+     //SERVER_PRINT(msg);
+
+     // There are not enough humans, so add/remove bots
+     if (iHumans < min_players) {
+        int iTotal = iHumans + iBots;
+
+        //      char msg[80];
+
+        // total players is higher then min_players due BOTS, remove a bot
+        if (iTotal > min_players) {
+           // find one bot and remove it (one by one)
+           SERVER_PRINT
+           ("RBSERVER: Too many players, kicking one bot.\n");
+           kick_amount_bots = 1;
+        }
+        // total players is lower then min_players due BOTS, add a bot
+        else if (iTotal < min_players) {
+           // add a bot
+           SERVER_PRINT
+           ("RBSERVER: Too few player slots filled, adding one bot.\n");
+           Game.CreateBot(NULL, NULL, NULL, NULL, NULL);
+        }
+     } else {
+        if (num_bots > 0) {
+           // there are enough human players, remove any bot
+           kick_amount_bots = 32;
+        }
+     }
+     // 2 seconds thinking
+     f_minplayers_think = gpGlobals->time + 2;
+  }
+  // INTERNET MODE:
+  if (internet_play == false)
+     add_timer = gpGlobals->time + 2.0;
+  else                      // ------------ INTERNET MODE IS ON ------------
+  {
+     bool max_serverbots = true;    // Reached MAX bots?
+
+     // When MAX_BOTS disabled...
+     if (max_bots < 0)
+        max_serverbots = false;
+
+     // When MAX_BOTS enabled...
+     if (max_bots > -1)
+        if (num_bots < max_bots)
+           max_serverbots = false;  // we may add bots
+
+     if (max_serverbots == false)   // we may add bots
+        if (num_bots + 1 >= gpGlobals->maxClients)
+           max_serverbots = true;   // we are actually full. Give one player the chance to fill in
+
+     // Keep adding bots until 'full'
+     if (max_serverbots == false) {
+        if (add_timer < gpGlobals->time) {
+           add_timer =
+              gpGlobals->time + RANDOM_LONG(internet_min_interval,
+                                            internet_max_interval);
+           internet_addbot = true;  // add a bot! w00t
+        }
+     }
+  }
+  if (internet_addbot) {
+     // When timer is set, create a new bot.
+     if (add_timer > gpGlobals->time && internet_addbot) {
+        internet_addbot = false;
+        Game.CreateBot(NULL, NULL, NULL, NULL, NULL);
+        bot_check_time = gpGlobals->time + 5.0;
+     }
+
+  }
+  // We have updated our 'goal' waypoints. Now we can change goals.
+  NodeMachine.players_plot();       // NODE MACHINE, PLAYERS PLOT THE HELL OUTTA HERE
+  count = 0;
+  waits = 0;
+
+  // -------------------------------------------------------------
+  // GAME : Update game status first, before we go think about it
+  // -------------------------------------------------------------
+  Game.UpdateGameStatus();
+  for (bot_index = 0; bot_index < gpGlobals->maxClients; bot_index++) {
+     if ((bots[bot_index].bIsUsed) &&       // is this slot used AND
+           (bots[bot_index].respawn_state == RESPAWN_IDLE))   // not respawning
+     {
+        BotThink(&bots[bot_index]);
+        count++;
+     }
+  }                         // FOR
+
+
+  // -------------------------------------------------------------
+  // CHATENGINE : Think now
+  // -------------------------------------------------------------
+  ChatEngine.think();
+
+  // Keep number of bots up-to-date.
+  if (count > num_bots)
+     num_bots = count;
+
+  // handle radio commands
+  if (radio_message) {
+     BotRadioAction();
+     radio_message = false;
+  }
+  // FIX: Suggested by Greg, unnescesary loops.
+  if (draw_nodes) {
+     for (player_index = 1; player_index <= gpGlobals->maxClients;
+           player_index++) {
+        pPlayer = INDEXENT(player_index);
+
+        if (pPlayer && !pPlayer->free) {
+           if (FBitSet(pPlayer->v.flags, FL_CLIENT)) {
+              NodeMachine.draw(pPlayer);
+              break;
+           }
+        }
+     }
+  }
+
+
+  if (draw_connodes) {
+     for (player_index = 1; player_index <= gpGlobals->maxClients;
+           player_index++) {
+        pPlayer = INDEXENT(player_index);
+
+        if (pPlayer && !pPlayer->free) {
+           if (FBitSet(pPlayer->v.flags, FL_CLIENT)) {
+              NodeMachine.connections(pPlayer);
+              break;
+           }
+        }
+     }
+  }
+  // Draw node path
+  if (draw_nodepath > -1) {
+     NodeMachine.path_draw(pHostEdict);
+  }
+  // Counter-Strike - A new round has started
+  if (Game.NewRound()) {
+     NodeMachine.scale_danger();    // Scale danger
+     NodeMachine.scale_contact();   // same for contact
+     Game.SetNewRound(false);
+  }
+  // are we currently respawning bots and is it time to spawn one yet?
+  if ((respawn_time > 1.0) && (respawn_time <= gpGlobals->time)) {
+     int index = 0;
+     // find bot needing to be respawned...
+     while ((index < 32)
+            && (bots[index].respawn_state != RESPAWN_NEED_TO_RESPAWN))
+        index++;
+
+     if (index < 32) {
+        bots[index].respawn_state = RESPAWN_IS_RESPAWNING;
+        bots[index].bIsUsed = false;        // free up this slot
+
+        // respawn 1 bot then wait a while (otherwise engine crashes)
+        // 01/07/04 - Stefan - Thanks Evy for pointing out this one: On skill 10
+        // the c_skill (was [2]) would be messed up (perhaps this is some memory related bug  later on?)
+        char c_skill[3];
+        char c_team[2];
+        char c_class[3];
+
+        sprintf(c_skill, "%d", bots[index].bot_skill);
+        sprintf(c_team, "%d", bots[index].iTeam);
+        sprintf(c_class, "%d", bots[index].bot_class);
+
+        Game.CreateBot(NULL, c_team, c_skill, c_class,
+                       bots[index].name);
+
+        // 01/07/04 - Stefan - make 100% sure we do not crash on this part with the auto-add function
+        f_minplayers_think = gpGlobals->time + 15;  // do not check this for 15 seconds from now
+
+        respawn_time = gpGlobals->time + 2.0;       // set next respawn time
+        bot_check_time = gpGlobals->time + 5.0;
+     } else {
+        respawn_time = 0.0;
+     }
+  }
+
+  if (g_GameRules) {
+     if (need_to_open_cfg)  // have we open bot.cfg file yet?
+     {
+        char filename[256];
+
+        need_to_open_cfg = FALSE;   // only do this once!!!
+
+        UTIL_BuildFileNameRB("bot.cfg", filename);
+
+        sprintf(msg, "Executing %s\n", filename);
+        ALERT(at_console, msg);
+
+        bot_cfg_fp = fopen(filename, "r");
+
+        if (bot_cfg_fp == NULL)
+           ALERT(at_console, "bot.cfg file not found\n");
+
+        if (IS_DEDICATED_SERVER())
+           bot_cfg_pause_time = gpGlobals->time + 5.0;
+        else
+           bot_cfg_pause_time = gpGlobals->time + 20.0;
+     }
+
+     if (!IS_DEDICATED_SERVER() && !spawn_time_reset) {
+        if (pHostEdict != NULL) {
+           if (IsAlive(pHostEdict)) {
+              spawn_time_reset = TRUE;
+
+              if (respawn_time >= 1.0)
+                 respawn_time = min(respawn_time, gpGlobals->time + (float) 1.0);
+
+              if (bot_cfg_pause_time >= 1.0)
+                 bot_cfg_pause_time =
+                    min(bot_cfg_pause_time,
+                        gpGlobals->time + (float) 1.0);
+           }
+        }
+     }
+     // DO BOT.CFG crap here
+     if ((bot_cfg_fp) && (bot_cfg_pause_time >= 1.0)
+           && (bot_cfg_pause_time <= gpGlobals->time)) {
+        // process bot.cfg file options...
+        ProcessBotCfgFile();
+     }
+
+  }
+
+  previous_time = gpGlobals->time;
 
    RETURN_META(MRES_IGNORED);
 }

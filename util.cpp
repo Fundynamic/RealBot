@@ -858,8 +858,10 @@ int UTIL_GetGrenadeType(edict_t * pEntity) {
    if (strcmp(model_name, "models/w_smokegrenade.mdl") == 0)  return 3;       // SmokeGrenade
    if (strcmp(model_name, "models/w_c4.mdl") == 0)  return 4;                 // C4 Explosive
 
-   rblog("UTIL_GetGrenadeType unknown grenade model\n");
-   rblog(model_name);
+   char msg[255];
+   sprintf("UTIL_GetGrenadeType unknown grenade model : [%s]\n", model_name);
+   rblog(msg);
+
    return 0;
 }
 

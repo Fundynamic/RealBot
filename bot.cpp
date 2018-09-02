@@ -2135,6 +2135,7 @@ void cBot::setMoveSpeed(float value) {
 
 void cBot::startWandering(float time) {
    this->fWanderTime = gpGlobals->time + time;
+   setMoveSpeed(f_max_speed);
 }
 
 void cBot::stopMoving() {
@@ -2150,11 +2151,19 @@ void cBot::forgetPath() {
    NodeMachine.path_clear(this->iIndex);
 }
 
+int cBot::getGoalNode() {
+   return this->iGoalNode;
+}
+
 void cBot::setGoalNode(int value) {
     if (value < 0) {
-        rprint("setGoalNode()", "Setting a goal lower than 0, assuming this is not intentional");
+        rprint("setGoalNode()", "WARN: Setting a goal lower than 0, assuming this is not intentional");
     }
-   this->iGoalNode = value;
+    this->iGoalNode = value;
+
+    char msg[255];
+    sprintf(msg, "Setting a iGoalNode to node %d", value);
+    rprint("setGoalNode()", msg);
 }
 
 void cBot::rprint(char *Function, char *msg) {
@@ -3037,9 +3046,7 @@ bool BotRadioAction() {
                   unstood = true;
 
                   // get to the leader position
-                  BotPointer->iGoalNode =
-                     NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE * 2,
-                                       plr);
+                  BotPointer->setGoalNode(NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE * 2, plr));
                   BotPointer->bot_pathid = -1;
                }
 
@@ -3069,7 +3076,7 @@ bool BotRadioAction() {
 
                      unstood = true;
 
-                     BotPointer->iGoalNode = iBackupNode;
+                     BotPointer->setGoalNode(iBackupNode);
                      BotPointer->bot_pathid = -1;
                      BotPointer->f_camp_time = gpGlobals->time - 1;
                      BotPointer->f_walk_time = gpGlobals->time;
@@ -3099,7 +3106,7 @@ bool BotRadioAction() {
                   int iBackupNode = NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE, plr);
 
                   if (iBackupNode > -1) {
-                     BotPointer->iGoalNode = iBackupNode;
+                     BotPointer->setGoalNode(iBackupNode);
                      BotPointer->bot_pathid = -1;
                      BotPointer->f_camp_time = gpGlobals->time - 1;
                      BotPointer->f_walk_time = gpGlobals->time;
@@ -3116,12 +3123,12 @@ bool BotRadioAction() {
                // Go GO Go, stop camping, stop following, get the heck out of there!
                if (strstr(message, "#Go_go_go") != NULL) {
                   unstood = true;
-                  BotPointer->bot_pathid = -1;
+                  BotPointer->forgetPath();
                   BotPointer->f_camp_time = gpGlobals->time - 20;
                   BotPointer->f_cover_time = gpGlobals->time - 10;
                   BotPointer->f_hold_duck = gpGlobals->time - 10;
                   BotPointer->f_jump_time = gpGlobals->time - 10;
-                  BotPointer->iGoalNode = -1;
+                  BotPointer->forgetGoal();
                }
 
                if ((FUNC_DoRadio(BotPointer)) && (unstood)) {

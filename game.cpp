@@ -533,9 +533,11 @@ int cGame::CreateBot(edict_t * pPlayer, const char *arg1, const char *arg2,
 
 // Debug message
 void REALBOT_PRINT(cBot * pBot, char *Function, char *msg) {
-   // Message format:
+
+    // Message format:
    // Function name - [BOT NAME, BOT TEAM]: Message
-   char cMessage[256];
+
+   char cMessage[512];
    char team[9];
    char name[32];
 
