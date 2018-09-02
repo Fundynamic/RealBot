@@ -861,15 +861,14 @@ int UTIL_GetGrenadeType(edict_t *pEntity) {
    if (strcmp(model_name, "models/w_smokegrenade.mdl") == 0) return 3;       // SmokeGrenade
    if (strcmp(model_name, "models/w_c4.mdl") == 0) return 4;                 // C4 Explosive
 
-   if (strlen(model_name) == 0) {
-      rblog("UTIL_GetGrenadeType model was empty string");
-      return 0;
+   char msg[512];
+   memset(msg, 0, sizeof(msg));
+
+   // when non empty string, let us know we missed something
+   if (!strlen(model_name) == 0) {
+       sprintf(msg, "UTIL_GetGrenadeType unknown grenade model : %s\n", model_name);
    }
 
-   char msg[512];
-   // clear first
-   memset(msg, 0, sizeof(msg));
-   sprintf(msg, "UTIL_GetGrenadeType unknown grenade model : %s\n", model_name);
    rblog(msg);
 
    return 0;
