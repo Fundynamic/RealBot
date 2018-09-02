@@ -846,20 +846,30 @@ void UTIL_BotRadioMessage(cBot * pBot, int radio, char *arg1, char *arg2) {
 //////////////////////////////////
 // UTIL_getGrenadeType function // - Stefan
 //////////////////////////////////
-int UTIL_GetGrenadeType(edict_t * pEntity) {
+int UTIL_GetGrenadeType(edict_t *pEntity) {
 
-   char model_name[32];
+   int length = 32;
 
-   strncpy(model_name, STRING(pEntity->v.model), 32 - 1);
-   model_name[32 - 1] = 0;      // Make sure it is NULL terminated
+   char model_name[length];
+   memset(model_name, 0, sizeof(model_name));
 
-   if (strcmp(model_name, "models/w_hegrenade.mdl") == 0)  return 1;          // He grenade
-   if (strcmp(model_name, "models/w_flashbang.mdl") == 0)  return 2;          // FlashBang
-   if (strcmp(model_name, "models/w_smokegrenade.mdl") == 0)  return 3;       // SmokeGrenade
-   if (strcmp(model_name, "models/w_c4.mdl") == 0)  return 4;                 // C4 Explosive
+   strncpy(model_name, STRING(pEntity->v.model), length - 1);
+   model_name[length - 1] = 0;      // Make sure it is NULL terminated
 
-   char msg[255];
-   sprintf("UTIL_GetGrenadeType unknown grenade model : [%s]\n", model_name);
+   if (strcmp(model_name, "models/w_hegrenade.mdl") == 0) return 1;          // He grenade
+   if (strcmp(model_name, "models/w_flashbang.mdl") == 0) return 2;          // FlashBang
+   if (strcmp(model_name, "models/w_smokegrenade.mdl") == 0) return 3;       // SmokeGrenade
+   if (strcmp(model_name, "models/w_c4.mdl") == 0) return 4;                 // C4 Explosive
+
+   if (strlen(model_name) == 0) {
+      rblog("UTIL_GetGrenadeType model was empty string");
+      return 0;
+   }
+
+   char msg[512];
+   // clear first
+   memset(msg, 0, sizeof(msg));
+   sprintf(msg, "UTIL_GetGrenadeType unknown grenade model : %s\n", model_name);
    rblog(msg);
 
    return 0;
