@@ -175,7 +175,7 @@ void cBot::SpawnInit() {
    pButtonEdict = NULL;
    pBotHostage = NULL;
    clearHostages();
-   pBotEnemy = NULL;
+   pEnemyEdict = NULL;
 
    // chat
    memset(chChatSentence, 0, sizeof(chChatSentence));
@@ -337,7 +337,7 @@ void cBot::NewRound() {
    pButtonEdict = NULL;
    pBotHostage = NULL;
    clearHostages();
-   pBotEnemy = NULL;
+   pEnemyEdict = NULL;
 
    // ------------------------
    // INTEGERS
@@ -349,7 +349,7 @@ void cBot::NewRound() {
    bot_health = 0;
    prev_health = 0;
    bot_armor = 0;
-   bot_weapons = 0;
+//   bot_weapons = 0; // <- stefan: prevent from buying new stuff every round!
    console_nr = 0;
    bot_pathid = -1;
    iGoalNode = -1;
@@ -512,6 +512,7 @@ int cBot::FindEnemy() {
          // skip this player if not alive (i.e. dead or dying)
          if (!IsAlive(pPlayer))
             continue;
+
          Vector vVecEnd = pPlayer->v.origin + pPlayer->v.view_ofs;
 
          // if bot can see the player...
@@ -541,7 +542,7 @@ int cBot::FindEnemy() {
    }                            // FOR
 
    // We found a new enemy & the new enemy is different then previous pointer
-   if ((pNewEnemy) && (pNewEnemy != pBotEnemy)) {
+   if ((pNewEnemy) && (pNewEnemy != pEnemyEdict)) {
       int iCurrentNode =   NodeMachine.getCloseNode(pEdict->v.origin, (NODE_ZONE * 2), pEdict);
 
 
@@ -553,8 +554,8 @@ int cBot::FindEnemy() {
       f_bot_find_enemy_time = gpGlobals->time + REMEMBER_ENEMY_TIME;
 
       // We did not have an enemy before
-      if (pBotEnemy == NULL) {
-         pBotEnemy = pNewEnemy;
+      if (pEnemyEdict == NULL) {
+         pEnemyEdict = pNewEnemy;
          f_bot_find_enemy_time = gpGlobals->time + REMEMBER_ENEMY_TIME; // Set timer
 
          // RADIO: When we found a NEW enemy but NOT via a friend
@@ -569,7 +570,7 @@ int cBot::FindEnemy() {
          iResult = 0;
       } else                    // we found an enemy that is newer/more dangerous then previous
       {
-         pBotEnemy = pNewEnemy; // Update pointer
+         pEnemyEdict = pNewEnemy; // Update pointer
          f_bot_find_enemy_time = gpGlobals->time + REMEMBER_ENEMY_TIME; // Set timer
          f_shoot_time = gpGlobals->time + ReactionTime(bot_skill);
          iResult = 3;           // we found a 'newer' enemy. Won't be doing anything in BotFight()
@@ -582,66 +583,88 @@ int cBot::FindEnemy() {
 /******************************************************************************
  Function purpose: Sets vHead to aim at vector
  ******************************************************************************/
-void cBot::Aim(Vector vTarget) {
+void cBot::setHeadAiming(Vector vTarget) {
    vHead = vTarget;
+}
+
+/**
+ * Returns true / false wether enemy is alive.
+ * @return
+ */
+bool cBot::isEnemyAlive() {
+   return IsAlive(pEnemyEdict);
+}
+
+bool cBot::canSeeEnemy() {
+   if (!hasEnemy()) {
+      this->rprint("canSeeEnemy called without having enemy?");
+      return false;
+   }
+
+   if (isBlindedByFlashbang()) {
+       return false;
+   }
+
+   Vector vBody = pEnemyEdict->v.origin;
+   Vector vHead =  pEnemyEdict->v.origin + pEnemyEdict->v.view_ofs;
+
+   bool bodyInFOV = FInViewCone(&vBody, pEdict) && FVisible(vBody, pEdict);
+   bool headInFOV = FInViewCone(&vHead, pEdict) && FVisible(vHead, pEdict);
+   if (bodyInFOV || headInFOV) {
+      return true;
+   }
+   return false;
 }
 
 /******************************************************************************
  Function purpose: Aims at enemy, only when valid. Based upon skill how it 'aims'
  ******************************************************************************/
 void cBot::AimAtEnemy() {
-   // No (valid) enem pointer? -> bail out
-   if (pBotEnemy == NULL)
+   if (!hasEnemy())
       return;
 
-   Vector vVecEnd = pBotEnemy->v.origin + pBotEnemy->v.view_ofs;
-
    // We cannot see our enemy? -> bail out
-   if ((fBlindedTime > gpGlobals->time) ||
-         (!(FInViewCone(&vVecEnd, pEdict) && FVisible(vVecEnd, pEdict)))) {
-      Aim(v_enemy);
+   if (canSeeEnemy()) {
+       setHeadAiming(v_enemy); // look at last known vector of enemy
       return;
    }
 
    // ------------------------ we can see enemy -------------------------
    float fDistance;
-   float fScale = 0.0;
 
    // Distance to enemy
-   fDistance = (pBotEnemy->v.origin - pEdict->v.origin).Length();
+   fDistance = (pEnemyEdict->v.origin - pEdict->v.origin).Length() + 1; // +1 to make sure we never divide by zero
 
-   // Scale this
-   fScale = fDistance / 4096;
+   // factor in distance, the further away the more deviation - which is based on skill
+   int skillReversed = (10 - bot_skill) + 1;
+   float fScale = 0.5 + (fDistance / (64 * skillReversed)); // a good skilled bot is less impacted by distance than a bad skilled bot
 
-   // 20/06/04 - stefan - and then i wondered, why would i limit fScale that much?
-   // (fScale > 0.9)
-   //cale = 0.9;
-
-   // Super skill requires little differentation
-   if (bot_skill == 0)
-      fScale = 0.05;
-   if (CarryWeaponType() == SNIPER)
-      fScale = 0.01;
+   if (CarryWeaponType() == SNIPER) fScale *= 0.80; // sniping improves aiming
 
    // Set target here
    Vector vTarget;
-   vTarget = pBotEnemy->v.origin;
-
    if (bot_skill <= 1)
-      vTarget = pBotEnemy->v.origin + pBotEnemy->v.view_ofs * RANDOM_FLOAT(-0.5, 1.1); // aim for the head
+      vTarget = pEnemyEdict->v.origin + pEnemyEdict->v.view_ofs * RANDOM_FLOAT(-0.5, 1.1); // aim for the head
    else if (bot_skill > 1 && bot_skill < 4)
-      vTarget = pBotEnemy->v.origin + pBotEnemy->v.view_ofs * RANDOM_FLOAT(-2.5, 2.5); // aim for the head more fuzzy
+      vTarget = pEnemyEdict->v.origin + pEnemyEdict->v.view_ofs * RANDOM_FLOAT(-2.5, 2.5); // aim for the head more fuzzy
    else
-      vTarget = pBotEnemy->v.origin; // aim for body
+      vTarget = pEnemyEdict->v.origin; // aim for body
 
    // Based uppon how far, we make this fuzzy
    float fDx, fDy, fDz;
-   fDx = fDy = fDz = 0.0;
-
-   // Add own fuzzyness here (based upon distance)
-
-   // Equals SKILL
    fDx = fDy = fDz = ((bot_skill + 1) * fScale);
+
+   // Example 1:
+   // Super skilled bot (bot_skill 1), with enemy of 2048 units away. Results into:
+   // skillReversed = (10 - 0 + 1) == 11
+   // fScale = 2048 / (128 * 11) -> 2048 / 1408 => 1.454545
+   // fd* = 0.5 + 1 * 1,95
+
+   // Example 2, less skilled bot (skill = 3) same enemy
+   // skillReversed = (10 - 3 + 1) == 8
+   // fScale = 2048 / (128 * 8) -> 2048 / 1024 => 2
+   // fd* = 3 * 2
+
    vTarget = vTarget + Vector(
            RANDOM_FLOAT(-fDx, fDx),
            RANDOM_FLOAT(-fDy, fDy),
@@ -653,18 +676,23 @@ void cBot::AimAtEnemy() {
    fDy = fpYOffset;
    fDz = fpZOffset;
 
-   // Add extra fuzzyness here (based uppon personality settings)
-   // Set extra offset
-   vTarget =
-      vTarget + Vector(RANDOM_FLOAT(-fDx, fDx), RANDOM_FLOAT(-fDy, fDy),
-                       RANDOM_FLOAT(-fDz, fDz));
+   // increase offset with personality x,y,z offsets randomly
+   vTarget = vTarget + Vector(
+           RANDOM_FLOAT(-fDx, fDx),
+           RANDOM_FLOAT(-fDy, fDy),
+           RANDOM_FLOAT(-fDz, fDz)
+       );
 
    if (holdingGrenadeOrFlashbang()) {
       // aim a bit higher
       vTarget = vTarget + Vector(0, 0, 50);
    }
 
-   Aim(vTarget);                // Aim
+    setHeadAiming(vTarget);
+}
+
+bool cBot::isBlindedByFlashbang() const {
+    return fBlindedTime > gpGlobals->time;
 }
 
 bool cBot::holdingGrenadeOrFlashbang() const {
@@ -677,7 +705,7 @@ bool cBot::holdingGrenadeOrFlashbang() const {
 void cBot::FightEnemy() {
 
    // INIT/START/PREPERATION
-   Vector vVecEnd = pBotEnemy->v.origin + pBotEnemy->v.view_ofs;
+   Vector vVecEnd = pEnemyEdict->v.origin + pEnemyEdict->v.view_ofs;
 
    // We can see our enemy
    if ((fBlindedTime < gpGlobals->time) &&
@@ -691,7 +719,7 @@ void cBot::FightEnemy() {
       bFirstOutOfSight = false;
 
       // UPDATE: Enemy position
-      v_enemy = pBotEnemy->v.origin;    // last seen enemy position
+      v_enemy = pEnemyEdict->v.origin;    // last seen enemy position
 
       // FIXME: Fix the darn zoom bug
       // zoom in with sniper gun
@@ -733,7 +761,7 @@ void cBot::FightEnemy() {
    {
       if (f_bot_find_enemy_time < gpGlobals->time) {
          //DebugOut("BotFightEnemy() : Lost enemy out of sight for 10 seconds.\n");
-         pBotEnemy = NULL;
+         pEnemyEdict = NULL;
          v_enemy = Vector(0, 0, 0);
          bot_pathid = -1;
          iGoalNode = -1;
@@ -755,7 +783,7 @@ void cBot::FightEnemy() {
                //
                UTIL_ClientPrintAll(HUD_PRINTNOTIFY,
                                    "Hmm, i am totally lost dude\n");
-               pBotEnemy = NULL;
+               pEnemyEdict = NULL;
             }
          }
          // Wants to camp
@@ -771,78 +799,90 @@ void cBot::FightEnemy() {
    }                            // visible
 }
 
+void cBot::pickWeapon(int weaponId) {
+   UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(weaponId));
+   f_c4_time = gpGlobals->time - 1;    // reset C4 timer data
+   // give Counter-Strike time to switch weapon (animation, update state, etc)
+   f_update_weapon_time = gpGlobals->time + 0.7;
+}
+
+bool cBot::ownsFavoritePrimaryWeapon() {
+   return hasFavoritePrimaryWeaponPreference() && ownsWeapon(ipFavoPriWeapon);
+}
+
+bool cBot::ownsFavoriteSecondaryWeapon() {
+   return hasFavoriteSecondaryWeaponPreference() && ownsWeapon(ipFavoSecWeapon);
+}
+
+/**
+ * Returns true if bot has weapon (id) in posession
+ * @param weaponId
+ * @return
+ */
+bool cBot::ownsWeapon(int weaponId) {
+   return bot_weapons & (1 << weaponId);
+}
+
+/**
+ * Returns true if bot carries weapon right now
+ * @param weaponId
+ * @return
+ */
+bool cBot::holdsWeapon(int weaponId) {
+   return (current_weapon.iId == weaponId);
+}
+
+bool cBot::hasFavoritePrimaryWeaponPreference() {
+   return ipFavoPriWeapon > -1;
+}
+
+bool cBot::hasFavoriteSecondaryWeaponPreference() {
+   return ipFavoSecWeapon > -1;
+}
+
+bool cBot::canAfford(int price) {
+   return this->bot_money > price;
+}
+
 /******************************************************************************
  Function purpose: Based upon several events pick the best weapon
  ******************************************************************************/
 void cBot::PickBestWeapon() {
+   // does Timer allow to change weapon? (only when f_update_weapon_time < gpGlobals->time
    if (f_update_weapon_time > gpGlobals->time)
       return;
 
    // Distance to enemy
-   float fDistance = 500;
-   bool bCanSeeEnemy = true;
+   float fDistance = func_distance(pEdict->v.origin, v_enemy);
 
-   if (pBotEnemy != NULL) {
-      fDistance = func_distance(pEdict->v.origin, pBotEnemy->v.origin);
-      Vector vVecEnd = pBotEnemy->v.origin + pBotEnemy->v.view_ofs;
+   float knifeDistance = 300;
 
-      // We cannot see our enemy? -> bail out
-      if (!(FInViewCone(&vVecEnd, pEdict) && FVisible(vVecEnd, pEdict))) {
-         bCanSeeEnemy = false;
-      }
-   }
    // ----------------------------
    // In this function all we do is decide what weapon to pick
    // if we don't pick another weapon the current weapon is okay
    // ----------------------------
 
    // First we handle situations which are bad, no matter the distance
-   // or any other sircumstance.
+   // or any other circumstance.
 
-   // Timer allows to change weapon
-   if (f_update_weapon_time < gpGlobals->time) {
-      // BAD: Carrying C4
-      if (CarryWeapon(CS_WEAPON_C4)) {
-         if (iPrimaryWeapon > -1) {
-            UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(iPrimaryWeapon));
-            f_c4_time = gpGlobals->time - 1;    // reset!
-            f_update_weapon_time = gpGlobals->time + 0.7;
-            return;
-         } else if (iSecondaryWeapon > -1)      // pick secondary
-         {
-            UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(iSecondaryWeapon));
-            f_c4_time = gpGlobals->time - 1;    // reset!
-            f_update_weapon_time = gpGlobals->time + 0.7;
-            return;
-         }
+   // BAD: Carrying C4 or knife
+   if (CarryWeapon(CS_WEAPON_C4) ||    // carrying C4
+      (CarryWeapon(CS_WEAPON_KNIFE) && fDistance > knifeDistance)) { // carrying knife and too far
+      if (hasPrimaryWeaponEquiped()) {
+         pickWeapon(iPrimaryWeapon);
+         return;
       }
-      // BAD: Carrying Knife
-      if (CarryWeapon(CS_WEAPON_KNIFE)) {
-         // TODO: Depending on distance pick knife or not. Could be fun to have bots
-         // kill someone with knife.
-         if (iPrimaryWeapon > -1) {
-            UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(iPrimaryWeapon));
-            f_c4_time = gpGlobals->time - 1;    // reset!
-            f_update_weapon_time = gpGlobals->time + 0.7;
-            return;
-         } else if (iSecondaryWeapon > -1)      // pick secondary
-         {
-            UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(iSecondaryWeapon));
-            f_c4_time = gpGlobals->time - 1;    // reset!
-            f_update_weapon_time = gpGlobals->time + 0.7;
-            return;
-         }
+      else if (hasSecondaryWeaponEquiped())
+      {
+         pickWeapon(iSecondaryWeapon);
+         return;
       }
-   } else {
-      // We still have to update weapon information
-      return;
    }
 
    // At this point we do not update weapon information. And we did not 'switch back' to primary / secondary
-
-   if (bCanSeeEnemy == false) {
+   if (hasEnemy() && !canSeeEnemy()) {
       // decision to pull HE grenade
-      if (FUNC_BotHasWeapon(this, CS_WEAPON_HEGRENADE) &&       // we have a grenade
+      if (ownsWeapon(CS_WEAPON_HEGRENADE) &&       // we have a grenade
             func_distance(pEdict->v.origin, v_enemy) < 900 &&     // we are close
             func_distance(pEdict->v.origin, v_enemy) > 200 &&     // but not to close
             RANDOM_LONG(0, 100) < 10 &&   // only randomly we pick a grenade in the heat of the battle
@@ -855,7 +895,7 @@ void cBot::PickBestWeapon() {
          return;
       }
       // OR we pull a flashbang?
-      if (FUNC_BotHasWeapon(this, CS_WEAPON_FLASHBANG) &&       // we have a grenade
+      if (ownsWeapon(CS_WEAPON_FLASHBANG) &&       // we have a grenade
             func_distance(pEdict->v.origin, v_enemy) < 200 &&     // we are close
             func_distance(pEdict->v.origin, v_enemy) > 300 &&     // but not to close
             RANDOM_LONG(0, 100) < 15 &&   // only randomly we pick a grenade in the heat of the battle
@@ -868,6 +908,7 @@ void cBot::PickBestWeapon() {
          return;
       }
    }
+
    // When we are here, we did not decide to switch to grenade/flashbang. Now we look
    // if the bot has to reload or switch weapon based upon ammo.
 
@@ -912,10 +953,10 @@ void cBot::PickBestWeapon() {
                UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(iSecondaryWeapon));  // select the secondary
                return;
             } else {
-               if (FUNC_BotHasWeapon(this, CS_WEAPON_KNIFE) &&  // we have a knife (for non-knife maps)
-                     current_weapon.iId != CS_WEAPON_KNIFE)       // that's not the current, empty knife (somehow, lol)
+               if (ownsWeapon(CS_WEAPON_KNIFE) &&  // we have a knife (for non-knife maps)
+                   !holdsWeapon(CS_WEAPON_KNIFE))  // but we do not carry it
                {
-                  UTIL_SelectItem(pEdict, "weapon_knife");      // slice and dice!
+                  UTIL_SelectItem(pEdict, "weapon_knife");
                   return;
                }
             }
@@ -929,36 +970,30 @@ void cBot::PickBestWeapon() {
  ******************************************************************************/
 void cBot::FireWeapon() {
    // We may not shoot!
-   if (f_shoot_time > gpGlobals->time
-         || f_update_weapon_time > gpGlobals->time)
+   if (f_shoot_time > gpGlobals->time || f_update_weapon_time > gpGlobals->time)
       return;
 
-   // When enemy last seen position differs from the exact location
-   if (pBotEnemy) {
-      // if (pBotEnemy->v.origin != v_enemy)
-      //   return;
-
-      // If we cannot see the enemy, then don't fire the weapon!
-      Vector vVecEnd = pBotEnemy->v.origin + pBotEnemy->v.view_ofs;
-
-      // see if bot can see the player...
-      if (!(FInViewCone(&vVecEnd, pEdict) && FVisible(vVecEnd, pEdict)))
-         return;
+   if (!canSeeEnemy()) {
+      return;
    }
+
    // ------------------------------------------------------------
    float fDistance = 50;
 
-   if (pBotEnemy != NULL)
-      fDistance = func_distance(pEdict->v.origin, pBotEnemy->v.origin);
+   if (hasEnemy()) {
+      fDistance = func_distance(pEdict->v.origin, pEnemyEdict->v.origin);
+   }
 
    // Depending on weapon type
    if (CarryWeaponType() == SECONDARY) {
       // We may shoot, use shooting rate.
       // TODO TODO TODO; Add shooting rates in BUYTABLE.INI
+
       if (f_sec_weapon < gpGlobals->time) {
          UTIL_BotPressKey(this, IN_ATTACK);
          f_sec_weapon = gpGlobals->time + RANDOM_FLOAT(0.05, 0.2);
       }
+
    } else if (CarryWeaponType() == PRIMARY) {
       // We may shoot, use shooting rate.
       // TODO TODO TODO: Add shooting rates in BUYTABLE.INI
@@ -1062,28 +1097,34 @@ void cBot::FireWeapon() {
  Function purpose: The combat brain of the bot ( called by Think() )
  ******************************************************************************/
 void cBot::Combat() {
+   if (!hasEnemy()) {
+      rprint("Unexpected call to Combat because bot has no enemy!");
+      return;
+   }
+
    // Bot is on ladder
    if (OnLadder()) {
       // TODO: Bot fights when on ladder
       return;
    }
-   // Enemy died
-   if (!IsAlive(pBotEnemy)) {
+
+   // We have an enemy and it is now dead
+   if (!isEnemyAlive()) {
 
       // radio (Enemy down)
-      if (FUNC_DoRadio(this))
+      if (FUNC_DoRadio(this)) {
          UTIL_BotRadioMessage(this, 3, "9", "");
+      }
 
       // get bot pointer
-      cBot *checkpointer = UTIL_GetBotPointer(pBotEnemy);
+      cBot *checkpointer = UTIL_GetBotPointer(pEnemyEdict);
 
       // This bot killed a human; adjust skill when 'autoskill' is on.
-      if ((checkpointer == NULL)) {
-         // auto skill
-         if (autoskill) {
-            // up skill
-            if (bot_skill < 10)
-               bot_skill++;
+      if (checkpointer == NULL) {
+
+         // increase bot_skill value when autoskill enabled (making bot weaker)
+         if (autoskill && bot_skill < 10) {
+            bot_skill++;
          }
 
          if (Game.iDeathsBroadcasting != BROADCAST_DEATHS_NONE) {
@@ -1093,26 +1134,27 @@ void cBot::Combat() {
             int g = RANDOM_LONG(30, 155);
             int b = RANDOM_LONG(30, 155);
             char msg[128];
-            if (Game.iDeathsBroadcasting == BROADCAST_DEATHS_FULL)
-               sprintf(msg,
-                       "A RealBot has killed you!\n\nName:%s\nSkill:%d\n",
-                       name, bot_skill);
-            else
+            if (Game.iDeathsBroadcasting == BROADCAST_DEATHS_FULL) {
+               sprintf(msg, "A RealBot has killed you!\n\nName:%s\nSkill:%d\n", name, bot_skill);
+            } else {
                sprintf(msg, "A RealBot named %s has killed you!", name);
+            }
 
-            HUD_DrawString(r, g, b, msg, pBotEnemy);
+            HUD_DrawString(r, g, b, msg, pEnemyEdict);
          }
       }
-      // clear the pointer for all other bots that may have this enemy bot pointer
-      FUNC_ClearEnemyPointer(pBotEnemy);
 
+      // clear the pointer for this and other bots that might have the same pEnemyEdict
+      FUNC_ClearEnemyPointer(pEnemyEdict);
 
       // from here react after kill...
-      iGoalNode = -1;           // clear goal & path
-      bot_pathid = -1;
+      forgetGoal();
+      forgetPath();
 
-      if (v_enemy != Vector(0, 0, 0))
+      if (v_enemy != Vector(0, 0, 0)) {
          vHead = v_enemy;
+      }
+
       v_enemy = Vector(0, 0, 0);
 
       // random waiting
@@ -1122,10 +1164,11 @@ void cBot::Combat() {
       if (RANDOM_LONG(0, 100) < ipFearRate)
          f_walk_time = gpGlobals->time + (1 + RANDOM_FLOAT(0.0, 2.0));
 
-      InteractWithPlayers();    // check any new enemy here immidiatly
+      InteractWithPlayers();    // check any new enemy here immediately
 
-      return;                   // Out of the function
+      return;
    }
+
    // ----------- combat
 
    // STEP 1: Pick best weapon to fight with
@@ -1243,7 +1286,7 @@ void cBot::FindCover() {
       }
    }
 
-   int iNodeEnemy = NodeMachine.getCloseNode(pBotEnemy->v.origin, 60, pBotEnemy);
+   int iNodeEnemy = NodeMachine.getCloseNode(pEnemyEdict->v.origin, 60, pEnemyEdict);
    int iNodeFrom = NodeMachine.getCloseNode(pEdict->v.origin, NODE_ZONE, pEdict);
 
    // --------------
@@ -1332,7 +1375,7 @@ void cBot::InteractWithFriends() {
             if (bClose) {
                if (pBotPointer->f_camp_time > gpGlobals->time
                      && pBotPointer->f_camp_time - 10 < gpGlobals->time
-                     && pBotPointer->pBotEnemy == NULL
+                     && pBotPointer->pEnemyEdict == NULL
                      && (RANDOM_LONG(0, 100) < ipCampRate
                          && FUNC_DoRadio(this))) {
                   // issue go go go
@@ -1351,7 +1394,7 @@ void cBot::InteractWithFriends() {
          // any player:
          if (bClose) {
             // some one is close,  need backup?
-            if (RANDOM_LONG(0, 100) < ipFearRate && pBotEnemy != NULL)
+            if (RANDOM_LONG(0, 100) < ipFearRate && pEnemyEdict != NULL)
                if (FUNC_DoRadio(this)) {
                   UTIL_BotRadioMessage(this, 3, "3", "");       // need backup
                }
@@ -1397,7 +1440,7 @@ void cBot::InteractWithPlayers() {
       } else {
 
          // For any weapon that has a silencer (the colt for example), use it if we want that.
-         if (FUNC_BotHoldsWeapon(this, CS_WEAPON_M4A1))
+         if (holdsWeapon(CS_WEAPON_M4A1))
             if (bot_use_special == 0 && zoomed == ZOOM_NONE
                   && f_allow_keypress < gpGlobals->time) {
                UTIL_BotPressKey(this, IN_ATTACK2);
@@ -1481,7 +1524,7 @@ void cBot::InteractWithPlayers() {
       }
       // INITIALIZATION:
       int iGoal =
-         NodeMachine.getCloseNode(pBotEnemy->v.origin, NODE_ZONE, pBotEnemy);
+         NodeMachine.getCloseNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
       if (iGoal > -1) {
          iGoalNode = iGoal;
          bot_pathid = -1;
@@ -1494,9 +1537,9 @@ void cBot::InteractWithPlayers() {
 
       // Does our enemy (when a bot) has focus on us?
       bool focused = false;
-      cBot *playerbot = UTIL_GetBotPointer(pBotEnemy);
+      cBot *playerbot = UTIL_GetBotPointer(pEnemyEdict);
       if (playerbot) {
-         if (playerbot->pBotEnemy == pEdict)
+         if (playerbot->pEnemyEdict == pEdict)
             focused = true;
       } else                      // Its a human
       {
@@ -1504,7 +1547,7 @@ void cBot::InteractWithPlayers() {
          // When we are in his 'sight' of 25 degrees , we are pretty
          // much focussed for a first encounter.
          if (FUNC_InFieldOfView
-               (pEdict, (pBotEnemy->v.origin - pEdict->v.origin)) < 25)
+               (pEdict, (pEnemyEdict->v.origin - pEdict->v.origin)) < 25)
             focused = true;
       }
 
@@ -1526,7 +1569,7 @@ void cBot::InteractWithPlayers() {
 
       // INITIALIZATION:
       int iGoal =
-         NodeMachine.getCloseNode(pBotEnemy->v.origin, NODE_ZONE, pBotEnemy);
+         NodeMachine.getCloseNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
 
       if (iGoal > -1) {
          iGoalNode = iGoal;
@@ -1818,6 +1861,7 @@ void cBot::Act() {
          memset(chChatSentence, 0, sizeof(chChatSentence));
       }
    }
+
    // camp
    if (f_camp_time > gpGlobals->time) {
       // When camping we duck and we don't move
@@ -1871,7 +1915,7 @@ void cBot::Act() {
             UTIL_BotPressKey(this, IN_ATTACK);  // plant it!
 
          // When we no longer have the C4 , we stop doing this stupid shit
-         if (FUNC_BotHasWeapon(this, CS_WEAPON_C4) == false) {
+         if (!hasBomb()) {
             f_c4_time = gpGlobals->time;
             iGoalNode = NodeMachine.getCloseNode(pEdict->v.origin, 200, pEdict);
             iPathFlags = PATH_CAMP;
@@ -2090,7 +2134,7 @@ void cBot::CheckAround() {
                // trace to vector to be sure we dont get blocked by anything else
                if (VectorIsVisibleWithEdict
                      (pEdict, vBreakableOrigin, "func_breakable")) {
-                  Aim(vBreakableOrigin);
+                   setHeadAiming(vBreakableOrigin);
                   FireWeapon();
                }
                return;
@@ -2124,7 +2168,7 @@ bool cBot::hasGoal() {
 
 // Returns true if bot has a path to follow
 bool cBot::hasEnemy() {
-   return this->pBotEnemy != NULL;
+   return this->pEnemyEdict != NULL;
 }
 
 // Returns true if bot has a path to follow
@@ -2169,16 +2213,16 @@ void cBot::setGoalNode(int value) {
     rprint("setGoalNode()", msg);
 }
 
-void cBot::rprint(char *Function, char *msg) {
+void cBot::rprint(const char *Function, const char *msg) {
     REALBOT_PRINT(this, Function, msg);
 }
 
-void cBot::rprint(char *msg) {
+void cBot::rprint(const char *msg) {
     REALBOT_PRINT(this, "rprint()", msg);
 }
 
 bool cBot::hasBomb() {
-    return FUNC_BotHasWeapon(this, CS_WEAPON_C4);
+    return ownsWeapon(CS_WEAPON_C4);
 }
 
 bool cBot::isCounterTerrorist() {
@@ -2188,6 +2232,265 @@ bool cBot::isCounterTerrorist() {
 bool cBot::isTerrorist() {
     return iTeam == 1;
 }
+
+bool cBot::hasPrimaryWeaponEquiped() {
+   return iPrimaryWeapon > -1;
+}
+
+bool cBot::hasSecondaryWeaponEquiped() {
+   return iSecondaryWeapon > -1;
+}
+
+bool cBot::hasSecondaryWeapon(int weaponId)  {
+   return ownsWeapon(weaponId);
+}
+
+void cBot::performBuyWeapon(const char *arg1, const char *arg2) {
+   // To be sure the console will only change when we MAY change.
+   // The values will only be changed when console_nr is 0
+   if (Game.RoundTime() + 4 < gpGlobals->time)
+      return;                   // Not valid to buy
+
+   if (this->console_nr == 0) {
+      // set up first command and argument
+      strcpy(this->arg1, "buy");
+      strcpy(this->arg2, arg1);
+
+      // add argument
+      if (arg2 != NULL)
+         strcpy(this->arg3, arg2);
+
+      this->console_nr = 1;     // start console command sequence
+   }
+}
+
+void cBot::performBuyActions(int weaponIdToBuy) {
+   if (weaponIdToBuy < 0) {
+      rprint("Asked to buy id < 0 , aborting!");
+      return;
+   }
+   // Buy...
+
+   // TODO
+   // FRASHMAN 30.08.04 haven't changed the cs 1.5 buycode, maybe there are also errors
+
+   // CS 1.5 only
+   if (counterstrike == 0) {
+      switch (weaponIdToBuy) {
+         case CS_WEAPON_AK47:
+            performBuyWeapon("4", "1");
+              break;
+         case CS_WEAPON_DEAGLE:
+            performBuyWeapon("1", "3");
+              break;
+         case CS_WEAPON_P228:
+            performBuyWeapon("1", "4");
+              break;
+         case CS_WEAPON_SG552:
+            performBuyWeapon("4", "2");
+              break;
+         case CS_WEAPON_SG550:
+            performBuyWeapon("4", "8");
+              break;
+         case CS_WEAPON_SCOUT:
+            performBuyWeapon("4", "5");
+              break;
+         case CS_WEAPON_AWP:
+            performBuyWeapon("4", "6");
+              break;
+         case CS_WEAPON_MP5NAVY:
+            performBuyWeapon("3", "1");
+              break;
+         case CS_WEAPON_UMP45:
+            performBuyWeapon("3", "5");
+              break;
+         case CS_WEAPON_ELITE:
+            performBuyWeapon("1", "5");
+              break;              // T only
+         case CS_WEAPON_MAC10:
+            performBuyWeapon("3", "4");
+              break;              // T only
+         case CS_WEAPON_AUG:
+            performBuyWeapon("4", "4");
+              break;              // CT Only
+         case CS_WEAPON_FIVESEVEN:
+            performBuyWeapon("1", "6");
+              break;              // CT only
+         case CS_WEAPON_M4A1:
+            performBuyWeapon("4", "3");
+              break;              // CT Only
+         case CS_WEAPON_TMP:
+            performBuyWeapon("3", "2");
+              break;              // CT only
+         case CS_WEAPON_HEGRENADE:
+            performBuyWeapon("8", "4");
+              break;
+         case CS_WEAPON_XM1014:
+            performBuyWeapon("2", "2");
+              break;
+         case CS_WEAPON_SMOKEGRENADE:
+            performBuyWeapon("8", "5");
+              break;
+         case CS_WEAPON_USP:
+            performBuyWeapon("1", "1");
+              break;
+         case CS_WEAPON_GLOCK18:
+            performBuyWeapon("1", "2");
+              break;
+         case CS_WEAPON_M249:
+            performBuyWeapon("5", "1");
+              break;
+         case CS_WEAPON_M3:
+            performBuyWeapon("2", "1");
+              break;
+
+         case CS_WEAPON_G3SG1:
+            performBuyWeapon("4", "7");
+              break;
+         case CS_WEAPON_FLASHBANG:
+            performBuyWeapon("8", "3");
+              break;
+         case CS_WEAPON_P90:
+            performBuyWeapon("3", "3");
+              break;
+
+              // Armor
+         case CS_WEAPON_ARMOR_LIGHT:
+            performBuyWeapon("8", "1");
+              break;
+         case CS_WEAPON_ARMOR_HEAVY:
+            performBuyWeapon("8", "2");
+              break;
+
+         case CS_DEFUSEKIT:
+            performBuyWeapon("8", "6");
+              break;
+      }
+   }
+
+   // CS 1.6 only
+   if (counterstrike == 1) { // FRASHMAN 30/08/04: redone switch block, it was full of errors
+      switch (weaponIdToBuy) {
+         //Pistols
+         case CS_WEAPON_GLOCK18:
+            performBuyWeapon("1", "1");
+              break;
+         case CS_WEAPON_USP:
+            performBuyWeapon("1", "2");
+              break;
+         case CS_WEAPON_P228:
+            performBuyWeapon("1", "3");
+              break;
+         case CS_WEAPON_DEAGLE:
+            performBuyWeapon("1", "4");
+              break;
+         case CS_WEAPON_ELITE:
+            performBuyWeapon("1", "5");
+              break;
+              //ShotGUNS
+         case CS_WEAPON_M3:
+            performBuyWeapon("2", "1");
+              break;
+         case CS_WEAPON_XM1014:
+            performBuyWeapon("2", "2");
+              break;
+              //SMG
+         case CS_WEAPON_MAC10:
+            performBuyWeapon("3", "1");
+              break;
+         case CS_WEAPON_TMP:
+            performBuyWeapon("3", "1");
+              break;
+         case CS_WEAPON_MP5NAVY:
+            performBuyWeapon("3", "2");
+              break;
+         case CS_WEAPON_UMP45:
+            performBuyWeapon("3", "3");
+              break;
+         case CS_WEAPON_P90:
+            performBuyWeapon("3", "4");
+              break;
+              //rifles
+         case CS_WEAPON_GALIL:
+            performBuyWeapon("4", "1");
+              break;
+         case CS_WEAPON_FAMAS:
+            performBuyWeapon("4", "1");
+              break;
+         case CS_WEAPON_AK47:
+            performBuyWeapon("4", "2");
+              break;
+         case CS_WEAPON_M4A1:
+            performBuyWeapon("4", "3");
+              break;
+         case CS_WEAPON_SG552:
+            performBuyWeapon("4", "4");
+              break;
+         case CS_WEAPON_AUG:
+            performBuyWeapon("4", "4");
+              break;
+         case CS_WEAPON_SG550:
+            performBuyWeapon("4", "5");
+              break;
+         case CS_WEAPON_G3SG1:
+            performBuyWeapon("4", "6");
+              break;
+              //machinegun
+         case CS_WEAPON_M249:
+            performBuyWeapon("5", "1");
+              break;
+              // equipment
+         case CS_WEAPON_ARMOR_LIGHT:
+            performBuyWeapon("8", "1");
+              break;
+         case CS_WEAPON_ARMOR_HEAVY:
+            performBuyWeapon("8", "2");
+              break;
+         case CS_WEAPON_FLASHBANG:
+            performBuyWeapon("8", "3");
+              break;
+         case CS_WEAPON_HEGRENADE:
+            performBuyWeapon("8", "4");
+              break;
+         case CS_WEAPON_SMOKEGRENADE:
+            performBuyWeapon("8", "5");
+              break;
+         case CS_WEAPON_SHIELD:
+            performBuyWeapon("8", "8");
+              break;
+
+         case CS_DEFUSEKIT:
+            performBuyWeapon("8", "6");
+              break;
+      }
+
+      // This differs per team
+      // FRASHMAN 30/08/04: all into one ifthen block
+      if (iTeam == 2)  // counter
+      {
+         switch (weaponIdToBuy) {
+            case CS_WEAPON_SCOUT:
+               performBuyWeapon("4", "2");
+                 break;
+            case CS_WEAPON_AWP:
+               performBuyWeapon("4", "6");
+                 break;
+                 //whats about nightvision? BuyWeapon (pBot, "8", "7")
+         }
+      } else                 // terror
+      {
+         switch (weaponIdToBuy) {
+            case CS_WEAPON_SCOUT:
+               performBuyWeapon("4", "3");
+                 break;
+            case CS_WEAPON_AWP:
+               performBuyWeapon("4", "5");
+                 break;
+                 //whats about nightvision? BuyWeapon (pBot, "8", "6")
+         }
+      }
+   }                         // end of cs 1.6 part
+}                            // We actually gonna buy this weapon
 
 // BOT: Memory()
 // In this function the bot will receive data; this can be any kind of data.
@@ -2204,7 +2507,7 @@ void cBot::Memory() {
 
    // Hear players: (loop through all players, determine if they are running and if
    // we can hear them (estimated distance)).
-   if (pBotEnemy == NULL) {
+   if (pEnemyEdict == NULL) {
       Vector vHear = Vector(9999, 9999, 9999);
       edict_t *pHearPlayer = NULL;
 
@@ -2648,7 +2951,7 @@ void cBot::Think() {
    // handle damage taken
    if (prev_health > bot_health
          && iChange > RANDOM_LONG(CSTRIKE_MIN_DAMAGE, CSTRIKE_MAX_DAMAGE)
-         && pBotEnemy != NULL) {
+         && pEnemyEdict != NULL) {
 
       // todo todo todo ?
       if (FUNC_DoRadio(this))
@@ -2743,7 +3046,7 @@ void cBot::Think() {
    // **---**---**---**---**---**---**
    // MAIN STATE: We have no enemy...
    // **---**---**---**---**---**---**
-   if (pBotEnemy == NULL) {
+   if (!hasEnemy()) {
       if (Game.bDoNotShoot == false) {
          InteractWithPlayers();
       }
@@ -2790,7 +3093,6 @@ void cBot::Think() {
       // Think about objectives
       ThinkAboutGoals();
    } else {
-
       // **---**---**---**---**---**---**
       // MAIN STATE: We have an enemy!
       // **---**---**---**---**---**---**
@@ -2807,7 +3109,9 @@ void cBot::Think() {
 
    // CHECKAROUND()
    CheckAround();
+
    // SITUATION: Passed Freezetime
+
 } // THINK()
 
 /**
@@ -2828,64 +3132,38 @@ void cBot::clearHostages() {
 void cBot::CheckGear() {
 
    // PRIMARY
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_mp5navy")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_mp5navy");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_ak47")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_ak47");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_m3")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m3");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_aug")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_aug");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_sg552")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_sg552");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_m249")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m249");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_xm1014")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_xm1014");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_p90")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_p90");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_tmp")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_tmp");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_m4a1")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m4a1");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_awp")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_awp");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_sg550")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_sg550");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_scout")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_scout");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_mac10")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_mac10");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_g3sg1")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_g3sg1");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_mp5navy"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_mp5navy");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_ak47")))    iPrimaryWeapon = UTIL_GiveWeaponId("weapon_ak47");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_m3")))      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m3");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_aug")))     iPrimaryWeapon = UTIL_GiveWeaponId("weapon_aug");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_sg552")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_sg552");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_m249")))    iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m249");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_xm1014")))  iPrimaryWeapon = UTIL_GiveWeaponId("weapon_xm1014");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_p90")))     iPrimaryWeapon = UTIL_GiveWeaponId("weapon_p90");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_tmp")))     iPrimaryWeapon = UTIL_GiveWeaponId("weapon_tmp");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_m4a1")))    iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m4a1");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_awp")))     iPrimaryWeapon = UTIL_GiveWeaponId("weapon_awp");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_sg550")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_sg550");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_scout")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_scout");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_mac10")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_mac10");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_g3sg1")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_g3sg1");
 
    // Counter-Strike 1.6 weapon FAMAS/GALIL
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_famas")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_famas");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_galil")))
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_galil");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_famas")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_famas");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_galil")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_galil");
 
    // SECONDARY
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_ump45")))
-      iSecondaryWeapon = UTIL_GiveWeaponId("weapon_ump45");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_elite")))
-      iSecondaryWeapon = UTIL_GiveWeaponId("weapon_elite");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_fiveseven")))
-      iSecondaryWeapon = UTIL_GiveWeaponId("weapon_fiveseven");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_p228")))
-      iSecondaryWeapon = UTIL_GiveWeaponId("weapon_p228");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_deagle")))
-      iSecondaryWeapon = UTIL_GiveWeaponId("weapon_deagle");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_usp")))
-      iSecondaryWeapon = UTIL_GiveWeaponId("weapon_usp");
-   if (FUNC_BotHasWeapon(this, UTIL_GiveWeaponId("weapon_glock18")))
-      iSecondaryWeapon = UTIL_GiveWeaponId("weapon_glock18");
-   // 30/07/04 by Josh
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_ump45")))   iSecondaryWeapon = UTIL_GiveWeaponId("weapon_ump45");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_elite")))   iSecondaryWeapon = UTIL_GiveWeaponId("weapon_elite");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_fiveseven")))  iSecondaryWeapon = UTIL_GiveWeaponId("weapon_fiveseven");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_p228")))    iSecondaryWeapon = UTIL_GiveWeaponId("weapon_p228");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_deagle")))  iSecondaryWeapon = UTIL_GiveWeaponId("weapon_deagle");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_usp")))     iSecondaryWeapon = UTIL_GiveWeaponId("weapon_usp");
+   if (ownsWeapon(UTIL_GiveWeaponId("weapon_glock18"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_glock18");
 
    // Handle shields as primary weapon
-   if (bHasShield())
-      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_shield");
-}  // CHECKGEAR()
+   if (bHasShield()) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_shield");
+}
 
 // BOT: Returns (vector) of any bombspot found within < fDistance
 Vector cBot::BombSpotNear(float fDistance) {
@@ -3214,8 +3492,7 @@ bool cBot::CanSeeEntity(edict_t * pEntity) {
    Vector vDest = pEntity->v.origin;
 
    // trace a line from bot's eyes to destination...
-   UTIL_TraceLine(start, vDest, ignore_monsters,
-                  pEdict->v.pContainingEntity, &tr);
+   UTIL_TraceLine(start, vDest, ignore_monsters, pEdict->v.pContainingEntity, &tr);
 
    if (tr.flFraction < 1.0) {
       // when the 'hit entity' is the same as pEntity, then its ok
@@ -3251,9 +3528,7 @@ bool cBot::CanSeeVector(Vector vDest) {
 // Whistler!
 bool cBot::bHasShield() {
    // Adapted from Wei Mingzhi's YAPB
-   return (strncmp
-           (STRING(pEdict->v.viewmodel), "models/shield/v_shield_",
-            23) == 0);
+   return (strncmp(STRING(pEdict->v.viewmodel), "models/shield/v_shield_", 23) == 0);
 }
 
 bool cBot::bHasShieldDrawn() {

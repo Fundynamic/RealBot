@@ -87,6 +87,9 @@
 #define CS_WEAPON_KNIFE         29
 #define CS_WEAPON_P90           30
 
+//30.8.04 redefined by frashman
+#define CS_DEFUSEKIT		    98      // old value was 99, same as SHIELD -> Bug??
+
 // NOT CONFIRMED
 #define CS_WEAPON_SHIELD        99      // Not used for detecting, only for
 // bot.dll

@@ -42,9 +42,6 @@ extern int counterstrike;
 
 extern cGame Game;
 
-//30.8.04 redefined by frashman
-#define CS_DEFUSEKIT		98      // old value was 99, same as SHIELD -> Bug??
-
 // Radio code
 extern bool radio_message;
 
@@ -64,7 +61,7 @@ int ListIdWeapon(int weapon_id) {
 }
 
 // The bot will be buying this weapon
-void BuyWeapon(cBot * pBot, char *arg1, char *arg2) {
+void BuyWeapon(cBot * pBot, const char *arg1, const char *arg2) {
    // To be sure the console will only change when we MAY change.
    // The values will only be changed when console_nr is 0
    if (Game.RoundTime() + 4 < gpGlobals->time)
@@ -161,42 +158,62 @@ bool GoodWeaponForTeam(int weapon, int team) {
  In this function the bot will choose what weapon to buy from the table.
  */
 void BotBuyStuff(cBot * pBot) {
+   /**
+    * Stefan 02/09/2018
+    *
+    * This function is called multiple frames. And it basically checks boolean flags (buy_*) method, if true
+    * then a weapon to buy is choosen. Once choosen it is bought. The flag which was 'true' now became 'false'.
+    *
+    * Then the next frame, the boolean flag before will become 'false' and thus another if block is executed.
+    *
+    * Effectively doing:
+    * - buy primary weapon first
+    * - then secondary
+    * - ammo for primary
+    * - ammo for secondary
+    * - armor
+    * - defuse kit
+    * - etc.
+    *
+    * the order of if statements is leading
+    *
+    * In other words, it needs refactoring...
+    *
+    */
    int money = pBot->bot_money; // Money
    int team = pBot->iTeam;      // Team
 
    int buy_weapon = -1;
 
-   // What to buy?
-   if (pBot->buy_primary == true) {
+   // Buy a primary weapon, think of the best choice
+   if (pBot->buy_primary) {
       // Buy primary
-      bool bBuyOther = true;
 
       // Personality related:
       // Check if we can buy our favorite weapon
-      if (pBot->ipFavoPriWeapon > -1) {
-         if (FUNC_BotHasWeapon(pBot, pBot->ipFavoPriWeapon) == false) {
-            if (GoodWeaponForTeam(pBot->ipFavoPriWeapon, pBot->iTeam))
-               if (PriceWeapon(pBot->ipFavoPriWeapon) <= money) {
-                  // Buy favorite weapon
-                  buy_weapon = pBot->ipFavoPriWeapon;
-                  bBuyOther = false;
-               } else {
-                  // We do here something to 'save' for our favorite weapon
-                  if (RANDOM_LONG(0, 100) < pBot->ipSaveForWeapon) {    // 31.08.04 Frashman forgotten brace
-                     pBot->buy_primary = false;
-                     bBuyOther = false;
-                     pBot->buy_secondary = false;       // don't buy a secondary
-                     return;    // get out of function, don't buy anything
-                  }
+      if (!pBot->ownsFavoritePrimaryWeapon()) {
+         if (GoodWeaponForTeam(pBot->ipFavoPriWeapon, pBot->iTeam)) { // can we buy it for this team?
+            if (pBot->canAfford(PriceWeapon(pBot->ipFavoPriWeapon))) { // can we afford it?
+               // Buy favorite weapon!
+               buy_weapon = pBot->ipFavoPriWeapon;
+            } else {
+               // bot personality: if we want to save money for our favorite weapon, then set other values to false
+               if (RANDOM_LONG(0, 100) < pBot->ipSaveForWeapon) {    // 31.08.04 Frashman forgotten brace
+                  pBot->buy_primary = false;
+                  pBot->buy_secondary = false;       // don't buy a secondary
+                  return;    // get out of function, don't buy anything
                }
-         } else {
-            pBot->buy_primary = false;  // already have our favorite weapon
-            bBuyOther = false;
-            return;             // get out of function, go buy a secondary weapon or something?
+            }
          }
+      } else {
+         // already have my favorite weapon
+         pBot->buy_primary = false; // do not buy a primary weapon
+         return;
       }
-      // Normal buy code
-      if (bBuyOther) {
+
+      // not decided what to buy yet
+      if (buy_weapon < 0) {
+
          // Find weapon we can buy in the list of weapons
          for (int i = 0; i < MAX_WEAPONS; i++) {
 
@@ -228,13 +245,12 @@ void BotBuyStuff(cBot * pBot) {
                   break;
             }
          }
-      }                         // Buy a primary weapon
-
+      }
 
       if (buy_weapon != -1) {
          pBot->buy_primary = false;
 
-         // depending on amount of money we have left buy a secondary weapon
+         // depending on amount of money we have left buy *also* secondary weapon
          int iMoneyLeft = money - PriceWeapon(buy_weapon);
 
          // TODO: this should be dependant on something else... not only money
@@ -245,34 +261,30 @@ void BotBuyStuff(cBot * pBot) {
                pBot->buy_secondary = true;
       }
 
-   } else if (pBot->buy_secondary == true) {
+   } else if (pBot->buy_secondary) {
       // Buy secondary
-      bool bBuyOther = true;
 
       // Personality related:
       // Check if we can buy our favorite weapon
-      if (pBot->ipFavoSecWeapon > -1) {
-         if (FUNC_BotHasWeapon(pBot, pBot->ipFavoSecWeapon) == false) {
-            if (GoodWeaponForTeam(pBot->ipFavoSecWeapon, pBot->iTeam))
-               if (PriceWeapon(pBot->ipFavoSecWeapon) < money) {
-                  // Buy favorite weapon
-                  buy_weapon = pBot->ipFavoPriWeapon;
-                  bBuyOther = false;
-               } else {
-                  // We do here something to 'save' for our favorite weapon
-                  if (RANDOM_LONG(0, 100) < pBot->ipSaveForWeapon) {    // 31.08.04 Frashman forgotten brace
-                     bBuyOther = false;
-                     pBot->buy_secondary = false;       // don't buy a secondary
-                     return;    // get out of function, don't buy anything
-                  }
+      if (!pBot->ownsFavoriteSecondaryWeapon()) {
+         if (GoodWeaponForTeam(pBot->ipFavoSecWeapon, pBot->iTeam)) {
+            if (pBot->canAfford(pBot->ipFavoSecWeapon)) {
+               // Buy favorite weapon
+               buy_weapon = pBot->ipFavoPriWeapon;
+            } else {
+               // We do here something to 'save' for our favorite weapon
+               if (RANDOM_LONG(0, 100) < pBot->ipSaveForWeapon) {    // 31.08.04 Frashman forgotten brace
+                  pBot->buy_secondary = false;       // don't buy a secondary
+                  return;    // get out of function, don't buy anything
                }
-         } else {
-            bBuyOther = false;
-            return;             // get out of function, go buy a secondary weapon or something?
+            }
          }
+      } else {
+         return;             // get out of function, go buy a secondary weapon or something?
       }
-      // Normal buy code
-      if (bBuyOther) {
+
+      // no weapon choosen to buy yet
+      if (buy_weapon < 0) {
          // Buy secondary
          // Find weapon we can buy in the list of weapons
          for (int i = 0; i < MAX_WEAPONS; i++) {
@@ -308,8 +320,9 @@ void BotBuyStuff(cBot * pBot) {
          }
       }
 
-      if (buy_weapon != -1)
+      if (buy_weapon != -1) {
          pBot->buy_secondary = false;
+      }
    } else if (pBot->buy_ammo_primary == true) {
       // Buy primary ammo
       BuyWeapon(pBot, "6", NULL);
@@ -360,230 +373,8 @@ void BotBuyStuff(cBot * pBot) {
       pBot->buy_smokegrenade = false;
    }
 
-   if (buy_weapon != -1) {
-      // Buy...
-
-      // TODO
-      // FRASHMAN 30.08.04 haven't changed the cs 1.5 buycode, maybe there are also errors
-
-      // CS 1.5 only
-      if (counterstrike == 0) {
-         switch (buy_weapon) {
-         case CS_WEAPON_AK47:
-            BuyWeapon(pBot, "4", "1");
-            break;
-         case CS_WEAPON_DEAGLE:
-            BuyWeapon(pBot, "1", "3");
-            break;
-         case CS_WEAPON_P228:
-            BuyWeapon(pBot, "1", "4");
-            break;
-         case CS_WEAPON_SG552:
-            BuyWeapon(pBot, "4", "2");
-            break;
-         case CS_WEAPON_SG550:
-            BuyWeapon(pBot, "4", "8");
-            break;
-         case CS_WEAPON_SCOUT:
-            BuyWeapon(pBot, "4", "5");
-            break;
-         case CS_WEAPON_AWP:
-            BuyWeapon(pBot, "4", "6");
-            break;
-         case CS_WEAPON_MP5NAVY:
-            BuyWeapon(pBot, "3", "1");
-            break;
-         case CS_WEAPON_UMP45:
-            BuyWeapon(pBot, "3", "5");
-            break;
-         case CS_WEAPON_ELITE:
-            BuyWeapon(pBot, "1", "5");
-            break;              // T only
-         case CS_WEAPON_MAC10:
-            BuyWeapon(pBot, "3", "4");
-            break;              // T only
-         case CS_WEAPON_AUG:
-            BuyWeapon(pBot, "4", "4");
-            break;              // CT Only
-         case CS_WEAPON_FIVESEVEN:
-            BuyWeapon(pBot, "1", "6");
-            break;              // CT only
-         case CS_WEAPON_M4A1:
-            BuyWeapon(pBot, "4", "3");
-            break;              // CT Only
-         case CS_WEAPON_TMP:
-            BuyWeapon(pBot, "3", "2");
-            break;              // CT only
-         case CS_WEAPON_HEGRENADE:
-            BuyWeapon(pBot, "8", "4");
-            break;
-         case CS_WEAPON_XM1014:
-            BuyWeapon(pBot, "2", "2");
-            break;
-         case CS_WEAPON_SMOKEGRENADE:
-            BuyWeapon(pBot, "8", "5");
-            break;
-         case CS_WEAPON_USP:
-            BuyWeapon(pBot, "1", "1");
-            break;
-         case CS_WEAPON_GLOCK18:
-            BuyWeapon(pBot, "1", "2");
-            break;
-         case CS_WEAPON_M249:
-            BuyWeapon(pBot, "5", "1");
-            break;
-         case CS_WEAPON_M3:
-            BuyWeapon(pBot, "2", "1");
-            break;
-
-         case CS_WEAPON_G3SG1:
-            BuyWeapon(pBot, "4", "7");
-            break;
-         case CS_WEAPON_FLASHBANG:
-            BuyWeapon(pBot, "8", "3");
-            break;
-         case CS_WEAPON_P90:
-            BuyWeapon(pBot, "3", "3");
-            break;
-
-            // Armor
-         case CS_WEAPON_ARMOR_LIGHT:
-            BuyWeapon(pBot, "8", "1");
-            break;
-         case CS_WEAPON_ARMOR_HEAVY:
-            BuyWeapon(pBot, "8", "2");
-            break;
-
-            // Defuse kit
-         case CS_DEFUSEKIT:
-            BuyWeapon(pBot, "8", "6");
-            break;
-         }
-      }
-      // CS 1.6 only
-      if (counterstrike == 1) { // FRASHMAN 30/08/04: redone switch block, it was full of errors
-         switch (buy_weapon) {
-            //Pistols
-         case CS_WEAPON_GLOCK18:
-            BuyWeapon(pBot, "1", "1");
-            break;
-         case CS_WEAPON_USP:
-            BuyWeapon(pBot, "1", "2");
-            break;
-         case CS_WEAPON_P228:
-            BuyWeapon(pBot, "1", "3");
-            break;
-         case CS_WEAPON_DEAGLE:
-            BuyWeapon(pBot, "1", "4");
-            break;
-         case CS_WEAPON_ELITE:
-            BuyWeapon(pBot, "1", "5");
-            break;
-            //ShotGUNS
-         case CS_WEAPON_M3:
-            BuyWeapon(pBot, "2", "1");
-            break;
-         case CS_WEAPON_XM1014:
-            BuyWeapon(pBot, "2", "2");
-            break;
-            //SMG
-         case CS_WEAPON_MAC10:
-            BuyWeapon(pBot, "3", "1");
-            break;
-         case CS_WEAPON_TMP:
-            BuyWeapon(pBot, "3", "1");
-            break;
-         case CS_WEAPON_MP5NAVY:
-            BuyWeapon(pBot, "3", "2");
-            break;
-         case CS_WEAPON_UMP45:
-            BuyWeapon(pBot, "3", "3");
-            break;
-         case CS_WEAPON_P90:
-            BuyWeapon(pBot, "3", "4");
-            break;
-            //rifles
-         case CS_WEAPON_GALIL:
-            BuyWeapon(pBot, "4", "1");
-            break;
-         case CS_WEAPON_FAMAS:
-            BuyWeapon(pBot, "4", "1");
-            break;
-         case CS_WEAPON_AK47:
-            BuyWeapon(pBot, "4", "2");
-            break;
-         case CS_WEAPON_M4A1:
-            BuyWeapon(pBot, "4", "3");
-            break;
-         case CS_WEAPON_SG552:
-            BuyWeapon(pBot, "4", "4");
-            break;
-         case CS_WEAPON_AUG:
-            BuyWeapon(pBot, "4", "4");
-            break;
-         case CS_WEAPON_SG550:
-            BuyWeapon(pBot, "4", "5");
-            break;
-         case CS_WEAPON_G3SG1:
-            BuyWeapon(pBot, "4", "6");
-            break;
-            //machinegun
-         case CS_WEAPON_M249:
-            BuyWeapon(pBot, "5", "1");
-            break;
-            // equipment
-         case CS_WEAPON_ARMOR_LIGHT:
-            BuyWeapon(pBot, "8", "1");
-            break;
-         case CS_WEAPON_ARMOR_HEAVY:
-            BuyWeapon(pBot, "8", "2");
-            break;
-         case CS_WEAPON_FLASHBANG:
-            BuyWeapon(pBot, "8", "3");
-            break;
-         case CS_WEAPON_HEGRENADE:
-            BuyWeapon(pBot, "8", "4");
-            break;
-         case CS_WEAPON_SMOKEGRENADE:
-            BuyWeapon(pBot, "8", "5");
-            break;
-         case CS_WEAPON_SHIELD:
-            BuyWeapon(pBot, "8", "8");
-            break;
-
-         case CS_DEFUSEKIT:
-            BuyWeapon(pBot, "8", "6");
-            break;
-         }
-
-         // This differs per team
-         // FRASHMAN 30/08/04: all into one ifthen block
-         if (pBot->iTeam == 2)  // counter
-         {
-            switch (buy_weapon) {
-            case CS_WEAPON_SCOUT:
-               BuyWeapon(pBot, "4", "2");
-               break;
-            case CS_WEAPON_AWP:
-               BuyWeapon(pBot, "4", "6");
-               break;
-               //whats about nightvision? BuyWeapon (pBot, "8", "7")
-            }
-         } else                 // terror
-         {
-            switch (buy_weapon) {
-            case CS_WEAPON_SCOUT:
-               BuyWeapon(pBot, "4", "3");
-               break;
-            case CS_WEAPON_AWP:
-               BuyWeapon(pBot, "4", "5");
-               break;
-               //whats about nightvision? BuyWeapon (pBot, "8", "6")
-            }
-         }
-      }                         // end of cs 1.6 part
-   }                            // We actually gonna buy this weapon
-
+   // Perform the actual buy commands to acquire weapon
+   pBot->performBuyActions(buy_weapon);
 }
 
 /*

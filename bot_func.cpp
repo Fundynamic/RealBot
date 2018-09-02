@@ -421,7 +421,7 @@ bool FUNC_ShouldTakeCover(cBot * pBot) {
    if (pBot->f_cover_time + 3 > gpGlobals->time)
       return false;
 
-   if (pBot->pBotEnemy == NULL)
+   if (pBot->pEnemyEdict == NULL)
       return false;
 
    // MONEY: The less we have, the more we want to take cover
@@ -438,20 +438,6 @@ bool FUNC_ShouldTakeCover(cBot * pBot) {
 
    // Fix #1 on taking cover
    pBot->f_cover_time = gpGlobals->time;        // wait 3 seconds before deciding again
-
-   return false;
-}
-
-bool FUNC_BotHasWeapon(cBot * pBot, int type) {
-   if (pBot->bot_weapons & (1 << type))
-      return true;
-   else
-      return false;
-}
-
-bool FUNC_BotHoldsWeapon(cBot * pBot, int type) {
-   if (pBot->current_weapon.iId == type)
-      return true;
 
    return false;
 }
@@ -561,31 +547,34 @@ void FUNC_HearingTodo(cBot * pBot) {
  *  Created : 16/11/2001
  *	Changed : 16/11/2001
  */
-void FUNC_ClearEnemyPointer(edict_t * pPtr) {
-   // Go through all bots and remove their enemy pointer that matches the given
-   // pointer pPtr
-   for (int i = 1; i <= gpGlobals->maxClients; i++) {
-      edict_t *pPlayer = INDEXENT(i);
+void FUNC_ClearEnemyPointer(edict_t *pPtr) {
+    // Go through all bots and remove their enemy pointer that matches the given
+    // pointer pPtr
+    for (int i = 1; i <= gpGlobals->maxClients; i++) {
+        edict_t *pPlayer = INDEXENT(i);
 
-      // Skip invalid players.
-      if ((pPlayer) && (!pPlayer->free)) {
-         // skip this player if not alive (i.e. dead or dying)
-         if (!IsAlive(pPlayer))
-            continue;
+        // Skip invalid players.
+        if ((pPlayer) && (!pPlayer->free)) {
 
-         if (!(pPlayer->v.flags & FL_THIRDPARTYBOT))
-            continue;
+            // skip this player if not alive (i.e. dead or dying)
+            if (!IsAlive(pPlayer))
+                continue;
 
-         // Only check bots
-         cBot *botpointer = UTIL_GetBotPointer(pPlayer);
+            // skip human players
+            if (!(pPlayer->v.flags & FL_THIRDPARTYBOT))
+                continue;
 
-         if (botpointer)        // Is a bot
-            if (botpointer->pBotEnemy == pPtr)  // Has same pointer
-               botpointer->pBotEnemy = NULL;    // Clear its pointer
-      }
+            // check if it is a bot known to us (ie, not another metamod supported bot)
+            cBot *botpointer = UTIL_GetBotPointer(pPlayer);
 
-   }
-   // End of function
+            if (botpointer &&                   // Is a bot managed by us
+                botpointer->pEnemyEdict == pPtr // and has the pointer we want to get rid of
+               ) {
+                botpointer->pEnemyEdict = NULL;    // Clear its pointer
+            }
+        }
+
+    }
 }
 
 // Returns true/false if an entity is on a ladder
@@ -733,7 +722,7 @@ bool FUNC_FreeHostage(cBot * pBot, edict_t * pEdict) {
 }
 
 void HostageNear(cBot * pBot) {
-   if (pBot->pBotEnemy != NULL)
+   if (pBot->pEnemyEdict != NULL)
       return;                   // enemy, do not check
 
    edict_t *pent = NULL;
@@ -897,13 +886,7 @@ void FUNC_BotUpdateHostages(cBot * pBot) {
 
 bool FUNC_BotHoldsZoomWeapon(cBot * pBot) {
    // Check if the bot holds a weapon that can zoom, but is not a sniper gun.
-   if (FUNC_BotHoldsWeapon(pBot, CS_WEAPON_AUG))
-      return true;
-
-   if (FUNC_BotHoldsWeapon(pBot, CS_WEAPON_SG552))
-      return true;
-
-   return false;
+   return pBot->holdsWeapon(CS_WEAPON_AUG) || pBot->holdsWeapon(CS_WEAPON_SG552);
 }
 
 void FUNC_BotChecksFalling(cBot * pBot) {
@@ -924,11 +907,11 @@ void CenterMessage(char *buffer) {
 bool BOT_DecideTakeCover(cBot * pBot) {
    /*
       	UTIL_ClientPrintAll( HUD_PRINTCENTER, "DECISION TO TAKE COVER\n" );
-    
+
    	int iNodeEnemy = NodeMachine.getCloseNode(pBot->pBotEnemy->v.origin, NODE_ZONE);
    	int iNodeHere  = NodeMachine.getCloseNode(pBot->pEdict->v.origin, NODE_ZONE);
    	int iCoverNode = NodeMachine.node_cover(iNodeHere, iNodeEnemy, pBot->pEdict);
-    
+
    	if (iCoverNode > -1)
    	{
            // TODO TODO TODO make sure the cover code works via iGoalNode

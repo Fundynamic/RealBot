@@ -60,9 +60,6 @@ bool FUNC_DoRadio(cBot * pBot);
 bool FUNC_ShouldTakeCover(cBot * pBot);
 bool FUNC_TakeCover(cBot * pBot);
 
-bool FUNC_BotHasWeapon(cBot * pBot, int type);
-
-
 int FUNC_EdictHoldsWeapon(edict_t * pEdict);
 
 int FUNC_FindFarWaypoint(cBot * pBot, Vector avoid, bool safest);
@@ -86,7 +83,7 @@ void FUNC_RemoveHostage(cBot * pBot, edict_t * pEdict); // remove hostage from m
 
 int FUNC_BotEstimateHearVector(cBot * pBot, Vector v_sound);
 bool FUNC_HostagesMoving(cBot * pBot);
-bool FUNC_BotHoldsWeapon(cBot * pBot, int type);
+
 bool FUNC_BotHoldsZoomWeapon(cBot * pBot);
 
 int FUNC_InFieldOfView(edict_t * pEntity, Vector dest);
@@ -104,7 +101,7 @@ void rblog(char *txt);
 // bot.cpp
 
 // util.cpp
-int UTIL_GiveWeaponId(char *name);
+int UTIL_GiveWeaponId(const char *name);
 int UTIL_GiveWeaponType(int weapon_id);
 int UTIL_GetGrenadeType(edict_t * pEntity);
 

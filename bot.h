@@ -342,7 +342,7 @@ public:
 
    edict_t *pButtonEdict;       // button edict
 
-   edict_t *pBotEnemy;          // Enemy edict
+   edict_t *pEnemyEdict;          // Enemy edict
    edict_t *killer_edict;       // Killer edict
 
    // Hostages edict
@@ -374,7 +374,7 @@ public:
    bool TakeCover();
    bool CarryWeapon(int iType);
    int CarryWeaponType();
-   void Aim(Vector vTarget);    // Aim at vector
+   void setHeadAiming(Vector vTarget);    // Aim at vector
    void AimAtEnemy();
    void PickBestWeapon();
    void FireWeapon();
@@ -396,21 +396,39 @@ public:
 
    // "is" Methods (booleans, statements, etc)
    bool isDead();
+   bool isEnemyAlive();         // If enemy set, is it alive? (else returns false)
    bool OnLadder();             // Bot on ladder or not?
    bool hasHostages();			// Does the bot has used any hostages yet?
+   bool canSeeEnemy();          // If enemy set, can we see it? (takes blinded by flashbang into account)
 
    bool isCounterTerrorist();
    bool isTerrorist();
+
+
+   void pickWeapon(int weaponId);
+   bool ownsWeapon(int weaponId);
+   bool holdsWeapon(int weaponId);
+   bool ownsFavoritePrimaryWeapon();
+   bool ownsFavoriteSecondaryWeapon();
+   bool hasFavoritePrimaryWeaponPreference();
+   bool hasFavoriteSecondaryWeaponPreference();
+
+   bool hasPrimaryWeaponEquiped();
+   bool hasSecondaryWeaponEquiped();
+
+   bool hasPrimaryWeapon(int weaponId);
+   bool hasSecondaryWeapon(int weaponId);
+
+   bool canAfford(int weaponId);
+
+   void performBuyActions(int weaponIdToBuy);
+   void performBuyWeapon(const char *arg1, const char *arg2);
 
    // Goal specific stuff
    Vector BombSpotNear(float fDistance);        // Is a bombspot near in fDistance?
 
    // -------------------
    void CheckAround();          // Check around body
-
-   // -------------------
-   void SetFace();              // Set
-   void SetBody();              // Set
 
    // -------------------
    bool hasPath();
@@ -430,8 +448,8 @@ public:
    void setGoalNode(int value);
    int getGoalNode();
 
-   void rprint(char *Function, char *msg);
-   void rprint(char *msg);
+   void rprint(const char *Function, const char *msg);
+   void rprint(const char *msg);
 
    // -------------------
    void SpawnInit();            // When bot spawns again (added/revived)
@@ -447,6 +465,8 @@ public:
    void Dump();
 
     bool holdingGrenadeOrFlashbang() const;
+
+    bool isBlindedByFlashbang() const;
 };
 
 // new UTIL.CPP functions...

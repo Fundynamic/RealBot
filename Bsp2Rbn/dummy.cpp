@@ -49,7 +49,7 @@ void FakeClientCommand (edict_t * pBot, char *arg1, char *arg2, char *arg3)
 // From game.cpp
 
 // Debug message
-void REALBOT_PRINT (cBot * pBot, char *Function, char *msg)
+void REALBOT_PRINT (cBot * pBot, const char *Function, const char *msg)
 {
         // Message format:
         // Function name - [BOT NAME, BOT TEAM]: Message

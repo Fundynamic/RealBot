@@ -2426,7 +2426,7 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
 
    // reached node
    if (bNearNode) {
-      REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Node reached.");
+//      REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Node reached.");
 
       // increase index on path, so we will go to next node
       pBot->bot_pathid++;
@@ -2450,7 +2450,7 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
          // When f_cover_time is > gpGlobals, we are taking cover
          // so we 'wait'
          if (pBot->f_cover_time > gpGlobals->time) {
-            if (pBot->pBotEnemy != NULL && pBot->v_enemy != Vector(0, 0, 0))
+            if (pBot->pEnemyEdict != NULL && pBot->v_enemy != Vector(0, 0, 0))
                pBot->vHead = pBot->v_enemy;
             pBot->f_wait_time = pBot->f_cover_time - RANDOM_FLOAT(0.0, 3.0);
             pBot->f_cover_time = gpGlobals->time;
@@ -2513,7 +2513,7 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
    // TODO TODO TODO Water Navigation
 
    // NO ENEMY, CHECK AROUND AREA
-   if (pBot->pBotEnemy == NULL) {
+   if (pBot->pEnemyEdict == NULL) {
       // look towards node after we have reached 'current' node, or else look at 'current' node.
       if (iNextNode > -1)
          pBot->vHead = Nodes[iNextNode].origin;
@@ -2912,50 +2912,42 @@ void cNodeMachine::path_walk(cBot * pBot, float moved_distance) {
             // pBotStuck -> faces pBot , do same
             // pBotStuck -> cannot see pBot, do opposite
             // Check if pBotStuck can see pBot (pBot can see pBotStuck!)
-            int angle_to_player = 40;
-
-            if (pBotStuck != NULL)
-               angle_to_player =
-                  FUNC_InFieldOfView(pBot->pEdict,
-                                     (pBotStuck->pEdict->v.origin -
-                                      pBot->pEdict->v.origin));
-
-            bool bReverse = false;
-            if (angle_to_player > 45)
-               bReverse = true;
-
-            // Method: both bots do exactly the same?
-            if (RANDOM_LONG(0, 100) < 50) {
-               pBot->f_strafe_speed = pBot->f_max_speed;
-               if (pBotStuck != NULL)
-                  if (bReverse)
-                     pBotStuck->f_strafe_speed = pBotStuck->f_max_speed;
-                  else
-                     pBotStuck->f_strafe_speed = -pBotStuck->f_max_speed;
-            } else {
-               pBot->f_strafe_speed = -pBot->f_max_speed;
-               if (pBotStuck != NULL)
-                  if (bReverse)
-                     pBotStuck->f_strafe_speed = pBotStuck->f_max_speed;
-                  else
-                     pBotStuck->f_strafe_speed = -pBotStuck->f_max_speed;
-            }
-
-            pBot->f_strafe_time = gpGlobals->time + 1.6;
-            pBot->f_goback_time = RANDOM_FLOAT(0.5, 1.5);
-
             if (pBotStuck != NULL) {
-               pBotStuck->f_strafe_time = gpGlobals->time + 0.8;
+               int angle_to_player = FUNC_InFieldOfView(pBot->pEdict, (pBotStuck->pEdict->v.origin - pBot->pEdict->v.origin));
+
+               bool bReverse = angle_to_player > 45;
+
+               // Method: both bots do exactly the same?
+               if (RANDOM_LONG(0, 100) < 30) {
+                  pBot->f_strafe_speed = pBot->f_max_speed;
+//                  if (bReverse)
+//                     pBotStuck->f_strafe_speed = pBotStuck->f_max_speed;
+//                  else
+//                     pBotStuck->f_strafe_speed = -pBotStuck->f_max_speed;
+               } else {
+                  pBot->f_strafe_speed = -pBot->f_max_speed;
+//                  if (bReverse)
+//                     pBotStuck->f_strafe_speed = pBotStuck->f_max_speed;
+//                  else
+//                     pBotStuck->f_strafe_speed = -pBotStuck->f_max_speed;
+               }
+
+               pBot->f_strafe_time = gpGlobals->time + 1.6;
+               pBot->f_goback_time = RANDOM_FLOAT(0.5, 1.5);
                pBot->f_stuck_time = gpGlobals->time + 0.2;
-               pBotStuck->f_stuck_time = gpGlobals->time + 0.2;
 
-               if (bReverse) {
-                  pBotStuck->f_goback_time = gpGlobals->time;
-                  pBotStuck->f_move_speed = pBotStuck->f_max_speed;
-               } else
-                  pBotStuck->f_goback_time =
-                     gpGlobals->time + RANDOM_FLOAT(0.5, 1.5);
+//               pBotStuck->f_strafe_time = gpGlobals->time + 0.8;
+//               pBotStuck->f_stuck_time = gpGlobals->time + 0.2;
 
+               // let the other bot wait
+               pBotStuck->f_wait_time = gpGlobals->time += RANDOM_FLOAT(0.2, 1.5);
+
+//               if (bReverse) {
+//                  pBotStuck->f_goback_time = gpGlobals->time;
+//                  pBotStuck->f_move_speed = pBotStuck->f_max_speed;
+//               } else {
+//                  pBotStuck->f_goback_time = gpGlobals->time + RANDOM_FLOAT(0.5, 1.5);
+//               }
             }
 
             if (RANDOM_LONG(0, 100) < 50) {

@@ -608,7 +608,7 @@ int UTIL_GiveWeaponType(int weapon_id) {
 }
 
 // Return weapon ID (depended on mod)
-int UTIL_GiveWeaponId(char *name) {
+int UTIL_GiveWeaponId(const char *name) {
    if (mod_id == CSTRIKE_DLL) {
       if (strcmp(name, "weapon_knife") == 0)
          return CS_WEAPON_KNIFE;

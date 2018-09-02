@@ -488,7 +488,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
 
          // if the bot doesn't have an enemy and someone is shooting at it then
          // turn in the attacker's direction...
-         if (bots[bot_index].pBotEnemy == NULL) {
+         if (bots[bot_index].pEnemyEdict == NULL) {
             // face the attacker...
 
             // Face danger vector

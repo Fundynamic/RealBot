@@ -52,8 +52,9 @@
 #define BROADCAST_DEATHS_FULL   6       // died, show full info (name+skill)
 #define BROADCAST_DEATHS_MIN    7       // died, show min info (name)
 #define BROADCAST_DEATHS_NONE   8       // died, show no information
+
 // Debug messages for realbot
-void REALBOT_PRINT(cBot * pBot, char *Function, char *msg);
+void REALBOT_PRINT(cBot * pBot, const char *Function, const char *msg);
 
 class cGame {
 public:
