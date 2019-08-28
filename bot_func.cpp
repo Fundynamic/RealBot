@@ -7,7 +7,7 @@
   * DISCLAIMER
   *
   * History, Information & Credits: 
-  * RealBot is based partially uppon the HPB-Bot Template #3 by Botman
+  * RealBot is based partially upon the HPB-Bot Template #3 by Botman
   * Thanks to Ditlew (NNBot), Pierre Marie Baty (RACCBOT), Tub (RB AI PR1/2/3)
   * Greg Slocum & Shivan (RB V1.0), Botman (HPB-Bot) and Aspirin (JOEBOT). And
   * everybody else who helped me with this project.
@@ -45,6 +45,10 @@ extern bool bombplanted;
 extern int mod_id;
 
 extern int m_spriteTexture;
+
+// defined in dll.cpp
+extern FILE *fpRblog;
+
 //
 extern cNodeMachine NodeMachine;
 
@@ -931,11 +935,7 @@ void rblog(char *txt) {
    printf(txt);
 
    // and to reallog file
-   FILE *fplog;
-   fplog = fopen("reallog.txt", "at");
-
-   if (fplog) {
-      fprintf(fplog, "%s", txt);        // print the text into the file
-      fclose(fplog);
+   if (fpRblog) {
+      fprintf(fpRblog, "%s", txt);        // print the text into the file
    }
 }

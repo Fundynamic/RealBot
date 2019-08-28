@@ -7,7 +7,7 @@
   * DISCLAIMER
   *
   * History, Information & Credits: 
-  * RealBot is based partially uppon the HPB-Bot Template #3 by Botman
+  * RealBot is based partially upon the HPB-Bot Template #3 by Botman
   * Thanks to Ditlew (NNBot), Pierre Marie Baty (RACCBOT), Tub (RB AI PR1/2/3)
   * Greg Slocum & Shivan (RB V1.0), Botman (HPB-Bot) and Aspirin (JOEBOT). And
   * everybody else who helped me with this project.
@@ -65,6 +65,7 @@ DLL_GLOBAL const Vector g_vecZero = Vector(0, 0, 0);
 cGame Game;
 cNodeMachine NodeMachine;
 cChatEngine ChatEngine;
+FILE *fpRblog = NULL;
 
 float f_load_time = 0.0;
 float f_minplayers_think = 0.0;
@@ -265,7 +266,7 @@ GiveFnptrsToDll(enginefuncs_t * pengfuncsFromEngine,
    memcpy(&g_engfuncs, pengfuncsFromEngine, sizeof(enginefuncs_t));
    gpGlobals = pGlobals;
    mod_id = CSTRIKE_DLL;        // so far RealBot works only for CS, eh Stefan ? :)
-   // @PMB -> Yes so far it does ;) working on this MOD-GAME independant structure... grmbl
+   // @PMB -> Yes so far it does ;) working on this MOD-GAME independent structure... grmbl
 }
 
 void GameDLLInit(void) {
@@ -278,6 +279,9 @@ void GameDLLInit(void) {
       fprintf(fplog, "Version %s\n\n", rb_version_nr);
       fclose(fplog);
    }
+
+   // and now open it for the entire bot-dll-lifetime
+   fpRblog = fopen("reallog.txt", "at");
 
    rblog("Initializing clients..");
    for (int i = 0; i < 32; i++)
