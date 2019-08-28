@@ -4540,7 +4540,7 @@ void EditNavAreas( NavEditCmdType cmd )
 			}
 		}
 
-		// do area-independant edit commands, if any
+		// do area-independent edit commands, if any
 		switch( cmd )
 		{
 			case EDIT_BEGIN_AREA:

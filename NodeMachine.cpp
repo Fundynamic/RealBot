@@ -7,7 +7,7 @@
   * DISCLAIMER
   *
   * History, Information & Credits: 
-  * RealBot is based partially uppon the HPB-Bot Template #3 by Botman
+  * RealBot is based partially upon the HPB-Bot Template #3 by Botman
   * Thanks to Ditlew (NNBot), Pierre Marie Baty (RACCBOT), Tub (RB AI PR1/2/3)
   * Greg Slocum & Shivan (RB V1.0), Botman (HPB-Bot) and Aspirin (JOEBOT). And
   * everybody else who helped me with this project.
@@ -26,8 +26,6 @@
   * source-code with your project.
   *
   **/
-
-
 
 /**
   *	NODE MACHINE
@@ -53,6 +51,7 @@
 #include "NodeMachine.h"
 
 tNodestar astar_list[MAX_NODES];
+
 extern edict_t *pHostEdict;
 extern cGame Game;
 extern cBot bots[32];

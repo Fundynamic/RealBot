@@ -7,7 +7,7 @@
   * DISCLAIMER
   *
   * History, Information & Credits: 
-  * RealBot is based partially uppon the HPB-Bot Template #3 by Botman
+  * RealBot is based partially upon the HPB-Bot Template #3 by Botman
   * Thanks to Ditlew (NNBot), Pierre Marie Baty (RACCBOT), Tub (RB AI PR1/2/3)
   * Greg Slocum & Shivan (RB V1.0), Botman (HPB-Bot) and Aspirin (JOEBOT). And
   * everybody else who helped me with this project.
@@ -937,7 +937,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
 
       // Skill, everything but botskill can change.
 
-      // Determine reaction time based uppon botskill here
+      // Determine reaction time based upon botskill here
       float fMinReact = 0.0, fMaxReact;
       if (pBot->bot_skill == 0)
          fMinReact = 0.0;
@@ -954,7 +954,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       pBot->fpMinReactTime = fMinReact;
       pBot->fpMaxReactTime = fMaxReact;
 
-      // Set Offsets (note, they are extra uppon current aiming code)
+      // Set Offsets (note, they are extra upon current aiming code)
       // 30.8.04 redefined by frashman
       // float fOffset = RANDOM_FLOAT ((pBot->bot_skill / 5), (pBot->bot_skill / 2));
       float fOffset = RANDOM_FLOAT((pBot->bot_skill / 5) + 0.05,

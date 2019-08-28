@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2002, Valve LLC, All rights reserved. ============
+//========= Copyright ï¿½ 1996-2002, Valve LLC, All rights reserved. ============
 //
 // Purpose: 
 //
@@ -817,7 +817,7 @@ int CGameStudioModelRenderer::_StudioDrawPlayer( int flags, entity_state_t *ppla
 
 		IEngineStudio.StudioEntityLight( &lighting );
 
-		// model and frame independant
+		// model and frame independent
 		IEngineStudio.StudioSetupLighting (&lighting);
 
 		m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );

@@ -7,7 +7,7 @@
   * DISCLAIMER
   *
   * History, Information & Credits: 
-  * RealBot is based partially uppon the HPB-Bot Template #3 by Botman
+  * RealBot is based partially upon the HPB-Bot Template #3 by Botman
   * Thanks to Ditlew (NNBot), Pierre Marie Baty (RACCBOT), Tub (RB AI PR1/2/3)
   * Greg Slocum & Shivan (RB V1.0), Botman (HPB-Bot) and Aspirin (JOEBOT). And
   * everybody else who helped me with this project.
@@ -650,7 +650,7 @@ void cBot::AimAtEnemy() {
    else
       vTarget = pEnemyEdict->v.origin; // aim for body
 
-   // Based uppon how far, we make this fuzzy
+   // Based upon how far, we make this fuzzy
    float fDx, fDy, fDz;
    fDx = fDy = fDz = ((bot_skill + 1) * fScale);
 
@@ -1404,7 +1404,7 @@ void cBot::InteractWithFriends() {
 
 }
 
-// BOT: Interact with Players ('find enemy, and how to react uppon them')
+// BOT: Interact with Players ('find enemy, and how to react upon them')
 void cBot::InteractWithPlayers() {
 
    // friends are important, we are a team dudes!

@@ -1,4 +1,4 @@
-//========= Copyright © 1996-2002, Valve LLC, All rights reserved. ============
+//========= Copyright ï¿½ 1996-2002, Valve LLC, All rights reserved. ============
 //
 // Purpose: 
 //
@@ -1166,7 +1166,7 @@ int CStudioModelRenderer::StudioDrawModel( int flags )
 		if ( strstr ( m_pCurrentEntity->model->name, "spike.mdl" ) )
 			lighting.ambientlight *= 30; 
 		
-		// model and frame independant
+		// model and frame independent
 		IEngineStudio.StudioSetupLighting (&lighting);
 
 		// get remap colors
@@ -1463,7 +1463,7 @@ int CStudioModelRenderer::StudioDrawPlayer( int flags, entity_state_t *pplayer )
 		//Scale player model lighting by a factor of 100 ( H4X!! )
 		lighting.ambientlight *= 100; 
 		
-		// model and frame independant
+		// model and frame independent
 		IEngineStudio.StudioSetupLighting (&lighting);
 
 		m_pPlayerInfo = IEngineStudio.PlayerInfo( m_nPlayerIndex );
