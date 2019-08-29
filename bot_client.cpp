@@ -528,7 +528,14 @@ void BotClient_FLF_Damage(void *p, int bot_index) {
 void BotClient_CS_SayText(void *p, int bot_index) {
    static unsigned char ucEntIndex;
 
-   static int state = 0;        // current state machine state
+   /**
+    * Since it has been a while I had to re-figure out how this engine calling/messaging works.
+    * In a nutshell: the function BotClient_CS_SayText is determined to call at the function pfnMessageBegin,
+    * then data is written to this function via pfnWriteByte, pfnWriteChar, pfnWriteShort, etc. These are separate calls
+    * hence the function itself should have a 'state' so it knows how many times it has been called already and which data
+    * it is receiving through *p. Hence the so called 'state machine'.
+    */
+   static int state = 0;        // current state machine state,
 
    // Different Counter-Strike versions mean different
    // handling of this "SayText" thingy.
@@ -539,15 +546,15 @@ void BotClient_CS_SayText(void *p, int bot_index) {
          cBot *pBot = &bots[bot_index];
 
          if (ENTINDEX(pBot->pEdict) != ucEntIndex) {
-            char sentence[128];
-            char chSentence[128];
+            char sentence[MAX_SENTENCE_LENGTH];
+            char chSentence[MAX_SENTENCE_LENGTH];
             char netname[30];
 
             memset(sentence, 0, sizeof(sentence));
             memset(chSentence, 0, sizeof(chSentence));
             memset(netname, 0, sizeof(netname));
 
-            strcpy(sentence, (char *) p);
+            strcpy(sentence, (char *) p); // the actual sentence
 
             int length = 0;
 
@@ -555,29 +562,13 @@ void BotClient_CS_SayText(void *p, int bot_index) {
             if (strstr(sentence, " : "))
                length = strlen(sentence) - strlen(strstr(sentence, " : "));
 
-
             int tc = 0, c;
 
-            for (c = length; c < 128; c++) {
+            for (c = length; c < MAX_SENTENCE_LENGTH; c++) {
                chSentence[tc] = sentence[c];
                tc++;
             }
-            /*
-            				int nc=0; 
-            					c=2;
-             
-            				if (strstr(sentence, "*DEAD*"))
-            					c+=6;
-            				
-            				if (counterstrike == 0)
-            					c=1;
-             
-            				for (c; c < length; c++)
-            				{
-            					netname[nc] = sentence[c];
-            					nc++;
-            				}
-            */
+
             edict_t *pPlayer = INDEXENT(ucEntIndex);
             strcpy(netname, STRING(pPlayer->v.netname));
 
@@ -606,7 +597,7 @@ void BotClient_CS_SayText(void *p, int bot_index) {
       // the actual sentence
       else if (state == 3) {
          // sentence
-         char sentence[128];
+         char sentence[MAX_SENTENCE_LENGTH];
          char netname[30];
 
          // init

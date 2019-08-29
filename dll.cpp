@@ -327,11 +327,11 @@ void GameDLLInit(void) {
    Game.LoadBuyTable();
 
    // NodeMachine
-   NodeMachine.init();          // INIT on load up
+   NodeMachine.init();
    NodeMachine.init_players();
 
    // Chat engine
-   ChatEngine.load();
+   ChatEngine.initAndload();
    ChatEngine.fThinkTimer = gpGlobals->time;
 
    // Set 'installed correctly' flag.

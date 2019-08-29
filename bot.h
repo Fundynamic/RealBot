@@ -484,28 +484,35 @@ void UTIL_SayText(const char *pText, edict_t * pEdict);
 void UTIL_HostSay(edict_t * pEntity, int teamonly, char *message);
 int UTIL_GetTeam(edict_t * pEntity);
 int UTIL_GetClass(edict_t * pEntity);
-int UTIL_GetBotIndex(edict_t * pEdict);
-cBot *UTIL_GetBotPointer(edict_t * pEdict);
 bool IsAlive(edict_t * pEdict);
 bool FInViewCone(Vector * pOrigin, edict_t * pEdict);
 bool FVisible(const Vector & vecOrigin, edict_t * pEdict);
+
 Vector Center(edict_t * pEdict);
 Vector GetGunPosition(edict_t * pEdict);
-void UTIL_SelectItem(edict_t * pEdict, char *item_name);
+
 Vector VecBModelOrigin(edict_t * pEdict);
-void UTIL_ShowMenu(edict_t * pEdict, int slots, int displaytime,
-                   bool needmore, char *pText);
+
+void UTIL_ShowMenu(edict_t * pEdict, int slots, int displaytime, bool needmore, char *pText);
+void UTIL_SelectItem(edict_t * pEdict, char *item_name);
+
 void UTIL_BuildFileName(char *filename, char *arg1, char *arg2);
 void UTIL_BuildFileNameRB(char *subdir, char *filename);
 
 unsigned short FixedUnsigned16(float value, float scale);
 short FixedSigned16(float value, float scale);
+
 void HUD_DrawString(int r, int g, int b, char *msg, edict_t * edict);
 void UTIL_FixAngles(Vector * Angles);
 
 void UTIL_SayTextBot(const char *pText, cBot * pBot);
 
 // combat.h
+
+// Bot specific
+int UTIL_GetBotIndex(edict_t * pEdict);
+cBot *UTIL_GetBotPointer(edict_t * pEdict);
+
 
 // dll.cpp
 bool BotRadioAction();

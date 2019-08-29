@@ -31,11 +31,12 @@
 #define MAX_BLOCKS	100
 #define BLOCK_DEATHS MAX_BLOCKS-1
 
+static const int MAX_SENTENCE_LENGTH = 128;
 // Reply block
 typedef struct {
    // words, hinting that in this block a logical sentence will be to reply with
    char word[10][25];
-   char sentence[50][128];      // at max 50 sentences of 80 characters to reply with
+   char sentence[50][MAX_SENTENCE_LENGTH];      // at max 50 sentences of 80 characters to reply with
    bool bUsed;
 }
 tReplyBlock;
@@ -44,21 +45,21 @@ class cChatEngine {
 public:
    // variables
    tReplyBlock ReplyBlock[MAX_BLOCKS];  // 100 reply blocks reserved in memory
-   float fThinkTimer;           // The chatengine has a 'think timer'.
+   float fThinkTimer;                   // The chatengine has a 'think timer'.
 
    char sender[30];
-   char sentence[128];
+   char sentence[MAX_SENTENCE_LENGTH];
 
    int iLastBlock;
    int iLastSentence;
 
    // functions
-   void init();                 // initialize database/blocks
-   void load();                 // load database (loads blocks)
+   void init();                 // initialize
+   void initAndload();          // initialize and load data from file
    void think();                // make the chat engine think
 
    // add sentence from any player/bot into memory to handle
-   void set_sentence(char csender[30], char csentence[128]);
+   void set_sentence(char csender[30], char csentence[MAX_SENTENCE_LENGTH]);
 
    // handles a sentence, decides to reply on it or not.
    void handle_sentence();

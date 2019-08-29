@@ -941,7 +941,6 @@ void UTIL_FixAngles(Vector * Angles) {
    Angles->z = 0.0;
 }
 
-// POD SAYING:
 void UTIL_SayTextBot(const char *pText, cBot * pBot) {
    if (gmsgSayText == 0)
       gmsgSayText = REG_USER_MSG("SayText", -1);

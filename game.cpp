@@ -287,8 +287,8 @@ void cGame::SelectName(char *name) {
 
 // GAME: Load BUYTABLE.INI file
 void cGame::LoadBuyTable() {
-   INI_PARSE_BUYTABLE();        // run from IniParser.cpp
-}                               // LoadBuyTable()
+   INI_PARSE_BUYTABLE();
+}
 
 // GAME: Update global vars (called by StartFrame)
 void cGame::UpdateGameStatus() {

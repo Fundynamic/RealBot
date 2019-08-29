@@ -81,6 +81,7 @@ int gmsgSayText = 0;
 int gmsgShowMenu = 0;
 
 // Need to implement the basename & dirname functions under Windows...
+
 #ifndef __linux__
 // 21/07/04 Whistler
 // Handle both \ and / as separator
@@ -101,13 +102,13 @@ char * dirname(char * s)
 {
 	char * fs ;
 
-	if ((s == NULL) || (*s == 0)) return "." ;
-	if (strcmp(s,"\\") == 0) return s ;
-	if (strcmp(s,"/") == 0) return s ;
-	fs = strrchr(s,'\\') ;
-	if (fs == NULL) fs = strrchr(s,'/') ;
-	if (fs == NULL) return "." ;
-	* fs = 0 ;
+	if ((s == NULL) || (*s == 0)) return ".";
+	if (strcmp(s,"\\") == 0) return s;
+	if (strcmp(s,"/") == 0) return s;
+	fs = strrchr(s,'\\');
+	if (fs == NULL) fs = strrchr(s,'/');
+	if (fs == NULL) return ".";
+	* fs = 0;
 	return s ;
 }
 #endif
@@ -566,7 +567,7 @@ UTIL_BuildFileNameRB (char *subdir, char *filename)
 {
   char * temp, *temp2 ;
 
-  temp=strdup(subdir) ;
+  temp=strdup(subdir);
   temp2=basename(temp) ;
   strcpy(filename,temp2) ;
   free(temp) ;

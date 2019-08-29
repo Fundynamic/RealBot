@@ -136,12 +136,11 @@ void pfnClientCommand(edict_t * pEdict, const char *szFmt, ...) {
 }
 
 void
-pfnMessageBegin(int msg_dest, int msg_type, const float *pOrigin,
-                edict_t * ed) {
-   if (Game.bEngineDebug) {
+pfnMessageBegin(int msg_dest, int msg_type, const float *pOrigin, edict_t * edict) {
+
+    if (Game.bEngineDebug) {
       char dmsg[256];
-      sprintf(dmsg, "ENGINE: pfnMessageBegin(), dest=%d, msg_type=%d\n",
-              msg_dest, msg_type);
+      sprintf(dmsg, "ENGINE: pfnMessageBegin(), dest=%d, msg_type=%d\n", msg_dest, msg_type);
       rblog(dmsg);
    }
 
@@ -153,18 +152,9 @@ pfnMessageBegin(int msg_dest, int msg_type, const float *pOrigin,
       if (msg_type == GET_USER_MSG_ID(PLID, "WeaponList", NULL))
          botMsgFunction = BotClient_CS_WeaponList;
 
-      if (ed) {
-         index = UTIL_GetBotIndex(ed);
+      if (edict) {
+         index = UTIL_GetBotIndex(edict);
 
-         // Note by stefan: This needs to get cleaned up
-         if (msg_type == GET_USER_MSG_ID(PLID, "SayText", NULL)) {
-            //BotMsgFunction = BotClient_CS_SayText;
-            /*
-               SERVER_PRINT("Recieved a message for : ");
-               SERVER_PRINT(STRING(ed->v.netname));
-               SERVER_PRINT("\n");
-             */
-         }
          // is this message for a bot?
          if (index != -1) {
             botMsgFunction = NULL;      // no msg function until known otherwise

@@ -1066,11 +1066,15 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
    }
 }                               // INI parsing
 
-// Parse BUYTABLE.INI
+/**
+ * The buytable.ini file is located at REALBOT_HOME/data/cstrike
+ *
+ * It contains weapon information such as which slot (in buy menu) and pricing. The buy logic uses the price configured
+ * here to choose which weapon to buy.
+ *
+ * The buytable.ini is not in the source file, but in the binary downloads of REALBOT.
+ */
 void INI_PARSE_BUYTABLE() {
-   /*
-
-    */
    FILE *stream;
    int section = INI_NONE;
    int wordtype = WORD_NONE;
@@ -1103,7 +1107,6 @@ void INI_PARSE_BUYTABLE() {
       char lineword[25];
       char linesection[30];
 
-      // infinite loop baby
       while (!feof(stream)) {
          INI_Sentence(stream, linefeed);
 
@@ -1134,17 +1137,12 @@ void INI_PARSE_BUYTABLE() {
 
                weapons_table[weapon_id].iId = section;
                weapons_table[section].iIdIndex = weapon_id;
-
-               // SECURE WEAPON ID
-               // 02/07/04 - Stefan - Should be removed now...
-               //if (weapon_defs[weapons_table[weapon_id].iId].iId < 0)
-               //  weapon_defs[weapons_table[weapon_id].iId].iId = weapons_table[weapon_id].iId;
-
             }
 
             prev_section = section;     // Equal the sections now
             continue;           // next line
          }
+
          // Check word only when in a section
          if (section != INI_NONE) {
             INI_Word(linefeed, lineword);
@@ -1159,54 +1157,6 @@ void INI_PARSE_BUYTABLE() {
                   weapons_table[weapons_table[weapon_id].iId].priority =
                      INI_WordValueINT(linefeed);
                }
-
-               /*
-
-                  02/07/04 - REMOVED
-
-                  // WEAPON DEFINITION INFORMATION! VERY IMPORTANT....
-                  if (wordtype == WORD_MAXAMMO1)
-                  {
-                  // update this information            
-                  weapon_defs[weapons_table[weapon_id].iId].iAmmo1Max =
-                  INI_WordValueINT (linefeed);
-                  }
-
-                  if (wordtype == WORD_MAXAMMO2)
-                  {
-                  // update this information
-                  weapon_defs[weapons_table[weapon_id].iId].iAmmo2Max =
-                  INI_WordValueINT (linefeed);
-                  }
-
-                  if (wordtype == WORD_INDEX1)
-                  {
-                  // update this information
-                  weapon_defs[weapons_table[weapon_id].iId].iAmmo1 =
-                  INI_WordValueINT (linefeed);
-                  }
-
-                  if (wordtype == WORD_INDEX2)
-                  {
-                  // update this information
-                  weapon_defs[weapons_table[weapon_id].iId].iAmmo2 =
-                  INI_WordValueINT (linefeed);
-                  }
-
-                  if (wordtype == WORD_ISLOT)
-                  {
-                  // update this information
-                  weapon_defs[weapons_table[weapon_id].iId].iSlot =
-                  INI_WordValueINT (linefeed);
-                  }
-
-                  if (wordtype == WORD_IPOSITION)
-                  {
-                  // update this information
-                  weapon_defs[weapons_table[weapon_id].iId].iPosition =
-                  INI_WordValueINT (linefeed);
-                  }
-                */
             }
          }
       }

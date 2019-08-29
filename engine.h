@@ -94,7 +94,7 @@ void pfnLightStyle(int style, char *val);
 int pfnDecalIndex(const char *name);
 int pfnPointContents(const float *rgflVector);
 void pfnMessageBegin(int msg_dest, int msg_type, const float *pOrigin,
-                     edict_t * ed);
+                     edict_t * edict);
 void pfnMessageEnd(void);
 void pfnWriteByte(int iValue);
 void pfnWriteChar(int iValue);
