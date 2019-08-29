@@ -8,6 +8,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0AE0F290-F98C-402E-9F35-329A88708328}</ProjectGuid>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -49,7 +50,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>C:\projects\RealBot\dependencies\metamod-1.19\metamod;C:\projects\RealBot\dependencies\hlsdk\multiplayer\common;C:\projects\RealBot\dependencies\hlsdk\multiplayer\dlls;C:\projects\RealBot\dependencies\hlsdk\multiplayer\engine;C:\projects\RealBot\dependencies\hlsdk\multiplayer\pm_shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\projects\RealBot\dependencies\hlsdk\dlls;C:\projects\RealBot\dependencies\hlsdk\common;C:\projects\RealBot\dependencies\hlsdk\pm_shared;C:\projects\RealBot\dependencies\hlsdk\engine;C:\projects\RealBot\dependencies\hlsdk\public;C:\projects\RealBot\dependencies\metamod-hl1\metamod;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>

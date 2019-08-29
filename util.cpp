@@ -848,7 +848,7 @@ void UTIL_BotRadioMessage(cBot * pBot, int radio, char *arg1, char *arg2) {
 //////////////////////////////////
 int UTIL_GetGrenadeType(edict_t *pEntity) {
 
-   int length = 32;
+   const int length = 32;
 
    char model_name[length];
    memset(model_name, 0, sizeof(model_name));
