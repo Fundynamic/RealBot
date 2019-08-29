@@ -285,12 +285,12 @@ public:
    void Draw(void);
 
 private:
-   tNode Nodes[MAX_NODES];     // Nodes
-   tInfoNode InfoNodes[MAX_NODES];      // Info for Nodes
-   tPlayer Players[32];         // Players to keep track off
-   tGoal Goals[MAX_GOALS];      // Goals in the game
-   tMeredian Meredians[MAX_MEREDIANS][MAX_MEREDIANS];   // Meredian lookup search for Nodes
-   int iPath[32][MAX_PATH_NODES];       // 32 bots, with max waypoints paths
+   tNode Nodes[MAX_NODES];                              // Nodes
+   tInfoNode InfoNodes[MAX_NODES];                      // Info for Nodes (metadata)
+   tPlayer Players[32];                                 // Players to keep track of, for node plotting
+   tGoal Goals[MAX_GOALS];                              // Goals to pursue in the game
+   tMeredian Meredians[MAX_MEREDIANS][MAX_MEREDIANS];   // Meredian lookup search for Nodes, squared
+   int iPath[32][MAX_PATH_NODES];                       // 32 bots, with max waypoints paths (TODO: move to bot class?)
    int iMaxUsedNodes;
    //byte        iVisTable[MAX_NODES][MAX_NODES];
    byte iVisChecked[MAX_NODES];
