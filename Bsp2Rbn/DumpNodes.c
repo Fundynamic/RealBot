@@ -179,8 +179,8 @@ void AnalyseMeredians(void)
 
 	for (i=0;i<MAX_MEREDIANS;i++)
 		for (j=0;j<MAX_MEREDIANS;j++)
-			if (Meredians[i][j] >= NODES_MEREDIANS) printf("Too many nodes on meredians(%d,%d): %d (max %d)\n",
-				i,j,Meredians[i][j],NODES_MEREDIANS) ;
+			if (Meredians[i][j] >= MAX_NODES_IN_MEREDIANS) printf("Too many nodes on meredians(%d,%d): %d (max %d)\n",
+                                                                  i, j, Meredians[i][j], MAX_NODES_IN_MEREDIANS) ;
 }
 
 int main (int argc, char * argv[])

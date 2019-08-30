@@ -108,9 +108,9 @@
 
 // Meridian stuff
 #define SIZE_MEREDIAN	256
-#define MAX_MEREDIANS	16384 / SIZE_MEREDIAN   // Size of HL map devided by
-#define NODES_MEREDIANS	120     // EVY: higher number, number of nodes per meredian
-//#define NODES_MEREDIANS       80      // (size meredian / zone (~6) times 2 (surface) , rounded to 80
+#define MAX_MEREDIANS	16384 / SIZE_MEREDIAN   // Size of HL map divided by SIZE of a meridian to evenly spread
+#define MAX_NODES_IN_MEREDIANS	120     // EVY: higher number, number of nodes per meredian
+//#define MAX_NODES_IN_MEREDIANS       80      // (size meredian / zone (~6) times 2 (surface) , rounded to 80
 
 // Pathfinder
 #define OPEN			1   // open
@@ -150,13 +150,13 @@ tNodestar;
 
 // Additional Node Information
 typedef struct {
-   float fDanger[2];            // Danger information (0.0 - no danger, 1.0 dangerous)
+   float fDanger[2];            // Danger information (0.0 - no danger, 1.0 dangerous). Indexed per team (T/CT)
    float fContact[2];           // How many times have contact with enemy (0.0 none, 1.0 , a lot)
 }
 tInfoNode;
 
 typedef struct {
-   int iNodes[NODES_MEREDIANS];
+   int iNodes[MAX_NODES_IN_MEREDIANS];
 }
 tMeredian;
 
@@ -190,10 +190,11 @@ tGoal;
 class cNodeMachine {
 public:
    // -----------------
-   int add(Vector vOrigin, int iType, edict_t * pEntity);
+   int add(Vector vOrigin, edict_t *pEntity);
    int Reachable(const int iStart, const int iEnd);
    int add2(Vector vOrigin, int iType, edict_t * pEntity);
    int getCloseNode(Vector vOrigin, float fDist, edict_t * pEdict);    // returns a close node
+   int getFreeNodeIndex();
 
    // -----------------
    bool add_neighbour_node(int iNode, int iToNode);
@@ -252,7 +253,7 @@ public:
    void vis_calculate(int iFrom);
 
    // -----------------
-   void path(int iFrom, int iTo, int iPath, cBot * pBot, int iFlags);   // know the path
+   void path(int nodeStartIndex, int nodeTargetIndex, int iPath, cBot * pBot, int iFlags);   // know the path
    void path_draw(edict_t * pEntity);   // draw the path
    void path_walk(cBot * pBot, float moved_distance);   // walk the path
    void path_think(cBot * pBot, float moved_distance);  // think about paths

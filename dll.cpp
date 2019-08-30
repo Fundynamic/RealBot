@@ -899,16 +899,19 @@ void StartFrame(void) {
         }
      }
   }
+
   // Draw node path
   if (draw_nodepath > -1) {
      NodeMachine.path_draw(pHostEdict);
   }
+
   // Counter-Strike - A new round has started
   if (Game.NewRound()) {
      NodeMachine.scale_danger();    // Scale danger
      NodeMachine.scale_contact();   // same for contact
      Game.SetNewRound(false);
   }
+
   // are we currently respawning bots and is it time to spawn one yet?
   if ((respawn_time > 1.0) && (respawn_time <= gpGlobals->time)) {
      int index = 0;
@@ -1862,21 +1865,17 @@ void RealBot_ServerCommand(void) {
             bots[iBot].Dump();
          NodeMachine.dump_goals();
          strcpy(cMessage, "RBDEBUG: Dumping bots' information.");
-      } else if (FStrEq(arg1, "print")) {
-         if (Game.bDebug)
+      } else if (FStrEq(arg1, "print")) { // realbot debug print
+         if (Game.bDebug) {
             Game.bDebug = false;
-
-         else
+             sprintf(cMessage, "RBDEBUG: Debug messages off.");
+         } else {
             Game.bDebug = true;
-
-         if (Game.bDebug)
-            sprintf(cMessage, "RBDEBUG: Debug messages on.");
-         else
-            sprintf(cMessage, "RBDEBUG: Debug messages off.");
-      } else if (FStrEq(arg1, "nodes")) {
-         if (FStrEq(arg2, "dumpbmp")) {
-            sprintf(cMessage,
-                    "RBDEBUG: Dumping Nodes information into bitmap file");
+             sprintf(cMessage, "RBDEBUG: Debug messages on.");
+         }
+      } else if (FStrEq(arg1, "nodes")) { // realbot debug nodes
+         if (FStrEq(arg2, "dumpbmp")) { // realbot debug nodes dumpbmp
+            sprintf(cMessage, "RBDEBUG: Dumping Nodes information into bitmap file");
             NodeMachine.Draw();
          } else if (FStrEq(arg2, "draw")) {
             if (draw_nodes == false)
@@ -1893,20 +1892,21 @@ void RealBot_ServerCommand(void) {
                iFrom = atoi(arg3);
             if ((arg4 != NULL) && (*arg4 != 0))
                iTo = atoi(arg4);
+
             if (iFrom > -1) {
                if (iTo < 0)
                   iTo = NodeMachine.node_goal(GOAL_SPAWNT);
-               sprintf(cMessage,
-                       "RBDEBUG: Creating path from [%d] to [%d].", iFrom,
-                       iTo);
+
+               sprintf(cMessage, "RBDEBUG: Creating path from [%d] to [%d].", iFrom, iTo);
                NodeMachine.path(iFrom, iTo, 0, NULL, PATH_DANGER);
+            } else {
+                sprintf(cMessage, "RBDEBUG: Usage: realbot debug nodes path <fromNode> <toNode>");
             }
          } else if (FStrEq(arg2, "drawpath")) {
             if ((arg3 != NULL) && (*arg3 != 0))
                draw_nodepath = atoi(arg3);
             if (draw_nodepath > -1) {
-               sprintf(cMessage, "RBDEBUG: Drawing path of bot id [%d].",
-                       draw_nodepath);
+               sprintf(cMessage, "RBDEBUG: Drawing path of bot id [%d].", draw_nodepath);
             } else
                sprintf(cMessage,
                        "RBDEBUG: Drawing path of bot id [%d] - no better or valid argument given.",

@@ -126,7 +126,7 @@ void AddNode(const vec3_t x)
     DummyEntity.v.origin.y = origin.y ;
     DummyEntity.v.origin.z = origin.z ;
 DUMP("Adding a node",x) ;
-    NodeMachine.add(origin,0,&DummyEntity) ;
+    NodeMachine.add(origin, &DummyEntity);
     NodesFound ++ ;
 }
 
