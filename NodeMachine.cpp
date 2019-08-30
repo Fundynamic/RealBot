@@ -58,6 +58,7 @@ extern edict_t *pHostEdict;
 extern cGame Game;
 extern cBot bots[32];
 extern int draw_nodepath;
+
 //---------------------------------------------------------
 //CODE: CHEESEMONSTER
 
@@ -96,6 +97,7 @@ cNodeMachine::SetVisibilityFromTo(int iFrom, int iTo, bool bVisible) {
     if (iFrom < 0 || iFrom > MAX_NODES || iTo < 0 || iTo > MAX_NODES) {
         return;
     }
+
     // -- STEFAN --
     iVisChecked[iFrom] = 1;      // WE HAVE CHECKED THIS ONE
     // -- END --
@@ -117,13 +119,15 @@ cNodeMachine::SetVisibilityFromTo(int iFrom, int iTo, bool bVisible) {
 }
 
 void cNodeMachine::ClearVisibilityTable(void) {
-    if (cVisTable)
+    if (cVisTable) {
         memset(cVisTable, 0, g_iMaxVisibilityByte);
+    }
 }
 
 void cNodeMachine::FreeVisibilityTable(void) {
-    if (cVisTable)
+    if (cVisTable) {
         free(cVisTable);
+    }
 }
 
 //---------------------------------------------------------
@@ -144,9 +148,7 @@ void cNodeMachine::init() {
         // --- info nodes
         for (int d = 0; d < 2; d++) {
             InfoNodes[i].fDanger[d] = 0.0;
-
         }
-
     }
 
     // Init trouble
@@ -169,16 +171,10 @@ void cNodeMachine::init() {
     for (int p = 0; p < 32; p++)
         path_clear(p);
 
-    /*
-       // Init VisTable
-       for (int iVx=0; iVx < MAX_NODES; iVx++)
-       for (int iVy=0; iVy < MAX_NODES; iVy++)
-       iVisTable[iVx][iVy] = NULL;
-     */
-
     // Init VisTable
-    for (int iVx = 0; iVx < MAX_NODES; iVx++)
+    for (int iVx = 0; iVx < MAX_NODES; iVx++) {
         iVisChecked[iVx] = 0;     // not checked yet
+    }
 
     // CODE: From cheesemonster
     unsigned long iSize = g_iMaxVisibilityByte;
@@ -197,7 +193,7 @@ void cNodeMachine::init() {
                 Meredians[iMx][iMy].iNodes[iNode] = -1;
 }
 
-int cNodeMachine::TroubleExists(int iFrom, int iTo) {
+int cNodeMachine::GetTroubleValueWithConnection(int iFrom, int iTo) {
     int t;
     for (t = 0; t < MAX_TROUBLE; t++)
         if (Troubles[t].iFrom == iFrom && Troubles[t].iTo == iTo)
@@ -206,9 +202,16 @@ int cNodeMachine::TroubleExists(int iFrom, int iTo) {
     return -1;
 }
 
-bool cNodeMachine::AddTrouble(int iFrom, int iTo) {
-    if (TroubleExists(iFrom, iTo) > -1)
-        return false;             // could not create a new one
+/**
+ * Adds a 'troubled connection' to the list of troubled connections.
+ *
+ * @param iFrom
+ * @param iTo
+ * @return
+ */
+bool cNodeMachine::AddTroubledConnection(int iFrom, int iTo) {
+    if (GetTroubleValueWithConnection(iFrom, iTo) > -1)
+        return false; // already exists
 
     int iNew = -1;
     int t;
@@ -229,33 +232,40 @@ bool cNodeMachine::AddTrouble(int iFrom, int iTo) {
     return true;
 }
 
-bool cNodeMachine::TroubleIsTrouble(int iFrom, int iTo) {
+bool cNodeMachine::hasAttemptedConnectionTooManyTimes(int iFrom, int iTo) {
     // Max amount of trouble we may have in one game is 4 times.
-    int t = TroubleExists(iFrom, iTo);
+    int t = GetTroubleValueWithConnection(iFrom, iTo);
 
-    if (t < 0)
+    if (t < 0) {
+        // deal with invalid connection
         return false;
+    }
 
-    if (Troubles[t].iTries > 3)
+    if (Troubles[t].iTries > 2) {
+        // after 3 times we quit
         return true;
+    }
 
     return false;
 }
 
-void cNodeMachine::IncreaseTrouble(int iFrom, int iTo) {
-    int t = TroubleExists(iFrom, iTo);
+void cNodeMachine::IncreaseAttemptsForTroubledConnection(int iFrom, int iTo) {
+    int t = GetTroubleValueWithConnection(iFrom, iTo);
     if (t < 0)
         return;
 
     Troubles[t].iTries++;
 }
 
-bool cNodeMachine::RemoveTrouble(int iFrom, int iTo) {
-    int t = TroubleExists(iFrom, iTo);
+bool cNodeMachine::ClearTroubledConnection(int iFrom, int iTo) {
+    int t = GetTroubleValueWithConnection(iFrom, iTo);
 
-    if (t < 0)
+    if (t < 0) {
+        // deal with scenario that this is a non-existing connection
         return false;
+    }
 
+    // clear values
     Troubles[t].iFrom = -1;
     Troubles[t].iTo = -1;
     Troubles[t].iTries = -1;
@@ -263,12 +273,14 @@ bool cNodeMachine::RemoveTrouble(int iFrom, int iTo) {
     return true;
 }
 
-void cNodeMachine::path_clear(int iPathId) {
-    // clear path
-    for (int i = 0; i < MAX_NODES; i++)
-        iPath[iPathId][i] = -1;
-
-    // cleared
+void cNodeMachine::path_clear(int botIndex) {
+    // only clear path when the very first node in the list is actually filled, else assume it has been cleared
+    // before - so no need to do it again
+    if (iPath[botIndex][0] > -1) {
+        for (int nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++) {
+            iPath[botIndex][nodeIndex] = -1;
+        }
+    }
 }
 
 // Return
@@ -443,23 +455,31 @@ bool cNodeMachine::add_neighbour_node(int iNode, int iToNode) {
     return false;
 }
 
-// Removes a neighbour connection from a node ID
-bool cNodeMachine::remove_neighbour_node(int iNode, int iRemoveNode) {
+/**
+ * Removes a neighbour connection from a node ID. Do note that we pass in node id's, ie not the actual indexes
+ * of the iNeighbour[] array.
+ * @param iNode
+ * @param neighborNodeToRemove
+ * @return
+ */
+bool cNodeMachine::removeNeighbourNode(int iNode, int neighborNodeToRemove) {
     if (iNode < 0)
         return false;
 
     // Does the node connection exist already?
-    if (is_neighbour_node(Nodes[iNode], iRemoveNode)) {
-        // Find the connection and remove it
-        int i = 0;
-        for (i = 0; i < MAX_NEIGHBOURS; i++)
-            if (Nodes[iNode].iNeighbour[i] == iRemoveNode) {
-                Nodes[iNode].iNeighbour[i] = -1;
-                return true;        // success
-            }
+    tNode &node = Nodes[iNode];
+
+    bool removedOneOrMoreNeighbours = false;
+    // Find the connection and remove it
+    int i = 0;
+    for (i = 0; i < MAX_NEIGHBOURS; i++) {
+        if (node.iNeighbour[i] == neighborNodeToRemove) {
+            node.iNeighbour[i] = -1;
+            removedOneOrMoreNeighbours = true;
+        }
     }
 
-    return false;
+    return removedOneOrMoreNeighbours;
 }
 
 // Removes ALL neighbour connections on iNode
@@ -483,19 +503,11 @@ int cNodeMachine::neighbour_node(tNode Node) {
     return -1;
 }
 
-// Checks on tNode if iNode is already a neighbour
-int cNodeMachine::is_neighbour_node(tNode Node, int iNode) {
-    for (int i = 0; i < MAX_NEIGHBOURS; i++)
-        if (Node.iNeighbour[i] == iNode)
-            return true;
-
-    return false;
-}
-
-// Return the NODE id from bot path on Index NR
-int cNodeMachine::NodeFromPath(int iBot, int iIndex) {
-    if ((iIndex > -1) && (iBot > -1))
-        return iPath[iBot][iIndex];
+// Return the node id from bot path on Index NR
+int cNodeMachine::getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex) {
+    if (botIndex > -1 && pathNodeIndex > -1 && pathNodeIndex < MAX_PATH_NODES) {
+        return iPath[botIndex][pathNodeIndex];
+    }
 
     return -1;                   // nothing found
 }
@@ -1918,42 +1930,37 @@ void cNodeMachine::scale_danger() {
 }
 
 // Pathfinder
-void cNodeMachine::path(int nodeStartIndex, int nodeTargetIndex, int iPathId, cBot *pBot, int iFlags) {
+bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIndex, cBot *pBot, int iFlags) {
     // Will create a path from nodeStartIndex to nodeTargetIndex, and store it into index number iPathId
 
-    if (nodeStartIndex < 0 || nodeTargetIndex < 0 || iPathId < 0)
-        return; // do not create a path when invalid params given
+    if (nodeStartIndex < 0 || nodeTargetIndex < 0 || botIndex < 0)
+        return false; // do not create a path when invalid params given
 
     if (nodeStartIndex > iMaxUsedNodes || nodeTargetIndex > iMaxUsedNodes)
-        return; // do not create a path when invalid params given
+        return false; // do not create a path when invalid params given
+
+    int botTeam = -1;
+    if (pBot) {
+        botTeam = UTIL_GetTeam(pBot->pEdict); // Stefan: yes we use 0-1 based, not 1-2 based
+    }
 
     const Vector &INVALID_VECTOR = Vector(9999, 9999, 9999);
 
-    if (Nodes[nodeStartIndex].origin == INVALID_VECTOR || Nodes[nodeTargetIndex].origin == INVALID_VECTOR)
-        return;
+    // start or target vector may not be invalid
+    if (Nodes[nodeStartIndex].origin == INVALID_VECTOR ||
+        Nodes[nodeTargetIndex].origin == INVALID_VECTOR)
+        return false;
 
     int path_index = 0, nodeIndex;
 
-    // clear path
-    for (nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++)
-        if (iPath[iPathId][nodeIndex] < 0) {
-            break;
-        } else
-            iPath[iPathId][nodeIndex] = -1;
+    path_clear(botIndex);
 
     // INIT: Start
-
-    // First, all waypoints are closed.
-    for (nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++) {
-        astar_list[nodeIndex].cost = 0;
-        astar_list[nodeIndex].parent = -1;
-        astar_list[nodeIndex].state = CLOSED;
-    }
+    closeAllWaypoints(nodeIndex);
 
     // Our start waypoint is open
-    astar_list[nodeStartIndex].state = OPEN;
-    astar_list[nodeStartIndex].parent = nodeStartIndex;
-    astar_list[nodeStartIndex].cost = func_distance(Nodes[nodeStartIndex].origin, Nodes[nodeTargetIndex].origin);
+    float cost = func_distance(Nodes[nodeStartIndex].origin, Nodes[nodeTargetIndex].origin);
+    openWaypoint(nodeStartIndex, nodeStartIndex, cost);
 
     bool valid = true;           // is it still valid to loop through the lists for pathfinding?
     bool succes = false;         // any succes finding the goal?
@@ -1964,12 +1971,12 @@ void cNodeMachine::path(int nodeStartIndex, int nodeTargetIndex, int iPathId, cB
         bool found_one_to_open = false;
 
         // go through all open waypoints
-        for (nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++)
-            if (Nodes[nodeIndex].origin != INVALID_VECTOR)
-
+        for (nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++) {
+            tNode &node = Nodes[nodeIndex];
+            
+            if (node.origin != INVALID_VECTOR) {
                 if (astar_list[nodeIndex].state == OPEN) {
                     if (nodeIndex == nodeTargetIndex) {
-                        // OPENED: This Node is our destination
                         succes = true;
                         valid = false;        // not valid to check anymore
                         break;        // Get out of here
@@ -1985,19 +1992,17 @@ void cNodeMachine::path(int nodeStartIndex, int nodeTargetIndex, int iPathId, cB
                     int j = 0;       // <-- ADDED BY PMB FOR ISO COMPLIANCE (ELSE LINUX GOES MAD)
 
                     for (j = 0; j < MAX_NEIGHBOURS; j++) {
-                        if (Nodes[nodeIndex].iNeighbour[j] > -1) {
-                            int neighbourNodeIndex = Nodes[nodeIndex].iNeighbour[j];
+                        int neighbourNodeIndex = node.iNeighbour[j];
+                        if (neighbourNodeIndex > -1) {
 
-                            // consider this node if CLOSED
+                            // consider this node if CLOSED and calculate cost to target from there
                             if (astar_list[neighbourNodeIndex].state == CLOSED) {
                                 cost = astar_list[nodeIndex].cost +
                                        (double) func_distance(Nodes[neighbourNodeIndex].origin,
                                                               Nodes[nodeTargetIndex].origin);
 
-                                int iTeam = UTIL_GetTeam(pBot->pEdict); // Stefan: yes we use 0-1 based, not 1-2 based
-
-                                double dangerCost = InfoNodes[neighbourNodeIndex].fDanger[iTeam] * cost;
-                                double contactCost = InfoNodes[neighbourNodeIndex].fContact[iTeam] * cost;
+                                double dangerCost = InfoNodes[neighbourNodeIndex].fDanger[botTeam] * cost;
+                                double contactCost = InfoNodes[neighbourNodeIndex].fContact[botTeam] * cost;
 
                                 cost += dangerCost;
                                 cost += contactCost;
@@ -2014,106 +2019,116 @@ void cNodeMachine::path(int nodeStartIndex, int nodeTargetIndex, int iPathId, cB
                     // this waypoint has the lowest cost to get to the next best waypoint
                     if (the_wpt > -1) {
                         j = the_wpt;
-                        astar_list[j].state = OPEN;
-                        astar_list[j].cost = lowest_cost;
-                        astar_list[j].parent = nodeIndex;
+                        openWaypoint(j, nodeIndex, lowest_cost);
                         found_one_to_open = true;
                     } else {
 
                     }
                 }
+            }
+        }
+
         // when no closed waypoints found
         if (found_one_to_open == false)
             valid = false;
-
     }
     // PATHFINDER: End
 
     // RESULT: Success
-    if (succes) {
-        // Build path (from goal to start, read out parent waypoint to backtrace)
-        int temp_path[MAX_PATH_NODES];
+    if (!succes) return false;
+    // Build path (from goal to start, read out parent waypoint to backtrace)
+    int temp_path[MAX_PATH_NODES];
 
-        // INIT: Start
-        for (nodeIndex = 0; nodeIndex < MAX_PATH_NODES; nodeIndex++)
-            temp_path[nodeIndex] = -1;
+    // INIT: Start
+    for (nodeIndex = 0; nodeIndex < MAX_PATH_NODES; nodeIndex++)
+        temp_path[nodeIndex] = -1;
 
-        // The path has been built yet?
-        bool built = false;
+    // The path has been built yet?
+    bool built = false;
 
-        // The variables needed to backtrace
-        // wpta = waypoint we use to backtrace (starting at goal)
-        // p = index for temp_path (the path will be GOAL-START, reversed later)
-        int wpta = nodeTargetIndex, p = 0;
+    // The variables needed to backtrace
+    // wpta = waypoint we use to backtrace (starting at goal)
+    // p = index for temp_path (the path will be GOAL-START, reversed later)
+    int wpta = nodeTargetIndex, p = 0;
 
-        // INIT: End
+    // INIT: End
 
-        // START: When path is not built yet
-        while (built == false) {
-            temp_path[p] = wpta;   // Copy the waypoint into temp_path[index]
+    // START: When path is not built yet
+    while (!built) {
+        temp_path[p] = wpta;   // Copy the waypoint into temp_path[index]
 
-            // IF: At current (start) waypoint
-            if (wpta == nodeStartIndex) {
-                // Check if we did not already had this waypoint before
-                built = true;       // We finished building this path.
-            } else {
-                // Whenever wpta is containing bad information...
-                if (wpta < 0 || wpta > MAX_NODES)
-                    break;           // ...get out aswell
-            }
-
-            // waypoint we use to backtrace will be set to parent waypoint.
-            wpta = astar_list[wpta].parent;
-
-            // Increase index for temp_path
-            p++;
-
-            // Whenever we reach the limit, get out.
-            if (p >= MAX_PATH_NODES)
-                break;
-
+        // IF: At current (start) waypoint
+        if (wpta == nodeStartIndex) {
+            // Check if we did not already had this waypoint before
+            built = true;       // We finished building this path.
+        } else {
+            // Whenever wpta is containing bad information...
+            if (wpta < 0 || wpta > MAX_NODES)
+                break;           // ...get out aswell
         }
 
-        // When using RB_MESSAGES, we see this:
-        /*
-           char msg[80];
-           sprintf(msg, "PATH A*:I have %d NODES in path.\n", p);
-           BotDebug(msg);
-           UTIL_ClientPrintAll(HUD_PRINTNOTIFY, msg);
-         */
-        // End Of notification
+        // waypoint we use to backtrace will be set to parent waypoint.
+        wpta = astar_list[wpta].parent;
 
-        // INIT: Start
-        path_index = 0;           // done above, but done again to be sure
-        // INIT: End
+        // Increase index for temp_path
+        p++;
 
-        // Now set the path up correctly
-        //DEBUG: Bad bug by Greg found
-        //DEBUG: Probably found bug due wrong call, DO NOT START AT MAX_PATH_NODES.
-        for (nodeIndex = (MAX_NODES - 1); nodeIndex > -1; nodeIndex--) {
-            if (temp_path[nodeIndex] < 0)
-                continue;
+        // Whenever we reach the limit, get out.
+        if (p >= MAX_PATH_NODES)
+            break;
 
-            iPath[iPathId][path_index] = temp_path[nodeIndex];
-            path_index++;
-        }
-
-        if (pBot != NULL) {
-            pBot->bot_pathid = 0;
-        }
-
-    } else {
-        return;                   // no succes
     }
 
-    iPath[iPathId][path_index] = nodeTargetIndex;    // terminate path
-    path_index++;
-    iPath[iPathId][path_index] = -1;     // terminate path
+    // INIT: Start
+    path_index = 0;           // done above, but done again to be sure
+    // INIT: End
 
-    // set timer
+    // Now set the path up correctly
+    for (nodeIndex = (MAX_NODES - 1); nodeIndex > -1; nodeIndex--) {
+        if (temp_path[nodeIndex] < 0)
+            continue;
+
+        iPath[botIndex][path_index] = temp_path[nodeIndex];
+        path_index++;
+    }
+
+    if (pBot != NULL) {
+        pBot->beginWalkingPath();
+    }
+
+    // Finally there is the goal
+    iPath[botIndex][path_index] = nodeTargetIndex;
+    path_index++;
+    iPath[botIndex][path_index] = -1;     // terminate path
+
+    // set timer (how much time do we allow ourselves to reach the following node)
     pBot->fMoveToNodeTime = gpGlobals->time + 3;
 
-    return;                      // path found
+    return true; // path found
+}
+
+/**
+ * Open a waypoint/node for pathfinding
+ * @param nodeStartIndex
+ * @param parent
+ * @param cost
+ */
+void cNodeMachine::openWaypoint(int nodeStartIndex, int parent, float cost) const {
+    astar_list[nodeStartIndex].state = OPEN;
+    astar_list[nodeStartIndex].parent = parent;
+    astar_list[nodeStartIndex].cost = cost;
+}
+
+/**
+ * A* method, close all waypoints (nodes to traverse)
+ * @param nodeIndex
+ */
+void cNodeMachine::closeAllWaypoints(int nodeIndex) const {
+    for (nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++) {
+        astar_list[nodeIndex].cost = 0;
+        astar_list[nodeIndex].parent = -1;
+        astar_list[nodeIndex].state = CLOSED;
+    }
 }
 
 // Find a node which has almost no danger!
@@ -2256,7 +2271,7 @@ int cNodeMachine::node_look_camp(Vector vOrigin, int iTeam,
 
 // Walk the path Neo
 void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
-    int BotIndex = pBot->iIndex;
+    int BotIndex = pBot->iBotIndex;
 
     // Check if path is valid
     if (iPath[BotIndex][0] < 0) {
@@ -2271,21 +2286,22 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     pBot->f_move_speed = pBot->f_max_speed;
 
     // Walk the path
-    int iCurrentNode = iPath[BotIndex][pBot->bot_pathid];        // Node we are heading for
-    int iNextNode = iPath[BotIndex][pBot->bot_pathid + 1];
-    //  int iNextNode = iPath[BotIndex][pBot->bot_pathid + 3];
+    int currentNodeToHeadFor = pBot->getCurrentPathNodeToHeadFor();        // Node we are heading for
 
-    if (iCurrentNode < 0) {
+    if (currentNodeToHeadFor < 0) {
         REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "There is no node to go to!");
 
+        // ?? Assumes we had arrived, so remember the previous goal?!?
         if (pBot->hasGoal()) {
             pBot->iPreviousGoalNode = pBot->getGoalNode();
         }
 
         pBot->forgetGoal();
-        pBot->bot_pathid = -1;
+        pBot->forgetPath();
         return;
     }
+
+    int nextNodeToHeadFor = pBot->getNextPathNode();              // the node we will head for after reaching currentNode
 
     // when pButtonEdict is filled in, we check if we are close!
     if (pBot->pButtonEdict) {
@@ -2341,7 +2357,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                 pBot->f_wait_time = gpGlobals->time + 0.5;
                 pBot->fButtonTime = gpGlobals->time + 5.0;
                 pBot->f_node_timer = gpGlobals->time + 3;
-                pBot->bot_pathid = -1;
+                pBot->forgetPath();
                 return;
             } else {
                 SERVER_PRINT("TRACELINE FUCKED UP!\n");
@@ -2356,7 +2372,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
     Vector vEdict, vNode;
     vEdict = pBot->pEdict->v.origin;
-    vNode = Nodes[iCurrentNode].origin;
+    vNode = Nodes[currentNodeToHeadFor].origin;
 
 #ifdef EVY_IS_WRONG
     // Make same height
@@ -2386,7 +2402,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     }
 
     if (pBot->f_strafe_time < gpGlobals->time)
-        pBot->vBody = Nodes[iCurrentNode].origin;
+        pBot->vBody = Nodes[currentNodeToHeadFor].origin;
 
     // Overwrite vBody when we are very close to the bomb.
     // FIXED: Terrorists only
@@ -2405,8 +2421,8 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
         //pBot->pEdict->v.button |= IN_DUCK;                    // duck
 
         // Look at the waypoint we are heading to.
-        pBot->vHead = Nodes[iCurrentNode].origin;
-        pBot->vBody = Nodes[iCurrentNode].origin;
+        pBot->vHead = Nodes[currentNodeToHeadFor].origin;
+        pBot->vBody = Nodes[currentNodeToHeadFor].origin;
 
         // Press forward key to move on ladder
         UTIL_BotPressKey(pBot, IN_FORWARD);
@@ -2419,7 +2435,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
         if (func_distance(vEdict, vNode) < 25)
             bNearNode = true;
     } else {
-        if (Nodes[iCurrentNode].iNodeBits & BIT_LADDER) {
+        if (Nodes[currentNodeToHeadFor].iNodeBits & BIT_LADDER) {
             // Going to a ladder waypoint
             if (func_distance(vEdict, vNode) < 25)
                 bNearNode = true;
@@ -2436,30 +2452,28 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     }
 
 
-    WaypointDrawBeam(pBot->pEdict, pBot->pEdict->v.origin + Vector(0, 0, 32), Nodes[iCurrentNode].origin, 2, 0, 0, 0,
+    WaypointDrawBeam(pBot->pEdict, pBot->pEdict->v.origin + Vector(0, 0, 32), Nodes[currentNodeToHeadFor].origin, 2, 0, 0, 0,
                      255, 255, 1);
 
     // reached node
     if (bNearNode) {
-//      REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Node reached.");
-
         // increase index on path, so we will go to next node
-        pBot->bot_pathid++;
+        pBot->nextPathNodeIndex();
 
         // Calculate vis table from here
-        vis_calculate(iCurrentNode);
+        vis_calculate(currentNodeToHeadFor);
 
         // calculate how long we should take to get to next node
         // nodes are mostly 90 units apart from each other. We give the bot 3 seconds
         // to get to the next node.
         pBot->fMoveToNodeTime = gpGlobals->time + 3.0;
 
-        if (iPath[BotIndex][pBot->bot_pathid] == pBot->getGoalNode()) {
+        if (pBot->isHeadingForGoalNode()) {
             REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Next node will be the destination!");
         }
 
         // When our target was our goal, we are there
-        if (iCurrentNode == pBot->getGoalNode()) {
+        if (currentNodeToHeadFor == pBot->getGoalNode()) {
             REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Heading to destination!");
 
             // When f_cover_time is > gpGlobals, we are taking cover
@@ -2510,10 +2524,11 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                         pBot->clearHostages(); // clear hostages
                     }
                 }
+
                 // reached the end
                 pBot->iPreviousGoalNode = pBot->getGoalNode();
                 pBot->forgetGoal();
-                pBot->bot_pathid = -1;
+                pBot->forgetPath();
             }
 
             return;
@@ -2530,10 +2545,10 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     // NO ENEMY, CHECK AROUND AREA
     if (pBot->pEnemyEdict == NULL) {
         // look towards node after we have reached 'current' node, or else look at 'current' node.
-        if (iNextNode > -1)
-            pBot->vHead = Nodes[iNextNode].origin;
+        if (nextNodeToHeadFor > -1)
+            pBot->vHead = Nodes[nextNodeToHeadFor].origin;
         else
-            pBot->vHead = Nodes[iCurrentNode].origin;
+            pBot->vHead = Nodes[currentNodeToHeadFor].origin;
     }
 
     // Jump over possible gaps, this is when a node is floating..
@@ -2588,7 +2603,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
     // When we have to many duck/jump tries, we reset path stuff
     if (pBot->iDuckTries > 7 || pBot->iJumpTries > 7) {
-        pBot->bot_pathid = -1;    // reset path
+        pBot->forgetPath();
         return;
     }
 
@@ -2792,9 +2807,9 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
                         // when valid...
                         if (iCurrentNode > -1) {
-                            pBot->bot_pathid = -1;
-                            path(iCurrentNode, iButtonNode, pBot->iIndex, pBot,
-                                 PATH_NONE);
+                            pBot->forgetPath();
+                            createPath(iCurrentNode, iButtonNode, pBot->iBotIndex, pBot,
+                                       PATH_NONE);
                             pBot->pButtonEdict = pButtonEdict;
                             return;
                         }
@@ -2813,36 +2828,35 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
         bool bPlayersNear = BOOL_search_near_players(pBot);
 
         // when we recorded a jump, this might help
-        if (Nodes[iCurrentNode].iNodeBits & BIT_JUMP)
+        if (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP)
             UTIL_BotPressKey(pBot, IN_JUMP);
 
         // Not near players, and we should move!!
-        if (bPlayersNear == false && bShouldMove && pBot->bot_pathid > 0) {
-            // Add this connection to the 'troubled ones'
-            int iFrom = iPath[pBot->iIndex][pBot->bot_pathid - 1];
-            int iTo = iCurrentNode;
+        if (!bPlayersNear &&
+            bShouldMove &&
+                pBot->isWalkingPath() &&
+                pBot->getPreviousPathNodeIndex() > -1) {
 
-            if (TroubleExists(iFrom, iTo) < 0) {
-                rblog("cNodeMachine: Added a trouble connection\n");
-                AddTrouble(iFrom, iTo);
+            // Add this connection to the 'troubled ones'
+            int iFrom = iPath[pBot->iBotIndex][pBot->getPreviousPathNodeIndex()];
+            int iTo = currentNodeToHeadFor;
+
+            if (GetTroubleValueWithConnection(iFrom, iTo) < 0) {
+                AddTroubledConnection(iFrom, iTo);
             } else {
                 // Troubled connection already known, make it more troublesome!
-                IncreaseTrouble(iFrom, iTo);
-                rblog
-                        ("cNodeMachine: Increasing trouble on specific connection\n");
+                IncreaseAttemptsForTroubledConnection(iFrom, iTo);
+                if (hasAttemptedConnectionTooManyTimes(iFrom, iTo)) {
 
-                if (TroubleIsTrouble(iFrom, iTo)) {
-                    // remove connection.
-                    rblog
-                            ("cNodeMachine: Connection caused to much trouble. Removed connection\n");
-                    remove_neighbour_node(iFrom, iTo);
-                    RemoveTrouble(iFrom, iTo);
+                    // remove connection
+                    removeNeighbourNode(iFrom, iTo);
+
+                    ClearTroubledConnection(iFrom, iTo);
                 }
             }
-        } else {
-            REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Did not get to destination fast enough, resetted");
         }
-        pBot->bot_pathid = -1;
+
+        pBot->forgetPath();
         pBot->fMoveToNodeTime += 3.0;
         pBot->forgetGoal();
         return;
@@ -2859,14 +2873,14 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
         // JUMP & DUCK
         if (BotShouldJump(pBot)
-            || (Nodes[iCurrentNode].iNodeBits & BIT_JUMP)) {
+            || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP)) {
             //UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: I should jump.\n");
             UTIL_BotPressKey(pBot, IN_JUMP);
             // stay focussed with body and head to this vector
-            pBot->vHead = Nodes[iCurrentNode].origin;
-            pBot->vBody = Nodes[iCurrentNode].origin;
+            pBot->vHead = Nodes[currentNodeToHeadFor].origin;
+            pBot->vBody = Nodes[currentNodeToHeadFor].origin;
             pBot->iJumpTries++;
-            pBot->fMoveToNodeTime += gpGlobals->time + 1;
+            pBot->fMoveToNodeTime += gpGlobals->time + 3;
         } else if (BotShouldDuck(pBot)) {
             //UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: I should duck.\n");
             UTIL_BotPressKey(pBot, IN_DUCK);
@@ -2878,44 +2892,41 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
             // - when going up
             // - when we should move
             // - when no players are close (could be blocked by them, do not learn stupid things)
-            if (Nodes[iCurrentNode].origin.z > pBot->pEdict->v.origin.z &&
+            if (Nodes[currentNodeToHeadFor].origin.z > pBot->pEdict->v.origin.z &&
                 bShouldMove && pBotStuck == NULL) {
                 // check if the next node is floating (skip self)
-                if (node_float(Nodes[iCurrentNode].origin, pBot->pEdict)) {
+                if (node_float(Nodes[currentNodeToHeadFor].origin, pBot->pEdict)) {
                     // it floats, cannot reach
                     // Our previous node in the list sent us here, so disable that connection
-                    int iCurrentPathId = pBot->bot_pathid - 1;
+                    int iCurrentPathId = pBot->getPathNodeIndex() - 1;
                     int iPrevNode = -1;
                     if (iCurrentPathId > -1)
                         iPrevNode = iPath[BotIndex][iCurrentPathId];
 
                     // Find the neighbour connection, and remove it
-                    for (int n = 0; n < MAX_NEIGHBOURS; n++)
-                        if (Nodes[iPrevNode].iNeighbour[n] == iCurrentNode) {
-                            Nodes[iPrevNode].iNeighbour[n] = -1;       // disable this connection
-                            //UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: Fixed connection ------- #1.\n");
-                            // be sure we reset our path stuff
-                            pBot->bot_pathid = -1;
-                            break;     // get out
-                        }
+                    tNode &prevNode = Nodes[iPrevNode];
+                    bool removedNeighbour = removeNeighbourNode(iPrevNode, currentNodeToHeadFor);
+                    if (removedNeighbour) {
+                        pBot->forgetPath();
+                    }
                 } else {
                     // When this node is not floating, it could be something we should jump to.
                     // somehow we cannot reach that node, so we fix it here.
-                    int iCurrentPathId = pBot->bot_pathid - 1;
+                    int iCurrentPathId = pBot->getPreviousPathNodeIndex();
                     int iPrevNode = -1;
                     if (iCurrentPathId > -1)
                         iPrevNode = iPath[BotIndex][iCurrentPathId];
 
                     // Find the neighbour connection, and remove it
                     for (int n = 0; n < MAX_NEIGHBOURS; n++)
-                        if (Nodes[iPrevNode].iNeighbour[n] == iCurrentNode) {
+                        if (Nodes[iPrevNode].iNeighbour[n] == currentNodeToHeadFor) {
                             Nodes[iPrevNode].iNeighbour[n] = -1;       // disable this connection
                             //UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: Fixed connection ------ #2.\n");
                             // be sure we reset our path stuff
                             break;     // get out
                         }
                     //                    pBot->iGoalNode = -1;
-                    //pBot->bot_pathid = -1;
+                    //pBot->pathNodeIndex = -1;
                     pBot->fWanderTime = gpGlobals->time + 0.1;
                 }
 
@@ -2980,7 +2991,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                 }
             } else if (bShouldMove) {
                 // we are stuck by 'world', we go back one step
-                pBot->bot_pathid--;
+                pBot->prevPathNodeIndex();
                 pBot->f_stuck_time = gpGlobals->time + 0.2;
             }
         }                         // Cannot jump or duck
@@ -3037,9 +3048,9 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         return;
     }
 
-    int BotIndex = pBot->iIndex;
+    int BotIndex = pBot->iBotIndex;
 
-    if (pBot->hasPath()) {
+    if (pBot->isWalkingPath()) {
         path_walk(pBot, moved_distance);  // walk the path
         return;
     }
@@ -3076,9 +3087,9 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         }
 
         // Finally create a path
-        path(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
+        createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
 
-        if (pBot->bot_pathid < 0) {
+        if (pBot->getPathNodeIndex()) {
             pBot->rprint("cNodeMachine::path_think()",
                          "there is a goal, no path, and we could not get a path to our goal; so i have choosen to go to a nice nearby and try again");
             pBot->setGoalNode(
@@ -3213,7 +3224,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
             // counter-terrorist should
             float goalscore = 0.0;
             if (pBot->iTeam == 2) {
-                if (pBot->hasHostages() == false) {
+                if (pBot->isKeepingHostages() == false) {
                     // always go to the most furthest hostage spot, and add some randomness here, else
                     // all bots go to there.
                     if (fDistanceToGoal > 90) {
@@ -3250,7 +3261,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
                 score = 2.0;
             }
         } else if (Goals[iGn].iType == GOAL_RESCUEZONE) {
-            if (pBot->hasHostages()) {
+            if (pBot->isKeepingHostages()) {
                 score = 2.0;
             }
         }
@@ -3329,17 +3340,17 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     pBot->rprint("cNodeMachine::path_think", msg);
 
     // create path
-    path(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
+    createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
 
     // If we still did not find a path, we set wander time
     // for 1 second we wait before a new attempt to find a goal and create a path.
-    if (!pBot->hasPath()) {
+    if (!pBot->isWalkingPath()) {
         REALBOT_PRINT(pBot, "cNodeMachine::path_think()",
                       "Ah damn, i finally knew where to go, now i don't know how. Well lets try something close first.");
         pBot->setGoalNode(getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict));
-        path(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
+        createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
 
-        if (!pBot->hasPath()) {
+        if (!pBot->isWalkingPath()) {
             REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Ok, thats it; i am screwed!");
             pBot->forgetPath();
             pBot->forgetGoal();

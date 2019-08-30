@@ -202,7 +202,7 @@ void cBot::SpawnInit() {
    bot_weapons = 0;
    bot_use_special = 0 + RANDOM_LONG(0, 2);
    console_nr = 0;
-   bot_pathid = -1;
+    pathNodeIndex = -1;
    iPathFlags = PATH_DANGER;
 
    // Smarter Stuck stuff
@@ -351,7 +351,7 @@ void cBot::NewRound() {
    bot_armor = 0;
 //   bot_weapons = 0; // <- stefan: prevent from buying new stuff every round!
    console_nr = 0;
-   bot_pathid = -1;
+    pathNodeIndex = -1;
    iGoalNode = -1;
    iPreviousGoalNode = -1;
    iCloseNode = -1;
@@ -435,7 +435,7 @@ void cBot::NewRound() {
    arg3[0] = 0;
 
    // initalize a few other stuff
-   NodeMachine.path_clear(iIndex);
+   NodeMachine.path_clear(iBotIndex);
 
    // Set on camp mode
    if (RANDOM_LONG(0, 100) < ipCampRate)
@@ -492,7 +492,7 @@ float cBot::ReactionTime(int iSkill) {
  ******************************************************************************/
 int cBot::FindEnemy() {
    // When on ladder, do not search for enemies
-   if (OnLadder())
+   if (isOnLadder())
       return -1;
 
    // When blinded we cannot search for enemies
@@ -595,7 +595,7 @@ bool cBot::isEnemyAlive() {
    return IsAlive(pEnemyEdict);
 }
 
-bool cBot::canSeeEnemy() {
+bool cBot::isSeeingEnemy() {
    if (!hasEnemy()) {
       this->rprint("canSeeEnemy called without having enemy?");
       return false;
@@ -624,7 +624,7 @@ void cBot::AimAtEnemy() {
       return;
 
    // We cannot see our enemy? -> bail out
-   if (canSeeEnemy()) {
+   if (isSeeingEnemy()) {
        setHeadAiming(v_enemy); // look at last known vector of enemy
       return;
    }
@@ -683,7 +683,7 @@ void cBot::AimAtEnemy() {
            RANDOM_FLOAT(-fDz, fDz)
        );
 
-   if (holdingGrenadeOrFlashbang()) {
+   if (isHoldingGrenadeOrFlashbang()) {
       // aim a bit higher
       vTarget = vTarget + Vector(0, 0, 50);
    }
@@ -695,7 +695,7 @@ bool cBot::isBlindedByFlashbang() const {
     return fBlindedTime > gpGlobals->time;
 }
 
-bool cBot::holdingGrenadeOrFlashbang() const {
+bool cBot::isHoldingGrenadeOrFlashbang() const {
    return current_weapon.iId == CS_WEAPON_HEGRENADE || current_weapon.iId == CS_WEAPON_FLASHBANG;
 }
 
@@ -763,7 +763,7 @@ void cBot::FightEnemy() {
          //DebugOut("BotFightEnemy() : Lost enemy out of sight for 10 seconds.\n");
          pEnemyEdict = NULL;
          v_enemy = Vector(0, 0, 0);
-         bot_pathid = -1;
+          pathNodeIndex = -1;
          iGoalNode = -1;
       } else {
          // When we have the enemy for the first time out of sight
@@ -773,7 +773,7 @@ void cBot::FightEnemy() {
             int iGoal = NodeMachine.getCloseNode(v_enemy, NODE_ZONE, pEdict);
             if (iGoal > -1) {
                iGoalNode = iGoal;
-               bot_pathid = -1; // force recalculation of path
+                pathNodeIndex = -1; // force recalculation of path
             }
             bFirstOutOfSight = true;
          } else {
@@ -807,11 +807,11 @@ void cBot::pickWeapon(int weaponId) {
 }
 
 bool cBot::ownsFavoritePrimaryWeapon() {
-   return hasFavoritePrimaryWeaponPreference() && ownsWeapon(ipFavoPriWeapon);
+   return hasFavoritePrimaryWeaponPreference() && isOwningWeapon(ipFavoPriWeapon);
 }
 
 bool cBot::ownsFavoriteSecondaryWeapon() {
-   return hasFavoriteSecondaryWeaponPreference() && ownsWeapon(ipFavoSecWeapon);
+   return hasFavoriteSecondaryWeaponPreference() && isOwningWeapon(ipFavoSecWeapon);
 }
 
 /**
@@ -819,7 +819,7 @@ bool cBot::ownsFavoriteSecondaryWeapon() {
  * @param weaponId
  * @return
  */
-bool cBot::ownsWeapon(int weaponId) {
+bool cBot::isOwningWeapon(int weaponId) {
    return bot_weapons & (1 << weaponId);
 }
 
@@ -828,7 +828,7 @@ bool cBot::ownsWeapon(int weaponId) {
  * @param weaponId
  * @return
  */
-bool cBot::holdsWeapon(int weaponId) {
+bool cBot::isHoldingWeapon(int weaponId) {
    return (current_weapon.iId == weaponId);
 }
 
@@ -880,9 +880,9 @@ void cBot::PickBestWeapon() {
    }
 
    // At this point we do not update weapon information. And we did not 'switch back' to primary / secondary
-   if (hasEnemy() && !canSeeEnemy()) {
+   if (hasEnemy() && !isSeeingEnemy()) {
       // decision to pull HE grenade
-      if (ownsWeapon(CS_WEAPON_HEGRENADE) &&       // we have a grenade
+      if (isOwningWeapon(CS_WEAPON_HEGRENADE) &&       // we have a grenade
             func_distance(pEdict->v.origin, v_enemy) < 900 &&     // we are close
             func_distance(pEdict->v.origin, v_enemy) > 200 &&     // but not to close
             RANDOM_LONG(0, 100) < 10 &&   // only randomly we pick a grenade in the heat of the battle
@@ -895,7 +895,7 @@ void cBot::PickBestWeapon() {
          return;
       }
       // OR we pull a flashbang?
-      if (ownsWeapon(CS_WEAPON_FLASHBANG) &&       // we have a grenade
+      if (isOwningWeapon(CS_WEAPON_FLASHBANG) &&       // we have a grenade
             func_distance(pEdict->v.origin, v_enemy) < 200 &&     // we are close
             func_distance(pEdict->v.origin, v_enemy) > 300 &&     // but not to close
             RANDOM_LONG(0, 100) < 15 &&   // only randomly we pick a grenade in the heat of the battle
@@ -953,8 +953,8 @@ void cBot::PickBestWeapon() {
                UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(iSecondaryWeapon));  // select the secondary
                return;
             } else {
-               if (ownsWeapon(CS_WEAPON_KNIFE) &&  // we have a knife (for non-knife maps)
-                   !holdsWeapon(CS_WEAPON_KNIFE))  // but we do not carry it
+               if (isOwningWeapon(CS_WEAPON_KNIFE) &&  // we have a knife (for non-knife maps)
+                   !isHoldingWeapon(CS_WEAPON_KNIFE))  // but we do not carry it
                {
                   UTIL_SelectItem(pEdict, "weapon_knife");
                   return;
@@ -973,7 +973,7 @@ void cBot::FireWeapon() {
    if (f_shoot_time > gpGlobals->time || f_update_weapon_time > gpGlobals->time)
       return;
 
-   if (!canSeeEnemy()) {
+   if (!isSeeingEnemy()) {
       return;
    }
 
@@ -1071,7 +1071,7 @@ void cBot::FireWeapon() {
    }                            // SNIPER
    else if (CarryWeaponType() == SHIELD) {
       if (fDistance > 550) {
-         if (bHasShieldDrawn()) {
+         if (hasShieldDrawn()) {
             // when the enemy is far away, we keep it
          } else {
             // draw shield!
@@ -1080,7 +1080,7 @@ void cBot::FireWeapon() {
          }
       } else {
          // get weapon here.
-         if (bHasShieldDrawn() && f_allow_keypress < gpGlobals->time) {
+         if (hasShieldDrawn() && f_allow_keypress < gpGlobals->time) {
             rblog
             ("BOT: Enemy is close enough, i should withdraw shield to attack this enemy\n");
             UTIL_BotPressKey(this, IN_ATTACK2);
@@ -1103,7 +1103,7 @@ void cBot::Combat() {
    }
 
    // Bot is on ladder
-   if (OnLadder()) {
+   if (isOnLadder()) {
       // TODO: Bot fights when on ladder
       return;
    }
@@ -1297,10 +1297,10 @@ void cBot::FindCover() {
 
    if (iCoverNode > -1) {
       iGoalNode = iCoverNode;
-      bot_pathid = -1;
+       pathNodeIndex = -1;
 
       // Calculate a path to this position and get the heck there.
-      NodeMachine.path(iNodeFrom, iCoverNode, iIndex, this, PATH_NONE);
+       NodeMachine.createPath(iNodeFrom, iCoverNode, iBotIndex, this, PATH_NONE);
       f_cover_time = gpGlobals->time + 8;
       bTakenCover = true;
    } else {
@@ -1311,11 +1311,11 @@ void cBot::FindCover() {
          int iNodeCover = NodeMachine.getCloseNode(cover_vect, 60, pEdict);
          if (iNodeCover > -1) {
             iGoalNode = iNodeCover;
-            bot_pathid = -1;
+             pathNodeIndex = -1;
 
             // Calculate a path to this position and get the heck there.
-            NodeMachine.path(iNodeFrom, iNodeCover, iIndex, this,
-                             PATH_NONE);
+             NodeMachine.createPath(iNodeFrom, iNodeCover, iBotIndex, this,
+                                    PATH_NONE);
             f_cover_time = gpGlobals->time + 8;
             bTakenCover = true;
          }
@@ -1440,7 +1440,7 @@ void cBot::InteractWithPlayers() {
       } else {
 
          // For any weapon that has a silencer (the colt for example), use it if we want that.
-         if (holdsWeapon(CS_WEAPON_M4A1))
+         if (isHoldingWeapon(CS_WEAPON_M4A1))
             if (bot_use_special == 0 && zoomed == ZOOM_NONE
                   && f_allow_keypress < gpGlobals->time) {
                UTIL_BotPressKey(this, IN_ATTACK2);
@@ -1505,7 +1505,7 @@ void cBot::InteractWithPlayers() {
          if (iGoal > -1)
          {
          iGoalNode = iGoal;
-         bot_pathid = -1;
+         pathNodeIndex = -1;
          }            
        */
    }
@@ -1527,7 +1527,7 @@ void cBot::InteractWithPlayers() {
          NodeMachine.getCloseNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
       if (iGoal > -1) {
          iGoalNode = iGoal;
-         bot_pathid = -1;
+          pathNodeIndex = -1;
       }
       // Speed our enemy runs
       // int run_speed = FUNC_PlayerSpeed(pBot->pBotEnemy);
@@ -1573,7 +1573,7 @@ void cBot::InteractWithPlayers() {
 
       if (iGoal > -1) {
          iGoalNode = iGoal;
-         bot_pathid = -1;
+          pathNodeIndex = -1;
       }
    }
 }
@@ -1919,7 +1919,7 @@ void cBot::Act() {
             f_c4_time = gpGlobals->time;
             iGoalNode = NodeMachine.getCloseNode(pEdict->v.origin, 200, pEdict);
             iPathFlags = PATH_CAMP;
-            bot_pathid = -1;
+             pathNodeIndex = -1;
             f_c4_time = gpGlobals->time;
          }
       }
@@ -2030,7 +2030,7 @@ void cBot::Act() {
 }
 
 // BOT: On ladder?
-bool cBot::OnLadder() {
+bool cBot::isOnLadder() {
    return FUNC_IsOnLadder(pEdict);
 }
 
@@ -2038,7 +2038,7 @@ bool cBot::OnLadder() {
 void cBot::CheckAround() {
 
    // Do not act when on ladder
-   if (OnLadder())
+   if (isOnLadder())
       return;
 
    // The principle is to fire 2 tracelines, both forward; one left
@@ -2155,10 +2155,26 @@ bool cBot::TakeCover() {
    return true;
 }
 
+/**
+ * Set the node to follow next as the next one (ie, increase index)
+ */
+void cBot::nextPathNodeIndex() {
+    this->pathNodeIndex++;
+}
+
+/**
+ * Set the node to follow next as the previous one (ie, decrease index). Calls forgetPath when index is getting < 0
+ */
+void cBot::prevPathNodeIndex() {
+   this->pathNodeIndex--;
+   if (this->pathNodeIndex < 0) {
+       forgetPath();
+   }
+}
 
 // Returns true if bot has a path to follow
-bool cBot::hasPath() {
-   return this->bot_pathid > -1;
+bool cBot::isWalkingPath() {
+   return this->pathNodeIndex > -1;
 }
 
 // Returns true if bot has goal node
@@ -2193,9 +2209,17 @@ void cBot::forgetGoal() {
    this->iGoalNode = -1;
 }
 
+int cBot::getPathNodeIndex() {
+    return this->pathNodeIndex;
+}
+
+int cBot::getPreviousPathNodeIndex() {
+    return this->pathNodeIndex - 1;
+}
+
 void cBot::forgetPath() {
-   this->bot_pathid = -1;
-   NodeMachine.path_clear(this->iIndex);
+   this->pathNodeIndex = -1;
+   NodeMachine.path_clear(this->iBotIndex);
 }
 
 int cBot::getGoalNode() {
@@ -2222,7 +2246,7 @@ void cBot::rprint(const char *msg) {
 }
 
 bool cBot::hasBomb() {
-    return ownsWeapon(CS_WEAPON_C4);
+    return isOwningWeapon(CS_WEAPON_C4);
 }
 
 bool cBot::isCounterTerrorist() {
@@ -2242,7 +2266,7 @@ bool cBot::hasSecondaryWeaponEquiped() {
 }
 
 bool cBot::hasSecondaryWeapon(int weaponId)  {
-   return ownsWeapon(weaponId);
+   return isOwningWeapon(weaponId);
 }
 
 void cBot::performBuyWeapon(const char *arg1, const char *arg2) {
@@ -2699,7 +2723,7 @@ void cBot::Memory() {
                      > 100 && func_distance(pEdict->v.origin, vC4) < 1024) {
                   // set new goal node
                   iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE, NULL);
-                  bot_pathid = -1;
+                   pathNodeIndex = -1;
                }
             }
          }
@@ -2744,7 +2768,7 @@ int cBot::CarryWeaponType() {
          || weapon_id == CS_WEAPON_AWP || weapon_id == CS_WEAPON_G3SG1)
       kind = SNIPER;
 
-   if (bHasShield()) {
+   if (hasShield()) {
       kind = SHIELD;
    }
    //if (weapon_id < 1)
@@ -2785,11 +2809,39 @@ void cBot::ThinkAboutGoals() {
 }
 
 /**
-This method will set the iCloseNode method, which is the node most closest to
-the bot.
+This function will set the iCloseNode variable, which is the node most closest to
+the bot. Returns the closest node it found.
 **/
-void cBot::setCurrentNode() {
+int cBot::determineCurrentNode() {
 	iCloseNode = NodeMachine.getCloseNode(pEdict->v.origin, 100, pEdict);
+	return iCloseNode;
+}
+
+/**
+ * This returns the current node (iCloseNode) set. Instead of using determineCurrentNode, which is expensive,
+ * call this to return the cached value.
+ * @return
+ */
+int cBot::getCurrentNode() {
+    return iCloseNode;
+}
+
+/**
+ * Aka, the node we are heading for.
+ */
+int cBot::getCurrentPathNodeToHeadFor() {
+    return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, pathNodeIndex);
+}
+
+bool cBot::isHeadingForGoalNode() {
+    return getCurrentPathNodeToHeadFor() == getGoalNode();
+}
+
+/**
+ * Aka, the next node after we have arrived at the current path node.
+ */
+int cBot::getNextPathNode() {
+    return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, pathNodeIndex + 1);
 }
 
 // Is this bot dead?
@@ -2808,7 +2860,7 @@ void cBot::Think() {
    }
 
    // Set closest node
-   setCurrentNode();
+    determineCurrentNode();
 
    // BOT: If a bot is dead, re-initialize
    if (isDead()) {
@@ -3060,8 +3112,8 @@ void cBot::Think() {
       if (Game.fWalkWithKnife == 0)
          bMayFromGame = false;
 
-      if (bHasShield())
-         if (!bHasShieldDrawn() && f_allow_keypress < gpGlobals->time) {
+      if (hasShield())
+         if (!hasShieldDrawn() && f_allow_keypress < gpGlobals->time) {
             rblog("BOT: I draw shield because i have no enemy\n");
             UTIL_BotPressKey(this, IN_ATTACK2);      // draw shield
             f_allow_keypress = gpGlobals->time + 0.7;
@@ -3117,7 +3169,7 @@ void cBot::Think() {
 /**
 Return true if one of the pointers is not NULL
 **/
-bool cBot::hasHostages() {
+bool cBot::isKeepingHostages() {
 	return hostage1 != NULL || hostage2 != NULL || hostage3 != NULL || hostage4 != NULL;
 }
 
@@ -3132,37 +3184,37 @@ void cBot::clearHostages() {
 void cBot::CheckGear() {
 
    // PRIMARY
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_mp5navy"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_mp5navy");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_ak47")))    iPrimaryWeapon = UTIL_GiveWeaponId("weapon_ak47");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_m3")))      iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m3");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_aug")))     iPrimaryWeapon = UTIL_GiveWeaponId("weapon_aug");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_sg552")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_sg552");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_m249")))    iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m249");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_xm1014")))  iPrimaryWeapon = UTIL_GiveWeaponId("weapon_xm1014");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_p90")))     iPrimaryWeapon = UTIL_GiveWeaponId("weapon_p90");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_tmp")))     iPrimaryWeapon = UTIL_GiveWeaponId("weapon_tmp");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_m4a1")))    iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m4a1");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_awp")))     iPrimaryWeapon = UTIL_GiveWeaponId("weapon_awp");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_sg550")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_sg550");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_scout")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_scout");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_mac10")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_mac10");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_g3sg1")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_g3sg1");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_mp5navy"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_mp5navy");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_ak47"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_ak47");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_m3"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m3");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_aug"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_aug");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_sg552"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_sg552");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_m249"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m249");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_xm1014"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_xm1014");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_p90"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_p90");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_tmp"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_tmp");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_m4a1"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_m4a1");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_awp"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_awp");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_sg550"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_sg550");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_scout"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_scout");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_mac10"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_mac10");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_g3sg1"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_g3sg1");
 
    // Counter-Strike 1.6 weapon FAMAS/GALIL
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_famas")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_famas");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_galil")))   iPrimaryWeapon = UTIL_GiveWeaponId("weapon_galil");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_famas"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_famas");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_galil"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_galil");
 
    // SECONDARY
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_ump45")))   iSecondaryWeapon = UTIL_GiveWeaponId("weapon_ump45");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_elite")))   iSecondaryWeapon = UTIL_GiveWeaponId("weapon_elite");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_fiveseven")))  iSecondaryWeapon = UTIL_GiveWeaponId("weapon_fiveseven");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_p228")))    iSecondaryWeapon = UTIL_GiveWeaponId("weapon_p228");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_deagle")))  iSecondaryWeapon = UTIL_GiveWeaponId("weapon_deagle");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_usp")))     iSecondaryWeapon = UTIL_GiveWeaponId("weapon_usp");
-   if (ownsWeapon(UTIL_GiveWeaponId("weapon_glock18"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_glock18");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_ump45"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_ump45");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_elite"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_elite");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_fiveseven"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_fiveseven");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_p228"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_p228");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_deagle"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_deagle");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_usp"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_usp");
+   if (isOwningWeapon(UTIL_GiveWeaponId("weapon_glock18"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_glock18");
 
    // Handle shields as primary weapon
-   if (bHasShield()) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_shield");
+   if (hasShield()) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_shield");
 }
 
 // BOT: Returns (vector) of any bombspot found within < fDistance
@@ -3328,7 +3380,7 @@ bool BotRadioAction() {
 
                   // get to the leader position
                   BotPointer->setGoalNode(NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE * 2, plr));
-                  BotPointer->bot_pathid = -1;
+                  BotPointer->forgetPath();
                }
 
                // Hold this position
@@ -3358,7 +3410,7 @@ bool BotRadioAction() {
                      unstood = true;
 
                      BotPointer->setGoalNode(iBackupNode);
-                     BotPointer->bot_pathid = -1;
+                     BotPointer->forgetPath();
                      BotPointer->f_camp_time = gpGlobals->time - 1;
                      BotPointer->f_walk_time = gpGlobals->time;
                   }
@@ -3388,7 +3440,7 @@ bool BotRadioAction() {
 
                   if (iBackupNode > -1) {
                      BotPointer->setGoalNode(iBackupNode);
-                     BotPointer->bot_pathid = -1;
+                     BotPointer->forgetPath();
                      BotPointer->f_camp_time = gpGlobals->time - 1;
                      BotPointer->f_walk_time = gpGlobals->time;
                   }
@@ -3526,14 +3578,14 @@ bool cBot::CanSeeVector(Vector vDest) {
 // The coming 2 shield functions where originaly created by Whistler;
 // i got them from the JoeBot source though. But... in the end, thank you
 // Whistler!
-bool cBot::bHasShield() {
+bool cBot::hasShield() {
    // Adapted from Wei Mingzhi's YAPB
    return (strncmp(STRING(pEdict->v.viewmodel), "models/shield/v_shield_", 23) == 0);
 }
 
-bool cBot::bHasShieldDrawn() {
+bool cBot::hasShieldDrawn() {
    // Adapted from Wei Mingzhi's YAPB
-   if (!bHasShield())
+   if (!hasShield())
       return false;
 
    return (pEdict->v.weaponanim == 6 || pEdict->v.weaponanim == 7);
@@ -3575,10 +3627,10 @@ void cBot::Dump(void) {
       NodeMachine.getCloseNode(pEdict->v.origin, (NODE_ZONE * 2), pEdict);
 
    _snprintf(buffer, 180,
-            "%s (#%d %s): timers, now= %.0f, c4_time=%.0f, camp_time=%.0f, wait_time=%.0f, cover_time=%.0f, wander=%.0f, MoveToNodeTime=%.0f\n",
-            name, iIndex, (iTeam == 1) ? "T" : "CT", gpGlobals->time,
-            f_c4_time, f_camp_time, f_wait_time, f_cover_time, fWanderTime,
-            fMoveToNodeTime);
+             "%s (#%d %s): timers, now= %.0f, c4_time=%.0f, camp_time=%.0f, wait_time=%.0f, cover_time=%.0f, wander=%.0f, MoveToNodeTime=%.0f\n",
+             name, iBotIndex, (iTeam == 1) ? "T" : "CT", gpGlobals->time,
+             f_c4_time, f_camp_time, f_wait_time, f_cover_time, fWanderTime,
+             fMoveToNodeTime);
    rblog(buffer);
    _snprintf(buffer, 180, "  GoalNode=%d, CurrentNode=%d, iPathFlags=",
             iGoalNode, iCurrentNode);
@@ -3601,7 +3653,15 @@ void cBot::Dump(void) {
    strncat(buffer, "\n", 180);
    rblog(buffer);
    if (iGoalNode >= 0)
-      NodeMachine.dump_path(iIndex, bot_pathid);
+      NodeMachine.dump_path(iBotIndex, pathNodeIndex);
+}
+
+/**
+ * Will begin walk the path by setting pathNodeIndex to 0, which is a valid nr so that
+ * isWalkingPath returns true.
+ */
+void cBot::beginWalkingPath() {
+    this->pathNodeIndex = 0;
 }
 
 // $Log: bot.cpp,v $

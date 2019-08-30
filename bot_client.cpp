@@ -459,23 +459,19 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
          //   we fix it (only when dist > 90)
          cBot *pBot = &bots[bot_index];
          if (damage_bits & (DMG_FALL | DMG_CRUSH)) {
-            LOG_CONSOLE(PLID, "realbot - fixed connection with falling.");
             LOG_MESSAGE(PLID, "realbot - fixed connection with falling.");
-            if (pBot->bot_pathid > 0) {
-               int iNode = NodeMachine.NodeFromPath(pBot->iIndex,
-                                                    (pBot->bot_pathid -
-                                                     1));
+            if (pBot->getPathNodeIndex() > 0) { // was one node further, so we can use previous node!
+               int iNode = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex, pBot->getPreviousPathNodeIndex());
                float fDist =
                   fabs(damage_origin.z -
                        NodeMachine.node_vector(iNode).z);
                if (fDist > 90) {
-
                   // we know where we came from, and we know where we went to
-                  int iNodeTo = NodeMachine.NodeFromPath(pBot->iIndex,
-                                                         pBot->bot_pathid);
+                  int iNodeTo = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex,
+                                                                       pBot->getPathNodeIndex());
 
                   // remove connection
-                  NodeMachine.remove_neighbour_node(iNode, iNodeTo);
+                   NodeMachine.removeNeighbourNode(iNode, iNodeTo);
                }
             }
          }

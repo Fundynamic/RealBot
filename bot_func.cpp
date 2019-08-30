@@ -890,7 +890,7 @@ void FUNC_BotUpdateHostages(cBot * pBot) {
 
 bool FUNC_BotHoldsZoomWeapon(cBot * pBot) {
    // Check if the bot holds a weapon that can zoom, but is not a sniper gun.
-   return pBot->holdsWeapon(CS_WEAPON_AUG) || pBot->holdsWeapon(CS_WEAPON_SG552);
+   return pBot->isHoldingWeapon(CS_WEAPON_AUG) || pBot->isHoldingWeapon(CS_WEAPON_SG552);
 }
 
 void FUNC_BotChecksFalling(cBot * pBot) {

@@ -41,7 +41,7 @@
 
 extern cNodeMachine NodeMachine;
 extern cGame Game;
-extern cBot bots[32];
+extern cBot bots[MAX_BOTS];
 
 // GAME: Init
 void cGame::Init() {
@@ -413,13 +413,17 @@ int cGame::CreateBot(edict_t * pPlayer, const char *arg1, const char *arg2,
       char ptr[128];            // allocate space for message from ClientConnect
       char *infobuffer;
       int clientIndex;
-      int index;
-      index = 0;
-      while ((bots[index].bIsUsed) && (index < 32))
-         index++;
-      if (index == 32) {
+
+      // find empty bot index
+      int freeBotIndex;
+      freeBotIndex = 0;
+      while ((bots[freeBotIndex].bIsUsed) && (freeBotIndex < MAX_BOTS))
+         freeBotIndex++;
+
+      if (freeBotIndex == MAX_BOTS) { // failure
          return GAME_MSG_FAILURE;
       }
+
       // create the player entity by calling MOD's player function
       // (from LINK_ENTITY_TO_CLASS for player object)
 
@@ -463,10 +467,10 @@ int cGame::CreateBot(edict_t * pPlayer, const char *arg1, const char *arg2,
       // initialize all the variables for this bot...
 
       // Retrieve Pointer
-      pBot = &bots[index];
+      pBot = &bots[freeBotIndex];
 
       // Set variables
-      pBot->iIndex = index;
+      pBot->iBotIndex = freeBotIndex;
       pBot->bIsUsed = true;
       pBot->respawn_state = RESPAWN_IDLE;
       pBot->fCreateTime = gpGlobals->time;
@@ -539,7 +543,7 @@ void REALBOT_PRINT(cBot * pBot, const char *Function, const char *msg) {
 
    char cMessage[512];
    char team[9];
-   char name[32];
+   char name[MAX_NAME_LENGTH];
 
    memset(team, 0, sizeof(team));       // clear
    memset(name, 0, sizeof(name));       // clear

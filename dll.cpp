@@ -1679,7 +1679,7 @@ void RealBot_ServerCommand(void) {
                // remove this connection
                if (iTo > -1) {
                   bool bSuccess =
-                     NodeMachine.remove_neighbour_node(iOnNode, iTo);
+                          NodeMachine.removeNeighbourNode(iOnNode, iTo);
 
                   if (bSuccess)
                      sprintf(cMessage,
@@ -1805,7 +1805,7 @@ void RealBot_ServerCommand(void) {
             int Node1 = atoi(arg2);
             int Node2 = atoi(arg3);
             if ((Node1 >= 0) && (Node2 >= 0)
-                  && NodeMachine.remove_neighbour_node(Node1, Node2))
+                  && NodeMachine.removeNeighbourNode(Node1, Node2))
                sprintf(cMessage,
                        "NODES EDITOR: Removed connection from node %d to node %d.",
                        Node1, Node2);
@@ -1898,7 +1898,7 @@ void RealBot_ServerCommand(void) {
                   iTo = NodeMachine.node_goal(GOAL_SPAWNT);
 
                sprintf(cMessage, "RBDEBUG: Creating path from [%d] to [%d].", iFrom, iTo);
-               NodeMachine.path(iFrom, iTo, 0, NULL, PATH_DANGER);
+                NodeMachine.createPath(iFrom, iTo, 0, NULL, PATH_DANGER);
             } else {
                 sprintf(cMessage, "RBDEBUG: Usage: realbot debug nodes path <fromNode> <toNode>");
             }

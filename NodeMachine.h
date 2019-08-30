@@ -170,8 +170,8 @@ tTrouble;
 
 // Node
 typedef struct {
-   Vector origin;               // Node origin
-   int iNeighbour[MAX_NEIGHBOURS];      // Neighbour reachable nodes
+   Vector origin;                   // Node origin
+   int iNeighbour[MAX_NEIGHBOURS];  // Reachable nodes for this node
    int iNodeBits;
 }
 tNode;
@@ -198,10 +198,10 @@ public:
 
    // -----------------
    bool add_neighbour_node(int iNode, int iToNode);
-   bool remove_neighbour_node(int iNode, int iRemoveNode);
+   bool removeNeighbourNode(int iNode, int neighborNodeToRemove);
    bool remove_neighbour_nodes(int iNode);
    int neighbour_node(tNode Node);
-   int is_neighbour_node(tNode Node, int iNode);
+   int is_neighbour_node(tNode node, int iNode);
 
    // -----------------
    void init();                 // Init (info)nodes
@@ -213,11 +213,11 @@ public:
    Vector node_vector(int iNode);
 
    // -----------------
-   int TroubleExists(int iFrom, int iTo);
-   bool AddTrouble(int iFrom, int iTo);
-   bool TroubleIsTrouble(int iFrom, int iTo);
-   void IncreaseTrouble(int iFrom, int iTo);
-   bool RemoveTrouble(int iFrom, int iTo);
+   int GetTroubleValueWithConnection(int iFrom, int iTo);
+   bool AddTroubledConnection(int iFrom, int iTo);
+   bool hasAttemptedConnectionTooManyTimes(int iFrom, int iTo);
+   void IncreaseAttemptsForTroubledConnection(int iFrom, int iTo);
+   bool ClearTroubledConnection(int iFrom, int iTo);
 
    // -----------------
    void goals();                // find new goals and attach them to the nodes
@@ -253,12 +253,12 @@ public:
    void vis_calculate(int iFrom);
 
    // -----------------
-   void path(int nodeStartIndex, int nodeTargetIndex, int iPath, cBot * pBot, int iFlags);   // know the path
+   bool createPath(int nodeStartIndex, int nodeTargetIndex, int botIndex, cBot * pBot, int iFlags);   // know the path
    void path_draw(edict_t * pEntity);   // draw the path
    void path_walk(cBot * pBot, float moved_distance);   // walk the path
    void path_think(cBot * pBot, float moved_distance);  // think about paths
-   void path_clear(int iPathId);
-   int NodeFromPath(int iBot, int iIndex);
+   void path_clear(int botIndex);
+   int getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex);
 
    // -----------------
    void VectorToMeredian(Vector vOrigin, int *iX, int *iY);     // Input: origin, output X and Y Meredians
@@ -291,9 +291,11 @@ private:
    tPlayer Players[32];                                 // Players to keep track of, for node plotting
    tGoal Goals[MAX_GOALS];                              // Goals to pursue in the game
    tMeredian Meredians[MAX_MEREDIANS][MAX_MEREDIANS];   // Meredian lookup search for Nodes, squared
-   int iPath[32][MAX_PATH_NODES];                       // 32 bots, with max waypoints paths (TODO: move to bot class?)
+
+   int iPath[MAX_BOTS][MAX_PATH_NODES];                 // 32 bots, with max waypoints paths (TODO: move to bot class?)
+
    int iMaxUsedNodes;
-   //byte        iVisTable[MAX_NODES][MAX_NODES];
+
    byte iVisChecked[MAX_NODES];
    unsigned char *cVisTable;
    tTrouble Troubles[MAX_TROUBLE];
@@ -303,6 +305,10 @@ private:
    void PlotNodes(int NeighbourColor, int NodeColor);
    void PlotPaths(int Tcolor, int CTcolor);
    void PlotGoals(int GoalColor);
+
+    void closeAllWaypoints(int nodeIndex) const;
+
+    void openWaypoint(int nodeStartIndex, int parent, float cost) const;
 };
 
 #endif
