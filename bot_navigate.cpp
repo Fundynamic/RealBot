@@ -37,6 +37,7 @@
 #include "bot.h"
 #include "bot_weapons.h"
 #include "bot_func.h"
+#include "game.h"
 #include "NodeMachine.h"
 extern int mod_id;
 
