@@ -773,6 +773,10 @@ int cNodeMachine::add2(Vector vOrigin, int iType, edict_t *pEntity) {
     return i;
 }
 
+/**
+ * Returns a free node index, this is not bound to a meredian (subcluster)!
+ * @return
+ */
 int cNodeMachine::getFreeNodeIndex() {
     int i = 0;
     for (i = 0; i < MAX_NODES; i++) {
@@ -791,106 +795,108 @@ int cNodeMachine::add(Vector vOrigin, edict_t *pEntity) {
     if (getCloseNode(vOrigin, NODE_ZONE, pEntity) > -1)
         return -1;
 
-    int index = getFreeNodeIndex();
+    int currentIndex = getFreeNodeIndex();
 
     // failed to find free node, bail
-    if (index < 0) {
+    if (currentIndex < 0) {
         return -1;
     }
 
-    Nodes[index].origin = vOrigin;
+    Nodes[currentIndex].origin = vOrigin;
 
     // SET BITS:
     bool bIsInWater = false;
-    bool bIndexFloats = false;
+    bool indexNodeFloats = false;
     bool bIndexOnCrate = false;
     bool bDucks = false;
 
     if (pEntity) {
         // Does this thing float?
-        bIndexFloats = node_float(Nodes[index].origin, pEntity);
-        bIndexOnCrate = node_on_crate(Nodes[index].origin, pEntity);
+        indexNodeFloats = node_float(Nodes[currentIndex].origin, pEntity);
+        bIndexOnCrate = node_on_crate(Nodes[currentIndex].origin, pEntity);
 
         if (FUNC_IsOnLadder(pEntity))
-            Nodes[index].iNodeBits |= BIT_LADDER;
+            Nodes[currentIndex].iNodeBits |= BIT_LADDER;
 
         // water
         if (UTIL_PointContents(pEntity->v.origin) == CONTENTS_WATER) {
-            Nodes[index].iNodeBits |= BIT_WATER;
+            Nodes[currentIndex].iNodeBits |= BIT_WATER;
             bIsInWater = true;
         }
 
         // record jumping
         // FIXED: removed ; , thanks Whistler
         if (pEntity->v.button & IN_JUMP)
-            Nodes[index].iNodeBits |= BIT_JUMP;
+            Nodes[currentIndex].iNodeBits |= BIT_JUMP;
 
         if (FUNC_IsOnLadder(pEntity))
-            bIndexFloats = false;
+            indexNodeFloats = false;
 
-        if (pEntity->v.button & IN_DUCK)
+        if (pEntity->v.button & IN_DUCK) {
             bDucks = true;
+//            // ??
+//            Nodes[index].iNodeBits |= BIT_DUCK;
+        }
 
     }                            // do only check pEntity when its not NULL
     else {
         // Does this thing float?
-        bIndexFloats = node_float(Nodes[index].origin, NULL);
-        bIndexOnCrate = node_on_crate(Nodes[index].origin, NULL);
+        indexNodeFloats = node_float(Nodes[currentIndex].origin, NULL);
+        bIndexOnCrate = node_on_crate(Nodes[currentIndex].origin, NULL);
     }
 
-    // add to meredians database
+    // add to subcluster
     int iX, iY;
-    VectorToMeredian(Nodes[index].origin, &iX, &iY);
+    VectorToMeredian(Nodes[currentIndex].origin, &iX, &iY);
 
-    if (iX > -1 && iY > -1)
-        AddToMeredian(iX, iY, index);
-
+    if (iX > -1 && iY > -1) {
+        AddToMeredian(iX, iY, currentIndex);
+    }
     // done.
+
+    // determine which other nodes are to be connected
     TraceResult tr;              // for traceresults
-    int nId = 0;                 // for neighbours
+    int neighbourId = 0;                 // for neighbours
 
     // Connect this node to other nodes (and vice versa)
-    for (int j = 0; j < MAX_NODES; j++) {
-        // Exclude rules
+    for (int nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++) {
 
-        // self
-        if (j == index)
+        if (nodeIndex == currentIndex || // exclude self
+            Nodes[nodeIndex].origin == INVALID_VECTOR // exclude invalid Nodes (no origin set)
+            )
             continue;
 
-        // invalid
-        if (Nodes[j].origin == INVALID_VECTOR)
-            continue;
-
-        // normalized vector
-        Vector vNormalizedOrigin = Nodes[j].origin;
-        Vector vNormalizedIndex = Nodes[index].origin;
+        // remove the z-axis, so we just compare x,y now
+        Vector vNormalizedOrigin = Nodes[nodeIndex].origin;
+        Vector vNormalizedIndex = Nodes[currentIndex].origin;
 
         vNormalizedOrigin.z = 0;
         vNormalizedIndex.z = 0;
 
         // When walking the human player can't pass a certain speed and distance
-        // however, when a human is falling, the distance will be bigger.
-        if (func_distance(vNormalizedOrigin, vNormalizedIndex) >
-            (NODE_ZONE * 3)) {
+        // however, when a human is falling (or walking a slope), the distance will be bigger.
+        float distanceBetweenVectorsWithoutZAxis = func_distance(vNormalizedOrigin, vNormalizedIndex);
+        if (distanceBetweenVectorsWithoutZAxis > (NODE_ZONE * 3)) { // allow up to 3 times the boundary we use normally
             continue;
         }
+        
         // ----------------------
         // The node is close enough, is valid, and not the same as the created one.
         // ----------------------
 
-        // Traceline from J to I
-        bool bNeighbourFloats = node_float(Nodes[j].origin, pEntity);
-        bool bNeighOnCrate = node_on_crate(Nodes[j].origin, pEntity);
+        // Traceline from nodeIndex to index
+        bool bNeighbourFloats = node_float(Nodes[nodeIndex].origin, pEntity);
+        bool bNeighOnCrate = node_on_crate(Nodes[nodeIndex].origin, pEntity);
         bool bNeighbourWater = false;
 
         // when pEntity is on ladder, it is NOT floating!
         if (FUNC_IsOnLadder(pEntity))
             bNeighbourFloats = false;
 
-        if (Nodes[j].iNodeBits & BIT_LADDER)
+        if (Nodes[nodeIndex].iNodeBits & BIT_LADDER)
             bNeighbourFloats = false;
 
-        if (Nodes[j].iNodeBits & BIT_WATER)
+        if (Nodes[nodeIndex].iNodeBits & BIT_WATER)
             bNeighbourWater = true;
 
         // Check if Index is LOWER then J, if so, the height should be jumpable!
@@ -898,41 +904,44 @@ int cNodeMachine::add(Vector vOrigin, edict_t *pEntity) {
         //
         //
         // 14/06/04 - fix: Some slopes are not counted in here..., de_dust jump from crates connects now
-        if ((bIndexFloats /* && bNeighbourFloats */ )
-            && (Nodes[j].origin.z > Nodes[index].origin.z)
-            && (Nodes[j].origin.z - Nodes[index].origin.z > MAX_FALLHEIGHT)
-            && (bNeighbourWater == false && bIsInWater == false)) {
+        bool nodeIsHigherThanOrigin = Nodes[nodeIndex].origin.z > Nodes[currentIndex].origin.z;
 
-            //char msg[80];
-            //sprintf(msg, "NODES FLOATING: INDEX.Z = %f LOWER THEN J.Z = %f\n", Nodes[index].origin.z, Nodes[j].origin.z);
-            //   UTIL_ClientPrintAll( HUD_PRINTNOTIFY, msg);
-            //SERVER_PRINT(msg);
+        // this assumes 'our' position is lower, this determines 'slope' distance
+        vec_t slopeDistance = Nodes[nodeIndex].origin.z - Nodes[currentIndex].origin.z;
+
+        // this assumes 'our' position is higher, so we can determine fall distance
+        vec_t fallDistance = Nodes[currentIndex].origin.z - Nodes[nodeIndex].origin.z;
+
+        if (indexNodeFloats
+            && (fallDistance > MAX_FALLHEIGHT)
+            && (!bNeighbourWater && !bIsInWater)) {
+            // skip nodes that are not in water and too low (ie will cause fall damage)
             continue;
         }
-        // skip nodes which are to high
-        if ((Nodes[index].origin.z - Nodes[j].origin.z) > MAX_FALLHEIGHT) {
-            //                SERVER_PRINT("to high\n");
+
+        // skip nodes which are to high (fall damage)
+        if (fallDistance > MAX_FALLHEIGHT) {
             continue;
         }
+
         // Index is not floating, we should check if we can jump it
         // 14/06/04 - temporary fix: We distinguish 2 kind of checks
         // when the nodes are on crates or not.
-
         if (bIndexOnCrate || bNeighOnCrate) {
-            if (bIndexFloats == false &&   // we stand on something
-                Nodes[j].origin.z > Nodes[index].origin.z &&       // we MUST jump (not fall)
+            if (indexNodeFloats == false &&   // we stand on something
+                nodeIsHigherThanOrigin &&       // we MUST jump (not fall)
                 bNeighbourWater == false &&
-                fabs(Nodes[j].origin.z - Nodes[index].origin.z) > MAX_JUMPHEIGHT)      // and cannot jump to it
+                fabs(slopeDistance) > MAX_JUMPHEIGHT)      // and cannot jump to it
             {
                 //                        SERVER_PRINT("Cannot jump to it");
                 continue;           // next neighbour
             }
         } else {
             // both are on steep, do a bit simplified check
-            if (bIndexFloats == false &&   // we stand on something
-                Nodes[j].origin.z > Nodes[index].origin.z &&       // we MUST jump (not fall)
+            if (indexNodeFloats == false &&   // we stand on something
+                nodeIsHigherThanOrigin &&       // we MUST jump (not fall)
                 bNeighbourWater == false &&
-                fabs(Nodes[j].origin.z - Nodes[index].origin.z) > MAX_FALLHEIGHT)      // and cannot jump to it
+                fabs(slopeDistance) > MAX_FALLHEIGHT)      // and cannot jump to it
             {
                 //                        SERVER_PRINT("Insanity jump not possible either!\n");
                 continue;           // next neighbour
@@ -941,56 +950,60 @@ int cNodeMachine::add(Vector vOrigin, edict_t *pEntity) {
 
         int hull_type = head_hull;
 
-        if (FUNC_IsOnLadder(pEntity))
+        if (FUNC_IsOnLadder(pEntity)) {
             hull_type = point_hull;
+        } else {
+            // falling
+            // 14/06/05 - this code does not cause bad connections! - Stefan
+            // 20/06/05 - oops, it does... because it blocks when we are NOT falling...
+            if (slopeDistance > MAX_FALLHEIGHT) {
+                hull_type = human_hull; // when we fall, be sure we can freely fall.
+            }
 
-        // falling
-        // 14/06/05 - this code does not cause bad connections! - Stefan
-        // 20/06/05 - oops, it does... because it blocks when we are NOT falling...
-        if ((Nodes[j].origin.z - Nodes[index].origin.z) > MAX_FALLHEIGHT) {
-            hull_type = human_hull;        // when we fall, be sure we can freely fall.
+            // when we go steep, we have a point hull!!
+            if ((bIndexOnCrate && bNeighOnCrate == false)
+                || (bIndexOnCrate == false && bNeighOnCrate)) {
+                // 20/06/05 - head_hull -> point_hull, somehow 'down stairs' does not get connected well
+                // probably because head_hull is the size of a ducking player. So lets do a point_hull
+                // then...
+
+                // it seems that when going down the human_hull is used,
+                hull_type = point_hull;
+            }
         }
-        // when we go steep, we have a point hull!!
-        if ((bIndexOnCrate && bNeighOnCrate == false)
-            || (bIndexOnCrate == false && bNeighOnCrate)) {
-            // 20/06/05 - head_hull -> point_hull, somehow 'down stairs' does not get connected well
-            // probably because head_hull is the size of a ducking player. So lets do a point_hull
-            // then...
 
-            // it seems that when going down the human_hull is used,
-            hull_type = point_hull;
-        }
-
-
-        UTIL_TraceHull(Nodes[index].origin, Nodes[j].origin, ignore_monsters,
+        // trace
+        UTIL_TraceHull(Nodes[currentIndex].origin, Nodes[nodeIndex].origin, ignore_monsters,
                        hull_type, pEntity->v.pContainingEntity, &tr);
 
         // if nothing hit:
         if (tr.flFraction >= 1.0) {
-
             // Add this to the neighbouring list
-            Nodes[index].iNeighbour[nId] = j;
-            // Do a reverse check immidiatly if possible
+            Nodes[currentIndex].iNeighbour[neighbourId] = nodeIndex;
+
+            // Do a reverse check
             bool bCanConnect = true;
+            // TODO: Stefan 30/08/2019 - this can be refactored into a function "canConnect" or something!?
 
             // ---- the same checks as above, but reversed ----
 
             // Check if J is LOWER then Index, if so, the height should be jumpable!
             // When height does not differ to much we can add this connection.
-            if ((bIndexFloats && bNeighbourFloats)
+            if ((indexNodeFloats && bNeighbourFloats)
                 && (bNeighbourWater == false && bIsInWater == false)
-                && Nodes[index].origin.z >= Nodes[j].origin.z) {
+                && Nodes[currentIndex].origin.z >= Nodes[nodeIndex].origin.z) {
                 char msg[80];
-                sprintf(msg, "J.Z = %f, INDEX.Z = %f\n", Nodes[j].origin.z,
-                        Nodes[index].origin.z);
+                sprintf(msg, "J.Z = %f, INDEX.Z = %f\n", Nodes[nodeIndex].origin.z,
+                        Nodes[currentIndex].origin.z);
                 //              UTIL_ClientPrintAll( HUD_PRINTNOTIFY, msg);
                 bCanConnect = false;        // cannot connect
             }
+
             // Index is not floating, we should check if we can jump it
             if (bNeighbourFloats == false &&       // we stand on something
-                Nodes[index].origin.z > Nodes[j].origin.z &&       // we MUST jump (not fall)
+                Nodes[currentIndex].origin.z > Nodes[nodeIndex].origin.z &&       // we MUST jump (not fall)
                 bIsInWater == false &&
-                fabs(Nodes[index].origin.z - Nodes[j].origin.z) > MAX_JUMPHEIGHT)   // and cannot jump to it
+                fabs(fallDistance) > MAX_JUMPHEIGHT)   // and cannot jump to it
                 bCanConnect = false;        // cannot connect
 
             // All water stuff can connect to each other
@@ -998,13 +1011,13 @@ int cNodeMachine::add(Vector vOrigin, edict_t *pEntity) {
                 bCanConnect = true;
 
             if (bCanConnect) {
-                int jNeigh = neighbour_node(Nodes[j]);
+                int jNeigh = neighbour_node(Nodes[nodeIndex]);
                 if (jNeigh > -1)
-                    Nodes[j].iNeighbour[jNeigh] = index;     // reversed also possible
+                    Nodes[nodeIndex].iNeighbour[jNeigh] = currentIndex;     // reversed also possible
             }
 
-            nId++;
-            if (nId > MAX_NEIGHBOURS)
+            neighbourId++;
+            if (neighbourId > MAX_NEIGHBOURS)
                 break;              // found enough neighbours
 
         } else {
@@ -1015,11 +1028,11 @@ int cNodeMachine::add(Vector vOrigin, edict_t *pEntity) {
 
     }
 
-    if (index > iMaxUsedNodes)
-        iMaxUsedNodes = index;
+    if (currentIndex > iMaxUsedNodes)
+        iMaxUsedNodes = currentIndex;
 
     //UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "NodeMachine: Succesfully added node\n");
-    return index;
+    return currentIndex;
 }
 
 // Players initialization
