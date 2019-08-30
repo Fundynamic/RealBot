@@ -437,8 +437,9 @@ IsAlive (edict_t * pEdict)
 bool
 FInViewCone (Vector * pOrigin, edict_t * pEdict)
 {
-return TRUE ;
 #ifdef EVYISWRONG
+return TRUE ;
+#endif
   Vector2D vec2LOS;
   float flDot;
 
@@ -457,15 +458,15 @@ return TRUE ;
     {
       return FALSE;
     }
-#endif
 }
 
 // FVisible()
 bool
 FVisible (const Vector & vecOrigin, edict_t * pEdict)
 {
-return TRUE ;
 #ifdef EVYISWRONG
+return TRUE ;
+#endif
   TraceResult tr;
   Vector vecLookerOrigin;
 
@@ -491,7 +492,6 @@ return TRUE ;
     {
       return TRUE;		// line of sight is valid.
     }
-#endif
 }
 
 Vector
