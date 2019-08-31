@@ -33,8 +33,8 @@
 //prototypes of bot functions...
 void BotThink(cBot * pBot);
 
-void BotFixIdealPitch(edict_t * pEdict);
-void BotFixIdealYaw(edict_t * pEdict);
+void botFixIdealPitch(edict_t * pEdict);
+void botFixIdealYaw(edict_t * pEdict);
 bool BotCanJumpUp(cBot * pBot);
 bool BotCanDuckUnder(cBot * pBot);
 

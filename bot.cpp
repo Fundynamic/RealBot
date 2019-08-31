@@ -2025,8 +2025,8 @@ void cBot::Act() {
    // Paulo-La-Frite - END
    pEdict->v.ideal_yaw = pEdict->v.v_angle.y;
    pEdict->v.idealpitch = pEdict->v.v_angle.x;
-   BotFixIdealYaw(pEdict);
-   BotFixIdealPitch(pEdict);
+    botFixIdealYaw(pEdict);
+    botFixIdealPitch(pEdict);
 }
 
 // BOT: On ladder?

@@ -45,22 +45,23 @@ extern edict_t *pHostEdict;
 
 #define SCAN_RADIUS   45        // Radius to scan to prevent blocking with players
 
-void BotFixIdealPitch(edict_t * pEdict) {
-   // check for wrap around of angle...
-   if (pEdict->v.idealpitch > 180)
-      pEdict->v.idealpitch -= 360;
-
-   if (pEdict->v.idealpitch < -180)
-      pEdict->v.idealpitch += 360;
+/**
+ * Given an angle, makes sure it wraps around properly
+ * @param angle
+ * @return
+ */
+float fixAngle(float angle) {
+    if (angle > 180) return (angle - 360);
+    if (angle < -180) return (angle + 360);
+    return angle;
 }
 
-void BotFixIdealYaw(edict_t * pEdict) {
-   // check for wrap around of angle...
-   if (pEdict->v.ideal_yaw > 180)
-      pEdict->v.ideal_yaw -= 360;
+void botFixIdealPitch(edict_t * pEdict) {
+    pEdict->v.idealpitch = fixAngle(pEdict->v.idealpitch);
+}
 
-   if (pEdict->v.ideal_yaw < -180)
-      pEdict->v.ideal_yaw += 360;
+void botFixIdealYaw(edict_t * pEdict) {
+    pEdict->v.ideal_yaw = fixAngle(pEdict->v.ideal_yaw);
 }
 
 bool BotCanJumpUp(cBot * pBot) {
