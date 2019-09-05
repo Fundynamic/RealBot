@@ -81,8 +81,13 @@ void BotPrepareConsoleCommandsToBuyWeapon(cBot *pBot, const char *arg1, const ch
     }
 }
 
-// Determines if the weapon that will be bought, is valid to be bought
-// by specific team, cs version, etc. Returns TRUE if valid.
+/**
+ * Determines if the weapon that will be bought, is valid to be bought
+ * by specific team, cs version, etc. Returns TRUE if valid.
+ * @param weapon
+ * @param team
+ * @return
+ */
 bool GoodWeaponForTeam(int weapon, int team) {
     // Mod CS:
     if (mod_id == CSTRIKE_DLL) {
@@ -186,36 +191,48 @@ void BotDecideWhatToBuy(cBot *pBot) {
 
     int buy_weapon = -1;
 
-    pBot->rprint("BotBuyStuff()");
     // Buy a primary weapon, think of the best choice
     if (pBot->buy_primary) {
-        pBot->rprint("BotBuyStuff()", "buy_primary");
+        pBot->rprint("BotDecideWhatToBuy()", "buy_primary");
         // Buy primary
 
         // Personality related:
         // Check if we can buy our favorite weapon
-        if (!pBot->ownsFavoritePrimaryWeapon()) {
-            if (GoodWeaponForTeam(pBot->ipFavoPriWeapon, pBot->iTeam)) { // can we buy it for this team?
-                if (pBot->canAfford(PriceWeapon(pBot->ipFavoPriWeapon))) { // can we afford it?
-                    // Buy favorite weapon!
-                    buy_weapon = pBot->ipFavoPriWeapon;
-                } else {
-                    // bot personality: if we want to save money for our favorite weapon, then set other values to false
-                    if (RANDOM_LONG(0, 100) < pBot->ipSaveForWeapon) {    // 31.08.04 Frashman forgotten brace
-                        pBot->buy_primary = false;
-                        pBot->buy_secondary = false;       // don't buy a secondary
-                        return;    // get out of function, don't buy anything
+        if (pBot->hasFavoritePrimaryWeaponPreference()) {
+            pBot->rprint("BotDecideWhatToBuy()", "I have a primary weapon preference");
+
+            if (!pBot->ownsFavoritePrimaryWeapon()) {
+                pBot->rprint("BotDecideWhatToBuy()", "I do not own my primary weapon preference");
+
+                if (GoodWeaponForTeam(pBot->ipFavoPriWeapon, pBot->iTeam)) { // can we buy it for this team?
+
+                    if (pBot->canAfford(PriceWeapon(pBot->ipFavoPriWeapon))) { // can we afford it?
+                        // Buy favorite weapon!
+                        pBot->rprint("BotDecideWhatToBuy()", "Can buy my favorite primary weapon, doing it");
+                        buy_weapon = pBot->ipFavoPriWeapon;
+                    } else {
+                        pBot->rprint("BotDecideWhatToBuy()", "Can't afford my favorite primary weapon.");
+
+                        // bot personality: if we want to save money for our favorite weapon, then set other values to false
+                        if (RANDOM_LONG(0, 100) < pBot->ipSaveForWeapon) {    // 31.08.04 Frashman forgotten brace
+                            pBot->rprint("Decided to save extra money");
+                            pBot->buy_primary = false;
+                            pBot->buy_secondary = false;       // don't buy a secondary
+                            return;    // get out of function, don't buy anything
+                        }
                     }
                 }
+            } else {
+                pBot->rprint("BotDecideWhatToBuy()", "I already have my favorite primary weapon");
+                // already have my favorite weapon
+                pBot->buy_primary = false; // do not buy a primary weapon
+                return;
             }
-        } else {
-            // already have my favorite weapon
-            pBot->buy_primary = false; // do not buy a primary weapon
-            return;
         }
 
         // not decided what to buy yet
         if (buy_weapon < 0) {
+            pBot->rprint("BotDecideWhatToBuy()", "I have no primary weapon preference, deciding what to buy.");
 
             // Find weapon we can buy in the list of weapons
             for (int i = 0; i < MAX_WEAPONS; i++) {
@@ -227,31 +244,39 @@ void BotDecideWhatToBuy(cBot *pBot) {
                     && (UTIL_GiveWeaponType(weapons_table[i].iId) != SHIELD))
                     continue;
 
-                if (GoodWeaponForTeam(weapons_table[i].iId, team) == false)
+                // must be a weapon that the team can buy (CT/T weapon)
+                if (!GoodWeaponForTeam(weapons_table[i].iId, team))
                     continue;
 
+                // can afford it
                 if (weapons_table[i].price <= money) {
-                    if (pBot->iPrimaryWeapon > -1)   // has a primary weapon
-                        if (weapons_table[ListIdWeapon(pBot->iPrimaryWeapon)].
-                                priority >= weapons_table[i].priority)
+
+                    // owns a primary weapon
+                    if (pBot->iPrimaryWeapon > -1) {
+                        // and the primary weapon has a higher priority than the other primary weapon
+                        if (weapons_table[ListIdWeapon(pBot->iPrimaryWeapon)].priority >= weapons_table[i].priority)
                             continue;
-
-                    if (buy_weapon == -1)
-                        buy_weapon = weapons_table[i].iId;
-
-                    else {
-                        if (RANDOM_LONG(0, 100) < weapons_table[i].priority)
-                            buy_weapon = weapons_table[i].iId; // randomly buy a different weapon
                     }
-                    // 30.8.04 Frashman fixed from 150 to 100
-                    if (RANDOM_LONG(0, 100) < weapons_table[i].priority)
-                        break;
+
+                    // nothing to buy yet, so chose this one
+                    if (buy_weapon == -1) {
+                        buy_weapon = weapons_table[i].iId;
+                    } else {
+                        // randomly overrule it based on priority. The higher priority the more chance
+                        // it will be bought.
+                        if (RANDOM_LONG(0, 100) < weapons_table[i].priority) {
+                            buy_weapon = weapons_table[i].iId; // randomly buy a different weapon
+                        }
+                    }
                 }
             }
         }
 
+        pBot->buy_primary = false;
+
+        // has decided which weapon to buy
         if (buy_weapon != -1) {
-            pBot->buy_primary = false;
+            pBot->rprint("BotDecideWhatToBuy()", "Found a primary weapon to buy");
 
             // depending on amount of money we have left buy *also* secondary weapon
             int iMoneyLeft = money - PriceWeapon(buy_weapon);
@@ -263,32 +288,45 @@ void BotDecideWhatToBuy(cBot *pBot) {
                     || (pBot->iPrimaryWeapon == CS_WEAPON_SHIELD))
                     pBot->buy_secondary = true;
         }
-
     } else if (pBot->buy_secondary) {
-        pBot->rprint("BotBuyStuff()", "buy_secondary");
+        pBot->rprint("BotDecideWhatToBuy()", "buy_secondary");
         // Buy secondary
 
         // Personality related:
         // Check if we can buy our favorite weapon
-        if (!pBot->ownsFavoriteSecondaryWeapon()) {
-            if (GoodWeaponForTeam(pBot->ipFavoSecWeapon, pBot->iTeam)) {
-                if (pBot->canAfford(pBot->ipFavoSecWeapon)) {
-                    // Buy favorite weapon
-                    buy_weapon = pBot->ipFavoPriWeapon;
-                } else {
-                    // We do here something to 'save' for our favorite weapon
-                    if (RANDOM_LONG(0, 100) < pBot->ipSaveForWeapon) {    // 31.08.04 Frashman forgotten brace
-                        pBot->buy_secondary = false;       // don't buy a secondary
-                        return;    // get out of function, don't buy anything
+        if (pBot->hasFavoriteSecondaryWeaponPreference()) {
+            pBot->rprint("BotDecideWhatToBuy()", "I have a secondary weapon preference");
+
+            if (!pBot->ownsFavoriteSecondaryWeapon()) {
+                pBot->rprint("BotDecideWhatToBuy()", "I do not own my secondary weapon preference");
+
+                if (GoodWeaponForTeam(pBot->ipFavoSecWeapon, pBot->iTeam)) {
+                    if (pBot->canAfford(pBot->ipFavoSecWeapon)) {
+                        pBot->rprint("BotDecideWhatToBuy()", "I can afford my favorite secondary weapon, buying it now");
+                        // Buy favorite weapon
+                        buy_weapon = pBot->ipFavoPriWeapon;
+                    } else {
+                        pBot->rprint("BotDecideWhatToBuy()", "I cannot afford my favorite secondary weapon");
+
+                        // do not buy a random secondary weapon - rather save money for it.
+                        // We do here something to 'save' for our favorite weapon
+                        if (RANDOM_LONG(0, 100) < pBot->ipSaveForWeapon) {    // 31.08.04 Frashman forgotten brace
+                            pBot->rprint("I have decided to save money for my favorite secondary weapon");
+                            pBot->buy_secondary = false;       // don't buy a secondary
+                            return;    // get out of function, don't buy anything
+                        }
                     }
                 }
+            } else {
+                pBot->rprint("BotDecideWhatToBuy()", "I already own my favorite secondary weapon");
+                // we already own it, do nothing
+                return;
             }
-        } else {
-            return;             // get out of function, go buy a secondary weapon or something?
         }
 
-        // no weapon choosen to buy yet
+        // no weapon choosen to buy yet - and no preference
         if (buy_weapon < 0) {
+            pBot->rprint("BotDecideWhatToBuy()", "Deciding which secondary weapon to buy");
             // Buy secondary
             // Find weapon we can buy in the list of weapons
             for (int i = 0; i < MAX_WEAPONS; i++) {
@@ -324,30 +362,33 @@ void BotDecideWhatToBuy(cBot *pBot) {
             }
         }
 
+        pBot->buy_secondary = false;
+
+        // found a secondary weapon to buy
         if (buy_weapon != -1) {
-            pBot->buy_secondary = false;
+            pBot->rprint("Found a secondary weapon to buy");
         }
     } else if (pBot->buy_ammo_primary == true) {
-        pBot->rprint("BotBuyStuff()", "buy_ammo_primary");
+        pBot->rprint("BotDecideWhatToBuy()", "buy_ammo_primary");
         // Buy primary ammo
         BotPrepareConsoleCommandsToBuyWeapon(pBot, "6", NULL);
         pBot->buy_ammo_primary = false;
         return;
 
     } else if (pBot->buy_ammo_secondary == true) {
-        pBot->rprint("BotBuyStuff()", "buy_ammo_secondary");
+        pBot->rprint("BotDecideWhatToBuy()", "buy_ammo_secondary");
         // Buy secondary ammo
         BotPrepareConsoleCommandsToBuyWeapon(pBot, "7", NULL);
         pBot->buy_ammo_secondary = false;
         return;
     } else if (pBot->buy_defusekit) {
-        pBot->rprint("BotBuyStuff()", "buy_defusekit");
+        pBot->rprint("BotDecideWhatToBuy()", "buy_defusekit");
+        pBot->buy_defusekit = false;
         if (money >= 200) {
             buy_weapon = CS_DEFUSEKIT;
-            pBot->buy_defusekit = false;
         }
     } else if (pBot->buy_armor) {
-        pBot->rprint("BotBuyStuff()", "buy_armor");
+        pBot->rprint("BotDecideWhatToBuy()", "buy_armor");
         if (money < 1000 && money >= 650) {
             // Buy light armor
             buy_weapon = CS_WEAPON_ARMOR_LIGHT;
@@ -357,29 +398,29 @@ void BotDecideWhatToBuy(cBot *pBot) {
         }
         pBot->buy_armor = false;
     } else if (pBot->buy_grenade) {
-        pBot->rprint("BotBuyStuff()", "buy_grenade");
+        pBot->rprint("BotDecideWhatToBuy()", "buy_grenade");
         // Buy grenade
-        if (money >= weapons_table[ListIdWeapon(CS_WEAPON_HEGRENADE)].price)
+        if (money >= weapons_table[ListIdWeapon(CS_WEAPON_HEGRENADE)].price) {
             buy_weapon = CS_WEAPON_HEGRENADE;
+        }
 
         pBot->buy_grenade = false;
     } else if (pBot->buy_flashbang > 0) {
-        pBot->rprint("BotBuyStuff()", "buy_flashbang");
+        pBot->rprint("BotDecideWhatToBuy()", "buy_flashbang");
         // Buy flashbang
         if (money >= weapons_table[ListIdWeapon(CS_WEAPON_FLASHBANG)].price) {
-
             buy_weapon = CS_WEAPON_FLASHBANG;
             pBot->buy_flashbang--;
-        } else
+        } else {
             pBot->buy_flashbang = 0;       // do not buy
-
+        }
     } else if (pBot->buy_smokegrenade)   //31.08.04 Frashman added Smoke Grenade support
     {
-        pBot->rprint("BotBuyStuff()", "buy_smokegrenade");
+        pBot->rprint("BotDecideWhatToBuy()", "buy_smokegrenade");
         // Buy SmokeGrenade
-        if (money >=
-            weapons_table[ListIdWeapon(CS_WEAPON_SMOKEGRENADE)].price)
+        if (money >= weapons_table[ListIdWeapon(CS_WEAPON_SMOKEGRENADE)].price) {
             buy_weapon = CS_WEAPON_SMOKEGRENADE;
+        }
 
         pBot->buy_smokegrenade = false;
     }
