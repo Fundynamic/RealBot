@@ -76,22 +76,21 @@ void BotClient_CS_ShowMenu(void *p, int bot_index) {
       return;
    }
 
-   if (strcmp((char *)p, "#Team_Select") == 0)  // team select menu?
-      bots[bot_index].start_action = MSG_CS_TEAM_SELECT;
-   else if (strcmp((char *)p, "#Team_Select_Spect") == 0)  // team select menu?
-      bots[bot_index].start_action = MSG_CS_TEAM_SELECT;
-   else if (strcmp((char *)p, "#IG_Team_Select_Spect") == 0)  // team select menu?
-      bots[bot_index].start_action = MSG_CS_TEAM_SELECT;
-   else if (strcmp((char *)p, "#IG_Team_Select") == 0)  // team select menu?
-      bots[bot_index].start_action = MSG_CS_TEAM_SELECT;
-   else if (strcmp((char *)p, "#IG_VIP_Team_Select") == 0)  // team select menu?
-      bots[bot_index].start_action = MSG_CS_TEAM_SELECT;
-   else if (strcmp((char *)p, "#IG_VIP_Team_Select_Spect") == 0)  // team select menu?
-      bots[bot_index].start_action = MSG_CS_TEAM_SELECT;
-   else if (strcmp((char *)p, "#Terrorist_Select") == 0)  // T model select?
-      bots[bot_index].start_action = MSG_CS_T_SELECT;
-   else if (strcmp((char *)p, "#CT_Select") == 0)  // CT model select menu?
-      bots[bot_index].start_action = MSG_CS_CT_SELECT;
+   if (strcmp((char *)p, "#Team_Select") == 0 ||
+       strcmp((char *)p, "#Team_Select_Spect") == 0 ||
+       strcmp((char *)p, "#IG_Team_Select_Spect") == 0 ||
+       strcmp((char *)p, "#IG_Team_Select") == 0 ||
+       strcmp((char *)p, "#IG_VIP_Team_Select") == 0 ||
+       strcmp((char *)p, "#IG_VIP_Team_Select_Spect") == 0) {
+       // team select menu?
+       bots[bot_index].start_action = MSG_CS_TEAM_SELECT;
+   } else if (strcmp((char *)p, "#Terrorist_Select") == 0) {
+       // T model select?
+       bots[bot_index].start_action = MSG_CS_T_SELECT;
+   } else if (strcmp((char *)p, "#CT_Select") == 0) {
+       // CT model select menu?
+       bots[bot_index].start_action = MSG_CS_CT_SELECT;
+   }
 
    state = 0;                   // reset state machine
 }
@@ -493,6 +492,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
 
             // move to damage vector
             pBot->f_camp_time = gpGlobals->time;        // stop camping
+            pBot->rprint("Setting goal from damage taken");
             pBot->setGoalNode(NodeMachine.getCloseNode(damage_origin, 150, NULL));
             pBot->forgetPath();
 
@@ -816,8 +816,10 @@ void BotClient_Valve_ScreenFade(void *p, int bot_index) {
       int iCoverNode = NodeMachine.node_cover(iCurrentNode, iCurrentNode, pBot->pEdict);
 
       if (iCoverNode > -1) {
-         pBot->forgetPath();
-         pBot->setGoalNode(iCoverNode);
+//         pBot->forgetPath();
+//         pBot->rprint("Setting goal from screenfade");
+//         pBot->setGoalNode(iCoverNode);
+        pBot->rprint("TODO: Make bot react upon screenfade/flashbang\n");
       }
 
    } else {

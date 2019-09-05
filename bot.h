@@ -155,7 +155,26 @@ private:
     int iGoalNode;               // Goal Node #
     int pathNodeIndex;           // Which node we want to move to, derived from Path
 
+    // Hostages edict
+    edict_t *pBotHostage;        // the Hostage we will go after!
+    edict_t *hostage1;           // we do not
+    edict_t *hostage2;           // use
+    edict_t *hostage3;           // any array
+    edict_t *hostage4;           // here
+
 public:
+    // Constructor
+    cBot();
+
+    bool isUsingHostage(edict_t *pHostage);
+    void forgetHostage(edict_t *pHostage);
+    void rememberHostageIsFollowingMe(edict_t *pHostage);
+    void rememberWhichHostageToRescue(edict_t *pHostage);
+    void clearHostageToRescueTarget();
+    int getAmountOfHostagesBeingRescued();
+    edict_t * findHostageToRescue();         // finds a hostage to rescue
+    edict_t * getHostageToRescue();          // returns hostage state pointer
+    bool isEscortingHostages();            // Does the bot has used any hostages yet?
 
     // ------------------------
     // TIMERS
@@ -305,7 +324,7 @@ public:
     char name[BOT_NAME_LEN + 1];
     char skin[BOT_SKIN_LEN + 1];
 
-    bool bStarted;
+    bool hasJoinedTeam;
     int start_action;
 
     // TheFatal - START
@@ -324,7 +343,7 @@ public:
     Vector vEar;                 // Vector where the bot hears
 
     // Console
-    int console_nr;
+    int console_nr;              // when != 0 it means it performs a 'console command' action (state machine)
     float f_console_timer;
     char arg1[25];
     char arg2[25];
@@ -345,13 +364,6 @@ public:
     edict_t *pEnemyEdict;          // Enemy edict
     edict_t *killer_edict;       // Killer edict
 
-    // Hostages edict
-    edict_t *pBotHostage;        // the Hostage we will go after!
-    edict_t *hostage1;           // we do not
-    edict_t *hostage2;           // use
-    edict_t *hostage3;           // any array
-    edict_t *hostage4;           // here
-
     Vector vecMoveAngles;        // Vector we move to
 
 
@@ -368,7 +380,7 @@ public:
     void Act();                  // Do as been told
     bool Defuse();               // Defuse (ACT) sub-function
     void FightEnemy();           // Fight
-    void StartGame();
+    void JoinTeam();
 
     void CheckGear();
 
@@ -393,9 +405,9 @@ public:
     float ReactionTime(int iSkill);      // Reaction time based upon skill
     void FindCover();
 
-    bool CanSeeVector(Vector vDest);
+    bool canSeeVector(Vector vDest);
 
-    bool CanSeeEntity(edict_t *pEntity);
+    bool canSeeEntity(edict_t *pEntity);
 
     void InteractWithFriends();
 
@@ -405,18 +417,21 @@ public:
 
     // Set methods
     int determineCurrentNode();
+    int determineCurrentNodeWithTwoAttempts();
+    int determineCurrentNode(float range);
 
     // Get methods
     int getCurrentNode();                      // the current (closest) node we are at
     int getCurrentPathNodeToHeadFor();         // get Node from path
     int getNextPathNode();                     // get next Node from path
+    float getDistanceTo(int nodeIndex);
+    float getDistanceTo(Vector vDest);
 
     // "is" Methods (booleans, statements, etc)
     bool isDead();
     bool isHeadingForGoalNode();
     bool isEnemyAlive();         // If enemy set, is it alive? (else returns false)
     bool isOnLadder();             // Bot on ladder or not?
-    bool isKeepingHostages();            // Does the bot has used any hostages yet?
     bool isSeeingEnemy();          // If enemy set, can we see it? (takes blinded by flashbang into account)
     bool isCounterTerrorist();
     bool isTerrorist();
@@ -445,10 +460,7 @@ public:
     // void / action methods
     void pickWeapon(int weaponId);
     void performBuyActions(int weaponIdToBuy);
-    void performBuyWeapon(const char *arg1, const char *arg2);
-
-    // Goal specific stuff
-    Vector BombSpotNear(float fDistance);        // Is a bombspot near in fDistance?
+    void performBuyWeapon(const char *menuItem, const char *subMenuItem);
 
     // -------------------
     void CheckAround();          // Check around body
@@ -485,6 +497,13 @@ public:
     void rprint(const char *msg);
     void Dump();
 
+    bool hasHostageToRescue();
+
+    bool canSeeHostageToRescue();
+
+    void checkIfHostagesAreRescued();
+
+    bool isOnSameTeamAs(cBot *pBot);
 };
 
 // new UTIL.CPP functions...

@@ -58,6 +58,7 @@ static const int MAX_NAME_LENGTH = 32;
 
 // Debug messages for realbot
 void REALBOT_PRINT(cBot * pBot, const char *Function, const char *msg);
+void REALBOT_PRINT(const char *Function, const char *msg);
 
 class cGame {
 public:

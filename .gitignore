@@ -214,3 +214,5 @@ ModelManifest.xml
 #more stuff to ignore
 CMakeLists.txt
 cmake-build-debug/
+
+#*.o

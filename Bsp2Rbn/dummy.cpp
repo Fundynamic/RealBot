@@ -75,6 +75,11 @@ void REALBOT_PRINT (cBot * pBot, const char *Function, const char *msg)
         }
 
         printf ("RBPRINT->[%s '%s']-[Team %s] : %s\n", name, Function, team, msg);
+
+        char msgForFile[512];
+        memset(msgForFile, 0, sizeof(msgForFile)); // clear
+        sprintf (msgForFile, "RBPRINT->[%s '%s']-[Team %s] : %s\n", name, Function, team, msg);
+        rblog(msgForFile);
 }
 
 
@@ -89,7 +94,7 @@ void cChatEngine::set_sentence(char csender[30], char csentence[128])
 // From bot.cpp
 
 // Can see Edict?
-bool cBot::CanSeeEntity (edict_t * pEntity)
+bool cBot::canSeeEntity (edict_t * pEntity)
 {
   TraceResult tr;
   Vector start = pEdict->v.origin + pEdict->v.view_ofs;

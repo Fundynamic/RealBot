@@ -707,7 +707,6 @@ void INI_PARSE_IAD() {
       char lineword[25];
       char linesection[30];
 
-      // infinite loop baby
       while (!feof(stream)) {
          INI_Sentence(stream, linefeed);
 
@@ -728,6 +727,7 @@ void INI_PARSE_IAD() {
             section = INI_SectionType(linesection, section);
             continue;           // next line
          }
+
          // Check word only when in a section
          if (section != INI_NONE) {
             INI_Word(linefeed, lineword);

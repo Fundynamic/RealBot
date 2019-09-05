@@ -50,8 +50,7 @@ cBot *search_near_players(cBot * pBot);
 bool BOOL_search_near_players(cBot * pBot);
 bool BotShouldJump(cBot * pBot);
 bool BotShouldDuck(cBot * pBot);
-void HostageNear(cBot * pBot);
-void FUNC_BotUpdateHostages(cBot * pBot);
+void TryToGetHostageTargetToFollowMe(cBot * pBot);
 Vector FUNC_CalculateAngles(cBot * pBot);
 
 // New funcs
@@ -74,11 +73,12 @@ bool FUNC_IsOnLadder(edict_t * pEntity);
 void FUNC_FindBreakable(cBot * pBot);
 void FUNC_CheckForBombPlanted();
 
-bool FUNC_UsedHostage(cBot * pBot, edict_t * pEdict);   // returns true when already used
-void FUNC_UseHostage(cBot * pBot, edict_t * pEdict);    // run this when a bot uses a hostage
-int FUNC_GiveHostage(cBot * pBot);      // gives any hostage we still have to go for
-int FUNC_AmountHostages(cBot * pBot);
-bool FUNC_FreeHostage(cBot * pBot, edict_t * pEdict);   // is this hostage not used by any other bot?
+int FUNC_GiveHostage(cBot * pBot);                      // gives any hostage we still have to go for
+
+bool isHostageRescueable(cBot *pBot, edict_t *pHostage);
+bool isHostageRescued(edict_t *pHostage);
+bool isHostageFree(cBot * pBot, edict_t * pHostage);   // is this hostage not used by any other bot?
+
 void FUNC_RemoveHostage(cBot * pBot, edict_t * pEdict); // remove hostage from memory
 
 int FUNC_BotEstimateHearVector(cBot * pBot, Vector v_sound);

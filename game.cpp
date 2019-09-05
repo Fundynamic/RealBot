@@ -89,7 +89,7 @@ void cGame::Init() {
 
    // DEBUG RELATED
    bDoNotShoot = false;         // ... guess
-   bDebug = false;              // ... prints debug messages
+   bDebug = true;               // ... prints debug messages
    bEngineDebug = false;        // ... prints engine debug messages (for figuring out engine interceptions)
    bPistols = false;            // pistols only mode
 
@@ -342,7 +342,8 @@ void cGame::UpdateGameStatus() {
             if (bot->isCounterTerrorist())
             {
                bot->forgetPath();
-               bot->setGoalNode(NodeMachine.node_goal(GOAL_BOMBSPOT)); // picks a random bomb spot
+                bot->rprint("Setting goal for bombspot");
+                bot->setGoalNode(NodeMachine.node_goal(GOAL_BOMBSPOT)); // picks a random bomb spot
             }             // ct
          }                // bot
       }                   // through all clients
@@ -479,7 +480,7 @@ int cGame::CreateBot(edict_t * pPlayer, const char *arg1, const char *arg2,
       pBot->bot_money = 0;
       strcpy(pBot->skin, c_skin);
       pBot->pEdict = BotEnt;
-      pBot->bStarted = false;   // hasn't joined game yet
+      pBot->hasJoinedTeam = false;   // hasn't joined game yet
 
       // CS Message IDLE..
       pBot->start_action = MSG_CS_IDLE;
@@ -535,9 +536,13 @@ int cGame::CreateBot(edict_t * pPlayer, const char *arg1, const char *arg2,
    }
 }                               // CreateBot()
 
+// Debug message (without BOT)
+void REALBOT_PRINT(const char *Function, const char *msg) {
+    REALBOT_PRINT(NULL, Function, msg);
+}
+
 // Debug message
 void REALBOT_PRINT(cBot * pBot, const char *Function, const char *msg) {
-
     // Message format:
    // Function name - [BOT NAME, BOT TEAM]: Message
 
@@ -555,21 +560,18 @@ void REALBOT_PRINT(cBot * pBot, const char *Function, const char *msg) {
       memset(name, 0, sizeof(name));    // clear
       strcpy(name, pBot->name); // copy name
 
-      if (pBot->iTeam == 2)
-         strcpy(team, "COUNTER");
+      if (pBot->iTeam == 2) strcpy(team, "COUNTER");
    } else {
       strcpy(team, "NONE");
    }
 
-   sprintf(cMessage, "RBPRINT->[%s '%s']-[Team %s] : %s\n", name, Function,
-           team, msg);
+   sprintf(cMessage, "RBPRINT->[%s '%s']-[Team %s] : %s\n", name, Function, team, msg);
 
    // print in console only when on debug print
-   if (Game.bDebug)
-      SERVER_PRINT(cMessage);
-
-   // print this realbot message also in the LOG file.
-   rblog(cMessage);
+   if (Game.bDebug) {
+       SERVER_PRINT(cMessage);
+       rblog(cMessage);
+   }
 }  // REALBOT_PRINT()
 
 // $Log: game.cpp,v $

@@ -73,6 +73,7 @@
 // Goal types & info
 #define MAX_GOALS		75
 
+// Node types / goal types
 #define GOAL_SPAWNCT	1
 #define GOAL_SPAWNT		2
 #define GOAL_BOMBSPOT	3
@@ -168,7 +169,7 @@ typedef struct {
 }
 tTrouble;
 
-// Node
+// Node (stored in RBN file, do not change casually)
 typedef struct {
    Vector origin;                   // Node origin
    int iNeighbour[MAX_NEIGHBOURS];  // Reachable nodes for this node
@@ -285,6 +286,11 @@ public:
    void dump_path(int iBot, int ThisNode);
    void Draw(void);
 
+   char *getGoalTypeAsTextFromGoal(int goalIndex) const;
+
+   tNode *getNode(int index);
+
+
 private:
    tNode Nodes[MAX_NODES];                              // Nodes
    tInfoNode InfoNodes[MAX_NODES];                      // Info for Nodes (metadata)
@@ -309,6 +315,8 @@ private:
     void closeAllWaypoints(int nodeIndex) const;
 
     void openWaypoint(int nodeStartIndex, int parent, float cost) const;
+
+    char *getGoalTypeAsText(const tGoal &goal) const;
 };
 
 #endif

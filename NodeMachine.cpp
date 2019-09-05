@@ -1386,7 +1386,7 @@ void cNodeMachine::save() {
         }
         fclose(rbl);
     } else
-        fprintf(stderr, "Cannot write experience file %s\n", filename);
+        fprintf(stderr, "Cannot write file %s\n", filename);
 }
 
 void cNodeMachine::save_important() {
@@ -1623,6 +1623,7 @@ void cNodeMachine::goal_add(edict_t *pEdict, int iType, Vector vVec) {
 
     if (pEdict != NULL) {
         if (goal_exists(pEdict)) {
+            rblog("goal_add: goal already exists");
             return;                // do not add goal that is already in our list
         }
     }
@@ -1648,20 +1649,27 @@ void cNodeMachine::goal_add(edict_t *pEdict, int iType, Vector vVec) {
     int nNode = getCloseNode(vVec, iDist, pEdict);
 
     if (nNode < 0) {
+        rblog("Cannot find near node, adding one");
         // 11/06/04 - stefan - when no goal exists, add it.
-        if (iType != GOAL_HOSTAGE) {
-            nNode = add
-                    (vVec, pEdict);
-        }
+//        if (iType != GOAL_HOSTAGE) {
+        nNode = add(vVec, pEdict);
+//        }
 
-        if (nNode < 0)
+        if (nNode < 0) {
             return;                // no node near
+        }
     }
 
-    Goals[g].iNode = nNode;
-    Goals[g].pGoalEdict = pEdict;
-    Goals[g].iType = iType;
+    tGoal &goal = Goals[index];
 
+    goal.iNode = nNode;
+    goal.pGoalEdict = pEdict;
+    goal.iType = iType;
+
+    char msg[255];
+    memset(msg, 0 , sizeof(msg));
+    sprintf(msg, "Adding goal of type %s, with nearby node %d\n", getGoalTypeAsText(goal), nNode);
+    rblog(msg);
 }
 
 // Does the goal already exist in your goals array?
@@ -1693,45 +1701,40 @@ int cNodeMachine::goal_from_node(int iNode) {
 // HOSTAGE: Return (random) goal node close to hostage
 int cNodeMachine::goal_hostage(cBot *pBot) {
 
-    int iGoals[10];
-    for (int i = 0; i < 10; i++)
+    // assign goals to any free hostage(s)
+    int iGoals[50];
+    for (int i = 0; i < 10; i++) {
         iGoals[i] = -1;
+    }
 
-    int iIndex = 0;
+    int iIndex = -1;
 
-    edict_t *pent = NULL;
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent, "hostage_entity")) != NULL) {
+    edict_t *pHostage = pBot->findHostageToRescue();
 
-        if (pent->v.effects & EF_NODRAW)
-            continue;              // already rescued
+    // found a free hostage, find a nearby node and remember it as a goal
+    int attempts = 3;
+    for (attempts; attempts > 0; attempts--) {
+        float distance = 75 * attempts;
+        int nodeNearHostage = getCloseNode(pHostage->v.origin, distance, pHostage);
 
-        // Not used by any other bot?
-        if (FUNC_UsedHostage(pBot, pent))
-            continue;
-
-        // not moving?
-        if (FUNC_PlayerSpeed(pent) > 0)
-            continue;              // already in use (else it would not move)
-
-        // not using it already self?
-        if ((FUNC_FreeHostage(pBot, pent)) == false
-            || (FUNC_UsedHostage(pBot, pent) == true))
-            continue;
-
-        int iClose = getCloseNode(pent->v.origin, 100, pent);
-        if (iClose > -1) {
-            iGoals[iIndex] = iClose;
+        if (nodeNearHostage > -1) {
             iIndex++;
+            iGoals[iIndex] = nodeNearHostage;
         }
     }
 
-    // Now return value
-    if (iIndex > 0) {
-        int iReturn = iGoals[RANDOM_LONG(0, (iIndex - 1))];
-        return iReturn;
+    // found a goal
+    if (iIndex > -1) {
+        // find a random goal and return it
+        if (iIndex == 0) {
+            // one goal found
+            return iGoals[0];
+        }
+        // more than one goal
+        return iGoals[RANDOM_LONG(0, (iIndex - 1))];
     }
 
+    // not found
     return -1;
 }
 
@@ -1747,67 +1750,48 @@ void cNodeMachine::goals() {
     // GOAL_UNREACHABLE to prevent stupid actions in the future
 
     // GOAL #1 - Counter Terrorist Spawn points.
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent, "info_player_start")) != NULL) {
-        if (goal_exists(pent) == false)
-            goal_add(pent, GOAL_SPAWNCT, pent->v.origin);
+    while ((pent = UTIL_FindEntityByClassname(pent, "info_player_start")) != NULL) {
+        goal_add(pent, GOAL_SPAWNCT, pent->v.origin);
     }
 
     // GOAL #2 - Terrorist Spawn points.
     while ((pent =
                     UTIL_FindEntityByClassname(pent,
                                                "info_player_deathmatch")) != NULL) {
-        if (goal_exists(pent) == false)
-            goal_add(pent, GOAL_SPAWNT, pent->v.origin);
+       goal_add(pent, GOAL_SPAWNT, pent->v.origin);
     }
 
     // GOAL #3 - Hostage rescue zone
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent,
-                                               "func_hostage_rescue")) != NULL) {
-        if (goal_exists(pent) == false)
-            goal_add(pent, GOAL_RESCUEZONE, VecBModelOrigin(pent));
+    while ((pent = UTIL_FindEntityByClassname(pent, "func_hostage_rescue")) != NULL) {
+        goal_add(pent, GOAL_RESCUEZONE, VecBModelOrigin(pent));
     }
 
     // EVY: rescue zone can also be an entitity of info_hostage_rescue
     while ((pent =
                     UTIL_FindEntityByClassname(pent,
                                                "info_hostage_rescue")) != NULL) {
-        if (goal_exists(pent) == false)
-            goal_add(pent, GOAL_RESCUEZONE, VecBModelOrigin(pent));
+        goal_add(pent, GOAL_RESCUEZONE, VecBModelOrigin(pent));
     }
 
     // GOAL #4 - Bombspot zone
     // Bomb spot
     while ((pent =
                     UTIL_FindEntityByClassname(pent, "func_bomb_target")) != NULL) {
-        if (goal_exists(pent) == false)
-            goal_add(pent, GOAL_BOMBSPOT, VecBModelOrigin(pent));
+        goal_add(pent, GOAL_BOMBSPOT, VecBModelOrigin(pent));
     }
 
     while ((pent =
                     UTIL_FindEntityByClassname(pent, "info_bomb_target")) != NULL) {
-        if (goal_exists(pent) == false)
-            goal_add(pent, GOAL_BOMBSPOT, VecBModelOrigin(pent));
+        goal_add(pent, GOAL_BOMBSPOT, VecBModelOrigin(pent));
     }
 
     // GOAL #5 - Hostages (this is the 'starting' position):
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent, "hostage_entity")) != NULL) {
-        if (pent->v.effects & EF_NODRAW)
-            continue;              // already rescued
-
-        // not moving?
-        if (FUNC_PlayerSpeed(pent) > 0)
-            continue;              // already in use (else it would not move)
-
-        // Add hostage to goals list
+    while ((pent = UTIL_FindEntityByClassname(pent, "hostage_entity")) != NULL) {
         goal_add(pent, GOAL_HOSTAGE, pent->v.origin);
     }
 
     // GOAL  #6 - VIP (this is the 'starting' position) (EVY)
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent, "info_vip_start")) != NULL) {
+    while ((pent = UTIL_FindEntityByClassname(pent, "info_vip_start")) != NULL) {
         if (goal_exists(pent) == false)
             goal_add(pent, GOAL_VIP, VecBModelOrigin(pent));
     }
@@ -2504,7 +2488,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                     // Set on camp mode
                     if (RANDOM_LONG(0, 100) < pBot->ipCampRate &&
                         pBot->f_camp_time + ((100 - pBot->ipCampRate) / 2) <
-                        gpGlobals->time && FUNC_AmountHostages(pBot) < 1) {
+                        gpGlobals->time && !pBot->isEscortingHostages()) {
                         pBot->iPathFlags = PATH_CAMP;
                     }
                 }
@@ -3025,16 +3009,21 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 
     if (pBot->shouldBeWandering()) {
-//      REALBOT_PRINT(pBot, "cNodeMachine::path_think", "wander timer is set, will wander");
         return;
     }
 
-    if (pBot->pBotHostage != NULL && pBot->CanSeeEntity(pBot->pBotHostage)) {
-        REALBOT_PRINT(pBot, "cNodeMachine::path_think", "has hostage and can see hostage, will not do anything");
-        return; // bot has hostage, can see hostage
+    // Heading for hostage (directly) so do not do things with paths
+    if (pBot->hasHostageToRescue()) {
+        if (pBot->canSeeHostageToRescue()) {
+            pBot->rprint("cNodeMachine::path_think", "has hostage and can see hostage, will not do anything");
+            return; // bot has hostage, can see hostage
+        } else {
+            pBot->rprint("cNodeMachine::path_think", "has hostage to rescue, but can't see it");
+        }
     }
 
     if (pBot->f_c4_time > gpGlobals->time) {
+        //???
         REALBOT_PRINT(pBot, "cNodeMachine::path_think", "Not allowed to think , c4 is planted");
         return;
     }
@@ -3042,6 +3031,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     // When camping we do not think about paths, we think where to look at
     if (pBot->f_camp_time > gpGlobals->time) {
         if (!pBot->hasGoal()) {
+            pBot->rprint("Setting goal to look for camping");
             pBot->setGoalNode(node_look_camp(pBot->pEdict->v.origin, UTIL_GetTeam(pBot->pEdict), pBot->pEdict));
         }
         REALBOT_PRINT(pBot, "cNodeMachine::path_think", "Camping!");
@@ -3055,19 +3045,19 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         return;
     }
 
-    // No path
 
+    if (pBot->hasEnemy()) {
+        pBot->rprint("cNodeMachine::path_think", "no goal - but bot has enemy. Bailing.");
+        // bail, as we have an enemy
+        return;
+    }
+
+    // No path
     pBot->stopMoving();
 
-    if (pBot->hasGoal() || pBot->hasEnemy()) {
+    if (pBot->hasGoal()) {
         // there is no path, but there is a goal to work to
-
-        int iCurrentNode = getCloseNode(pBot->pEdict->v.origin, 50, pBot->pEdict);
-
-        // if there is no currentNode, try again in a bit wider range
-        if (iCurrentNode < 0) {
-            iCurrentNode = getCloseNode(pBot->pEdict->v.origin, 100, pBot->pEdict);
-        }
+        int iCurrentNode = pBot->determineCurrentNodeWithTwoAttempts();
 
         if (iCurrentNode < 0) {
             pBot->forgetGoal();
@@ -3092,25 +3082,18 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         if (pBot->getPathNodeIndex()) {
             pBot->rprint("cNodeMachine::path_think()",
                          "there is a goal, no path, and we could not get a path to our goal; so i have choosen to go to a nice nearby and try again");
-            pBot->setGoalNode(
-                    getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict)
+            pBot->setGoalNode(getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict)
             );
         }
         return;
     }
 
-    // There is no path, and no goal
-
-    if (pBot->hasEnemy()) {
-        pBot->rprint("cNodeMachine::path_think", "no goal - but bot has enemy. Bailing.");
-        // bail, as we have an enemy
-        return;
-    }
+    // There is no goal
 
     REALBOT_PRINT(pBot, "cNodeMachine::path_think", "No goal yet\n");
 
     // Depending on team we have a goal
-    int iCurrentNode = getCloseNode(pBot->pEdict->v.origin, 75, pBot->pEdict);
+    int iCurrentNode = pBot->determineCurrentNodeWithTwoAttempts();
 
     if (iCurrentNode < 0) {
         iCurrentNode = add(pBot->pEdict->v.origin, pBot->pEdict);
@@ -3123,13 +3106,15 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         return;
     }
 
+    // DETERMINE GOAL
+
     // Loop through all goals.
     float highestScore = 0.0;
 
     int iFinalGoalNode = -1;
-    int iFinalGoalID = -1;
+    int iFinalGoalIndex = -1;
 
-    int iGn = 0;
+    int goalIndex = 0;
 
     float MAX_DISTANCE = 16384.0; // theoretical max distance
     float MAX_GOAL_DISTANCE = MAX_DISTANCE / 2.0;
@@ -3140,24 +3125,24 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     // Since both scores can be max 1.0, meaning we keep it between 0.0 and 1.0
     // A score of 1.0 is max.
     int maxCheckedScore = 25;
-    for (iGn = 0; iGn < MAX_GOALS; iGn++) {
+    for (goalIndex = 0; goalIndex < MAX_GOALS; goalIndex++) {
 
         // Make sure this goal is valid
-        if (Goals[iGn].iNode < 0) continue;
+        if (Goals[goalIndex].iNode < 0) continue;
 
         float score = 0.0f; // start with 0
 
         float fDistanceToGoal = func_distance(
                 pBot->pEdict->v.origin,
-                node_vector(Goals[iGn].iNode)
+                node_vector(Goals[goalIndex].iNode)
         );
 
         // First score is distance, so just set it:
         score = fDistanceToGoal / MAX_DISTANCE;
 
-        if (Goals[iGn].iChecked > maxCheckedScore) {
+        if (Goals[goalIndex].iChecked > maxCheckedScore) {
             // it has been very popular, reset
-            Goals[iGn].iChecked = 0;
+            Goals[goalIndex].iChecked = 0;
         }
 
         // A bit off randomness
@@ -3166,51 +3151,50 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 
         score += weight;
 
-//            if (RANDOM_LONG (0, 100) < pBot->ipRandom)
-//            {
-////            iGoalNode = RANDOM_LONG (0, iMaxUsedNodes);
-//  //          REALBOT_PRINT (pBot, "cNodeMachine::path_think()", "Goalnode is random.");
-//
-//            }
-
         // Take into consideration how many times this goal has been selected
-        score = (score + (1.0f - (Goals[iGn].iChecked / maxCheckedScore))) / 2.0f;
+        score = (score + (1.0f - (Goals[goalIndex].iChecked / maxCheckedScore))) / 2.0f;
 
         // Danger (is important)
-        score = (score + InfoNodes[Goals[iGn].iNode].fDanger[UTIL_GetTeam(pBot->pEdict)]) / 1.5;
+        score = (score + InfoNodes[Goals[goalIndex].iNode].fDanger[UTIL_GetTeam(pBot->pEdict)]) / 1.5;
 
-        // Favoriteness
-        float goalscore = 0.0;
-        for (int iBots = 0; iBots < 32; iBots++) {
-            if (&bots[iBots] == NULL ||
-                bots[iBots].bIsUsed == false) {
-                goalscore++;
+        // How many bots have already taken this goal?
+        float goalAlreadyUsedScore = 0.0;
+        float teamMembers = 1.0; // count self by default
+
+        for (int botIndex = 0; botIndex < 32; botIndex++) {
+            // not a bot
+            cBot *botPointer = &bots[botIndex];
+            if (botPointer == NULL ||
+                !botPointer->bIsUsed ||
+                botPointer == pBot) { // skip self
                 continue;
             }
 
             // real bots..
-            if ((bots[iBots].getGoalNode() == Goals[iGn].iNode) &&
-                (bots[iBots].iTeam == pBot->iTeam)) {
-                goalscore++;
+            if (pBot->isOnSameTeamAs(botPointer)) {
+                teamMembers++;
+                if (pBot->getGoalNode() == Goals[goalIndex].iNode) {
+                    goalAlreadyUsedScore++;
+                }
             }
         }
 
         // add favoriteness
-        score = (score + (1.0 - (goalscore / 32.0))) / 2.0;
+        score = (score + (1.0 - (goalAlreadyUsedScore / teamMembers))) / 2.0;
 
         // Spawn points, when bomb is not planted
-        if ((Goals[iGn].iType == GOAL_SPAWNCT ||
-             Goals[iGn].iType == GOAL_SPAWNT) &&
+        if ((Goals[goalIndex].iType == GOAL_SPAWNCT ||
+             Goals[goalIndex].iType == GOAL_SPAWNT) &&
             Game.bBombPlanted == false) {
 
             float goalscore = fDistanceToGoal / MAX_GOAL_DISTANCE;
             score = (score + goalscore) / 2.0;
-        } else if (Goals[iGn].iType == GOAL_BOMBSPOT) {
+        } else if (Goals[goalIndex].iType == GOAL_BOMBSPOT) {
             float goalscore = 0.0;
             // Whenever the bot has a bomb, or must defuse it, it will assign
             // a high priority to this goal.
-            if ((pBot->iTeam == 1 && pBot->hasBomb()) ||
-                (pBot->iTeam == 2 && Game.bBombPlanted)) {
+            if ((pBot->isTerrorist() && pBot->hasBomb()) ||
+                (pBot->isCounterTerrorist() && Game.bBombPlanted)) {
                 goalscore = 0.7;
             } else {
                 // Bot does not have a bomb, or it has not been planted. These goals are still important
@@ -3220,11 +3204,11 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
             }
 
             score = (score + goalscore) / 2.0;
-        } else if (Goals[iGn].iType == GOAL_HOSTAGE) {
+        } else if (Goals[goalIndex].iType == GOAL_HOSTAGE) {
             // counter-terrorist should
             float goalscore = 0.0;
-            if (pBot->iTeam == 2) {
-                if (pBot->isKeepingHostages() == false) {
+            if (pBot->isCounterTerrorist()) {
+                if (!pBot->isEscortingHostages()) {
                     // always go to the most furthest hostage spot, and add some randomness here, else
                     // all bots go to there.
                     if (fDistanceToGoal > 90) {
@@ -3237,16 +3221,19 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
                     goalscore = 0.5; // not that important anymore, rescueing is more important
                 }
             } else {
+
+                // Terrorist pick randomly this location
                 if (RANDOM_LONG(0, 100) < 25) {
                     goalscore = RANDOM_FLOAT(0.1, 0.6);
                 }
+
             }
 
             score = (score + goalscore) / 2.0;
         }
             // 17/07/04
             // Basic attempts to handle other kind of goals...
-        else if (Goals[iGn].iType == GOAL_VIPSAFETY)        // basic goals added for as_ maps
+        else if (Goals[goalIndex].iType == GOAL_VIPSAFETY)        // basic goals added for as_ maps
         {
             // Maximum importance when acting as CT should check whether we are the VIP!
             if (pBot->iTeam == 2) {
@@ -3254,14 +3241,14 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
             } else {            // We are T
                 score = (score + 1.0) / 2.0;
             }
-        } else if (Goals[iGn].iType == GOAL_ESCAPEZONE)     // basic goals added for es_  maps
+        } else if (Goals[goalIndex].iType == GOAL_ESCAPEZONE)     // basic goals added for es_  maps
         {
             // Maximum importance when acting as T
             if (pBot->iTeam == 1) {
                 score = 2.0;
             }
-        } else if (Goals[iGn].iType == GOAL_RESCUEZONE) {
-            if (pBot->isKeepingHostages()) {
+        } else if (Goals[goalIndex].iType == GOAL_RESCUEZONE) {
+            if (pBot->isEscortingHostages()) {
                 score = 2.0;
             }
         }
@@ -3280,15 +3267,20 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 
 
         // was previous goal as well, don't go there
-        if (pBot->iPreviousGoalNode == iGn) {
+        if (pBot->iPreviousGoalNode == goalIndex) {
             score = 0.2; // low chance
         }
+
+
+        // UNTIL HERE THE GOAL 'SCORE' IS CALCULATED
+        // the next job is to determine if it is 'more important' to pick than the one before
+        // Refactor this please...
 
         // finally update values, and get to goal
         if (score > highestScore) {
             highestScore = score;
-            iFinalGoalNode = Goals[iGn].iNode;
-            iFinalGoalID = iGn;
+            iFinalGoalNode = Goals[goalIndex].iNode;
+            iFinalGoalIndex = goalIndex;
         }
     }
 
@@ -3297,22 +3289,19 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         pBot->iPathFlags = PATH_DANGER;
     }
 
-    if (Game.vDroppedC4 != Vector(9999, 9999, 9999) &&
-        pBot->pButtonEdict == NULL) {
-        if (RANDOM_LONG(0, 100) < pBot->ipDroppedBomb) {
-            iFinalGoalNode = getCloseNode(Game.vDroppedC4, 75, NULL);
-        }
-    }
-
-    // a few situations override the final goal node
+    // a few situations override the final goal node... (Stefan, what!?)
     if (pBot->pButtonEdict) {
         iFinalGoalNode = getCloseNode(VecBModelOrigin(pBot->pButtonEdict), NODE_ZONE, pBot->pButtonEdict);
     }
 
-    if (iFinalGoalNode > -1) {
-        Goals[iFinalGoalNode].iChecked++;
-    } else {
-        pBot->startWandering(1);
+    // Well it looks like we override the 'final' goal node (not so final after all huh?) to the dropped c4
+    if (Game.vDroppedC4 != Vector(9999, 9999, 9999) && // c4 dropped somewhere
+        pBot->pButtonEdict == NULL) { // not using button
+
+        // randomly, if we 'feel like picking up the bomb' just override the 'final' goal node
+        if (RANDOM_LONG(0, 100) < pBot->ipDroppedBomb) {
+            iFinalGoalNode = getCloseNode(Game.vDroppedC4, 75, NULL);
+        }
     }
 
     // When camp flag is set, so we should camp at our 'destination' then we should determine
@@ -3329,15 +3318,31 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
        }
      */
 
+
+    if (iFinalGoalIndex > -1) {
+        Goals[iFinalGoalIndex].iChecked++;
+    } else {
+        pBot->startWandering(1);
+    }
+
+    // Finally, we set it for real
+    pBot->rprint("Setting final goal after choosing a goal from goals list");
     pBot->setGoalNode(iFinalGoalNode);
 
     char msg[255];
+    memset(msg, 0, sizeof(msg));
 
-    sprintf(msg, "I have chosen to go to goalnode: Node %d, Node Type = %d, iScore=%f, Distance=%f",
-            iFinalGoalNode, Goals[iFinalGoalID].iType, highestScore,
-            func_distance(pBot->pEdict->v.origin, Nodes[iFinalGoalNode].origin));
+    sprintf(msg, "I have chosen a goal: Node [%d], Goal type [%s], score [%f], distance [%f]",
+            iFinalGoalNode,
+            getGoalTypeAsTextFromGoal(iFinalGoalIndex),
+            highestScore,
+            pBot->getDistanceTo(iFinalGoalNode)
+        );
 
     pBot->rprint("cNodeMachine::path_think", msg);
+
+    //////////////////////////////////////// GOAL PICKING FINISHED //////////////////////////////////////////
+    //////////////////////////////////////// GOAL PICKING FINISHED //////////////////////////////////////////
 
     // create path
     createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
@@ -3347,6 +3352,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     if (!pBot->isWalkingPath()) {
         REALBOT_PRINT(pBot, "cNodeMachine::path_think()",
                       "Ah damn, i finally knew where to go, now i don't know how. Well lets try something close first.");
+        pBot->rprint("Setting a random goal");
         pBot->setGoalNode(getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict));
         createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
 
@@ -3356,6 +3362,76 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
             pBot->forgetGoal();
         }
     }
+}
+
+tNode *cNodeMachine::getNode(int index) {
+    // safe-guard
+    if (index < 0 || index >= MAX_NODES) return NULL;
+    return &Nodes[index];
+}
+
+/**
+ * Returns goal type as string, given a goal index.
+ * @param goalIndex
+ * @return
+ */
+char *cNodeMachine::getGoalTypeAsTextFromGoal(int goalIndex) const {
+    if (goalIndex < 0 || goalIndex > MAX_GOALS) {
+        REALBOT_PRINT("cNodeMachine::getGoalTypeAsTextFromGoal", "provided invalid goalIndex");
+        return "INVALID GOALINDEX";
+    }
+    const tGoal &goal = Goals[goalIndex];
+    return getGoalTypeAsText(goal);
+}
+
+char *cNodeMachine::getGoalTypeAsText(const tGoal &goal) const {
+    char typeAsText[255];
+    memset(typeAsText, 0, sizeof(typeAsText));
+
+    switch(goal.iType) {
+        case GOAL_SPAWNT:
+            sprintf(typeAsText, "GOAL_SPAWNT");
+            break;
+        case GOAL_SPAWNCT:
+            sprintf(typeAsText, "GOAL_SPAWNCT");
+            break;
+        case GOAL_BOMBSPOT:
+            sprintf(typeAsText, "GOAL_BOMBSPOT");
+            break;
+        case GOAL_BOMB:
+            sprintf(typeAsText, "GOAL_BOMB");
+            break;
+        case GOAL_HOSTAGE:
+            sprintf(typeAsText, "GOAL_HOSTAGE");
+            break;
+        case GOAL_RESCUEZONE:
+            sprintf(typeAsText, "GOAL_RESCUEZONE");
+            break;
+        case GOAL_CONTACT:
+            sprintf(typeAsText, "GOAL_CONTACT");
+            break;
+        case GOAL_IMPORTANT:
+            sprintf(typeAsText, "GOAL_IMPORTANT");
+            break;
+        case GOAL_VIP:
+            sprintf(typeAsText, "GOAL_VIP");
+            break;
+        case GOAL_VIPSAFETY:
+            sprintf(typeAsText, "GOAL_VIPSAFETY");
+            break;
+        case GOAL_ESCAPEZONE:
+            sprintf(typeAsText, "GOAL_ESCAPEZONE");
+            break;
+        case GOAL_WEAPON:
+            sprintf(typeAsText, "GOAL_WEAPON");
+            break;
+        case GOAL_NONE:
+            sprintf(typeAsText, "GOAL_NONE");
+            break;
+        default:
+            sprintf(typeAsText, "GOAL UNKNOWN");
+    }
+    return typeAsText;
 }
 
 // Find cover

@@ -423,9 +423,7 @@ UTIL_GetBotPointer (edict_t * pEdict)
   return NULL;			// return NULL if edict is not a bot
 }
 
-bool
-IsAlive (edict_t * pEdict)
-{
+bool IsAlive (edict_t * pEdict) {
   // FIX: Make sure the edict is valid and such, else return false:   
   return ((pEdict != NULL) &&	// VALID
 	  (pEdict->v.deadflag == DEAD_NO) &&	// NOT DEAD
