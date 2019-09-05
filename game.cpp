@@ -355,185 +355,202 @@ void cGame::UpdateGameStatus() {
     } // planted, and not planted before
 } // UpdateGameStatus()
 
-// Add bot -> ARG1(team), ARG2(skill), ARG3(model), ARG4(name)
-int cGame::CreateBot(edict_t *pPlayer, const char *team, const char *skill, const char *model, const char *name) {
-    edict_t *BotEnt;
-    cBot *pBot;
-    char c_skin[BOT_SKIN_LEN + 1];
+/**
+ * Add bot -> ARG1(team), ARG2(skill), ARG3(model), ARG4(name)
+ * pPlayer == player who wanted to create bot (if not null)
+ * @param pPlayer
+ * @param teamArg
+ * @param skillArg
+ * @param modelArg
+ * @param nameArg
+ * @return
+ */
+int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg, const char *modelArg, const char *nameArg) {
 
-    // clear
-    memset(c_skin, 0, sizeof(c_skin));
-
-    int skill;
-    int i, j, length;
-    char c_name[BOT_NAME_LEN + 1];
-    memset(c_name, 0, sizeof(c_name));
-    if ((name != NULL) && (*name != 0)) {
-        strncpy(c_name, name, BOT_NAME_LEN - 1);
-        c_name[BOT_NAME_LEN] = 0; // make sure c_name is null terminated
-    } else {
-        if (NamesAvailable())
-            SelectName(c_name);
-        else
-            strcpy(c_name, "RealBot");
+    // NAME
+    char botName[BOT_NAME_LEN + 1];
+    memset(botName, 0, sizeof(botName));
+    // if name given, use that
+    if ((nameArg != NULL) && (*nameArg != 0)) {
+        strncpy(botName, nameArg, BOT_NAME_LEN - 1);
+        botName[BOT_NAME_LEN] = 0; // make sure botName is null terminated
+    } else { // else pick random one or fallback to default "RealBot"
+        if (NamesAvailable()) {
+            SelectName(botName);
+        } else {
+            strcpy(botName, "RealBot");
+        }
     }
-
-    skill = -2;                  // -2, not valid
-
-    if ((skill != NULL) && (*skill != 0))
-        skill = atoi(skill);       // set to given skill
-
-    // when not valid (-2), it has default skill
-    if ((skill < -1) || (skill > 10))
-        skill = iDefaultBotSkill;
-
-    // When skill is -1, random, we set it by boundries given
-    if (skill == -1)
-        skill = RANDOM_LONG(iRandomMinSkill, iRandomMaxSkill);
 
     // length of name
-    length = strlen(c_name);
+    int lengthOfBotName = strlen(botName);
 
     // remove any illegal characters from name...
-    for (i = 0; i < length; i++) {
-        if ((c_name[i] <= ' ') || (c_name[i] > '~') || (c_name[i] == '"')) {
-            for (j = i; j < length; j++)   // shuffle chars left (and null)
-                c_name[j] = c_name[j + 1];
-            length--;
-        }
-    }
-
-    BotEnt = (*g_engfuncs.pfnCreateFakeClient)(c_name);
-    if (FNullEnt(BotEnt)) {
-        REALBOT_PRINT(NULL, "cGame::CreateBot",
-                      "Cannot create bot, server is full");
-        return GAME_MSG_FAIL_SERVERFULL;  // failed
-    } else {
-        char ptr[128];            // allocate space for message from ClientConnect
-        char *infobuffer;
-        int clientIndex;
-
-        // find empty bot index
-        int freeBotIndex;
-        freeBotIndex = 0;
-        while ((bots[freeBotIndex].bIsUsed) && (freeBotIndex < MAX_BOTS))
-            freeBotIndex++;
-
-        if (freeBotIndex == MAX_BOTS) { // failure
-            return GAME_MSG_FAILURE;
-        }
-
-        // create the player entity by calling MOD's player function
-        // (from LINK_ENTITY_TO_CLASS for player object)
-
-        // FIX: Free data for bot, so we can fill in new
-        if (BotEnt->pvPrivateData != NULL)
-            FREE_PRIVATE(BotEnt);
-
-        BotEnt->pvPrivateData = NULL;
-        BotEnt->v.frags = 0;
-
-        // END OF FIX: --- score resetted
-        CALL_GAME_ENTITY(PLID, "player", VARS(BotEnt));
-        infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(BotEnt);
-        clientIndex = ENTINDEX(BotEnt);
-
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "model", "");
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "rate", "3500.000000");
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_updaterate", "20");
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_lw", "1");
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_lc", "1");
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "tracker", "0");
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_dlmax", "128");
-
-        if (RANDOM_LONG(0, 100) < 50) {
-            (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "lefthand", "1");
-        } else {
-            (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "lefthand", "0");
-        }
-
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "friends", "0");
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "dm", "0");
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "ah", "1");
-        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "_vgui_menus", "0");
-
-        MDLL_ClientConnect(BotEnt, c_name, "127.0.0.1", ptr);
-
-        // Pieter van Dijk - use instead of DispatchSpawn() - Hip Hip Hurray!
-        MDLL_ClientPutInServer(BotEnt);
-        BotEnt->v.flags |= FL_THIRDPARTYBOT;
-
-        // initialize all the variables for this bot...
-
-        // Retrieve Pointer
-        pBot = &bots[freeBotIndex];
-
-        // TODO: Stefan 05/09/2019 - init function? (re-use, so much duplication here)
-        // Set variables
-        pBot->iBotIndex = freeBotIndex;
-        pBot->bIsUsed = true;
-        pBot->respawn_state = RESPAWN_IDLE;
-        pBot->fCreateTime = gpGlobals->time;
-        pBot->fKickTime = 0.0;
-        pBot->name[0] = 0;        // name not set by server yet
-        pBot->bot_money = 0;
-        strcpy(pBot->skin, c_skin);
-        pBot->pEdict = BotEnt;
-        pBot->hasJoinedTeam = false;   // hasn't joined game yet
-
-        // CS Message IDLE..
-        pBot->start_action = MSG_CS_IDLE;
-        pBot->SpawnInit();
-        pBot->bInitialize = false;        // don't need to initialize yet
-        BotEnt->v.idealpitch = BotEnt->v.v_angle.x;
-        BotEnt->v.ideal_yaw = BotEnt->v.v_angle.y;
-        BotEnt->v.pitch_speed = BOT_PITCH_SPEED;
-        BotEnt->v.yaw_speed = BOT_YAW_SPEED;
-        pBot->bot_skill = skill;
-
-        // Personality related
-        pBot->ipHostage = 0;
-        pBot->ipBombspot = 0;
-        pBot->ipRandom = 0;
-        pBot->ipTurnSpeed = 20;
-        pBot->ipReplyToRadio = 0;
-        pBot->ipCreateRadio = 0;
-        pBot->ipHelpTeammate = 0;
-        pBot->ipWalkWithKnife = 0;
-        pBot->ipDroppedBomb = 0;
-        pBot->ipCampRate = 0;
-        pBot->ipChatRate = 0;
-        pBot->ipFearRate = 0;
-        pBot->ipHearRate = 0;
-
-        pBot->played_rounds = 0;
-
-        // Buy-personality related
-        pBot->ipFavoPriWeapon = -1;
-        pBot->ipFavoSecWeapon = -1;
-        pBot->ipBuyFlashBang = 0;
-        pBot->ipBuyGrenade = 0;
-        pBot->ipBuySmokeGren = 0;
-        pBot->ipBuyDefuseKit = 0;
-        pBot->ipSaveForWeapon = 0;
-        pBot->ipBuyArmour = 0;
-
-        // here we set team
-        if ((team != NULL) && (team[0] != 0)) {
-            pBot->iTeam = atoi(team);
-
-            // and class
-            if ((model != NULL) && (model[0] != 0)) {
-                pBot->bot_class = atoi(model);
+    int i, j;
+    for (i = 0; i < lengthOfBotName; i++) {
+        if ((botName[i] <= ' ') || (botName[i] > '~') || (botName[i] == '"')) {
+            // move chars to the left (and null)
+            for (j = i; j < lengthOfBotName; j++) {
+                botName[j] = botName[j + 1];
             }
+            lengthOfBotName--;
         }
-
-        // Parsing name into bot identity
-        INI_PARSE_BOTS(c_name, pBot);
-
-        // return success
-        return GAME_MSG_SUCCESS;
     }
+
+    int botSkill = -2; // -2, not valid
+
+    // Skill argument provided
+    if ((skillArg != NULL) && (*skillArg != 0)) {
+        botSkill = atoi(skillArg);       // set to given skill
+    }
+
+    // when not valid (-2), it has default skill
+    if ((botSkill < -1) || (botSkill > 10)) {
+        botSkill = iDefaultBotSkill;
+    }
+
+    // When skill is -1, random, we set it by boundries given
+    if (botSkill == -1) {
+        botSkill = RANDOM_LONG(iRandomMinSkill, iRandomMaxSkill);
+    }
+
+    // CREATE fake client!
+    edict_t *pBotEdict = (*g_engfuncs.pfnCreateFakeClient)(botName);
+    if (FNullEnt(pBotEdict)) {
+        REALBOT_PRINT(NULL, "cGame::CreateBot", "Cannot create bot, server is full");
+        return GAME_MSG_FAIL_SERVERFULL;  // failed
+    }
+
+
+    char ptr[128];            // allocate space for message from ClientConnect
+    char *infobuffer;
+    int clientIndex;
+
+    // find empty bot index
+    int freeBotIndex;
+    freeBotIndex = 0;
+    while ((bots[freeBotIndex].bIsUsed) && (freeBotIndex < MAX_BOTS))
+        freeBotIndex++;
+
+    if (freeBotIndex == MAX_BOTS) { // failure
+        return GAME_MSG_FAILURE;
+    }
+
+    // create the player entity by calling MOD's player function
+    // (from LINK_ENTITY_TO_CLASS for player object)
+
+    // FIX: Free data for bot, so we can fill in new
+    if (pBotEdict->pvPrivateData != NULL)
+        FREE_PRIVATE(pBotEdict);
+
+    pBotEdict->pvPrivateData = NULL;
+    pBotEdict->v.frags = 0;
+
+    // END OF FIX: --- score resetted
+    CALL_GAME_ENTITY(PLID, "player", VARS(pBotEdict));
+    infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pBotEdict);
+    clientIndex = ENTINDEX(pBotEdict);
+
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "model", "");
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "rate", "3500.000000");
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_updaterate", "20");
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_lw", "1");
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_lc", "1");
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "tracker", "0");
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_dlmax", "128");
+
+    if (RANDOM_LONG(0, 100) < 50) {
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "lefthand", "1");
+    } else {
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "lefthand", "0");
+    }
+
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "friends", "0");
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "dm", "0");
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "ah", "1");
+    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "_vgui_menus", "0");
+
+    MDLL_ClientConnect(pBotEdict, botName, "127.0.0.1", ptr);
+
+    // Pieter van Dijk - use instead of DispatchSpawn() - Hip Hip Hurray!
+    MDLL_ClientPutInServer(pBotEdict);
+    pBotEdict->v.flags |= FL_THIRDPARTYBOT;
+
+    // initialize all the variables for this bot...
+
+    // Retrieve Pointer
+    cBot *pBot = &bots[freeBotIndex];
+
+    // TODO: Stefan 05/09/2019 - init function? (re-use, so much duplication here)
+    // Set variables
+    pBot->iBotIndex = freeBotIndex;
+    pBot->bIsUsed = true;
+    pBot->respawn_state = RESPAWN_IDLE;
+    pBot->fCreateTime = gpGlobals->time;
+    pBot->fKickTime = 0.0;
+    pBot->name[0] = 0;        // name not set by server yet
+    pBot->bot_money = 0;
+
+    // clear
+    char c_skin[BOT_SKIN_LEN + 1];
+    memset(c_skin, 0, sizeof(c_skin));
+    strcpy(pBot->skin, c_skin);
+
+    pBot->pEdict = pBotEdict;
+    pBot->hasJoinedTeam = false;   // hasn't joined game yet
+
+    // CS Message IDLE..
+    pBot->start_action = MSG_CS_IDLE;
+    pBot->SpawnInit();
+    pBot->bInitialize = false;        // don't need to initialize yet
+    pBotEdict->v.idealpitch = pBotEdict->v.v_angle.x;
+    pBotEdict->v.ideal_yaw = pBotEdict->v.v_angle.y;
+    pBotEdict->v.pitch_speed = BOT_PITCH_SPEED;
+    pBotEdict->v.yaw_speed = BOT_YAW_SPEED;
+    pBot->bot_skill = botSkill;
+
+    // Personality related
+    pBot->ipHostage = 0;
+    pBot->ipBombspot = 0;
+    pBot->ipRandom = 0;
+    pBot->ipTurnSpeed = 20;
+    pBot->ipReplyToRadio = 0;
+    pBot->ipCreateRadio = 0;
+    pBot->ipHelpTeammate = 0;
+    pBot->ipWalkWithKnife = 0;
+    pBot->ipDroppedBomb = 0;
+    pBot->ipCampRate = 0;
+    pBot->ipChatRate = 0;
+    pBot->ipFearRate = 0;
+    pBot->ipHearRate = 0;
+
+    pBot->played_rounds = 0;
+
+    // Buy-personality related
+    pBot->ipFavoPriWeapon = -1;
+    pBot->ipFavoSecWeapon = -1;
+    pBot->ipBuyFlashBang = 0;
+    pBot->ipBuyGrenade = 0;
+    pBot->ipBuySmokeGren = 0;
+    pBot->ipBuyDefuseKit = 0;
+    pBot->ipSaveForWeapon = 0;
+    pBot->ipBuyArmour = 0;
+
+    // here we set team
+    if ((teamArg != NULL) && (teamArg[0] != 0)) {
+        pBot->iTeam = atoi(teamArg);
+
+        // and class
+        if ((modelArg != NULL) && (modelArg[0] != 0)) {
+            pBot->bot_class = atoi(modelArg);
+        }
+    }
+
+    // Parsing name into bot identity
+    INI_PARSE_BOTS(botName, pBot);
+
+    // return success
+    return GAME_MSG_SUCCESS;
 }                               // CreateBot()
 
 // Debug message (without BOT)

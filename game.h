@@ -86,8 +86,8 @@ public:
    bool NewRound();             // New round?
    float RoundTime();           // When did the round start? (time)
 
-   int CreateBot(edict_t * pPlayer, const char *team, const char *skill,
-                 const char *model, const char *name);
+   int createBot(edict_t * pPlayer, const char *teamArg, const char *skillArg,
+                 const char *modelArg, const char *nameArg);
 
    // ---------------------
    void UpdateGameStatus();     // Updates global game variables

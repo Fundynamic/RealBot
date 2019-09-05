@@ -785,7 +785,7 @@ void StartFrame(void) {
             else if (iTotal < min_players) {
                 // add a bot
                 SERVER_PRINT("RBSERVER: Too few player slots filled, adding one bot.\n");
-                Game.CreateBot(NULL, NULL, NULL, NULL, NULL);
+                Game.createBot(NULL, NULL, NULL, NULL, NULL);
             }
         } else {
             if (num_bots > 0) {
@@ -830,7 +830,7 @@ void StartFrame(void) {
         // When timer is set, create a new bot.
         if (add_timer > gpGlobals->time && internet_addbot) {
             internet_addbot = false;
-            Game.CreateBot(NULL, NULL, NULL, NULL, NULL);
+            Game.createBot(NULL, NULL, NULL, NULL, NULL);
             bot_check_time = gpGlobals->time + 5.0;
         }
 
@@ -933,7 +933,7 @@ void StartFrame(void) {
             sprintf(c_team, "%d", bots[index].iTeam);
             sprintf(c_class, "%d", bots[index].bot_class);
 
-            Game.CreateBot(NULL, c_team, c_skill, c_class,
+            Game.createBot(NULL, c_team, c_skill, c_class,
                            bots[index].name);
 
             // 01/07/04 - Stefan - make 100% sure we do not crash on this part with the auto-add function
@@ -1213,7 +1213,7 @@ void RealBot_ServerCommand(void) {
         EMIT_SOUND_DYN2(pEntity, CHAN_VOICE, "misc/imgood12.wav", 1.0,
                         ATTN_NORM, 0, 100);
     } else if (FStrEq(pcmd, "add")) {
-        int iStatus = Game.CreateBot(pEntity, arg1, arg2, arg3, arg4);
+        int iStatus = Game.createBot(pEntity, arg1, arg2, arg3, arg4);
         bot_check_time = gpGlobals->time + 5.0;
         if (iStatus == GAME_MSG_SUCCESS)
             sprintf(cMessage, "REALBOT: Successfully created bot.");
