@@ -15,4 +15,5 @@ rm "/Users/shendriks/Library/Application Support/Steam/SteamApps/common/Half-Lif
 touch "/Users/shendriks/Library/Application Support/Steam/SteamApps/common/Half-Life/reallog.txt"
 
 # run
-"/Users/shendriks/Library/Application Support/Steam/SteamApps/common/Half-Life/hl.sh" -game cstrike --listen +map cs_italy +maxplayers 32
+#"/Users/shendriks/Library/Application Support/Steam/SteamApps/common/Half-Life/hl.sh" -game cstrike --listen +map cs_italy +maxplayers 32
+"/Users/shendriks/Library/Application Support/Steam/SteamApps/common/Half-Life/hl.sh" -game cstrike --listen +map de_dust +maxplayers 32

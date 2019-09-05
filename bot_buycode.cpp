@@ -62,7 +62,7 @@ int ListIdWeapon(int weapon_id) {
 }
 
 // The bot will be buying this weapon
-void BuyWeapon(cBot *pBot, const char *arg1, const char *arg2) {
+void BotPrepareConsoleCommandsToBuyWeapon(cBot *pBot, const char *arg1, const char *arg2) {
     // To be sure the console will only change when we MAY change.
     // The values will only be changed when console_nr is 0
     if (Game.RoundTime() + 4 < gpGlobals->time)
@@ -154,11 +154,11 @@ bool GoodWeaponForTeam(int weapon, int team) {
 }
 
 /*
- BotBuyStuff()
+ BotDecideWhatToBuy()
  
  In this function the bot will choose what weapon to buy from the table.
  */
-void BotBuyStuff(cBot *pBot) {
+void BotDecideWhatToBuy(cBot *pBot) {
     /**
      * Stefan 02/09/2018
      *
@@ -330,14 +330,14 @@ void BotBuyStuff(cBot *pBot) {
     } else if (pBot->buy_ammo_primary == true) {
         pBot->rprint("BotBuyStuff()", "buy_ammo_primary");
         // Buy primary ammo
-        BuyWeapon(pBot, "6", NULL);
+        BotPrepareConsoleCommandsToBuyWeapon(pBot, "6", NULL);
         pBot->buy_ammo_primary = false;
         return;
 
     } else if (pBot->buy_ammo_secondary == true) {
         pBot->rprint("BotBuyStuff()", "buy_ammo_secondary");
         // Buy secondary ammo
-        BuyWeapon(pBot, "7", NULL);
+        BotPrepareConsoleCommandsToBuyWeapon(pBot, "7", NULL);
         pBot->buy_ammo_secondary = false;
         return;
     } else if (pBot->buy_defusekit) {
@@ -397,35 +397,13 @@ void BotBuyStuff(cBot *pBot) {
 void ConsoleThink(cBot *pBot) {
     // RealBot only supports Counter-Strike
     if (mod_id != CSTRIKE_DLL) return;
-
-    // Bot thinks what it should do with the console
-    bool time_to_buy = false;
-    bool need_to_buy = false; // We dont need anything!
+    if (pBot->isUsingConsole()) return; // busy executing console commands, so do not decide anything else
 
     // TODO: take buy time cvar?
-    if (Game.RoundTime() + 15 > gpGlobals->time && pBot->console_nr == 0) {
-        pBot->rprint("ConsoleThink()", "time to buy = true");
-        time_to_buy = true;
-    }
-
-    if (time_to_buy == true) {
-        // Do only 'check for buying' stuff if its time, else this is wasted time and cpu load :)
-        need_to_buy = pBot->buy_secondary == true ||
-                pBot->buy_primary == true ||
-                pBot->buy_ammo_primary == true ||
-                pBot->buy_ammo_secondary == true ||
-                pBot->buy_armor == true ||
-                pBot->buy_defusekit == true ||
-                pBot->buy_grenade == true ||
-                pBot->buy_flashbang > 0;
-
-        // * so you are asking yourself why i do == true all the time huh?
-        // * i just love the blue color in my MSVC :)
-    }
-
-    // Ok, if its time to buy, check if its NEEDED to buy...
-    if (time_to_buy && need_to_buy && pBot->console_nr == 0) {
-        BotBuyStuff(pBot);
+//    float buyTime = CVAR_GET_FLOAT("mp_buytime") * 60;
+    if (Game.RoundTime() + 15 > gpGlobals->time &&
+        pBot->wantsToBuyStuff()) {
+        BotDecideWhatToBuy(pBot);
     }
     // Buying code in CS
 }

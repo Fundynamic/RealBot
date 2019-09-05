@@ -530,7 +530,7 @@ void ClientCommand(edict_t *pEntity) {
 // TODO: Revise this method
 void StartFrame(void) {
     if (!gpGlobals->deathmatch) return; // bots only work in 'deathmatch mode'
-    REALBOT_PRINT("StartFrame", "BEGIN");
+//    REALBOT_PRINT("StartFrame", "BEGIN");
 
     edict_t *pPlayer;
     static float check_server_cmd = 0.0;
@@ -627,7 +627,7 @@ void StartFrame(void) {
         NodeMachine.init_players();
         NodeMachine.init_round();
         NodeMachine.goals();
-        NodeMachine.goal_reset();
+        NodeMachine.resetCheckedValuesForGoals();
 
         //ChatEngine.fThinkTimer = gpGlobals->time;
         client_update_time = gpGlobals->time + 10.0;   // start updating client data again
@@ -995,7 +995,7 @@ void StartFrame(void) {
 
     previous_time = gpGlobals->time;
 
-    REALBOT_PRINT("StartFrame", "END");
+//    REALBOT_PRINT("StartFrame", "END");
     RETURN_META(MRES_IGNORED);
 }
 
@@ -1259,12 +1259,10 @@ void RealBot_ServerCommand(void) {
         // Broadcast
         if (FStrEq(arg1, "add")) {
             if (pHostEdict != NULL) {
-                NodeMachine.goal_add(NULL, GOAL_IMPORTANT,
-                                     pHostEdict->v.origin);
+                NodeMachine.addGoal(NULL, GOAL_IMPORTANT, pHostEdict->v.origin);
                 sprintf(cMessage, "REALBOT: Added important area/goal.");
             } else
-                sprintf(cMessage,
-                        "REALBOT: Only a listen server can execute this command!");
+                sprintf(cMessage, "REALBOT: Only a listen server can execute this command!");
         } else if (FStrEq(arg1, "save")) {
             NodeMachine.save_important();
             sprintf(cMessage,

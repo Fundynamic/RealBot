@@ -745,8 +745,7 @@ void INI_PARSE_IAD() {
                if (AreaX != 9999 && AreaY != 9999 && AreaZ != 9999) {
                   // add this to goal
                   rblog("IAD: Adding an important area/goal\n");
-                  NodeMachine.goal_add(NULL, GOAL_IMPORTANT,
-                                       Vector(AreaX, AreaY, AreaZ));
+                   NodeMachine.addGoal(NULL, GOAL_IMPORTANT, Vector(AreaX, AreaY, AreaZ));
 
                   AreaX = AreaY = AreaZ = 9999;
                }

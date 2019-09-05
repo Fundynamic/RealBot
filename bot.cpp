@@ -2248,7 +2248,7 @@ int cBot::getGoalNode() {
 
 void cBot::setGoalNode(int value) {
     if (value < 0) {
-        rprint("setGoalNode()", "WARN: Setting a goal lower than 0, assuming this is not intentional");
+        rprint("setGoalNode()", "WARN: Setting a goal lower than 0, assuming this is not intentional. If you need to forget a goal, use forgetGoal()");
     }
     this->iGoalNode = value;
     tNode *node = NodeMachine.getNode(this->iGoalNode);
@@ -3805,6 +3805,21 @@ void cBot::checkIfHostagesAreRescued() {
 bool cBot::isOnSameTeamAs(cBot *pBot) {
     if (pBot == NULL) return false;
     return pBot->iTeam == this->iTeam;
+}
+
+bool cBot::wantsToBuyStuff() {
+    return buy_secondary == true ||
+           buy_primary == true ||
+           buy_ammo_primary == true ||
+           buy_ammo_secondary == true ||
+           buy_armor == true ||
+           buy_defusekit == true ||
+           buy_grenade == true ||
+           buy_flashbang > 0;
+}
+
+bool cBot::isUsingConsole() {
+    return console_nr > 0;
 }
 
 // $Log: bot.cpp,v $

@@ -166,6 +166,7 @@ public:
     // Constructor
     cBot();
 
+    // Hostage related
     bool isUsingHostage(edict_t *pHostage);
     void forgetHostage(edict_t *pHostage);
     void rememberHostageIsFollowingMe(edict_t *pHostage);
@@ -437,6 +438,8 @@ public:
     bool isTerrorist();
 
     // "is" methods, related to weapons
+    bool wantsToBuyStuff();
+    bool isUsingConsole();
     bool isOwningWeapon(int weaponId);
     bool isHoldingWeapon(int weaponId);
     bool ownsFavoritePrimaryWeapon();

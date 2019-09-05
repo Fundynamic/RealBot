@@ -332,6 +332,7 @@ void cGame::UpdateGameStatus() {
     if (bPlanted && // found a planted bomb
         bPlanted != bBombPlanted // and a milisecond ago we didnt know that
             ) {
+
         int i;
         for (i = 1; i <= gpGlobals->maxClients; i++) {
             edict_t *pPlayer = INDEXENT(i);

@@ -382,7 +382,13 @@ bool cNodeMachine::node_on_crate(Vector vOrigin, edict_t *pEdict) {
     return false;
 }
 
-// Find close node
+/**
+ * Find a node close to vOrigin within distance fDist. Ignoring any pEdict it hits.
+ * @param vOrigin
+ * @param fDist
+ * @param pEdict
+ * @return
+ */
 int cNodeMachine::getCloseNode(Vector vOrigin, float fDist, edict_t *pEdict) {
     // REDO: Need faster method to find a node
     // TOADD: For secure results all nodes should be checked to figure out the real
@@ -801,7 +807,7 @@ int cNodeMachine::getFreeNodeIndex() {
 }
 
 // Adding a node
-int cNodeMachine::add(Vector vOrigin, edict_t *pEntity) {
+int cNodeMachine::addNode(Vector vOrigin, edict_t *pEntity) {
 
     // Do not add a node when there is already one close
     if (getCloseNode(vOrigin, NODE_ZONE, pEntity) > -1)
@@ -875,7 +881,7 @@ int cNodeMachine::add(Vector vOrigin, edict_t *pEntity) {
 
         if (nodeIndex == currentIndex || // exclude self
             Nodes[nodeIndex].origin == INVALID_VECTOR // exclude invalid Nodes (no origin set)
-            )
+                )
             continue;
 
         // remove the z-axis, so we just compare x,y now
@@ -891,7 +897,7 @@ int cNodeMachine::add(Vector vOrigin, edict_t *pEntity) {
         if (distanceBetweenVectorsWithoutZAxis > (NODE_ZONE * 3)) { // allow up to 3 times the boundary we use normally
             continue;
         }
-        
+
         // ----------------------
         // The node is close enough, is valid, and not the same as the created one.
         // ----------------------
@@ -1613,7 +1619,7 @@ void cNodeMachine::danger(int iNode, int iTeam) {
 }
 
 // Adds a new goal to the array
-void cNodeMachine::goal_add(edict_t *pEdict, int iType, Vector vVec) {
+void cNodeMachine::addGoal(edict_t *pEdict, int iType, Vector vVec) {
     //
     // 14/06/04
     // Be carefull with adding SERVER_PRINT messages here
@@ -1621,68 +1627,85 @@ void cNodeMachine::goal_add(edict_t *pEdict, int iType, Vector vVec) {
     // and RBN file with a corresponding INI file this will crash HL.EXE
     //
 
-    if (pEdict != NULL) {
-        if (goal_exists(pEdict)) {
-            rblog("goal_add: goal already exists");
-            return;                // do not add goal that is already in our list
-        }
+    // Note: pEdict can be NULL (ie 'important' goal nodes do not have an edict)
+    if (hasGoalWithEdict(pEdict)) {
+        return; // do not add goal that is already in our list
     }
 
-    int index = -1;
-    int g = 0;                   // <-- ADDED BY PMB ELSE LINUX COMPILER COMPLAINS (ISO COMPLIANCE)
-    for (g = 0; g < MAX_GOALS; g++)
-        if (Goals[g].iType == GOAL_NONE) {
-            index = g;
-            break;
-        }
+    int index = getFreeGoalIndex();
+    if (index < 0) {
+        return;
+    }
 
-    if (index < 0)
-        return;                   // no more arrays left
-
-    int iDist = NODE_ZONE * 2;
-
-    //if (iType == GOAL_BOMBSPOT)
-    //      iDist = 75;
-
-    //if (iType == GOAL_IMPORTANT)
-    //      iDist = 75;
-    int nNode = getCloseNode(vVec, iDist, pEdict);
+    int distance = NODE_ZONE * 2;
+    int nNode = getCloseNode(vVec, distance, pEdict);
 
     if (nNode < 0) {
         rblog("Cannot find near node, adding one");
         // 11/06/04 - stefan - when no goal exists, add it.
-//        if (iType != GOAL_HOSTAGE) {
-        nNode = add(vVec, pEdict);
-//        }
-
+        nNode = addNode(vVec, pEdict);
         if (nNode < 0) {
             return;                // no node near
         }
     }
 
-    tGoal &goal = Goals[index];
-
-    goal.iNode = nNode;
-    goal.pGoalEdict = pEdict;
-    goal.iType = iType;
+    tGoal *goal = getGoal(index);
+    goal->iNode = nNode;
+    goal->pGoalEdict = pEdict;
+    goal->iType = iType;
 
     char msg[255];
-    memset(msg, 0 , sizeof(msg));
-    sprintf(msg, "Adding goal of type %s, with nearby node %d\n", getGoalTypeAsText(goal), nNode);
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "Adding goal at index %d of type %s, with nearby node %d\n", index, getGoalTypeAsText(*goal), nNode);
     rblog(msg);
 }
 
-// Does the goal already exist in your goals array?
-bool cNodeMachine::goal_exists(edict_t *pEdict) {
-    for (int g = 0; g < MAX_GOALS; g++)
-        if (Goals[g].pGoalEdict == pEdict)
+tGoal * cNodeMachine::getGoal(int index) {
+    if (index < 0 || index >= MAX_GOALS) {
+        rblog("ERROR: Asking to retrieve goal with invalid index! Returning goal with index 0\n");
+        return &Goals[0];
+    }
+    return &Goals[index];
+}
+
+/**
+ * Looks into array of Goals and finds a non-used goal. If not found it will return -1, else it returns
+ * a valid int between 0 and MAX_GOALS.
+ * @return
+ */
+int cNodeMachine::getFreeGoalIndex() const {
+    int index = -1;
+    int g = 0;                   // <-- ADDED BY PMB ELSE LINUX COMPILER COMPLAINS (ISO COMPLIANCE)
+    for (g = 0; g < MAX_GOALS; g++) {
+        if (Goals[g].iType == GOAL_NONE) {
+            index = g;
+            break;
+        }
+    }
+    return index;
+}
+
+/**
+ * Given a non-null pEdict, it will check if any goal already has this edict assigned, if so it returns true.
+ * If pEdict argument provided is NULL, this function returns false.
+ *
+ * @param pEdict
+ * @return
+ */
+bool cNodeMachine::hasGoalWithEdict(edict_t *pEdict) {
+    if (pEdict == NULL) return false; // no edict == by default no
+
+    for (int g = 0; g < MAX_GOALS; g++) {
+        if (Goals[g].pGoalEdict == pEdict) {
             return true;
+        }
+    }
 
     // Does not exist
     return false;
 }
 
-void cNodeMachine::goal_reset() {
+void cNodeMachine::resetCheckedValuesForGoals() {
     for (int g = 0; g < MAX_GOALS; g++) {
         if (Goals[g].iChecked > 0)
             Goals[g].iChecked = 0;
@@ -1690,7 +1713,7 @@ void cNodeMachine::goal_reset() {
 }
 
 // returns goal type from node, -1 for unknown
-int cNodeMachine::goal_from_node(int iNode) {
+int cNodeMachine::getGoalIndexFromNode(int iNode) {
     for (int g = 0; g < MAX_GOALS; g++)
         if (Goals[g].iNode == iNode)
             return Goals[g].iType;
@@ -1751,72 +1774,72 @@ void cNodeMachine::goals() {
 
     // GOAL #1 - Counter Terrorist Spawn points.
     while ((pent = UTIL_FindEntityByClassname(pent, "info_player_start")) != NULL) {
-        goal_add(pent, GOAL_SPAWNCT, pent->v.origin);
+        addGoal(pent, GOAL_SPAWNCT, pent->v.origin);
     }
 
     // GOAL #2 - Terrorist Spawn points.
     while ((pent =
                     UTIL_FindEntityByClassname(pent,
                                                "info_player_deathmatch")) != NULL) {
-       goal_add(pent, GOAL_SPAWNT, pent->v.origin);
+        addGoal(pent, GOAL_SPAWNT, pent->v.origin);
     }
 
     // GOAL #3 - Hostage rescue zone
     while ((pent = UTIL_FindEntityByClassname(pent, "func_hostage_rescue")) != NULL) {
-        goal_add(pent, GOAL_RESCUEZONE, VecBModelOrigin(pent));
+        addGoal(pent, GOAL_RESCUEZONE, VecBModelOrigin(pent));
     }
 
     // EVY: rescue zone can also be an entitity of info_hostage_rescue
     while ((pent =
                     UTIL_FindEntityByClassname(pent,
                                                "info_hostage_rescue")) != NULL) {
-        goal_add(pent, GOAL_RESCUEZONE, VecBModelOrigin(pent));
+        addGoal(pent, GOAL_RESCUEZONE, VecBModelOrigin(pent));
     }
 
     // GOAL #4 - Bombspot zone
     // Bomb spot
     while ((pent =
                     UTIL_FindEntityByClassname(pent, "func_bomb_target")) != NULL) {
-        goal_add(pent, GOAL_BOMBSPOT, VecBModelOrigin(pent));
+        addGoal(pent, GOAL_BOMBSPOT, VecBModelOrigin(pent));
     }
 
     while ((pent =
                     UTIL_FindEntityByClassname(pent, "info_bomb_target")) != NULL) {
-        goal_add(pent, GOAL_BOMBSPOT, VecBModelOrigin(pent));
+        addGoal(pent, GOAL_BOMBSPOT, VecBModelOrigin(pent));
     }
 
     // GOAL #5 - Hostages (this is the 'starting' position):
     while ((pent = UTIL_FindEntityByClassname(pent, "hostage_entity")) != NULL) {
-        goal_add(pent, GOAL_HOSTAGE, pent->v.origin);
+        addGoal(pent, GOAL_HOSTAGE, pent->v.origin);
     }
 
     // GOAL  #6 - VIP (this is the 'starting' position) (EVY)
     while ((pent = UTIL_FindEntityByClassname(pent, "info_vip_start")) != NULL) {
-        if (goal_exists(pent) == false)
-            goal_add(pent, GOAL_VIP, VecBModelOrigin(pent));
+        if (hasGoalWithEdict(pent) == false)
+            addGoal(pent, GOAL_VIP, VecBModelOrigin(pent));
     }
 
     // GOAL  #7 - VIP safety (this is the 'rescue' position) (EVY)
     while ((pent =
                     UTIL_FindEntityByClassname(pent,
                                                "func_vip_safetyzone")) != NULL) {
-        if (goal_exists(pent) == false)
-            goal_add(pent, GOAL_VIPSAFETY, VecBModelOrigin(pent));
+        if (hasGoalWithEdict(pent) == false)
+            addGoal(pent, GOAL_VIPSAFETY, VecBModelOrigin(pent));
     }
 
     // GOAL  #8 - Escape zone for es_ (EVY)
     while ((pent =
                     UTIL_FindEntityByClassname(pent, "func_escapezone")) != NULL) {
-        if (goal_exists(pent) == false)
-            goal_add(pent, GOAL_ESCAPEZONE, VecBModelOrigin(pent));
+        if (hasGoalWithEdict(pent) == false)
+            addGoal(pent, GOAL_ESCAPEZONE, VecBModelOrigin(pent));
     }
 
     // 05/07/04
     // GOAL  #9 - Free weapons on the ground EVY
     while ((pent =
                     UTIL_FindEntityByClassname(pent, "armoury_entity")) != NULL) {
-        if (goal_exists(pent) == false)
-            goal_add(pent, GOAL_WEAPON, VecBModelOrigin(pent));
+        if (hasGoalWithEdict(pent) == false)
+            addGoal(pent, GOAL_WEAPON, VecBModelOrigin(pent));
     }
 
 
@@ -1957,7 +1980,7 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
         // go through all open waypoints
         for (nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++) {
             tNode &node = Nodes[nodeIndex];
-            
+
             if (node.origin != INVALID_VECTOR) {
                 if (astar_list[nodeIndex].state == OPEN) {
                     if (nodeIndex == nodeTargetIndex) {
@@ -2436,7 +2459,8 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     }
 
 
-    WaypointDrawBeam(pBot->pEdict, pBot->pEdict->v.origin + Vector(0, 0, 32), Nodes[currentNodeToHeadFor].origin, 2, 0, 0, 0,
+    WaypointDrawBeam(pBot->pEdict, pBot->pEdict->v.origin + Vector(0, 0, 32), Nodes[currentNodeToHeadFor].origin, 2, 0,
+                     0, 0,
                      255, 255, 1);
 
     // reached node
@@ -2494,7 +2518,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                 }
 
                 if (Game.bBombPlanted && Game.bBombDiscovered == false) {
-                    int iGoalType = goal_from_node(pBot->getGoalNode());
+                    int iGoalType = getGoalIndexFromNode(pBot->getGoalNode());
 
                     if (iGoalType == GOAL_BOMBSPOT && pBot->iTeam == 2) {
                         if (pBot->Defuse() == false) {
@@ -2818,8 +2842,8 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
         // Not near players, and we should move!!
         if (!bPlayersNear &&
             bShouldMove &&
-                pBot->isWalkingPath() &&
-                pBot->getPreviousPathNodeIndex() > -1) {
+            pBot->isWalkingPath() &&
+            pBot->getPreviousPathNodeIndex() > -1) {
 
             // Add this connection to the 'troubled ones'
             int iFrom = iPath[pBot->iBotIndex][pBot->getPreviousPathNodeIndex()];
@@ -3096,7 +3120,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     int iCurrentNode = pBot->determineCurrentNodeWithTwoAttempts();
 
     if (iCurrentNode < 0) {
-        iCurrentNode = add(pBot->pEdict->v.origin, pBot->pEdict);
+        iCurrentNode = addNode(pBot->pEdict->v.origin, pBot->pEdict);
     }
 
     if (iCurrentNode < 0) {
@@ -3125,10 +3149,13 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     // Since both scores can be max 1.0, meaning we keep it between 0.0 and 1.0
     // A score of 1.0 is max.
     int maxCheckedScore = 25;
+
     for (goalIndex = 0; goalIndex < MAX_GOALS; goalIndex++) {
 
         // Make sure this goal is valid
-        if (Goals[goalIndex].iNode < 0) continue;
+        if (Goals[goalIndex].iNode < 0) {
+            continue;
+        }
 
         float score = 0.0f; // start with 0
 
@@ -3284,6 +3311,10 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         }
     }
 
+    if (iFinalGoalNode < 0) {
+        pBot->rprint("I cannot determine a goal, bugged?");
+    }
+
     // when afraid , use path_danger
     if (RANDOM_LONG(0, 100) < pBot->ipFearRate) {
         pBot->iPathFlags = PATH_DANGER;
@@ -3337,7 +3368,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
             getGoalTypeAsTextFromGoal(iFinalGoalIndex),
             highestScore,
             pBot->getDistanceTo(iFinalGoalNode)
-        );
+    );
 
     pBot->rprint("cNodeMachine::path_think", msg);
 
@@ -3388,7 +3419,7 @@ char *cNodeMachine::getGoalTypeAsText(const tGoal &goal) const {
     char typeAsText[255];
     memset(typeAsText, 0, sizeof(typeAsText));
 
-    switch(goal.iType) {
+    switch (goal.iType) {
         case GOAL_SPAWNT:
             sprintf(typeAsText, "GOAL_SPAWNT");
             break;
