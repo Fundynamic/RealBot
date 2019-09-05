@@ -245,7 +245,7 @@ public:
 
     int goal_hostage(cBot *pBot);
 
-    int node_goal(int iType);    // return a node close to a iType goal (random)
+    int getRandomGoalByType(int goalType);    // return a node close to a iType goal (random)
     bool node_float(Vector vOrigin, edict_t *pEdict);
 
     bool node_on_crate(Vector vOrigin, edict_t *pEdict);

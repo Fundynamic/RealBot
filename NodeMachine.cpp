@@ -1847,33 +1847,35 @@ void cNodeMachine::goals() {
 }
 
 // Find a goal, and return the node close to it
-int cNodeMachine::node_goal(int iType) {
-    if (iType == GOAL_NONE)
+int cNodeMachine::getRandomGoalByType(int goalType) {
+    if (goalType == GOAL_NONE)
         return -1;
 
-    int goals_list[MAX_GOALS];
-    for (int c = 0; c < MAX_GOALS; c++)
-        goals_list[c] = -1;
+    int possibleGoalNodes[MAX_GOALS];
+    for (int c = 0; c < MAX_GOALS; c++) {
+        possibleGoalNodes[c] = -1;
+    }
 
-    int itemIndex = 0;
-    for (int g = 0; g < MAX_GOALS; g++) {
-        if (Goals[g].iType == iType && Goals[g].iNode > -1) {
-            goals_list[itemIndex] = Goals[g].iNode;
-            itemIndex++;
+    int possibleCandidateIndex = 0;
+    for (int goalIndex = 0; goalIndex < MAX_GOALS; goalIndex++) {
+        if (Goals[goalIndex].iType == goalType && // type equals requested type
+            Goals[goalIndex].iNode > -1) { // and it has a node
+            possibleGoalNodes[possibleCandidateIndex] = Goals[goalIndex].iNode;
+            possibleCandidateIndex++;
         }
     }
 
-    if (itemIndex == 0)
+    if (possibleCandidateIndex == 0)
         return -1;                // nothing found :(
 
     // we have an amount of goals, pick one randomly
-    int the_goal = RANDOM_LONG(0, (itemIndex - 1));
+    int randomGoalNode = RANDOM_LONG(0, (possibleCandidateIndex - 1));
 
     char msg[255];
-    sprintf(msg, "cNodeMachine::node_goal() - Found %d nodes of type %d and picked %d\n", itemIndex, iType, the_goal);
+    sprintf(msg, "cNodeMachine::getRandomGoalByType() - Found %d nodes of type %d and picked %d\n", possibleCandidateIndex, goalType, randomGoalNode);
     rblog(msg);
 
-    return goals_list[the_goal];
+    return possibleGoalNodes[randomGoalNode];
 }
 
 // Contact scaler (on round start)

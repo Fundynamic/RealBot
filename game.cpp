@@ -343,7 +343,7 @@ void cGame::UpdateGameStatus() {
                 if (bot->isCounterTerrorist()) {
                     bot->forgetPath();
                     bot->rprint("Setting goal for bombspot");
-                    bot->setGoalNode(NodeMachine.node_goal(GOAL_BOMBSPOT)); // picks a random bomb spot
+                    bot->setGoalNode(NodeMachine.getRandomGoalByType(GOAL_BOMBSPOT)); // picks a random bomb spot
                 }             // ct
             }                // bot
         }                   // through all clients
