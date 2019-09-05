@@ -119,10 +119,7 @@ extern bool end_round;          // End round
 
 cBot::cBot() {
     pBotHostage = NULL;
-    hostage1 = NULL;
-    hostage2 = NULL;
-    hostage3 = NULL;
-    hostage4 = NULL;
+    clearHostages();
 }
 
 /******************************************************************************
