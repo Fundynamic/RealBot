@@ -1173,25 +1173,19 @@ void RealBot_ServerCommand(void) {
 
     // Handle command here
     if (FStrEq(pcmd, "help")) {
-
         // Give information
         bSendMessage = false;     // do not use 'standard' stuff
-        SERVER_PRINT
-                ("=============================================================================\n");
-        SERVER_PRINT
-                ("Syntax: realbot [command] [arg1/subcommand] [arg2] [arg3] [arg4]\n\n");
-        SERVER_PRINT
-                ("List of most-used commands; for full command list read the readme.\n\n");
+        SERVER_PRINT("=============================================================================\n");
+        SERVER_PRINT("Syntax: realbot [command] [arg1/subcommand] [arg2] [arg3] [arg4]\n\n");
+        SERVER_PRINT("List of most-used commands; for full command list read the readme.\n\n");
         SERVER_PRINT("realbot add (team) (skill) (model) (name)\n");
         SERVER_PRINT("realbot max (max amount bots)\n");
         SERVER_PRINT("realbot killall\n");
         SERVER_PRINT("realbot internet (1=ON, 0=OFF(default))\n");
-        SERVER_PRINT
-                ("realbot remove (amount) ((optional) of team 1(T)/2(CT))\n");
+        SERVER_PRINT("realbot remove (amount) ((optional) of team 1(T)/2(CT))\n");
         SERVER_PRINT("realbot skill (-1(random), 0(godlike)-10(newbie)\n");
         SERVER_PRINT("realbot server [subcommand]\n");
-        SERVER_PRINT
-                ("=============================================================================\n");
+        SERVER_PRINT("=============================================================================\n");
     } else if (FStrEq(pcmd, "chatrate")) {
         if ((arg1 != NULL) && (*arg1 != 0)) {
             Game.iMaxSentences = atoi(arg1);
@@ -1947,41 +1941,27 @@ void RealBot_ServerCommand(void) {
 
     // Send message
     if (bSendMessage) {
-
-        //LOG_CONSOLE (PLID, "%s", cMessage);
-        //LOG_MESSAGE (PLID, "%s", cMessage);
-
         // Adding return carriage
         strcat(cMessage, "\n");
 
         // Put a carriage return when using dedicated server.
-        if (IS_DEDICATED_SERVER())
-            SERVER_PRINT
-                    ("\n============================================================================\n");
-        else
-            SERVER_PRINT
-                    ("============================================================================\n");
-
-        SERVER_PRINT(cMessage);
-
-        // Put a carriage return when using dedicated server.
         if (IS_DEDICATED_SERVER()) {
-            //if (counterstrike == 0)
-            //  SERVER_PRINT("\n============================================================================\n\n");
-            //else
-            SERVER_PRINT
-                    ("============================================================================\n\n");
-        } else
-            SERVER_PRINT
-                    ("============================================================================\n");
+            SERVER_PRINT("\n");
+        }
 
-        if (Game.bInstalledCorrectly == false)
-            SERVER_PRINT
-                    ("WARNING: RealBot is NOT installed into the correct directory!\nWARNING: rbn\rbx files will not be created nor personality files!\n");
+        SERVER_PRINT("============================================================================\n");
+        SERVER_PRINT(cMessage);
+        SERVER_PRINT("============================================================================\n");
 
+        // Put an extra carriage return when using dedicated server.
+        if (IS_DEDICATED_SERVER()) {
+            SERVER_PRINT("\n");
+        }
+
+        if (!Game.bInstalledCorrectly) {
+            SERVER_PRINT("WARNING: RealBot is NOT installed into the correct directory!\nWARNING: rbn\rbx files will not be created nor personality files!\n");
+        }
     }
-    // Return
-    return;
 }
 
 int Spawn_Post(edict_t *pent) {
