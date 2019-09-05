@@ -584,10 +584,14 @@ void StartFrame(void) {
         }                      // I
 
         kick_amount_bots--;    // next frame we kick another bot
-    } else
+    } else {
         kick_bots_team = 0;    // its always 0 when we have no one to kick
+    }
 
     // if a new map has started then (MUST BE FIRST IN StartFrame)...
+    // which is determined by comparing the previously recorded time (at the end of this function)
+    // with the current time. If the current time somehow was less (before) the previous time, then we
+    // assume a reset/restart/reload of a map.
     if ((gpGlobals->time + 0.1) < previous_time) {
         check_server_cmd = 0.0;        // reset at start of map
 
@@ -595,29 +599,33 @@ void StartFrame(void) {
 
         // mark the bots as needing to be respawned...
         for (index = 0; index < 32; index++) {
+            cBot *pBot = &bots[index];
             if (count >= prev_num_bots) {
-                bots[index].bIsUsed = false;
-                bots[index].respawn_state = RESPAWN_NONE;
-                bots[index].fKickTime = 0.0;
+                pBot->bIsUsed = false;
+                pBot->respawn_state = RESPAWN_NONE;
+                pBot->fKickTime = 0.0;
             }
 
-            if (bots[index].bIsUsed)    // is this slot used?
+            if (pBot->bIsUsed)    // is this slot used?
             {
-                bots[index].respawn_state = RESPAWN_NEED_TO_RESPAWN;
+                pBot->respawn_state = RESPAWN_NEED_TO_RESPAWN;
                 count++;
             }
+
             // check for any bots that were very recently kicked...
-            if ((bots[index].fKickTime + 5.0) > previous_time) {
-                bots[index].respawn_state = RESPAWN_NEED_TO_RESPAWN;
+            if ((pBot->fKickTime + 5.0) > previous_time) {
+                pBot->respawn_state = RESPAWN_NEED_TO_RESPAWN;
                 count++;
-            } else
-                bots[index].fKickTime = 0.0;     // reset to prevent false spawns later
+            } else {
+                pBot->fKickTime = 0.0;     // reset to prevent false spawns later
+            }
 
             // set the respawn time
-            if (IS_DEDICATED_SERVER())
+            if (IS_DEDICATED_SERVER()) {
                 respawn_time = gpGlobals->time + 5.0;
-            else
+            } else {
                 respawn_time = gpGlobals->time + 20.0;
+            }
 
             // Send welcome message
             welcome_sent = false;
@@ -633,11 +641,12 @@ void StartFrame(void) {
         client_update_time = gpGlobals->time + 10.0;   // start updating client data again
 
         bot_check_time = gpGlobals->time + 30.0;
-    }
+    } // New map/reload/restart
+
     //
     // SEND WELCOME MESSAGE
     //
-    if (welcome_sent == false) {
+    if (!welcome_sent) {
         int iIndex = 0;
         if (welcome_time == 0.0) {
 
@@ -653,20 +662,10 @@ void StartFrame(void) {
             }
         }
 
-        /*
-           if ((pHostEdict != NULL) && (welcome_sent == FALSE) &&
-           (welcome_time < 1.0))
-           {
-           // are they out of observer mode yet?
-           if (IsAlive(pHostEdict))
-           welcome_time = gpGlobals->time + 10.0;  // welcome in 10 seconds
-           }
-         */
         if ((welcome_time > 0.0) && (welcome_time < gpGlobals->time)) {
             // let's send a welcome message to this client...
             char total_welcome[256];
-            sprintf(total_welcome,
-                    "RealBot - Version %s\nBy Stefan Hendriks\n", rb_version_nr);
+            sprintf(total_welcome, "RealBot - Version %s\nBy Stefan Hendriks\n", rb_version_nr);
             int r, g, b;
             /*
                r = RANDOM_LONG(30, 255);
@@ -724,6 +723,7 @@ void StartFrame(void) {
             }
         }
     }
+
     // a few seconds after map load we assign goals
     if (f_load_time < gpGlobals->time && f_load_time != 0.0) {
         f_load_time = 0.0;     // do not load again
@@ -993,6 +993,7 @@ void StartFrame(void) {
 
     }
 
+    // remember the time
     previous_time = gpGlobals->time;
 
 //    REALBOT_PRINT("StartFrame", "END");
