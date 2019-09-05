@@ -440,9 +440,10 @@ void ConsoleThink(cBot *pBot) {
     if (mod_id != CSTRIKE_DLL) return;
     if (pBot->isUsingConsole()) return; // busy executing console commands, so do not decide anything else
 
-    // TODO: take buy time cvar?
-//    float buyTime = CVAR_GET_FLOAT("mp_buytime") * 60;
-    if (Game.RoundTime() + 15 > gpGlobals->time &&
+    // buy time is in minutes, we need
+    // gpGlobals->time is in seconds, so we need to translate the minutes into seconds
+    float buyTime = CVAR_GET_FLOAT("mp_buytime") * 60;
+    if (Game.RoundTime() + buyTime > gpGlobals->time &&
         pBot->wantsToBuyStuff()) {
         BotDecideWhatToBuy(pBot);
     }
