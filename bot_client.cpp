@@ -880,7 +880,7 @@ void BotClient_CS_HLTV(void *p, int bot_index) {
       // detections on strange occasions!
 
       // We could do some cool stuff here, but all i want to know is if the
-      // round has (re)started, so i just set that flag and i am done dude.
+      // round has (re)started, so i just set that flag and i am done.
       if (players == 0) {
          // New round started.
          Game.SetNewRound(true);

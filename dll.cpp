@@ -68,7 +68,7 @@ cChatEngine ChatEngine;
 FILE *fpRblog = NULL;
 
 float f_load_time = 0.0;
-float f_minplayers_think = 0.0;
+float f_minplayers_think = 0.0; // timer used to add realbots if internet play enabled
 int mod_id = CSTRIKE_DLL;       // should be changed to 0 when we are going to do multi-mod stuff
 int m_spriteTexture = 0;
 bool isFakeClientCommand = FALSE;
@@ -742,15 +742,16 @@ void StartFrame(void) {
         NodeMachine.save();    // save information
         NodeMachine.experience_save();
         NodeMachine.goals();
+
         Game.bBombPlanted = false;
         Game.vDroppedC4 = Vector(9999, 9999, 9999);
+
         end_round = false;
     } // new round - before any bots realized yet
 
     // When min players is set
     if (min_players > 0 && f_minplayers_think < gpGlobals->time) {
-        internet_play = false; // whatever they say, when there is min_players set
-        // there is NO simulated internet_play!
+        internet_play = false; // when there is min_players set there is NO simulated internet_play!
         int iHumans = 0, iBots = 0;
 
         // Search for human players, simple method...
@@ -768,10 +769,6 @@ void StartFrame(void) {
             }
         }
 
-        //char msg[80];
-        //sprintf (msg, "Humans in game %d, Bots in game %d, players forced %d\n", iHumans, iBots, min_players);
-        //SERVER_PRINT(msg);
-
         // There are not enough humans, so add/remove bots
         if (iHumans < min_players) {
             int iTotal = iHumans + iBots;
@@ -781,15 +778,13 @@ void StartFrame(void) {
             // total players is higher then min_players due BOTS, remove a bot
             if (iTotal > min_players) {
                 // find one bot and remove it (one by one)
-                SERVER_PRINT
-                        ("RBSERVER: Too many players, kicking one bot.\n");
+                SERVER_PRINT("RBSERVER: Too many players, kicking one bot.\n");
                 kick_amount_bots = 1;
             }
                 // total players is lower then min_players due BOTS, add a bot
             else if (iTotal < min_players) {
                 // add a bot
-                SERVER_PRINT
-                        ("RBSERVER: Too few player slots filled, adding one bot.\n");
+                SERVER_PRINT("RBSERVER: Too few player slots filled, adding one bot.\n");
                 Game.CreateBot(NULL, NULL, NULL, NULL, NULL);
             }
         } else {
