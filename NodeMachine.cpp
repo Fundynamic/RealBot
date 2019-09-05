@@ -2487,8 +2487,10 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
             // When f_cover_time is > gpGlobals, we are taking cover
             // so we 'wait'
             if (pBot->f_cover_time > gpGlobals->time) {
-                if (pBot->pEnemyEdict != NULL && pBot->v_enemy != Vector(0, 0, 0))
-                    pBot->vHead = pBot->v_enemy;
+                if (pBot->hasEnemy() && pBot->lastSeenEnemyVector != Vector(0, 0, 0)) {
+                    pBot->vHead = pBot->lastSeenEnemyVector;
+                }
+
                 pBot->f_wait_time = pBot->f_cover_time - RANDOM_FLOAT(0.0, 3.0);
                 pBot->f_cover_time = gpGlobals->time;
 
@@ -2551,12 +2553,14 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     // TODO TODO TODO Water Navigation
 
     // NO ENEMY, CHECK AROUND AREA
-    if (pBot->pEnemyEdict == NULL) {
+    // This determines where to look at, no enemy == look at next node
+    if (!pBot->hasEnemy()) {
         // look towards node after we have reached 'current' node, or else look at 'current' node.
-        if (nextNodeToHeadFor > -1)
+        if (nextNodeToHeadFor > -1) {
             pBot->vHead = Nodes[nextNodeToHeadFor].origin;
-        else
+        } else {
             pBot->vHead = Nodes[currentNodeToHeadFor].origin;
+        }
     }
 
     // Jump over possible gaps, this is when a node is floating..
@@ -3069,12 +3073,11 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         return;
     }
 
-
-    if (pBot->hasEnemy()) {
-        pBot->rprint("cNodeMachine::path_think", "no goal - but bot has enemy. Bailing.");
-        // bail, as we have an enemy
-        return;
-    }
+//    if (pBot->hasEnemy()) {
+////        pBot->rprint("cNodeMachine::path_think", "no goal - but bot has enemy. Bailing.");
+//        // bail, as we have an enemy
+//        return;
+//    }
 
     // No path
     pBot->stopMoving();

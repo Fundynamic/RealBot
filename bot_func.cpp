@@ -427,7 +427,7 @@ bool FUNC_ShouldTakeCover(cBot *pBot) {
     if (pBot->f_cover_time + 3 > gpGlobals->time)
         return false;
 
-    if (pBot->pEnemyEdict == NULL)
+    if (!pBot->hasEnemy())
         return false;
 
     // MONEY: The less we have, the more we want to take cover
@@ -574,9 +574,9 @@ void FUNC_ClearEnemyPointer(edict_t *pPtr) {
             cBot *botpointer = UTIL_GetBotPointer(pPlayer);
 
             if (botpointer &&                   // Is a bot managed by us
-                botpointer->pEnemyEdict == pPtr // and has the pointer we want to get rid of
+                botpointer->hasEnemy(pPtr) // and has the pointer we want to get rid of
                     ) {
-                botpointer->pEnemyEdict = NULL;    // Clear its pointer
+                botpointer->forgetEnemy();    // Clear its pointer
             }
         }
 
@@ -638,7 +638,7 @@ bool isHostageFree(cBot *pBot, edict_t *pHostage) {
 
 void TryToGetHostageTargetToFollowMe(cBot *pBot) {
     pBot->rprint("TryToGetHostageTargetToFollowMe");
-    if (pBot->pEnemyEdict != NULL) {
+    if (pBot->hasEnemy()) {
         return;                   // enemy, do not check
     }
 

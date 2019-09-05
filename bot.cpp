@@ -276,7 +276,7 @@ void cBot::SpawnInit() {
     // VECTORS
     // ------------------------
     v_prev_origin = Vector(9999.0, 9999.0, 9999.0);
-    v_enemy = Vector(0, 0, 0);
+    lastSeenEnemyVector = Vector(0, 0, 0);
     vEar = Vector(9999, 9999, 9999);
 
     // ------------------------
@@ -430,7 +430,7 @@ void cBot::NewRound() {
     // VECTORS
     // ------------------------
     v_prev_origin = Vector(9999.0, 9999.0, 9999.0);
-    v_enemy = Vector(0, 0, 0);
+    lastSeenEnemyVector = Vector(0, 0, 0);
     vEar = Vector(9999, 9999, 9999);
 
     // ------------------------
@@ -631,7 +631,7 @@ void cBot::AimAtEnemy() {
 
     // We cannot see our enemy? -> bail out
     if (isSeeingEnemy()) {
-        setHeadAiming(v_enemy); // look at last known vector of enemy
+        setHeadAiming(lastSeenEnemyVector); // look at last known vector of enemy
         return;
     }
 
@@ -711,23 +711,20 @@ bool cBot::isHoldingGrenadeOrFlashbang() const {
  Function purpose: Perform fighting actions
  ******************************************************************************/
 void cBot::FightEnemy() {
-
-    // INIT/START/PREPERATION
-    Vector vVecEnd = pEnemyEdict->v.origin + pEnemyEdict->v.view_ofs;
-
     // We can see our enemy
-    if ((fBlindedTime < gpGlobals->time) &&
-        (FInViewCone(&vVecEnd, pEdict) && FVisible(vVecEnd, pEdict))) {
+    if (!isBlindedByFlashbang() && isSeeingEnemy()) {
+
         // GET OUT OF CAMP MODE
-        if (f_camp_time > gpGlobals->time)
+        if (f_camp_time > gpGlobals->time) {
             f_camp_time = gpGlobals->time;
+        }
 
         // Next time our enemy gets out of sight, it will be the 'first' time
         // of all 'frame times'.
         bFirstOutOfSight = false;
 
-        // UPDATE: Enemy position
-        v_enemy = pEnemyEdict->v.origin;    // last seen enemy position
+        // Remember last seen enemy position
+        lastSeenEnemyVector = pEnemyEdict->v.origin;    // last seen enemy position
 
         // FIXME: Fix the darn zoom bug
         // zoom in with sniper gun
@@ -747,6 +744,7 @@ void cBot::FightEnemy() {
                 zoomed++;
             }
         }
+
         // TODO TODO TODO: Code fighting styles ?
         if (f_cover_time < gpGlobals->time) {
             // COVER: Not taking cover now, fight using fightstyles.
@@ -761,48 +759,42 @@ void cBot::FightEnemy() {
                 if (FUNC_ShouldTakeCover(this))
                     FindCover();
             }
-        } else {}
+        } else {
+
+        }
 
         // Keep timer updated for enemy
         f_bot_find_enemy_time = gpGlobals->time + REMEMBER_ENEMY_TIME;
-    } else                       // ---- CANNOT SEE ENEMY
+    }
+    else                       // ---- CANNOT SEE ENEMY
     {
         if (f_bot_find_enemy_time < gpGlobals->time) {
             //DebugOut("BotFightEnemy() : Lost enemy out of sight for 10 seconds.\n");
             pEnemyEdict = NULL;
-            v_enemy = Vector(0, 0, 0);
+            lastSeenEnemyVector = Vector(0, 0, 0);
             pathNodeIndex = -1;
             iGoalNode = -1;
         } else {
+
             // When we have the enemy for the first time out of sight
             // we calculate a path to the last seen position
-            if (bFirstOutOfSight == false) {
+            if (!bFirstOutOfSight) {
+
+                rprint("Enemy out of sight, calculating path towards it");
                 // Only change path when we update our information here
-                int iGoal = NodeMachine.getCloseNode(v_enemy, NODE_ZONE, pEdict);
+                int iGoal = NodeMachine.getCloseNode(lastSeenEnemyVector, NODE_ZONE, pEdict);
                 if (iGoal > -1) {
                     iGoalNode = iGoal;
                     pathNodeIndex = -1; // force recalculation of path
                 }
+
                 bFirstOutOfSight = true;
             } else {
-                // todo: code 'where should he have been?' code...
-                if (iGoalNode < 0) {
-                    // TODO TODO TODO something better?
-                    //
-                    UTIL_ClientPrintAll(HUD_PRINTNOTIFY,
-                                        "Hmm, i am totally lost dude\n");
-                    pEnemyEdict = NULL;
+                if (!hasGoal()) {
+                    rprint("Enemy out of sight and no goal, forgetting enemy");
+                    forgetEnemy();
                 }
             }
-            // Wants to camp
-            /*
-               if (CAMP_HasDesire(pBot) && ((pBot->f_camp_time + 10) < gpGlobals->time))
-               {
-               pBot->f_camp_time = gpGlobals->time + RANDOM_LONG(2,4);
-               pBot->v_look = pBot->v_enemy; // camp and watch at this spot
-               pBot->f_look_time = pBot->f_camp_time;
-               }
-             */
         }
     }                            // visible
 }
@@ -861,7 +853,7 @@ void cBot::PickBestWeapon() {
         return;
 
     // Distance to enemy
-    float fDistance = func_distance(pEdict->v.origin, v_enemy);
+    float fDistance = func_distance(pEdict->v.origin, lastSeenEnemyVector);
 
     float knifeDistance = 300;
 
@@ -889,8 +881,8 @@ void cBot::PickBestWeapon() {
     if (hasEnemy() && !isSeeingEnemy()) {
         // decision to pull HE grenade
         if (isOwningWeapon(CS_WEAPON_HEGRENADE) &&       // we have a grenade
-            func_distance(pEdict->v.origin, v_enemy) < 900 &&     // we are close
-            func_distance(pEdict->v.origin, v_enemy) > 200 &&     // but not to close
+            func_distance(pEdict->v.origin, lastSeenEnemyVector) < 900 &&     // we are close
+            func_distance(pEdict->v.origin, lastSeenEnemyVector) > 200 &&     // but not to close
             RANDOM_LONG(0, 100) < 10 &&   // only randomly we pick a grenade in the heat of the battle
             current_weapon.iId != CS_WEAPON_HEGRENADE && current_weapon.iId != CS_WEAPON_FLASHBANG &&
             f_gren_time + 15 < gpGlobals->time) // and dont hold it yet
@@ -904,8 +896,8 @@ void cBot::PickBestWeapon() {
         }
         // OR we pull a flashbang?
         if (isOwningWeapon(CS_WEAPON_FLASHBANG) &&       // we have a grenade
-            func_distance(pEdict->v.origin, v_enemy) < 200 &&     // we are close
-            func_distance(pEdict->v.origin, v_enemy) > 300 &&     // but not to close
+            func_distance(pEdict->v.origin, lastSeenEnemyVector) < 200 &&     // we are close
+            func_distance(pEdict->v.origin, lastSeenEnemyVector) > 300 &&     // but not to close
             RANDOM_LONG(0, 100) < 15 &&   // only randomly we pick a grenade in the heat of the battle
             current_weapon.iId != CS_WEAPON_FLASHBANG && current_weapon.iId != CS_WEAPON_HEGRENADE &&
             f_gren_time + 15 < gpGlobals->time) // and dont hold it yet
@@ -950,7 +942,7 @@ void cBot::PickBestWeapon() {
             // switch to another weapon.
             if (iPrimaryWeapon > -1 &&     // we have a primary
                 current_weapon.iId != iPrimaryWeapon &&    // that's not the current, empty gun
-                func_distance(pEdict->v.origin, v_enemy) > 300)    // and we are not close enough to knife
+                func_distance(pEdict->v.origin, lastSeenEnemyVector) > 300)    // and we are not close enough to knife
             {
                 // select primary weapon
                 UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(iPrimaryWeapon));       // select the primary
@@ -959,7 +951,7 @@ void cBot::PickBestWeapon() {
 
                 if (iSecondaryWeapon > -1 && current_weapon.iId != iSecondaryWeapon &&
                     // that's not the current, empty gun
-                    func_distance(pEdict->v.origin, v_enemy) > 300) // and we are not close enough to knife
+                    func_distance(pEdict->v.origin, lastSeenEnemyVector) > 300) // and we are not close enough to knife
                 {
                     UTIL_SelectItem(pEdict, UTIL_GiveWeaponName(iSecondaryWeapon));  // select the secondary
                     return;
@@ -1162,11 +1154,11 @@ void cBot::Combat() {
         forgetGoal();
         forgetPath();
 
-        if (v_enemy != Vector(0, 0, 0)) {
-            vHead = v_enemy;
+        if (lastSeenEnemyVector != Vector(0, 0, 0)) {
+            vHead = lastSeenEnemyVector;
         }
 
-        v_enemy = Vector(0, 0, 0);
+        lastSeenEnemyVector = Vector(0, 0, 0);
 
         // random waiting
         f_wait_time = gpGlobals->time + (1 + RANDOM_FLOAT(0.0, 0.4));
@@ -1202,7 +1194,7 @@ void cBot::Combat() {
  ******************************************************************************/
 void cBot::FindCover() {
     TraceResult tr;
-    Vector dest = v_enemy;
+    Vector dest = lastSeenEnemyVector;
     //  Vector start = pEdict->v.origin;
     //  Vector end;
     Vector cover_vect = Vector(9999, 9999, 9999);
@@ -2201,9 +2193,18 @@ bool cBot::hasGoal() {
     return this->iGoalNode > -1;
 }
 
-// Returns true if bot has a path to follow
+// Returns true if bot has an enemy edict
 bool cBot::hasEnemy() {
     return this->pEnemyEdict != NULL;
+}
+
+/**
+ * Returns true when given edict == our enemy edict
+ * @param pEdict
+ * @return
+ */
+bool cBot::hasEnemy(edict_t * pEdict) {
+    return this->pEnemyEdict == pEdict;
 }
 
 // Returns true if bot has a path to follow
@@ -2240,6 +2241,14 @@ int cBot::getPreviousPathNodeIndex() {
 void cBot::forgetPath() {
     this->pathNodeIndex = -1;
     NodeMachine.path_clear(this->iBotIndex);
+}
+
+void cBot::forgetEnemy() {
+    this->pEnemyEdict = NULL;
+}
+
+edict_t * cBot::getEnemyEdict() {
+    return this->pEnemyEdict;
 }
 
 int cBot::getGoalNode() {
@@ -3126,7 +3135,7 @@ void cBot::Think() {
     // SITUATION: In freezetime
     if (f_freeze_time > gpGlobals->time) {
         f_move_speed = 0.0;
-        v_enemy = Vector(0, 0, 0);
+        lastSeenEnemyVector = Vector(0, 0, 0);
         fMoveToNodeTime = gpGlobals->time + 2;
         vHead = vBody = pEdict->v.origin;
 
@@ -3151,7 +3160,6 @@ void cBot::Think() {
 
         // when pent is filled, look at it
         if (pent != NULL) {
-            rprint("Found entity to look at and move to");
             vBody = vHead = pent->v.origin;
         }
 
@@ -3162,7 +3170,7 @@ void cBot::Think() {
     // MAIN STATE: We have no enemy...
     // **---**---**---**---**---**---**
     if (!hasEnemy()) {
-        this->rprint("!hasEnemy()");
+//        this->rprint("!hasEnemy()");
 
         if (Game.bDoNotShoot == false) {
             InteractWithPlayers();

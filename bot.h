@@ -162,6 +162,8 @@ private:
     edict_t *hostage3;           // any array
     edict_t *hostage4;           // here
 
+    edict_t *pEnemyEdict;        // Enemy edict
+
 public:
     // Constructor
     cBot();
@@ -354,7 +356,7 @@ public:
     float prev_time;
 
     Vector v_prev_origin;
-    Vector v_enemy;              // Vector where we last saw our enemy (when not 0,0,0)
+    Vector lastSeenEnemyVector;              // Vector where we last saw our enemy (when not 0,0,0)
 
     float f_jump_time;
     float f_bot_see_enemy_time;
@@ -362,7 +364,6 @@ public:
 
     edict_t *pButtonEdict;       // button edict
 
-    edict_t *pEnemyEdict;          // Enemy edict
     edict_t *killer_edict;       // Killer edict
 
     Vector vecMoveAngles;        // Vector we move to
@@ -472,6 +473,9 @@ public:
 
     //
     bool hasEnemy();
+    bool hasEnemy(edict_t * pEdict);
+    edict_t * getEnemyEdict();
+
     bool hasGoal();
     bool shouldBeWandering();
     bool hasBomb();
@@ -488,6 +492,7 @@ public:
     void startWandering(float time);
     void forgetGoal();
     void forgetPath();
+    void forgetEnemy();
     void setGoalNode(int value);
     int getGoalNode();
 

@@ -457,23 +457,23 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
          // - when the prev node was higher (so we are sure we do FIX the correct nodes!)
          //   we fix it (only when dist > 90)
          cBot *pBot = &bots[bot_index];
+
          if (damage_bits & (DMG_FALL | DMG_CRUSH)) {
             LOG_MESSAGE(PLID, "realbot - fixed connection with falling.");
             if (pBot->getPathNodeIndex() > 0) { // was one node further, so we can use previous node!
                int iNode = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex, pBot->getPreviousPathNodeIndex());
-               float fDist =
-                  fabs(damage_origin.z -
-                       NodeMachine.node_vector(iNode).z);
+               float fDist = fabs(damage_origin.z - NodeMachine.node_vector(iNode).z);
                if (fDist > 90) {
                   // we know where we came from, and we know where we went to
                   int iNodeTo = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex,
                                                                        pBot->getPathNodeIndex());
 
-                  // remove connection
+                   // remove connection
                    NodeMachine.removeNeighbourNode(iNode, iNodeTo);
                }
             }
          }
+
          // ignore certain types of damage...
          if (damage_bits & IGNORE_DAMAGE)
             return;
@@ -483,7 +483,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
 
          // if the bot doesn't have an enemy and someone is shooting at it then
          // turn in the attacker's direction...
-         if (bots[bot_index].pEnemyEdict == NULL) {
+         if (!pBot->hasEnemy()) {
             // face the attacker...
 
             // Face danger vector
@@ -492,7 +492,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
 
             // move to damage vector
             pBot->f_camp_time = gpGlobals->time;        // stop camping
-            pBot->rprint("Setting goal from damage taken");
+            pBot->rprint("Damage taken, change goal to damage origin.");
             pBot->setGoalNode(NodeMachine.getCloseNode(damage_origin, 150, NULL));
             pBot->forgetPath();
 
