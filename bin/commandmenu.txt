@@ -1,0 +1,164 @@
+"1" "Add Bots"
+{
+     "1" "Quick add bot"		"realbot add"
+     "2" "Add a specific bot"
+     {
+          "1" "Add a terrorist"
+          {
+               "1" "Newbie"		"realbot add 1 10"
+               "2" "Average"		"realbot add 1 5
+               "3" "Godlike"		"realbot add 1 0"
+               "5" "Random skill"		"realbot add 1"
+          }
+          "2" "Add a counter-terrorist"
+          {
+               "1" "Newbie"		"realbot add 2 10"
+               "2" "Average"		"realbot add 2 5"
+               "3" "Godlike"		"realbot add 2 0"
+               "5" "Random skill"		"realbot add 2"
+          }
+          "5" "Random team"
+          {
+               "1" "Newbie"		"realbot add -1 10"
+               "2" "Average"		"realbot add -1 5"
+               "3" "Godlike"		"realbot add -1 0"
+               "5" "Random skill"		"realbot add"
+          }
+     }
+}
+
+"2" "Remove Bots"
+{
+     "1" "Remove 1 bot"		"realbot remove 1"
+     	  "2" "Remove 2 bots"		"realbot remove 2"
+     	  "3" "Remove 5 bots"		"realbot remove 5"
+     	  "4" "Remove bot from team"		
+	  {
+              "1" "Remove 1 Terrorist bot"	"realbot remove 1 1"
+              "2" "Remove 1 Counter-Terrorist bot"	"realbot remove 1 2"
+
+              "3" "Remove 2 Terrorist bots"	"realbot remove 2 1"
+              "4" "Remove 2 Counter-Terrorist bots"	"realbot remove 2 2"
+
+              "5" "Remove 5 Terrorist bots"	"realbot remove 5 1"
+              "6" "Remove 5 Counter-Terrorist bots"	"realbot remove 5 2"
+	  }
+}
+
+"3" "Internet Mode"
+{
+     "1" "Turn on internet mode"		"realbot internet 1"
+     "2" "Turn off internet mode"		"realbot internet 0"
+}
+
+"4" "Settings"
+{
+    "1" "Counter-Strike Version"
+    {
+	"1" "Counter-Strike 1.5"		"realbot csversion 0"
+	"2" "Counter-Strike 1.6"		"realbot csversion 1"
+    }
+    "2" "Bot Skill"
+    {
+	"1" "Simplified"
+	{
+	    	"1" "Randomized skill"			"realbot skill -1"
+		"2" "Default skill"			"realbot skill 5"
+		"3" "Easy skill"			"realbot skill 10"
+		"4" "Hard skill"			"realbot skill 1"
+	}
+	"2" "Specified"
+	{
+		"1" "Skill 0"	"realbot skill 0"
+		"2" "Skill 1"	"realbot skill 1"
+		"3" "Skill 2"	"realbot skill 2"
+		"4" "Skill 3"	"realbot skill 3"
+		"5" "Skill 4"	"realbot skill 4"
+		"6" "Skill 5"	"realbot skill 5"
+		"7" "Skill 6"	"realbot skill 6"
+		"8" "Skill 7"	"realbot skill 7"
+		"9" "Skill 8"	"realbot skill 8"
+		"10" "Skill 9"	"realbot skill 9"
+		"11" "Skill 10"	"realbot skill 10"
+	}
+    }
+    "3" "Auto-Skill Adjustment"
+    {
+	"1" "Turn Auto-Skill on"		"realbot autoskill 1"
+	"2" "Turn Auto-Skill off"		"realbot autoskill 0"
+    }
+    "4" "Override personality skill setting"
+    {
+	"1" "Override personality skill setting" "realbot override_skill 1"
+ 	"2" "Use bot skill settings" "realbot override_skill 0"
+    }
+    "5" "Server settings"
+    {
+	"1" "Broadcasting"
+        {
+	  "1" "Version broadcasting"
+	  {
+	    "1" "Every round"	"realbot server broadcast version 0"
+	    "2" "Every map-change" "realbot server broadcast version 1"
+	  }
+
+	  "2" "Kill broadcasting (player kills bot)"
+	  {
+	    "1" "Name & Skill"	"realbot server broadcast kills 0"
+	    "2" "Name only" "realbot server broadcast kills 1"
+	    "3" "None" "realbot server broadcast kills 2"
+	  }
+
+	  "3" "Death broadcasting (bot kills player)"
+	  {
+	    "1" "Name & Skill"	"realbot server broadcast deaths 0"
+	    "2" "Name only" "realbot server broadcast deaths 1"
+	    "3" "None" "realbot server broadcast deaths 2"
+	  }
+
+	 "4" "Speech broadcasting (listen server only)"
+	  {
+	    "1" "Every round"	"realbot server broadcast speech 1"
+	    "2" "Never"		"realbot server broadcast speech 0"
+	  }
+	}
+    }
+    "6" "Enable/Disable bot-shooting"
+    {
+	"1" "Enable bot shooting" "realbot debug dontshoot 0"
+	"2" "Disable bot shooting" "realbot debug dontshoot 1"
+    }
+    "7" "Set maximum bots playing"
+    {
+	"5 bots" "realbot max 5"
+	"7 bots" "realbot max 7"
+	"9 bots" "realbot max 9"
+	"11 bots" "realbot max 11"
+	"15 bots" "realbot max 15"
+	"17 bots" "realbot max 17"
+	"21 bots" "realbot max 21"
+	"25 bots" "realbot max 25"
+	"27 bots" "realbot max 27"
+    }
+    "8" "Chat-rate"
+    {
+	"1" "Low" "realbot chatrate 1"
+	"2" "Normal" "realbot chatrate 3"
+	"3" "High" "realbot chatrate 5"
+	"4" "Insane" "realbot chatrate 10"
+    }
+}
+
+"5" "Nodes Editor"
+{
+   "1" "Initialize"	"realbot nodes init"
+   "2" "Save"	        "realbot nodes save"
+   "3" "Load"		"realbot nodes load"
+   "4" "Remove all connections" "realbot nodes removeall"
+   "5" "Draw/Undraw"	"realbot nodes draw"
+   "6" "Draw/Undraw connections" "realbot nodes connections"   
+   "7" "Add important area" "realbot important add"
+   "8" "Save IAD" "realbot important save"
+}
+
+"6" "Endround"			"realbot killall"

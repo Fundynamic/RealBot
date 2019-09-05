@@ -1,0 +1,59 @@
+Realbot BUILD 3063:
+===================
+Need help? Use the forums!
+
+
+
+Requirements : Metamod v1.19 must be installed.
+
+
+
+What about Linux?
+=================
+I do not have a Linux box. Use the source to compile it for Linux.
+See the realbot\source directory. Be sure you compile it with the most
+recent HL SDK and Metamod V1.19.
+
+
+INSTALLING:
+===========
+Unzip into : steamapps\<username>\counter-strike
+
+Your directory structure should look like:
+
+steamapps\<username>\counter-strike\
+steamapps\<username>\counter-strike\realbot
+steamapps\<username>\counter-strike\cstrike
+steamapps\<username>\counter-strike\cstrike\addons
+etc.
+
+in:
+steamapps\<username>\counter-strike\cstrike\addons\metamod\plugins.ini
+
+there should be a line:
+
+win32 ../realbot/dll/realbot_mm.dll
+
+Thats it.
+
+
+Optional: 
+- copy the commandmenu.txt file into your cstrike folder (you can find
+commandmenu.txt in the realbot folder). This command menu is modified
+to be used with realbot.
+
+
+
+Usage:
+Start a new game. 
+Type:
+realbot add
+
+or:
+Use command menu, press H (= default button), click on the menu to set things up.
+
+
+Notice:
+=======
+Bots need to LEARN maps first. Run around a few rounds, before adding bots in a new map.
+The more you play, the more they learn.
