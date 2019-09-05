@@ -46,131 +46,131 @@ extern cBot bots[MAX_BOTS];
 // GAME: Init
 void cGame::Init() {
 
-   // Default Bot Skill
-   iDefaultBotSkill = -1;       // random
-   iOverrideBotSkill = GAME_YES;
+    // Default Bot Skill
+    iDefaultBotSkill = -1;       // random
+    iOverrideBotSkill = GAME_YES;
 
-   // Randomized skill boundries
-   iRandomMinSkill = 0;
-   iRandomMaxSkill = 10;
+    // Randomized skill boundries
+    iRandomMinSkill = 0;
+    iRandomMaxSkill = 10;
 
-   // Internet simulation
-   iMinPlayRounds = 5;
-   iMaxPlayRounds = 25;
+    // Internet simulation
+    iMinPlayRounds = 5;
+    iMaxPlayRounds = 25;
 
-   // New round stuff
-   bNewRound = false;
+    // New round stuff
+    bNewRound = false;
 
-   // Broadcasting
-   iVersionBroadcasting = BROADCAST_ROUND;
-   iKillsBroadcasting = BROADCAST_KILLS_FULL;
-   iDeathsBroadcasting = BROADCAST_DEATHS_FULL;
-   bSpeechBroadcasting = false; // @ default we do NOT broadcast this shit every round to the listen server
+    // Broadcasting
+    iVersionBroadcasting = BROADCAST_ROUND;
+    iKillsBroadcasting = BROADCAST_KILLS_FULL;
+    iDeathsBroadcasting = BROADCAST_DEATHS_FULL;
+    bSpeechBroadcasting = false; // @ default we do NOT broadcast this shit every round to the listen server
 
-   // Installed into correct directory
-   bInstalledCorrectly = true;
+    // Installed into correct directory
+    bInstalledCorrectly = true;
 
-   // Round time
-   fRoundTime = 0.0;
+    // Round time
+    fRoundTime = 0.0;
 
-   // Dropped C4 location
-   vDroppedC4 = Vector(9999, 9999, 9999);
+    // Dropped C4 location
+    vDroppedC4 = Vector(9999, 9999, 9999);
 
-   // May we walk with knife (when bots want to), default = yes (3600 seconds)
-   fWalkWithKnife = 3600;
+    // May we walk with knife (when bots want to), default = yes (3600 seconds)
+    fWalkWithKnife = 3600;
 
-   // Bomb planted
-   bBombPlanted = false;
-   bBombDiscovered = false;
+    // Bomb planted
+    bBombPlanted = false;
+    bBombDiscovered = false;
 
-   // Chat related
-   iMaxSentences = 1;           // max sentences produced by chatengine per second (1=default)
-   iProducedSentences = 0;      // currently produced sentences
+    // Chat related
+    iMaxSentences = 1;           // max sentences produced by chatengine per second (1=default)
+    iProducedSentences = 0;      // currently produced sentences
 
-   // DEBUG RELATED
-   bDoNotShoot = false;         // ... guess
-   bDebug = true;               // ... prints debug messages
-   bEngineDebug = false;        // ... prints engine debug messages (for figuring out engine interceptions)
-   bPistols = false;            // pistols only mode
+    // DEBUG RELATED
+    bDoNotShoot = false;         // ... guess
+    bDebug = true;               // ... prints debug messages
+    bEngineDebug = false;        // ... prints engine debug messages (for figuring out engine interceptions)
+    bPistols = false;            // pistols only mode
 
-   // Speech sentences (from POD and a *few* own made)
-   strcpy(cSpeechSentences[0], "hello user,communication is acquired");
-   strcpy(cSpeechSentences[1], "your presence is acknowledged");
-   strcpy(cSpeechSentences[2], "high man, your in command now");
-   strcpy(cSpeechSentences[3], "blast your hostile for good");
-   strcpy(cSpeechSentences[4], "high man, kill some idiot here");
-   strcpy(cSpeechSentences[5], "is there a doctor in the area");
-   strcpy(cSpeechSentences[6], "warning, experimental materials detected");
-   strcpy(cSpeechSentences[7], "high amigo, shoot some but");
-   strcpy(cSpeechSentences[8], "attention, hours of work software, detected");
-   strcpy(cSpeechSentences[9], "time for some bad ass explosion");
-   strcpy(cSpeechSentences[10],"bad ass son of a breach device activated");
-   strcpy(cSpeechSentences[11],"high, do not question this great service");
-   strcpy(cSpeechSentences[12],"engine is operative, hello and goodbye");
-   strcpy(cSpeechSentences[13],"high amigo, your administration has been great last day");
-   strcpy(cSpeechSentences[14],"attention, expect experimental armed hostile presence");
-   strcpy(cSpeechSentences[15],"warning,medical attention required");
+    // Speech sentences (from POD and a *few* own made)
+    strcpy(cSpeechSentences[0], "hello user,communication is acquired");
+    strcpy(cSpeechSentences[1], "your presence is acknowledged");
+    strcpy(cSpeechSentences[2], "high man, your in command now");
+    strcpy(cSpeechSentences[3], "blast your hostile for good");
+    strcpy(cSpeechSentences[4], "high man, kill some idiot here");
+    strcpy(cSpeechSentences[5], "is there a doctor in the area");
+    strcpy(cSpeechSentences[6], "warning, experimental materials detected");
+    strcpy(cSpeechSentences[7], "high amigo, shoot some but");
+    strcpy(cSpeechSentences[8], "attention, hours of work software, detected");
+    strcpy(cSpeechSentences[9], "time for some bad ass explosion");
+    strcpy(cSpeechSentences[10], "bad ass son of a breach device activated");
+    strcpy(cSpeechSentences[11], "high, do not question this great service");
+    strcpy(cSpeechSentences[12], "engine is operative, hello and goodbye");
+    strcpy(cSpeechSentences[13], "high amigo, your administration has been great last day");
+    strcpy(cSpeechSentences[14], "attention, expect experimental armed hostile presence");
+    strcpy(cSpeechSentences[15], "warning,medical attention required");
 
 }                               // Init()
 
 // Returns random sentence for speech
 char *cGame::RandomSentence() {
-   return cSpeechSentences[RANDOM_LONG(0, 15)];
+    return cSpeechSentences[RANDOM_LONG(0, 15)];
 }
 
 // GAME: Set round time
 void cGame::SetRoundTime(float fTime) {
-   fRoundTime = fTime;
+    fRoundTime = fTime;
 }
 
 // GAME: Get round time
 // NOTE: This is the time when a round has just started!
 float cGame::RoundTime() {
-   return fRoundTime;
+    return fRoundTime;
 }
 
 // GAME: Set new round flag
 void cGame::SetNewRound(bool bState) {
-   bNewRound = bState;
+    bNewRound = bState;
 }
 
 // GAME: Get new round status
 bool cGame::NewRound() {
-   return bNewRound;
+    return bNewRound;
 }
 
 // GAME: Set min and max playing rounds
 void cGame::SetPlayingRounds(int iMin, int iMax) {
-   if (iMin > -1)
-      iMinPlayRounds = iMin;
-   if (iMax > -1)
-      iMaxPlayRounds = iMax;
+    if (iMin > -1)
+        iMinPlayRounds = iMin;
+    if (iMax > -1)
+        iMaxPlayRounds = iMax;
 
-   // Boundries
-   if (iMinPlayRounds < 1)
-      iMinPlayRounds = 1;
-   if (iMaxPlayRounds < 2)
-      iMaxPlayRounds = 2;
+    // Boundries
+    if (iMinPlayRounds < 1)
+        iMinPlayRounds = 1;
+    if (iMaxPlayRounds < 2)
+        iMaxPlayRounds = 2;
 
-   // Make sure MAX never is lower then MIN
-   if (iMinPlayRounds > iMaxPlayRounds)
-      iMinPlayRounds = iMaxPlayRounds - 1;
+    // Make sure MAX never is lower then MIN
+    if (iMinPlayRounds > iMaxPlayRounds)
+        iMinPlayRounds = iMaxPlayRounds - 1;
 
 }                               // SetPlayingRounds()
 
 // GAME: GET Max playing rounds
 int cGame::GetMaxPlayRounds() {
-   return iMaxPlayRounds;
+    return iMaxPlayRounds;
 }
 
 // GAME: GET Min playing rounds
 int cGame::GetMinPlayRounds() {
-   return iMinPlayRounds;
+    return iMinPlayRounds;
 }
 
 // GAME: Load bot.cfg
 void cGame::LoadCFG() {
-   // loads bot.cfg?
+    // loads bot.cfg?
 
 }                               // LoadCFG()
 
@@ -178,362 +178,362 @@ void cGame::LoadCFG() {
 // NOTE: This function is just a copy/paste stuff from Botmans template, nothing more, nothing less
 // TODO: Rewrite this, can be done much cleaner.
 void cGame::LoadNames() {
-   FILE *bot_name_fp;
-   int str_index;
-   char name_buffer[80];
-   int length, index;
-   char filename[256];
-   UTIL_BuildFileNameRB("rb_names.txt", filename);
-   bot_name_fp = fopen(filename, "r");
-   if (bot_name_fp != NULL) {
-      while ((iAmountNames < MAX_BOT_NAMES) &&
-             (fgets(name_buffer, 80, bot_name_fp) != NULL)) {
-         length = strlen(name_buffer);
-         if (name_buffer[length - 1] == '\n') {
-            name_buffer[length - 1] = 0;        // remove '\n'
-            length--;
-         }
-         str_index = 0;
-         while (str_index < length) {
-            if ((name_buffer[str_index] < ' ')
-                  || (name_buffer[str_index] > '~')
-                  || (name_buffer[str_index] == '"'))
-               for (index = str_index; index < length; index++)
-                  name_buffer[index] = name_buffer[index + 1];
-            str_index++;
-         }
+    FILE *bot_name_fp;
+    int str_index;
+    char name_buffer[80];
+    int length, index;
+    char filename[256];
+    UTIL_BuildFileNameRB("rb_names.txt", filename);
+    bot_name_fp = fopen(filename, "r");
+    if (bot_name_fp != NULL) {
+        while ((iAmountNames < MAX_BOT_NAMES) &&
+               (fgets(name_buffer, 80, bot_name_fp) != NULL)) {
+            length = strlen(name_buffer);
+            if (name_buffer[length - 1] == '\n') {
+                name_buffer[length - 1] = 0;        // remove '\n'
+                length--;
+            }
+            str_index = 0;
+            while (str_index < length) {
+                if ((name_buffer[str_index] < ' ')
+                    || (name_buffer[str_index] > '~')
+                    || (name_buffer[str_index] == '"'))
+                    for (index = str_index; index < length; index++)
+                        name_buffer[index] = name_buffer[index + 1];
+                str_index++;
+            }
 
-         if (name_buffer[0] != 0) {
-            strncpy(cBotNames[iAmountNames], name_buffer, BOT_NAME_LEN);
-            iAmountNames++;
-         }
-      }
-      fclose(bot_name_fp);
-   }
+            if (name_buffer[0] != 0) {
+                strncpy(cBotNames[iAmountNames], name_buffer, BOT_NAME_LEN);
+                iAmountNames++;
+            }
+        }
+        fclose(bot_name_fp);
+    }
 }                               // LoadNames()
 
 // Any names available?
 bool cGame::NamesAvailable() {
-   if (iAmountNames > 0)
-      return true;
+    if (iAmountNames > 0)
+        return true;
 
-   return false;
+    return false;
 }                               // NamesAvailable()
 
 
 // Picks a random name
 // rewritten on april 10th 2004
 void cGame::SelectName(char *name) {
-   int iNameIndex, iIndex;
-   bool bUsed;
-   edict_t *pPlayer;
-   iNameIndex = 0;              // zero based (RANDOM_LONG (0, iAmountNames-1))
+    int iNameIndex, iIndex;
+    bool bUsed;
+    edict_t *pPlayer;
+    iNameIndex = 0;              // zero based (RANDOM_LONG (0, iAmountNames-1))
 
-   bool iNameUsed[MAX_BOT_NAMES];
-   for (int i = 0; i < MAX_BOT_NAMES; i++) {
-      iNameUsed[i] = false;
-   }
+    bool iNameUsed[MAX_BOT_NAMES];
+    for (int i = 0; i < MAX_BOT_NAMES; i++) {
+        iNameUsed[i] = false;
+    }
 
-   // check make sure this name isn't used
-   bUsed = true;
-   while (bUsed) {
-      iNameIndex = RANDOM_LONG(0, iAmountNames - 1);    // pick random one
-      int iLimit = iNameIndex;  // remember this.
+    // check make sure this name isn't used
+    bUsed = true;
+    while (bUsed) {
+        iNameIndex = RANDOM_LONG(0, iAmountNames - 1);    // pick random one
+        int iLimit = iNameIndex;  // remember this.
 
-      // make sure it is not checked yet
-      while (iNameUsed[iNameIndex]) {
-         // check again
-         if (iNameUsed[iNameIndex] == false)
-            break;
+        // make sure it is not checked yet
+        while (iNameUsed[iNameIndex]) {
+            // check again
+            if (iNameUsed[iNameIndex] == false)
+                break;
 
-         // add up
-         iNameIndex++;
+            // add up
+            iNameIndex++;
 
-         // make sure that it does not check out of range
-         if (iNameIndex == iAmountNames)
-            iNameIndex = 0;     // go to 0 (will be set to 0 next 'name')
+            // make sure that it does not check out of range
+            if (iNameIndex == iAmountNames)
+                iNameIndex = 0;     // go to 0 (will be set to 0 next 'name')
 
-         // when we are back to where we came from, get the fuck outta here
-         if (iNameIndex == iLimit) {
-            strcpy(name, "RealBot");
-            return;
-         }
-      }
-
-      // so far we did not find evidence that this name has been used already
-      bUsed = false;
-
-      // check if this name is used
-      for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
-         pPlayer = INDEXENT(iIndex);
-         if (pPlayer && !pPlayer->free) {
-            if (strcmp(cBotNames[iNameIndex], STRING(pPlayer->v.netname))
-                  == 0) {
-               // atten tion, this namehas been used.
-               bUsed = true;
-               break;
+            // when we are back to where we came from, get the fuck outta here
+            if (iNameIndex == iLimit) {
+                strcpy(name, "RealBot");
+                return;
             }
-         }
-      }
+        }
 
-      if (bUsed)
-         iNameUsed[iNameIndex] = true;  // set on true
+        // so far we did not find evidence that this name has been used already
+        bUsed = false;
 
-   }
+        // check if this name is used
+        for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
+            pPlayer = INDEXENT(iIndex);
+            if (pPlayer && !pPlayer->free) {
+                if (strcmp(cBotNames[iNameIndex], STRING(pPlayer->v.netname))
+                    == 0) {
+                    // atten tion, this namehas been used.
+                    bUsed = true;
+                    break;
+                }
+            }
+        }
 
-   // copy name into the name_buffer
-   strcpy(name, cBotNames[iNameIndex]);
+        if (bUsed)
+            iNameUsed[iNameIndex] = true;  // set on true
+
+    }
+
+    // copy name into the name_buffer
+    strcpy(name, cBotNames[iNameIndex]);
 }                               // SelectName()
 
 // GAME: Load BUYTABLE.INI file
 void cGame::LoadBuyTable() {
-   INI_PARSE_BUYTABLE();
+    INI_PARSE_BUYTABLE();
 }
 
 // GAME: Update global vars (called by StartFrame)
 void cGame::UpdateGameStatus() {
 
-   // Used variables
-   edict_t *pEnt;
-   pEnt = NULL;
+    // Used variables
+    edict_t *pEnt;
+    pEnt = NULL;
 
-   // ------------------
-   // Update: Dropped C4
-   // ------------------
-   // Its not dropped unless stated otherwise.
-   vDroppedC4 = Vector(9999, 9999, 9999);
+    // ------------------
+    // Update: Dropped C4
+    // ------------------
+    // Its not dropped unless stated otherwise.
+    vDroppedC4 = Vector(9999, 9999, 9999);
 
-   // Find the dropped bomb
-   while ((pEnt = UTIL_FindEntityByClassname(pEnt, "weaponbox")) != NULL) {
-      // when DROPPED C4
-      if ((FStrEq(STRING(pEnt->v.model), "models/w_backpack.mdl"))) {
-         vDroppedC4 = pEnt->v.origin;   // this is the origin.
-         break;
-      }
-   }
+    // Find the dropped bomb
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "weaponbox")) != NULL) {
+        // when DROPPED C4
+        if ((FStrEq(STRING(pEnt->v.model), "models/w_backpack.mdl"))) {
+            vDroppedC4 = pEnt->v.origin;   // this is the origin.
+            break;
+        }
+    }
 
-   // ------------------
-   // Update: Is the bomb planted?
-   // ------------------
-   // Same as dropped c4, its NOT, unless stated otherwise.
-   pEnt = NULL;
-   Vector vVec = Vector(9999, 9999, 9999);
-   bool bPlanted = bBombPlanted;
+    // ------------------
+    // Update: Is the bomb planted?
+    // ------------------
+    // Same as dropped c4, its NOT, unless stated otherwise.
+    pEnt = NULL;
+    Vector vVec = Vector(9999, 9999, 9999);
+    bool bPlanted = bBombPlanted;
 
-   while ((pEnt = UTIL_FindEntityByClassname(pEnt, "grenade")) != NULL) {
-      if (UTIL_GetGrenadeType(pEnt) == 4) {
-         bPlanted = true;         // Found planted bomb!
-         break;
-      }
-   }
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "grenade")) != NULL) {
+        if (UTIL_GetGrenadeType(pEnt) == 4) {
+            bPlanted = true;         // Found planted bomb!
+            break;
+        }
+    }
 
-   // Discovered the bomb is planted and it was a different value than before (not planted).
-   // all counter-terrorists should know this, and they should head for the bomb
-   if (bPlanted && // found a planted bomb
-       bPlanted != bBombPlanted // and a milisecond ago we didnt know that
-      ) {
-      int i;
-      for (i = 1; i <= gpGlobals->maxClients; i++) {
-         edict_t *pPlayer = INDEXENT(i);
-         cBot *bot = UTIL_GetBotPointer(pPlayer);
+    // Discovered the bomb is planted and it was a different value than before (not planted).
+    // all counter-terrorists should know this, and they should head for the bomb
+    if (bPlanted && // found a planted bomb
+        bPlanted != bBombPlanted // and a milisecond ago we didnt know that
+            ) {
+        int i;
+        for (i = 1; i <= gpGlobals->maxClients; i++) {
+            edict_t *pPlayer = INDEXENT(i);
+            cBot *bot = UTIL_GetBotPointer(pPlayer);
 
-         if (bot)         // valid bot
-         {
-            if (bot->isCounterTerrorist())
+            if (bot)         // valid bot
             {
-               bot->forgetPath();
-                bot->rprint("Setting goal for bombspot");
-                bot->setGoalNode(NodeMachine.node_goal(GOAL_BOMBSPOT)); // picks a random bomb spot
-            }             // ct
-         }                // bot
-      }                   // through all clients
+                if (bot->isCounterTerrorist()) {
+                    bot->forgetPath();
+                    bot->rprint("Setting goal for bombspot");
+                    bot->setGoalNode(NodeMachine.node_goal(GOAL_BOMBSPOT)); // picks a random bomb spot
+                }             // ct
+            }                // bot
+        }                   // through all clients
 
-      // It is not yet discovered
-      bBombDiscovered = false;
+        // It is not yet discovered
+        bBombDiscovered = false;
 
-      // Now update bBombPlanted
-      bBombPlanted = bPlanted;
-   } // planted, and not planted before
+        // Now update bBombPlanted
+        bBombPlanted = bPlanted;
+    } // planted, and not planted before
 } // UpdateGameStatus()
 
 // Add bot -> ARG1(team), ARG2(skill), ARG3(model), ARG4(name)
-int cGame::CreateBot(edict_t * pPlayer, const char *arg1, const char *arg2,
-                     const char *arg3, const char *arg4) {
-   edict_t *BotEnt;
-   cBot *pBot;
-   char c_skin[BOT_SKIN_LEN + 1];
-   char c_name[BOT_NAME_LEN + 1];
+int cGame::CreateBot(edict_t *pPlayer, const char *team, const char *skill, const char *model, const char *name) {
+    edict_t *BotEnt;
+    cBot *pBot;
+    char c_skin[BOT_SKIN_LEN + 1];
 
-   // clear
-   memset(c_skin, 0, sizeof(c_skin));
-   memset(c_name, 0, sizeof(c_name));
+    // clear
+    memset(c_skin, 0, sizeof(c_skin));
 
-   int skill;
-   int i, j, length;
-   if ((arg4 != NULL) && (*arg4 != 0)) {
-      strncpy(c_name, arg4, BOT_NAME_LEN - 1);
-      c_name[BOT_NAME_LEN] = 0; // make sure c_name is null terminated
-   } else {
-      if (NamesAvailable())
-         SelectName(c_name);
-      else
-         strcpy(c_name, "RealBot");
-   }
+    int skill;
+    int i, j, length;
+    char c_name[BOT_NAME_LEN + 1];
+    memset(c_name, 0, sizeof(c_name));
+    if ((name != NULL) && (*name != 0)) {
+        strncpy(c_name, name, BOT_NAME_LEN - 1);
+        c_name[BOT_NAME_LEN] = 0; // make sure c_name is null terminated
+    } else {
+        if (NamesAvailable())
+            SelectName(c_name);
+        else
+            strcpy(c_name, "RealBot");
+    }
 
-   skill = -2;                  // -2, not valid
+    skill = -2;                  // -2, not valid
 
-   if ((arg2 != NULL) && (*arg2 != 0))
-      skill = atoi(arg2);       // set to given skill
+    if ((skill != NULL) && (*skill != 0))
+        skill = atoi(skill);       // set to given skill
 
-   // when not valid (-2), it has default skill
-   if ((skill < -1) || (skill > 10))
-      skill = iDefaultBotSkill;
+    // when not valid (-2), it has default skill
+    if ((skill < -1) || (skill > 10))
+        skill = iDefaultBotSkill;
 
-   // When skill is -1, random, we set it by boundries given
-   if (skill == -1)
-      skill = RANDOM_LONG(iRandomMinSkill, iRandomMaxSkill);
+    // When skill is -1, random, we set it by boundries given
+    if (skill == -1)
+        skill = RANDOM_LONG(iRandomMinSkill, iRandomMaxSkill);
 
-   // length of name
-   length = strlen(c_name);
+    // length of name
+    length = strlen(c_name);
 
-   // remove any illegal characters from name...
-   for (i = 0; i < length; i++) {
-      if ((c_name[i] <= ' ') || (c_name[i] > '~') || (c_name[i] == '"')) {
-         for (j = i; j < length; j++)   // shuffle chars left (and null)
-            c_name[j] = c_name[j + 1];
-         length--;
-      }
-   }
+    // remove any illegal characters from name...
+    for (i = 0; i < length; i++) {
+        if ((c_name[i] <= ' ') || (c_name[i] > '~') || (c_name[i] == '"')) {
+            for (j = i; j < length; j++)   // shuffle chars left (and null)
+                c_name[j] = c_name[j + 1];
+            length--;
+        }
+    }
 
-   BotEnt = (*g_engfuncs.pfnCreateFakeClient) (c_name);
-   if (FNullEnt(BotEnt)) {
-      REALBOT_PRINT(NULL, "cGame::CreateBot",
-                    "Cannot create bot, server is full");
-      return GAME_MSG_FAIL_SERVERFULL;  // failed
-   } else {
-      char ptr[128];            // allocate space for message from ClientConnect
-      char *infobuffer;
-      int clientIndex;
+    BotEnt = (*g_engfuncs.pfnCreateFakeClient)(c_name);
+    if (FNullEnt(BotEnt)) {
+        REALBOT_PRINT(NULL, "cGame::CreateBot",
+                      "Cannot create bot, server is full");
+        return GAME_MSG_FAIL_SERVERFULL;  // failed
+    } else {
+        char ptr[128];            // allocate space for message from ClientConnect
+        char *infobuffer;
+        int clientIndex;
 
-      // find empty bot index
-      int freeBotIndex;
-      freeBotIndex = 0;
-      while ((bots[freeBotIndex].bIsUsed) && (freeBotIndex < MAX_BOTS))
-         freeBotIndex++;
+        // find empty bot index
+        int freeBotIndex;
+        freeBotIndex = 0;
+        while ((bots[freeBotIndex].bIsUsed) && (freeBotIndex < MAX_BOTS))
+            freeBotIndex++;
 
-      if (freeBotIndex == MAX_BOTS) { // failure
-         return GAME_MSG_FAILURE;
-      }
+        if (freeBotIndex == MAX_BOTS) { // failure
+            return GAME_MSG_FAILURE;
+        }
 
-      // create the player entity by calling MOD's player function
-      // (from LINK_ENTITY_TO_CLASS for player object)
+        // create the player entity by calling MOD's player function
+        // (from LINK_ENTITY_TO_CLASS for player object)
 
-      // FIX: Free data for bot, so we can fill in new
-      if (BotEnt->pvPrivateData != NULL)
-         FREE_PRIVATE(BotEnt);
+        // FIX: Free data for bot, so we can fill in new
+        if (BotEnt->pvPrivateData != NULL)
+            FREE_PRIVATE(BotEnt);
 
-      BotEnt->pvPrivateData = NULL;
-      BotEnt->v.frags = 0;
+        BotEnt->pvPrivateData = NULL;
+        BotEnt->v.frags = 0;
 
-      // END OF FIX: --- score resetted
-      CALL_GAME_ENTITY(PLID, "player", VARS(BotEnt));
-      infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer) (BotEnt);
-      clientIndex = ENTINDEX(BotEnt);
+        // END OF FIX: --- score resetted
+        CALL_GAME_ENTITY(PLID, "player", VARS(BotEnt));
+        infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(BotEnt);
+        clientIndex = ENTINDEX(BotEnt);
 
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "model", "");
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "rate", "3500.000000");
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "cl_updaterate", "20");
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "cl_lw", "1");
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "cl_lc", "1");
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "tracker", "0");
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "cl_dlmax", "128");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "model", "");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "rate", "3500.000000");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_updaterate", "20");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_lw", "1");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_lc", "1");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "tracker", "0");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_dlmax", "128");
 
-	  if (RANDOM_LONG(0, 100) < 50) {
-         (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "lefthand", "1");
-	  } else {
-         (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "lefthand", "0");
-	  }
+        if (RANDOM_LONG(0, 100) < 50) {
+            (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "lefthand", "1");
+        } else {
+            (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "lefthand", "0");
+        }
 
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "friends", "0");
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "dm", "0");
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "ah", "1");
-      (*g_engfuncs.pfnSetClientKeyValue) (clientIndex, infobuffer, "_vgui_menus", "0");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "friends", "0");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "dm", "0");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "ah", "1");
+        (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "_vgui_menus", "0");
 
-      MDLL_ClientConnect(BotEnt, c_name, "127.0.0.1", ptr);
+        MDLL_ClientConnect(BotEnt, c_name, "127.0.0.1", ptr);
 
-      // Pieter van Dijk - use instead of DispatchSpawn() - Hip Hip Hurray!
-      MDLL_ClientPutInServer(BotEnt);
-      BotEnt->v.flags |= FL_THIRDPARTYBOT;
+        // Pieter van Dijk - use instead of DispatchSpawn() - Hip Hip Hurray!
+        MDLL_ClientPutInServer(BotEnt);
+        BotEnt->v.flags |= FL_THIRDPARTYBOT;
 
-      // initialize all the variables for this bot...
+        // initialize all the variables for this bot...
 
-      // Retrieve Pointer
-      pBot = &bots[freeBotIndex];
+        // Retrieve Pointer
+        pBot = &bots[freeBotIndex];
 
-      // Set variables
-      pBot->iBotIndex = freeBotIndex;
-      pBot->bIsUsed = true;
-      pBot->respawn_state = RESPAWN_IDLE;
-      pBot->fCreateTime = gpGlobals->time;
-      pBot->fKickTime = 0.0;
-      pBot->name[0] = 0;        // name not set by server yet
-      pBot->bot_money = 0;
-      strcpy(pBot->skin, c_skin);
-      pBot->pEdict = BotEnt;
-      pBot->hasJoinedTeam = false;   // hasn't joined game yet
+        // TODO: Stefan 05/09/2019 - init function? (re-use, so much duplication here)
+        // Set variables
+        pBot->iBotIndex = freeBotIndex;
+        pBot->bIsUsed = true;
+        pBot->respawn_state = RESPAWN_IDLE;
+        pBot->fCreateTime = gpGlobals->time;
+        pBot->fKickTime = 0.0;
+        pBot->name[0] = 0;        // name not set by server yet
+        pBot->bot_money = 0;
+        strcpy(pBot->skin, c_skin);
+        pBot->pEdict = BotEnt;
+        pBot->hasJoinedTeam = false;   // hasn't joined game yet
 
-      // CS Message IDLE..
-      pBot->start_action = MSG_CS_IDLE;
-      pBot->SpawnInit();
-      pBot->bInitialize = false;        // don't need to initialize yet
-      BotEnt->v.idealpitch = BotEnt->v.v_angle.x;
-      BotEnt->v.ideal_yaw = BotEnt->v.v_angle.y;
-      BotEnt->v.pitch_speed = BOT_PITCH_SPEED;
-      BotEnt->v.yaw_speed = BOT_YAW_SPEED;
-      pBot->bot_skill = skill;
+        // CS Message IDLE..
+        pBot->start_action = MSG_CS_IDLE;
+        pBot->SpawnInit();
+        pBot->bInitialize = false;        // don't need to initialize yet
+        BotEnt->v.idealpitch = BotEnt->v.v_angle.x;
+        BotEnt->v.ideal_yaw = BotEnt->v.v_angle.y;
+        BotEnt->v.pitch_speed = BOT_PITCH_SPEED;
+        BotEnt->v.yaw_speed = BOT_YAW_SPEED;
+        pBot->bot_skill = skill;
 
-      // Personality related
-      pBot->ipHostage = 0;
-      pBot->ipBombspot = 0;
-      pBot->ipRandom = 0;
-      pBot->ipTurnSpeed = 20;
-      pBot->ipReplyToRadio = 0;
-      pBot->ipCreateRadio = 0;
-      pBot->ipHelpTeammate = 0;
-      pBot->ipWalkWithKnife = 0;
-      pBot->ipDroppedBomb = 0;
-      pBot->ipCampRate = 0;
-      pBot->ipChatRate = 0;
-      pBot->ipFearRate = 0;
-      pBot->ipHearRate = 0;
+        // Personality related
+        pBot->ipHostage = 0;
+        pBot->ipBombspot = 0;
+        pBot->ipRandom = 0;
+        pBot->ipTurnSpeed = 20;
+        pBot->ipReplyToRadio = 0;
+        pBot->ipCreateRadio = 0;
+        pBot->ipHelpTeammate = 0;
+        pBot->ipWalkWithKnife = 0;
+        pBot->ipDroppedBomb = 0;
+        pBot->ipCampRate = 0;
+        pBot->ipChatRate = 0;
+        pBot->ipFearRate = 0;
+        pBot->ipHearRate = 0;
 
-      pBot->played_rounds = 0;
+        pBot->played_rounds = 0;
 
-      // Buy-personality related
-      pBot->ipFavoPriWeapon = -1;
-      pBot->ipFavoSecWeapon = -1;
-      pBot->ipBuyFlashBang = 0;
-      pBot->ipBuyGrenade = 0;
-      pBot->ipBuySmokeGren = 0;
-      pBot->ipBuyDefuseKit = 0;
-      pBot->ipSaveForWeapon = 0;
-      pBot->ipBuyArmour = 0;
+        // Buy-personality related
+        pBot->ipFavoPriWeapon = -1;
+        pBot->ipFavoSecWeapon = -1;
+        pBot->ipBuyFlashBang = 0;
+        pBot->ipBuyGrenade = 0;
+        pBot->ipBuySmokeGren = 0;
+        pBot->ipBuyDefuseKit = 0;
+        pBot->ipSaveForWeapon = 0;
+        pBot->ipBuyArmour = 0;
 
-      // here we set team
-      if ((arg1 != NULL) && (arg1[0] != 0)) {
-         pBot->iTeam = atoi(arg1);
+        // here we set team
+        if ((team != NULL) && (team[0] != 0)) {
+            pBot->iTeam = atoi(team);
 
-         // and class
-         if ((arg3 != NULL) && (arg3[0] != 0)) {
-            pBot->bot_class = atoi(arg3);
-         }
-      }
-      // Parsing name into bot identity
-      INI_PARSE_BOTS(c_name, pBot);
+            // and class
+            if ((model != NULL) && (model[0] != 0)) {
+                pBot->bot_class = atoi(model);
+            }
+        }
 
-      // return success
-      return GAME_MSG_SUCCESS;
-   }
+        // Parsing name into bot identity
+        INI_PARSE_BOTS(c_name, pBot);
+
+        // return success
+        return GAME_MSG_SUCCESS;
+    }
 }                               // CreateBot()
 
 // Debug message (without BOT)
@@ -542,36 +542,36 @@ void REALBOT_PRINT(const char *Function, const char *msg) {
 }
 
 // Debug message
-void REALBOT_PRINT(cBot * pBot, const char *Function, const char *msg) {
+void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
     // Message format:
-   // Function name - [BOT NAME, BOT TEAM]: Message
+    // Function name - [BOT NAME, BOT TEAM]: Message
 
-   char cMessage[512];
-   char team[9];
-   char name[MAX_NAME_LENGTH];
+    char cMessage[512];
+    char team[9];
+    char name[MAX_NAME_LENGTH];
 
-   memset(team, 0, sizeof(team));       // clear
-   memset(name, 0, sizeof(name));       // clear
+    memset(team, 0, sizeof(team));       // clear
+    memset(name, 0, sizeof(name));       // clear
 
-   strcpy(team, "TERROR");      // t
-   strcpy(name, "FUNCTION");
+    strcpy(team, "TERROR");      // t
+    strcpy(name, "FUNCTION");
 
-   if (pBot) {
-      memset(name, 0, sizeof(name));    // clear
-      strcpy(name, pBot->name); // copy name
+    if (pBot) {
+        memset(name, 0, sizeof(name));    // clear
+        strcpy(name, pBot->name); // copy name
 
-      if (pBot->iTeam == 2) strcpy(team, "COUNTER");
-   } else {
-      strcpy(team, "NONE");
-   }
+        if (pBot->iTeam == 2) strcpy(team, "COUNTER");
+    } else {
+        strcpy(team, "NONE");
+    }
 
-   sprintf(cMessage, "RBPRINT->[%s '%s']-[Team %s] : %s\n", name, Function, team, msg);
+    sprintf(cMessage, "RBPRINT->[%s '%s']-[Team %s] : %s\n", name, Function, team, msg);
 
-   // print in console only when on debug print
-   if (Game.bDebug) {
-       SERVER_PRINT(cMessage);
-       rblog(cMessage);
-   }
+    // print in console only when on debug print
+    if (Game.bDebug) {
+        SERVER_PRINT(cMessage);
+        rblog(cMessage);
+    }
 }  // REALBOT_PRINT()
 
 // $Log: game.cpp,v $
