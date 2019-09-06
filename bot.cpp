@@ -2827,8 +2827,10 @@ void cBot::ThinkAboutGoals() {
             if (Game.bBombPlanted) {
                 Defuse();           // defuse (or set timers for it)
             } else {
-                TryToGetHostageTargetToFollowMe(this);
-                checkIfHostagesAreRescued();
+                if (Game.bHostageRescueMap) {
+                    TryToGetHostageTargetToFollowMe(this);
+                    checkIfHostagesAreRescued();
+                }
             }
         }
     }
@@ -2849,14 +2851,12 @@ edict_t * cBot::findHostageToRescue() {
 
     // Search for all hostages in the game
     while ((pHostage = UTIL_FindEntityByClassname(pHostage, "hostage_entity")) != NULL) {
+        Game.bHostageRescueMap = true; // HACK HACK
         if (!isHostageRescueable(this, pHostage)) continue;
+        if (!canSeeEntity(pHostage)) continue;
 
-//        if (func_distance(pEdict->v.origin, pHostage->v.origin) < 125) {
-//            if (canSeeEntity(pHostage)) {
-            this->rprint("HostageNear()", "I have found a new hostage target");
-            return pHostage;
-//            }
-//        }
+        this->rprint("HostageNear()", "I have found a new hostage target");
+        return pHostage;
     }
 
     return NULL;
@@ -2904,6 +2904,14 @@ int cBot::getCurrentNode() {
  */
 int cBot::getCurrentPathNodeToHeadFor() {
     return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, pathNodeIndex);
+}
+
+/**
+ * Aka, the node we were coming from. In case the index is < 0 (ie, there is no previous node yet), this will
+ * return -1;
+ */
+int cBot::getPreviousPathNodeToHeadFor() {
+    return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, getPreviousPathNodeIndex());
 }
 
 bool cBot::isHeadingForGoalNode() {

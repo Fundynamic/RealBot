@@ -744,9 +744,14 @@ void StartFrame(void) {
         NodeMachine.goals();
 
         Game.bBombPlanted = false;
+        Game.bHostageRescueMap = false;
         Game.vDroppedC4 = Vector(9999, 9999, 9999);
 
         end_round = false;
+
+        // Hackish way to update state if this is a hostage rescue map
+        edict_t *pHostage = NULL;
+        Game.bHostageRescueMap = UTIL_FindEntityByClassname(pHostage, "hostage_entity") != NULL;
     } // new round - before any bots realized yet
 
     // When min players is set
@@ -1671,7 +1676,7 @@ void RealBot_ServerCommand(void) {
                     // remove this connection
                     if (iTo > -1) {
                         bool bSuccess =
-                                NodeMachine.removeNeighbourNode(iOnNode, iTo);
+                                NodeMachine.removeConnection(iOnNode, iTo);
 
                         if (bSuccess)
                             sprintf(cMessage,
@@ -1797,7 +1802,7 @@ void RealBot_ServerCommand(void) {
                 int Node1 = atoi(arg2);
                 int Node2 = atoi(arg3);
                 if ((Node1 >= 0) && (Node2 >= 0)
-                    && NodeMachine.removeNeighbourNode(Node1, Node2))
+                    && NodeMachine.removeConnection(Node1, Node2))
                     sprintf(cMessage,
                             "NODES EDITOR: Removed connection from node %d to node %d.",
                             Node1, Node2);

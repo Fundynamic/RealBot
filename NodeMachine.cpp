@@ -193,11 +193,19 @@ void cNodeMachine::init() {
                 Meredians[iMx][iMy].iNodes[iNode] = -1;
 }
 
-int cNodeMachine::GetTroubleValueWithConnection(int iFrom, int iTo) {
-    int t;
-    for (t = 0; t < MAX_TROUBLE; t++)
-        if (Troubles[t].iFrom == iFrom && Troubles[t].iTo == iTo)
-            return t;
+int cNodeMachine::GetTroubleIndexForConnection(int iFrom, int iTo) {
+    // in case of invalid values, return -1 - no need to loop
+    if (iFrom < -1 || iFrom >= MAX_NODES) return -1;
+    if (iTo < -1 || iTo >= MAX_NODES) return -1;
+
+    // seems to be valid, look for troubled connections
+    int index;
+    for (index = 0; index < MAX_TROUBLE; index++) {
+        if (Troubles[index].iFrom == iFrom && Troubles[index].iTo == iTo) {
+            // found troubled connection, return its index
+            return index;
+        }
+    }
 
     return -1;
 }
@@ -207,10 +215,10 @@ int cNodeMachine::GetTroubleValueWithConnection(int iFrom, int iTo) {
  *
  * @param iFrom
  * @param iTo
- * @return
+ * @return index of newly created index
  */
-bool cNodeMachine::AddTroubledConnection(int iFrom, int iTo) {
-    if (GetTroubleValueWithConnection(iFrom, iTo) > -1)
+int cNodeMachine::AddTroubledConnection(int iFrom, int iTo) {
+    if (GetTroubleIndexForConnection(iFrom, iTo) > -1)
         return false; // already exists
 
     int iNew = -1;
@@ -229,36 +237,41 @@ bool cNodeMachine::AddTroubledConnection(int iFrom, int iTo) {
     Troubles[iNew].iTo = iTo;
     Troubles[iNew].iTries = 1;
 
-    return true;
+    return iNew;
 }
 
 bool cNodeMachine::hasAttemptedConnectionTooManyTimes(int iFrom, int iTo) {
     // Max amount of trouble we may have in one game is 4 times.
-    int t = GetTroubleValueWithConnection(iFrom, iTo);
+    int index = GetTroubleIndexForConnection(iFrom, iTo);
 
-    if (t < 0) {
+    if (index < 0) {
+        rblog("invalid index for hasAttemptedConnectionTooManyTimes()\n");
         // deal with invalid connection
         return false;
     }
 
-    if (Troubles[t].iTries > 2) {
+    if (Troubles[index].iTries > 2) {
+        rblog("Connection has been tried too many times!\n");
         // after 3 times we quit
         return true;
     }
 
+    rblog("Connection may be retried\n");
     return false;
 }
 
 void cNodeMachine::IncreaseAttemptsForTroubledConnection(int iFrom, int iTo) {
-    int t = GetTroubleValueWithConnection(iFrom, iTo);
-    if (t < 0)
-        return;
+    int t = GetTroubleIndexForConnection(iFrom, iTo);
+    IncreaseAttemptsForTroubledConnection(t);
+}
 
-    Troubles[t].iTries++;
+void cNodeMachine::IncreaseAttemptsForTroubledConnection(int index) {
+    if (index < 0 || index >= MAX_TROUBLE) return;
+    Troubles[index].iTries++;
 }
 
 bool cNodeMachine::ClearTroubledConnection(int iFrom, int iTo) {
-    int t = GetTroubleValueWithConnection(iFrom, iTo);
+    int t = GetTroubleIndexForConnection(iFrom, iTo);
 
     if (t < 0) {
         // deal with scenario that this is a non-existing connection
@@ -468,19 +481,19 @@ bool cNodeMachine::add_neighbour_node(int iNode, int iToNode) {
  * @param neighborNodeToRemove
  * @return
  */
-bool cNodeMachine::removeNeighbourNode(int iNode, int neighborNodeToRemove) {
+bool cNodeMachine::removeConnection(int iNode, int neighborNodeToRemove) {
     if (iNode < 0)
         return false;
 
     // Does the node connection exist already?
-    tNode &node = Nodes[iNode];
+    tNode *node = getNode(iNode);
 
     bool removedOneOrMoreNeighbours = false;
     // Find the connection and remove it
     int i = 0;
     for (i = 0; i < MAX_NEIGHBOURS; i++) {
-        if (node.iNeighbour[i] == neighborNodeToRemove) {
-            node.iNeighbour[i] = -1;
+        if (node->iNeighbour[i] == neighborNodeToRemove) {
+            node->iNeighbour[i] = -1;
             removedOneOrMoreNeighbours = true;
         }
     }
@@ -2836,43 +2849,66 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
 
     // When we run out of time, we move back to previous to try again
+    int previousPathNodeIndex = pBot->getPreviousPathNodeIndex();
     if (pBot->fMoveToNodeTime < gpGlobals->time) {
         // We have trouble with this one somehow? Check for nearby players before
         // we judge its done by worldspawn.
         bool bPlayersNear = BOOL_search_near_players(pBot);
 
         // when we recorded a jump, this might help
-        if (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP)
+        if (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP) {
             UTIL_BotPressKey(pBot, IN_JUMP);
-
-        // Not near players, and we should move!!
-        if (!bPlayersNear &&
-            bShouldMove &&
-            pBot->isWalkingPath() &&
-            pBot->getPreviousPathNodeIndex() > -1) {
-
-            // Add this connection to the 'troubled ones'
-            int iFrom = iPath[pBot->iBotIndex][pBot->getPreviousPathNodeIndex()];
-            int iTo = currentNodeToHeadFor;
-
-            if (GetTroubleValueWithConnection(iFrom, iTo) < 0) {
-                AddTroubledConnection(iFrom, iTo);
-            } else {
-                // Troubled connection already known, make it more troublesome!
-                IncreaseAttemptsForTroubledConnection(iFrom, iTo);
-                if (hasAttemptedConnectionTooManyTimes(iFrom, iTo)) {
-
-                    // remove connection
-                    removeNeighbourNode(iFrom, iTo);
-
-                    ClearTroubledConnection(iFrom, iTo);
-                }
-            }
         }
 
-        pBot->forgetPath();
+        // Not near players, and we should move!!
+        char msg[255];
+        memset(msg, 0, sizeof(msg));
+        bool isWalkingPath = pBot->isWalkingPath();
+        sprintf(msg, "players near? %d, shouldMove? %d, walking path? %d, previousPathNodeIndex? %d",
+                bPlayersNear,
+                bShouldMove,
+                isWalkingPath,
+                previousPathNodeIndex);
+
+        pBot->rprint("path_walk", msg);
+
+        // Add this connection to the 'troubled ones'
+        int iFrom = pBot->getPreviousPathNodeToHeadFor();
+        int iTo = currentNodeToHeadFor;
+
         pBot->fMoveToNodeTime += 3.0;
+        pBot->rprint("MoveToNodeTime expired");
         pBot->forgetGoal();
+
+        if (!bPlayersNear &&
+            bShouldMove &&
+            isWalkingPath &&
+            previousPathNodeIndex > -1) {
+
+            int troubleIndex = GetTroubleIndexForConnection(iFrom, iTo);
+            if (troubleIndex < 0) {
+                troubleIndex = AddTroubledConnection(iFrom, iTo);
+            }
+
+            // Troubled connection already known, make it more troublesome!
+            IncreaseAttemptsForTroubledConnection(iFrom, iTo);
+            pBot->rprint("path_walk", "a troubled connection!");
+            if (hasAttemptedConnectionTooManyTimes(iFrom, iTo)) {
+                pBot->rprint("path_walk", "a troubled connection - tried too many times!");
+
+                // remove connection
+                if (!removeConnection(iFrom, iTo)) {
+                    pBot->rprint("path_walk", "for some reason the connection was not removed!?");
+                } else {
+                    pBot->rprint("path_walk", "the connection is removed!");
+                }
+
+                ClearTroubledConnection(iFrom, iTo);
+            }
+        } else {
+            pBot->rprint("path_walk", "this ought to be ok!?");
+        }
+
         return;
     }
 
@@ -2919,14 +2955,14 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
                     // Find the neighbour connection, and remove it
                     tNode &prevNode = Nodes[iPrevNode];
-                    bool removedNeighbour = removeNeighbourNode(iPrevNode, currentNodeToHeadFor);
+                    bool removedNeighbour = removeConnection(iPrevNode, currentNodeToHeadFor);
                     if (removedNeighbour) {
                         pBot->forgetPath();
                     }
                 } else {
                     // When this node is not floating, it could be something we should jump to.
                     // somehow we cannot reach that node, so we fix it here.
-                    int iCurrentPathId = pBot->getPreviousPathNodeIndex();
+                    int iCurrentPathId = previousPathNodeIndex;
                     int iPrevNode = -1;
                     if (iCurrentPathId > -1)
                         iPrevNode = iPath[BotIndex][iCurrentPathId];
@@ -3098,8 +3134,8 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 
         // we are already pretty close to our goal. Close enough to consider it achieved and forgetting it, so in the next
         // frame we might think of a new goal
-        if ((func_distance(pBot->pEdict->v.origin, Nodes[pBot->getGoalNode()].origin) < 50)
-            || iCurrentNode == pBot->getGoalNode()) {
+        if ((pBot->getDistanceTo(pBot->getGoalNode()) < 50) || iCurrentNode == pBot->getGoalNode()) {
+            pBot->rprint("I think I am fairly close enough so that I can forget about the goal now");
             pBot->forgetGoal();
             pBot->forgetPath();
             return;

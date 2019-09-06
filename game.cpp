@@ -82,6 +82,7 @@ void cGame::Init() {
     // Bomb planted
     bBombPlanted = false;
     bBombDiscovered = false;
+    bHostageRescueMap = false;
 
     // Chat related
     iMaxSentences = 1;           // max sentences produced by chatengine per second (1=default)

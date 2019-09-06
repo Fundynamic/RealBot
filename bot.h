@@ -425,6 +425,7 @@ public:
     // Get methods
     int getCurrentNode();                      // the current (closest) node we are at
     int getCurrentPathNodeToHeadFor();         // get Node from path
+    int getPreviousPathNodeToHeadFor();        // get previous Node from path
     int getNextPathNode();                     // get next Node from path
     float getDistanceTo(int nodeIndex);
     float getDistanceTo(Vector vDest);

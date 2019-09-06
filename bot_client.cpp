@@ -469,7 +469,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
                                                                        pBot->getPathNodeIndex());
 
                    // remove connection
-                   NodeMachine.removeNeighbourNode(iNode, iNodeTo);
+                   NodeMachine.removeConnection(iNode, iNodeTo);
                }
             }
          }

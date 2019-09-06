@@ -103,6 +103,7 @@ public:
    // Game related variables:
    Vector vDroppedC4;           // Dropped C4?
    bool bBombPlanted;           // Bomb planted?
+   bool bHostageRescueMap;           // Hostage rescue map?
    bool bBombDiscovered;        // Is the bomb discovered?
 
    // Server vars

@@ -637,7 +637,6 @@ bool isHostageFree(cBot *pBot, edict_t *pHostage) {
 }
 
 void TryToGetHostageTargetToFollowMe(cBot *pBot) {
-    pBot->rprint("TryToGetHostageTargetToFollowMe");
     if (pBot->hasEnemy()) {
         return;                   // enemy, do not check
     }

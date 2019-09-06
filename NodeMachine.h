@@ -203,7 +203,7 @@ public:
     // -----------------
     bool add_neighbour_node(int iNode, int iToNode);
 
-    bool removeNeighbourNode(int iNode, int neighborNodeToRemove);
+    bool removeConnection(int iNode, int neighborNodeToRemove);
 
     bool remove_neighbour_nodes(int iNode);
 
@@ -221,13 +221,14 @@ public:
     Vector node_vector(int iNode);
 
     // -----------------
-    int GetTroubleValueWithConnection(int iFrom, int iTo);
+    int GetTroubleIndexForConnection(int iFrom, int iTo);
 
-    bool AddTroubledConnection(int iFrom, int iTo);
+    int AddTroubledConnection(int iFrom, int iTo);
 
     bool hasAttemptedConnectionTooManyTimes(int iFrom, int iTo);
 
     void IncreaseAttemptsForTroubledConnection(int iFrom, int iTo);
+    void IncreaseAttemptsForTroubledConnection(int index);
 
     bool ClearTroubledConnection(int iFrom, int iTo);
 
