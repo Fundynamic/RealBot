@@ -2335,12 +2335,47 @@ void cBot::setGoalNode(tGoal *goal) {
     }
 }
 
+/**
+ * Always printed when debug mode is on
+ * @param Function
+ * @param msg
+ */
 void cBot::rprint(const char *Function, const char *msg) {
     REALBOT_PRINT(this, Function, msg);
 }
 
+/**
+ * Only printed when debug mode is on and verbosity is trace
+ * @param Function
+ * @param msg
+ */
+void cBot::rprint_trace(const char *Function, const char *msg) {
+    if (Game.messageVerbosity > 1) {
+        REALBOT_PRINT(this, Function, msg);
+    }
+}
+
+/**
+ * Only printed when debug mode is on and verbosity is normal
+ * @param Function
+ * @param msg
+ */
+void cBot::rprint_normal(const char *Function, const char *msg) {
+    if (Game.messageVerbosity > 1) {
+        REALBOT_PRINT(this, Function, msg);
+    }
+}
+
 void cBot::rprint(const char *msg) {
-    REALBOT_PRINT(this, "rprint()", msg);
+    rprint("rprint()", msg);
+}
+
+void cBot::rprint_normal(const char *msg) {
+    rprint_normal("rprint()", msg);
+}
+
+void cBot::rprint_trace(const char *msg) {
+    rprint_trace("rprint()", msg);
 }
 
 bool cBot::hasBomb() {

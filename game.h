@@ -122,6 +122,7 @@ public:
    // DEBUG variables
    bool bDoNotShoot;            // Bots not shooting
    bool bDebug;                 // Print debug messages
+   int  messageVerbosity;       // Print debug messages (verbosity)
    bool bEngineDebug;           // Print engine debug messages
    bool bPistols;               // 30/07/04 by Josh: bots will only use pistols
 

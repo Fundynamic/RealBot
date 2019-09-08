@@ -90,7 +90,8 @@ void cGame::Init() {
 
     // DEBUG RELATED
     bDoNotShoot = false;         // ... guess
-    bDebug = true;               // ... prints debug messages
+    bDebug = false;               // ... prints debug messages
+    messageVerbosity = 0;         // normal verbosity
     bEngineDebug = false;        // ... prints engine debug messages (for figuring out engine interceptions)
     bPistols = false;            // pistols only mode
 

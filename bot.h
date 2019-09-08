@@ -513,8 +513,13 @@ public:
     void NewRound();             // When bot enters new round
 
     // Debug -------
-    void rprint(const char *Function, const char *msg);
+    void rprint(const char *Function, const char *msg); // low
+    void rprint_normal(const char *Function, const char *msg); // normal
+    void rprint_trace(const char *Function, const char *msg); // trace
+
     void rprint(const char *msg);
+    void rprint_normal(const char *msg);
+    void rprint_trace(const char *msg);
     void Dump();
 
     bool hasHostageToRescue();

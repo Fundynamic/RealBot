@@ -1872,6 +1872,19 @@ void RealBot_ServerCommand(void) {
                 Game.bDebug = true;
                 sprintf(cMessage, "RBDEBUG: Debug messages on.");
             }
+        } else if (FStrEq(arg1, "verbosity")) { // realbot verbosity
+            if (FStrEq(arg2, "low")) {
+                sprintf(cMessage, "RBDEBUG: Message verbosity low.");
+                Game.messageVerbosity = 0;
+            } else if (FStrEq(arg2, "normal")) {
+                sprintf(cMessage, "RBDEBUG: Message verbosity normal.");
+                Game.messageVerbosity = 1;
+            } else if (FStrEq(arg2, "trace")) {
+                sprintf(cMessage, "RBDEBUG: Message verbosity trace.");
+                Game.messageVerbosity = 2; // extreme verbose
+            } else {
+                sprintf(cMessage, "RBDEBUG: Usage: realbot debug verbosity [low][normal][trace]");
+            }
         } else if (FStrEq(arg1, "nodes")) { // realbot debug nodes
             if (FStrEq(arg2, "dumpbmp")) { // realbot debug nodes dumpbmp
                 sprintf(cMessage, "RBDEBUG: Dumping Nodes information into bitmap file");

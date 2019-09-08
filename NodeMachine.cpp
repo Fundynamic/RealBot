@@ -2535,26 +2535,26 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
     } else {
 
-        pBot->rprint("cNodeMachine::path_walk", "not on ladder");
+        pBot->rprint_trace("cNodeMachine::path_walk", "not on ladder");
         float requiredDistance = NODE_ZONE;
 
         if (Nodes[currentNodeToHeadFor].iNodeBits & BIT_LADDER) {
-            pBot->rprint("cNodeMachine::path_walk", "going to ladder");
+            pBot->rprint_trace("cNodeMachine::path_walk", "going to ladder");
             // Going to a ladder waypoint
             requiredDistance = 25;
         } else {
-            pBot->rprint("cNodeMachine::path_walk", "not going to ladder");
+            pBot->rprint_trace("cNodeMachine::path_walk", "not going to ladder");
 
             if (pBot->isHeadingForGoalNode()) {
-                pBot->rprint("cNodeMachine::path_walk", "is heading for goal node");
+                pBot->rprint_trace("cNodeMachine::path_walk", "is heading for goal node");
 
                 tGoal *goalData = pBot->getGoalData();
                 if (goalData && goalData->iType == GOAL_HOSTAGE) {
-                    pBot->rprint("bNear", "next node is destination and GOAL_HOSTAGE, so need to get really close");
+                    pBot->rprint_normal("bNear", "next node is destination and GOAL_HOSTAGE, so need to get really close");
                     requiredDistance = 25; // get really close to hostage
                 }
             }
-            pBot->rprint("cNodeMachine::path_walk", "not going to ladder - end");
+            pBot->rprint_trace("cNodeMachine::path_walk", "not going to ladder - end");
         }
 
         bNearNode = pBot->getDistanceToNextNode() < requiredDistance;
@@ -3135,7 +3135,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
 // Think about path creation here
 void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
-    pBot->rprint("cNodeMachine::path_think", "START");
+    pBot->rprint_trace("cNodeMachine::path_think", "START");
     if (pBot->shouldBeWandering()) {
         int currentNode = -1;
         for (int attempts = 1; attempts < 5; attempts++) {
