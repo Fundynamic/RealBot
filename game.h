@@ -138,6 +138,7 @@ private:
    int iMinPlayRounds, iMaxPlayRounds;  // Min/Max playable rounds
    bool bNewRound;              // New round triggered?
    float fRoundTime;            // Round time
+   float fUpdateGoalTimer;
 };
 
 #endif // GAME_H

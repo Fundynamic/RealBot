@@ -636,7 +636,7 @@ void StartFrame(void) {
 
         NodeMachine.init_players();
         NodeMachine.init_round();
-        NodeMachine.goals();
+        NodeMachine.setUpInitialGoals();
         NodeMachine.resetCheckedValuesForGoals();
 
         //ChatEngine.fThinkTimer = gpGlobals->time;
@@ -731,7 +731,7 @@ void StartFrame(void) {
         f_load_time = 0.0;     // do not load again
         rblog("NEW MAP because time is reset #2\n");
         Game.DetermineIfHostageRescueMap();
-        NodeMachine.goals();
+        NodeMachine.setUpInitialGoals();
     }
 
     // Fix kill all with new round
@@ -746,7 +746,7 @@ void StartFrame(void) {
         NodeMachine.init_round();
         NodeMachine.save();    // save information
         NodeMachine.experience_save();
-        NodeMachine.goals();
+        NodeMachine.setUpInitialGoals();
 
         Game.bBombPlanted = false;
         Game.bHostageRescueMap = false;

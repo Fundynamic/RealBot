@@ -732,19 +732,31 @@ bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {
 //    pBot->rprint("isHostageRescueable");
 
     // Already rescued?
-    if (isHostageRescued(pBot, pHostage)) return false;
+    if (isHostageRescued(pBot, pHostage)) {
+        return false;
+    }
+
     // dead
-    if (!FUNC_EdictIsAlive(pHostage)) return false;
+    if (!FUNC_EdictIsAlive(pHostage)) {
+        return false;
+    }
+
     // Already moving? (used by human player?)
-    if (FUNC_PlayerSpeed(pHostage) > 2) return false;
+    if (FUNC_PlayerSpeed(pHostage) > 2) {
+        return false;
+    }
     // Already used by bot?
 
     if (pBot != NULL) {
         if (pBot->isUsingHostage(pHostage)) return false;
+        // Is the hostage not used by *any other* bot?
+        if (!isHostageFree(pBot, pHostage)) {
+            rblog("isHostageRescueable - Hostage is not free");
+            return false;
+        }
     }
 
-    // Is the hostage not used by *any other* bot?
-    if (!isHostageFree(pBot, pHostage)) return false;
+
     // yes we can rescue this hostage
     return true;
 }

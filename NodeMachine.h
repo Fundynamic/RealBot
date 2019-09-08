@@ -85,7 +85,9 @@ public:
     bool ClearTroubledConnection(int iFrom, int iTo);
 
     // -----------------
-    void goals();                // find new goals and attach them to the nodes
+    void setUpInitialGoals();                // find new goals and attach them to the nodes
+    void updateGoals();          // update moving goals (ie hostages)
+
     int getGoalIndexFromNode(int iNode);
 
     void resetCheckedValuesForGoals();
@@ -204,6 +206,9 @@ private:
 
     int getFreeGoalIndex() const;
 
+    void initGoals();
+
+    void initGoal(int g);
 };
 
 #endif // NODEMACHINE_H

@@ -112,6 +112,7 @@ void cGame::Init() {
     strcpy(cSpeechSentences[14], "attention, expect experimental armed hostile presence");
     strcpy(cSpeechSentences[15], "warning,medical attention required");
 
+    fUpdateGoalTimer = gpGlobals->time;
 }                               // Init()
 
 /**
@@ -317,7 +318,6 @@ void cGame::LoadBuyTable() {
 
 // GAME: Update global vars (called by StartFrame)
 void cGame::UpdateGameStatus() {
-
     // Used variables
     edict_t *pEnt;
     pEnt = NULL;
@@ -382,6 +382,14 @@ void cGame::UpdateGameStatus() {
         // Now update bBombPlanted
         bBombPlanted = bPlanted;
     } // planted, and not planted before
+
+    // Every 3 seconds update the goals
+    if (gpGlobals->time > (fUpdateGoalTimer + 3)) {
+        rblog("cGame::UpdateGameStatus - updateGoals\n");
+        NodeMachine.updateGoals();
+        fUpdateGoalTimer = gpGlobals->time;
+    }
+
 } // UpdateGameStatus()
 
 /**

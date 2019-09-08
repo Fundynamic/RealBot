@@ -159,15 +159,7 @@ void cNodeMachine::init() {
         Troubles[t].iTries = -1;
     }
 
-    // Init goals
-    for (int g = 0; g < MAX_GOALS; g++) {
-        Goals[g].iNode = -1;
-        Goals[g].pGoalEdict = NULL;
-        Goals[g].iType = GOAL_NONE;
-        Goals[g].iChecked = 0;
-        Goals[g].iBadScore = 0;   // no bad score at init
-        memset(Goals[g].name, 0, sizeof(Goals[g].name));
-    }
+    initGoals();
 
     // Init paths
     for (int p = 0; p < MAX_BOTS; p++)
@@ -195,6 +187,23 @@ void cNodeMachine::init() {
                 Meredians[iMx][iMy].iNodes[iNode] = -1;
 
     rblog("cNodeMachine::init() - END\n");
+}
+
+void cNodeMachine::initGoals() {
+    // Init goals
+    for (int g = 0; g < MAX_GOALS; g++) {
+        initGoal(g);
+    }
+}
+
+void cNodeMachine::initGoal(int g) {
+    Goals[g].iNode = -1;
+    Goals[g].pGoalEdict = NULL;
+    Goals[g].iType = GOAL_NONE;
+    Goals[g].index = g;
+    Goals[g].iChecked = 0;
+    Goals[g].iBadScore = 0;   // no bad score at init
+    memset(Goals[g].name, 0, sizeof(Goals[g].name));
 }
 
 int cNodeMachine::GetTroubleIndexForConnection(int iFrom, int iTo) {
@@ -503,7 +512,8 @@ bool cNodeMachine::removeConnection(int iNode, int neighborNodeToRemove) {
 
         char msg[255];
         memset(msg, 0, sizeof(msg));
-        sprintf(msg, "removeConnection(from->%d, to->%d), evaluating neighbour of node %d, neighbourIndex %d = node %d\n",
+        sprintf(msg,
+                "removeConnection(from->%d, to->%d), evaluating neighbour of node %d, neighbourIndex %d = node %d\n",
                 iNode, neighborNodeToRemove,
                 iNode, i, neighbourNode);
         rblog(msg);
@@ -1174,7 +1184,7 @@ void cNodeMachine::connections(edict_t *pEntity) {
                         green = 0;
                     }
                 }
-                
+
                 WaypointDrawBeam(pEntity, start, end, 2, 0, red, green, blue, 255, 1);
             }
         }
@@ -1731,7 +1741,7 @@ void cNodeMachine::addGoal(edict_t *pEdict, int iType, Vector vVec) {
     rblog(msg);
 }
 
-tGoal * cNodeMachine::getGoal(int index) {
+tGoal *cNodeMachine::getGoal(int index) {
     if (index < 0 || index >= MAX_GOALS) {
         rblog("ERROR: Asking to retrieve goal with invalid index! Returning goal NULL\n");
         return NULL;
@@ -1792,9 +1802,39 @@ int cNodeMachine::getGoalIndexFromNode(int iNode) {
     return -1;
 }
 
-// Goal attacher
-void cNodeMachine::goals() {
+void cNodeMachine::updateGoals() {
+    for (int i = 0; i < MAX_GOALS; i++) {
+        tGoal *goal = getGoal(i);
+        if (goal == NULL) continue;
+
+        if (goal->iType == GOAL_HOSTAGE) {
+            initGoal(i);
+        }
+    }
+
+    edict_t *pent = NULL;
+
+    // re-add goals for hostages so we have the latest information about them
+    // GOAL #5 - Hostages (this is the 'starting' position):
+    while ((pent = UTIL_FindEntityByClassname(pent, "hostage_entity")) != NULL) {
+        // verify hostage is still rescueable
+        if (isHostageRescued(NULL, pent) || !FUNC_EdictIsAlive(pent)) {
+            continue; // skip dead or already rescued hostages
+        }
+
+        addGoal(pent, GOAL_HOSTAGE, pent->v.origin);
+    }
+}
+
+/**
+ * Called at start of map
+ */
+void cNodeMachine::setUpInitialGoals() {
     rblog("cNodeMachine::goals() - START\n");
+
+    // make sure to initialize goals at start
+    initGoals();
+
     // Called on round-start, will update goals,
     // because Nodes get expanded all the time the bot should eventually learn
     // how to reach other goals.
@@ -1879,7 +1919,7 @@ void cNodeMachine::goals() {
 }
 
 // Find a goal, and return the node close to it
-tGoal * cNodeMachine::getRandomGoalByType(int goalType) {
+tGoal *cNodeMachine::getRandomGoalByType(int goalType) {
     if (goalType == GOAL_NONE)
         return NULL;
 
@@ -1905,7 +1945,8 @@ tGoal * cNodeMachine::getRandomGoalByType(int goalType) {
     int randomGoalIndex = RANDOM_LONG(0, (possibleCandidateIndex - 1));
 
     char msg[255];
-    sprintf(msg, "cNodeMachine::getRandomGoalByType() - Found %d nodes of type %d and picked %d\n", possibleCandidateIndex, goalType, randomGoalIndex);
+    sprintf(msg, "cNodeMachine::getRandomGoalByType() - Found %d nodes of type %d and picked %d\n",
+            possibleCandidateIndex, goalType, randomGoalIndex);
     rblog(msg);
 
     return getGoal(randomGoalIndex);
@@ -2660,7 +2701,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
     // When longer not stuck for some time we clear stuff
     if (pBot->fNotStuckTime + 2 < gpGlobals->time && // not stuck for 2 seconds
-        (pBot->iDuckTries != 0 ||  pBot->iJumpTries != 0) // values has been set
+        (pBot->iDuckTries != 0 || pBot->iJumpTries != 0) // values has been set
             ) {
         pBot->iDuckTries = 0;
         pBot->iJumpTries = 0;
@@ -2879,10 +2920,10 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     // When we run out of time, we move back to previous to try again
     int previousPathNodeIndex = pBot->getPreviousPathNodeIndex();
     if (!pBot->hasTimeToMoveToNode() && pBot->shouldBeAbleToMove() // had to move and didn't
-    //||
+        //||
         //         (moved_distance < 0.5 && pBot->shouldBeAbleToMove()
 
-        ) {
+            ) {
         // We have trouble with this one somehow? Check for nearby players before
         // we judge its done by worldspawn.
         bool bPlayersNear = isAnyPlayerNearbyBotInFOV(pBot);
@@ -2954,7 +2995,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     // - unstuck
     // - go back in path...
     bool isStuck = moved_distance < 0.5 && pBot->shouldBeAbleToMove()
-            && (pBot->fNotStuckTime + 0.5) < gpGlobals->time; // also did not evaluate this logic for 0.5 second
+                   && (pBot->fNotStuckTime + 0.5) < gpGlobals->time; // also did not evaluate this logic for 0.5 second
     if (isStuck) {
         pBot->fNotStuckTime = gpGlobals->time;
 
@@ -3017,7 +3058,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                         pBot->forgetPath();
                     }
                 }
-            }  else if (bPlayersNear) {
+            } else if (bPlayersNear) {
                 pBot->rprint("isStuck", "bPlayersNear = true and should be able to move");
                 // Depending on how the other bot looks, act
                 // pBotStuck -> faces pBot , do same
@@ -3054,7 +3095,6 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
 // Think about path creation here
 void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
-
     if (pBot->shouldBeWandering()) {
         int currentNode = -1;
         for (int attempts = 1; attempts < 5; attempts++) {
@@ -3181,6 +3221,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     // A score of 1.0 is max.
     int maxCheckedScore = 5;
 
+    REALBOT_PRINT(pBot, "cNodeMachine::path_think", "going to choose goal");
     for (goalIndex = 0; goalIndex < MAX_GOALS; goalIndex++) {
 
         // Make sure this goal is valid
@@ -3240,52 +3281,77 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         // add favoriteness
         score = (score + (1.0 - (goalAlreadyUsedScore / teamMembers))) / 2.0;
 
-        // Spawn points, when bomb is not planted
-        if ((Goals[goalIndex].iType == GOAL_SPAWNCT ||
-             Goals[goalIndex].iType == GOAL_SPAWNT) &&
-            Game.bBombPlanted == false) {
+        // Goals regardless of map/game type
+        int goalType = Goals[goalIndex].iType;
 
+        if (goalType == GOAL_SPAWNCT || goalType == GOAL_SPAWNT) {
             float goalscore = fDistanceToGoal / MAX_GOAL_DISTANCE;
             score = (score + goalscore) / 2.0;
-        } else if (Goals[goalIndex].iType == GOAL_BOMBSPOT) {
-            float goalscore = 0.0;
-            // Whenever the bot has a bomb, or must defuse it, it will assign
-            // a high priority to this goal.
-            if ((pBot->isTerrorist() && pBot->hasBomb()) ||
-                (pBot->isCounterTerrorist() && Game.bBombPlanted)) {
-                goalscore = 0.7;
-            } else {
-                // Bot does not have a bomb, or it has not been planted. These goals are still important
-                // but less important.
-                float mul = fDistanceToGoal / MAX_GOAL_DISTANCE;
-                goalscore = (0.7 * mul);
-            }
-
-            score = (score + goalscore) / 2.0;
-        } else if (Goals[goalIndex].iType == GOAL_HOSTAGE) {
-            // counter-terrorist should
-            float goalscore = 0.0;
-            if (pBot->isCounterTerrorist()) {
-                if (!pBot->isEscortingHostages()) {
-                    // always go to the most furthest hostage spot, and add some randomness here, else
-                    // all bots go to there.
-                    float mul = MAX_GOAL_DISTANCE / fDistanceToGoal;
-                    goalscore = (0.8 * mul);
-                } else {
-                    goalscore = 0.4; // we prefer bringing them back over searching for other hostages
-                }
-            } else {
-                // Terrorist pick randomly this location
-                if (RANDOM_LONG(0, 100) < 25) {
-                    goalscore = RANDOM_FLOAT(0.1, 0.6);
-                }
-            }
-
-            score = (score + goalscore) / 2.0;
         }
-            // 17/07/04
-            // Basic attempts to handle other kind of goals...
-        else if (Goals[goalIndex].iType == GOAL_VIPSAFETY)        // basic goals added for as_ maps
+
+        if (Game.bHostageRescueMap) {
+            if (goalType == GOAL_HOSTAGE) {
+                // counter-terrorist should
+                float goalscore = 0.0;
+                if (pBot->isCounterTerrorist()) {
+                    if (pBot->isEscortingHostages()) {
+                        // already escorting hostages, low interest for other hostages
+                        goalscore = 0.2;
+                    } else {
+                        // always go to the most furthest hostage spot, and add some randomness here, else
+                        // all bots go to there.
+                        float mul = MAX_GOAL_DISTANCE / fDistanceToGoal;
+                        goalscore = 1 + mul;
+                    }
+                } else {
+                    // Terrorist pick randomly this location
+                    if (RANDOM_LONG(0, 100) < 25) {
+                        goalscore = RANDOM_FLOAT(0.1, 0.6);
+                    }
+                }
+
+                score = (score + goalscore) / 2.0;
+            } else if (goalType == GOAL_RESCUEZONE) {
+                if (pBot->isCounterTerrorist()) {
+                    if (pBot->isEscortingHostages()) {
+                        // highest priority
+                        score = 2.0;
+                    } else {
+                        score = 0.2;
+                    }
+                } else if (pBot->isTerrorist()) {
+                    // TODO: when hostages are being rescued, go to a rescue zone to catch CT's and
+                    // prevent rescue
+                    score = 0.2;
+                }
+            }
+        } else { // it is a DE_ map
+            if (goalType == GOAL_BOMBSPOT) {
+                float goalscore = 0.0;
+                if (pBot->isTerrorist()) {
+                    if (pBot->hasBomb()) {
+                        goalscore = 0.7 * Goals[goalIndex].iChecked;
+                    } else {
+                        float mul = fDistanceToGoal / MAX_GOAL_DISTANCE;
+                        goalscore = (0.7 * mul);
+                    }
+
+                } else if (pBot->isCounterTerrorist()) {
+                    if (Game.bBombPlanted) {
+                        goalscore = 0.7;
+                    } else {
+                        float mul = fDistanceToGoal / MAX_GOAL_DISTANCE;
+                        goalscore = (0.7 * mul);
+                    }
+                }
+                score = (score + goalscore) / 2.0;
+            } // GOAL is a bombspot
+        } // bomb plant map
+
+        // 17/07/04
+        // Basic attempts to handle other kind of goals...
+
+        if (goalType == GOAL_VIPSAFETY)        // basic goals added for as_ maps
         {
             // Maximum importance when acting as CT should check whether we are the VIP!
             if (pBot->iTeam == 2) {
@@ -3293,14 +3359,10 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
             } else {            // We are T
                 score = (score + 1.0) / 2.0;
             }
-        } else if (Goals[goalIndex].iType == GOAL_ESCAPEZONE)     // basic goals added for es_  maps
+        } else if (goalType == GOAL_ESCAPEZONE)     // basic goals added for es_  maps
         {
             // Maximum importance when acting as T
             if (pBot->iTeam == 1) {
-                score = 2.0;
-            }
-        } else if (Goals[goalIndex].iType == GOAL_RESCUEZONE) {
-            if (pBot->isEscortingHostages()) {
                 score = 2.0;
             }
         }
