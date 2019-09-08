@@ -368,7 +368,10 @@ void cGame::UpdateGameStatus() {
                 if (bot->isCounterTerrorist()) {
                     bot->forgetPath();
                     bot->rprint("Setting goal for bombspot");
-                    bot->setGoalNode(NodeMachine.getRandomGoalByType(GOAL_BOMBSPOT)); // picks a random bomb spot
+                    tGoal *bombSpotGoal = NodeMachine.getRandomGoalByType(GOAL_BOMBSPOT);
+                    if (bombSpotGoal) {
+                        bot->setGoalNode(bombSpotGoal); // picks a random bomb spot
+                    }
                 }             // ct
             }                // bot
         }                   // through all clients
@@ -610,7 +613,8 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
         strcpy(team, "NONE");
     }
 
-    sprintf(cMessage, "RBPRINT->[%s '%s']-[Team %s] : %s\n", name, Function, team, msg);
+    float gameTime = gpGlobals->time;
+    sprintf(cMessage, "RBPRINT->[%f] - [%s '%s']-[Team %s] : %s\n", gameTime, name, Function, team, msg);
 
     // print in console only when on debug print
     if (Game.bDebug) {

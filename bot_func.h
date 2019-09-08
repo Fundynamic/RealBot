@@ -46,8 +46,8 @@ float func_distance(Vector v1, Vector v2);
 void WaypointDrawBeam(edict_t * pEntity, Vector start, Vector end,
                       int width, int noise, int red, int green, int blue,
                       int brightness, int speed);
-cBot *search_near_players(cBot * pBot);
-bool BOOL_search_near_players(cBot * pBot);
+cBot *getNearbyBotInFOV(cBot * pBot);
+bool isAnyPlayerNearbyBotInFOV(cBot * pBot);
 bool BotShouldJump(cBot * pBot);
 bool BotShouldDuck(cBot * pBot);
 void TryToGetHostageTargetToFollowMe(cBot * pBot);
@@ -77,12 +77,11 @@ int FUNC_GiveHostage(cBot * pBot);                      // gives any hostage we 
 
 bool isHostageRescueable(cBot *pBot, edict_t *pHostage);
 bool isHostageRescued(cBot *pBot, edict_t *pHostage);
-bool isHostageFree(cBot * pBot, edict_t * pHostage);   // is this hostage not used by any other bot?
-
-void FUNC_RemoveHostage(cBot * pBot, edict_t * pEdict); // remove hostage from memory
+bool isHostageFree(cBot * pBotWhoIsAsking, edict_t * pHostage);   // is this hostage not used by any other bot?
 
 int FUNC_BotEstimateHearVector(cBot * pBot, Vector v_sound);
-bool FUNC_HostagesMoving(cBot * pBot);
+
+bool FUNC_EdictIsAlive(edict_t *pEdict);
 
 bool FUNC_BotHoldsZoomWeapon(cBot * pBot);
 

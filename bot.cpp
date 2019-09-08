@@ -193,6 +193,7 @@ void cBot::SpawnInit() {
     // INTEGERS
     // ------------------------
     iGoalNode = -1;
+    goalIndex = -1;
     iPreviousGoalNode = -1;
     iCloseNode = -1;
     iDiedNode = -1;
@@ -362,6 +363,7 @@ void cBot::NewRound() {
     console_nr = 0;
     pathNodeIndex = -1;
     iGoalNode = -1;
+    goalIndex = -1;
     iPreviousGoalNode = -1;
     iCloseNode = -1;
 
@@ -2201,6 +2203,27 @@ bool cBot::hasGoal() {
     return this->iGoalNode > -1;
 }
 
+// Returns true if bot has goal node index (ie referring to Goals[])
+bool cBot::hasGoalIndex() {
+    return this->goalIndex > -1;
+}
+
+/**
+ * Returns goal data , if goal data exists
+ * @return
+ */
+tGoal *cBot::getGoalData() {
+    if (!hasGoalIndex()) return NULL;
+    tGoal *ptr = NodeMachine.getGoal(this->goalIndex);
+    if (ptr == NULL) return NULL;
+
+    // only goals with a node are valid
+    if (ptr->iNode > -1) return ptr;
+    // else not
+
+    return NULL;
+}
+
 // Returns true if bot has an enemy edict
 bool cBot::hasEnemy() {
     return this->pEnemyEdict != NULL;
@@ -2247,6 +2270,7 @@ void cBot::stopMoving() {
 void cBot::forgetGoal() {
     rprint("forgetGoal");
     this->iGoalNode = -1;
+    this->goalIndex = -1;
 }
 
 int cBot::getPathNodeIndex() {
@@ -2275,16 +2299,39 @@ int cBot::getGoalNode() {
     return this->iGoalNode;
 }
 
-void cBot::setGoalNode(int value) {
-    if (value < 0) {
+void cBot::setGoalNode(int nodeIndex, int iGoalIndex) {
+    if (nodeIndex < 0) {
         rprint("setGoalNode()", "WARN: Setting a goal lower than 0, assuming this is not intentional. If you need to forget a goal, use forgetGoal()");
     }
-    this->iGoalNode = value;
-//    tNode *node = NodeMachine.getNode(this->iGoalNode);
+    this->iGoalNode = nodeIndex;
+    this->goalIndex = iGoalIndex;
 
+    tGoal *goalPtr = getGoalData();
     char msg[255];
-    sprintf(msg, "Setting iGoalNode to %d", value);
+    memset(msg, 0, sizeof(msg));
+
+    if (goalPtr != NULL) {
+        sprintf(msg, "Setting iGoalNode to [%d] and goalIndex [%d] - GOAL: type [%s], checked [%d]",
+                nodeIndex,
+                goalIndex,
+                goalPtr->name,
+                goalPtr->iChecked
+        );
+    } else {
+        sprintf(msg, "Setting iGoalNode to %d and goalIndex %d - could not retrieve goal data.", nodeIndex, goalIndex);
+    }
     rprint("setGoalNode()", msg);
+}
+
+void cBot::setGoalNode(int nodeIndex) {
+    this->setGoalNode(nodeIndex, -1);
+}
+
+void cBot::setGoalNode(tGoal *goal) {
+    if (goal != NULL && goal->iNode > -1) {
+        rprint("setGoalNode with goal pointer\n");
+        this->setGoalNode(goal->iNode, goal->index);
+    }
 }
 
 void cBot::rprint(const char *Function, const char *msg) {
@@ -2850,6 +2897,7 @@ void cBot::ThinkAboutGoals() {
                 if (Game.bHostageRescueMap) {
                     TryToGetHostageTargetToFollowMe(this);
                     checkIfHostagesAreRescued();
+                    checkOfHostagesStillFollowMe();
                 }
             }
         }
@@ -3273,38 +3321,32 @@ void cBot::Think() {
 Return true if one of the pointers is not NULL
 **/
 bool cBot::isEscortingHostages() {
-    bool result = getAmountOfHostagesBeingRescued() > 0;
-    if (result) {
-        rprint("I am guiding hostage(s)");
-        checkOfHostagesStillFollowMe();
-    }
-    return result;
+    return getAmountOfHostagesBeingRescued() > 0;
 }
 
 void cBot::checkOfHostagesStillFollowMe() {
-    rprint("checkOfHostagesStillFollowMe");
     if (hostage1) {
-        if (!canSeeEntity(hostage1)) {
+        if (isHostageRescueable(this, hostage1) && !canSeeEntity(hostage1)) {
             rprint("lost track of hostage1");
-            hostage1 = NULL;
+            forgetHostage(hostage1);
         }
     }
     if (hostage2) {
-        if (!canSeeEntity(hostage2)) {
+        if (isHostageRescueable(this, hostage2) && !canSeeEntity(hostage2)) {
             rprint("lost track of hostage2");
-            hostage2 = NULL;
+            forgetHostage(hostage2);
         }
     }
     if (hostage3) {
-        if (!canSeeEntity(hostage3)) {
+        if (isHostageRescueable(this, hostage3) && !canSeeEntity(hostage3)) {
             rprint("lost track of hostage3");
-            hostage3 = NULL;
+            forgetHostage(hostage3);
         }
     }
-    if (hostage4) {
+    if (isHostageRescueable(this, hostage4) && hostage4) {
         if (!canSeeEntity(hostage4)) {
             rprint("lost track of hostage4");
-            hostage4 = NULL;
+            forgetHostage(hostage4);
         }
     }
 }
@@ -3652,6 +3694,8 @@ bool EntityIsVisible(edict_t *pEntity, Vector dest) {
 
 // Can see Edict?
 bool cBot::canSeeEntity(edict_t *pEntity) {
+    if (pEntity == NULL) return false;
+
     TraceResult tr;
     Vector start = pEdict->v.origin + pEdict->v.view_ofs;
     Vector vDest = pEntity->v.origin;
@@ -3695,30 +3739,53 @@ float cBot::getDistanceTo(Vector vDest) {
 bool cBot::isUsingHostage(edict_t *pHostage) {
     // checks if the current pEdict is already 'in use'
     // note: time check only when we have an hostage pointer assigned
-    if (hostage1 == pHostage)
+    if (hostage1 == pHostage) {
+        rprint("isUsingHostage", "hostage1");
         return true;
+    }
 
-    if (hostage2 == pHostage)
+    if (hostage2 == pHostage) {
+        rprint("isUsingHostage", "hostage2");
         return true;
+    }
 
-    if (hostage3 == pHostage)
+    if (hostage3 == pHostage) {
+        rprint("isUsingHostage", "hostage3");
         return true;
+    }
 
-    if (hostage4 == pHostage)
+    if (hostage4 == pHostage) {
+        rprint("isUsingHostage", "hostage4");
         return true;
+    }
 
     return false;
 }
 
 void cBot::forgetHostage(edict_t *pHostage) {
     // these are the hostages we are rescueing (ie, they are following this bot)
-    if (hostage1 == pHostage)  hostage1 = NULL;
-    if (hostage2 == pHostage)  hostage2 = NULL;
-    if (hostage3 == pHostage)  hostage3 = NULL;
-    if (hostage4 == pHostage)  hostage4 = NULL;
+    if (hostage1 == pHostage)  {
+        rprint("forgetHostage", "hostage1");
+        hostage1 = NULL;
+    }
+    if (hostage2 == pHostage)  {
+        rprint("forgetHostage", "hostage2");
+        hostage2 = NULL;
+    }
+    if (hostage3 == pHostage)  {
+        rprint("forgetHostage", "hostage3");
+        hostage3 = NULL;
+    }
+    if (hostage4 == pHostage)  {
+        rprint("forgetHostage", "hostage4");
+        hostage4 = NULL;
+    }
 
     // this is the hostage we have taken interest in
-    if (pBotHostage == pHostage)  pBotHostage = NULL;
+    if (pBotHostage == pHostage)  {
+        rprint("forgetHostage", "pBotHostage");
+        pBotHostage = NULL;
+    }
 }
 
 int cBot::getAmountOfHostagesBeingRescued() {
@@ -3965,8 +4032,12 @@ void cBot::increaseTimeToMoveToNode(float timeInSeconds) {
         rprint("increaseTimeToMoveToNode");
         this->fMoveToNodeTime += timeInSeconds;
     } else {
-        rprint("Refused to increase time, already gave 3 more tries");
+        rprint("Refused to increase time");
     }
+}
+
+float cBot::getMoveToNodeTimeRemaining() {
+    return gpGlobals->time - fMoveToNodeTime;
 }
 
 // $Log: bot.cpp,v $

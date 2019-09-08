@@ -1893,8 +1893,10 @@ void RealBot_ServerCommand(void) {
                     iTo = atoi(arg4);
 
                 if (iFrom > -1) {
-                    if (iTo < 0)
-                        iTo = NodeMachine.getRandomGoalByType(GOAL_SPAWNT);
+                    if (iTo < 0) {
+                        tGoal *ptr = NodeMachine.getRandomGoalByType(GOAL_SPAWNT);
+                        if (ptr) iTo = ptr->iNode;
+                    }
 
                     sprintf(cMessage, "RBDEBUG: Creating path from [%d] to [%d].", iFrom, iTo);
                     NodeMachine.createPath(iFrom, iTo, 0, NULL, PATH_DANGER);

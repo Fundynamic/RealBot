@@ -186,14 +186,14 @@ WaypointDrawBeam(edict_t *pEntity, Vector start, Vector end, int width,
     MESSAGE_END();
 }
 
-// Function takes care of near bot players, returns most 'closest in FOV' bot pointer
-cBot *search_near_players(cBot *pBot) {
-    // This function will look for players or bots near
-    // Any bot or player near will make the bot slow down, and sometimes even wait
-    // So bots don't interfere with their paths and dont mess up their learning
-
+/**
+ * Function takes care of near bot players, returns most 'closest in FOV' bot pointer
+ * @param pBot
+ * @return
+ */
+cBot *getNearbyBotInFOV(cBot *pBot) {
     edict_t *pEdict = pBot->pEdict;
-    cBot *TheBot = NULL;
+    cBot *closestBot = NULL;
 
     int iClosestAngle = 180;
 
@@ -220,17 +220,22 @@ cBot *search_near_players(cBot *pBot) {
                 cBot *pBotPointer = UTIL_GetBotPointer(pPlayer);
                 iClosestAngle = iAngle;
 
-                if (pBotPointer != NULL)
-                    TheBot = pBotPointer;    // set pointer
+                if (pBotPointer != NULL) {
+                    closestBot = pBotPointer;    // set pointer
+                }
             }
         }
     }
 
-    return TheBot;               // return result (either NULL or bot pointer)
+    return closestBot;               // return result (either NULL or bot pointer)
 }
 
-// Return TRUE of any players are near that could block him
-bool BOOL_search_near_players(cBot *pBot) {
+/**
+ * Return TRUE of any players are near that could block him
+ * @param pBot
+ * @return
+ */
+bool isAnyPlayerNearbyBotInFOV(cBot *pBot) {
     edict_t *pEdict = pBot->pEdict;
     int iClosestAngle = 180;
 
@@ -594,13 +599,13 @@ bool FUNC_IsOnLadder(edict_t *pEntity) {
 /**
  * Returns true when hostage is not marked as being rescued by any other alive bot.
  *
- * @param pBot
+ * @param pBotWhoIsAsking
  * @param pHostage
  * @return
  */
-bool isHostageFree(cBot *pBot, edict_t *pHostage) {
+bool isHostageFree(cBot *pBotWhoIsAsking, edict_t *pHostage) {
     if (pHostage == NULL) return false;
-    if (pBot == NULL) return false;
+    if (pBotWhoIsAsking == NULL) return false;
 
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
@@ -620,11 +625,13 @@ bool isHostageFree(cBot *pBot, edict_t *pHostage) {
         // Only check other bots (do not check self)
         cBot *botpointer = UTIL_GetBotPointer(pPlayer);
         if (botpointer && // a bot
-            (botpointer != pBot) && // not self
+            (botpointer != pBotWhoIsAsking) && // not self
             !botpointer->isDead()) { // not dead
 
             // other bot uses hostage, so hostage is not 'free'
             if (botpointer->isUsingHostage(pHostage)) {
+                pBotWhoIsAsking->rprint("Looks like the hostage is used by another one");
+                botpointer->rprint("I am using the hostage!");
                 return false;
             }
         }
@@ -661,7 +668,7 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
         pBot->forgetHostage(pHostage);
         return;
     } else {
-        pBot->rprint("Remembering hostage to rescue");
+        pBot->rprint("Remembering hostage (target) to rescue");
         pBot->rememberWhichHostageToRescue(pHostage);
     }
 
@@ -670,7 +677,7 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
 
     if (distanceToHostage < 80) {
         pBot->rprint("Getting really close to hostage now");
-        pBot->f_move_speed = 10.0;      // do not get to close ;)
+        pBot->f_move_speed = pBot->f_max_speed * 0.1;      // do not get to close ;)
     }
 
     // From here, we should get the hostage when still visible
@@ -721,13 +728,13 @@ bool isHostageRescued(cBot *pBot, edict_t *pHostage) {
 }
 
 bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {
-//    pBot->rprint("isHostageRescueable");
     if (pHostage == NULL) return false;
+//    pBot->rprint("isHostageRescueable");
 
     // Already rescued?
     if (isHostageRescued(pBot, pHostage)) return false;
     // dead
-    if (pHostage->v.health < 1) return false;
+    if (!FUNC_EdictIsAlive(pHostage)) return false;
     // Already moving? (used by human player?)
     if (FUNC_PlayerSpeed(pHostage) > 2) return false;
     // Already used by bot?
@@ -740,6 +747,11 @@ bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {
     if (!isHostageFree(pBot, pHostage)) return false;
     // yes we can rescue this hostage
     return true;
+}
+
+bool FUNC_EdictIsAlive(edict_t *pEdict) {
+    if (pEdict == NULL) return false;
+    return pEdict->v.health > 0;
 }
 
 // HostageNear()

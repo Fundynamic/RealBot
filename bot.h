@@ -30,7 +30,8 @@
 #ifndef BOT_H
 #define BOT_H
 
-//#pragma warning( disable : 4005 ) 
+//#pragma warning( disable : 4005 )
+#include "NodeDataTypes.h"
 
 // Weapon price table (filled by the INI PARSER)
 typedef struct {
@@ -153,6 +154,7 @@ typedef struct {
 class cBot {
 private:
     int iGoalNode;               // Goal Node #
+    int goalIndex;               // is a goal node is set, it might be related to a goal, if so it is set here
     int pathNodeIndex;           // Which node we want to move to, derived from Path
 
     // Hostages edict
@@ -483,6 +485,8 @@ public:
     edict_t * getEnemyEdict();
 
     bool hasGoal();
+    bool hasGoalIndex();
+    tGoal *getGoalData();
     bool shouldBeWandering();
     bool hasBomb();
 
@@ -499,7 +503,9 @@ public:
     void forgetGoal();
     void forgetPath();
     void forgetEnemy();
-    void setGoalNode(int value);
+    void setGoalNode(tGoal *goal);
+    void setGoalNode(int nodeIndex);
+    void setGoalNode(int nodeIndex, int iGoalIndex);
     int getGoalNode();
 
     // -------------------
@@ -531,6 +537,8 @@ public:
 
     void setTimeToMoveToNode(float timeInSeconds);
     void increaseTimeToMoveToNode(float timeInSeconds);
+
+    float getMoveToNodeTimeRemaining();
 };
 
 // new UTIL.CPP functions...

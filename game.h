@@ -27,6 +27,10 @@
   *
   **/
 
+#ifndef GAME_H
+#define GAME_H
+
+
 /**
   * GAME "handler" CLASS
   * COPYRIGHTED BY STEFAN HENDRIKS (C) 
@@ -135,3 +139,5 @@ private:
    bool bNewRound;              // New round triggered?
    float fRoundTime;            // Round time
 };
+
+#endif // GAME_H
