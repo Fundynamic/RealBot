@@ -79,7 +79,7 @@ public:
    void SetPlayingRounds(int iMin, int iMax);
    void SetNewRound(bool bState);
    void SetRoundTime(float fTime);
-   void DetermineIfHostageRescueMap();
+   void DetermineMapGoal();
 
    // ---------------------
    char *RandomSentence();

@@ -129,7 +129,7 @@ char *cGame::RandomSentence() {
     return cSpeechSentences[RANDOM_LONG(0, 15)];
 }
 
-void cGame::DetermineIfHostageRescueMap() {
+void cGame::DetermineMapGoal() {
     rblog("DetermineIfHostageRescueMap called\n");
     edict_t *pHostage = NULL;
 
@@ -386,7 +386,7 @@ void cGame::UpdateGameStatus() {
 
     // Every 3 seconds update the goals
     if (gpGlobals->time > (fUpdateGoalTimer + 3)) {
-        rblog("cGame::UpdateGameStatus - updateGoals\n");
+//        rblog("cGame::UpdateGameStatus - updateGoals\n");
         NodeMachine.updateGoals();
         fUpdateGoalTimer = gpGlobals->time;
     }

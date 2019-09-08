@@ -730,7 +730,7 @@ void StartFrame(void) {
     if (f_load_time < gpGlobals->time && f_load_time != 0.0) {
         f_load_time = 0.0;     // do not load again
         rblog("NEW MAP because time is reset #2\n");
-        Game.DetermineIfHostageRescueMap();
+        Game.DetermineMapGoal();
         NodeMachine.setUpInitialGoals();
     }
 
@@ -913,7 +913,7 @@ void StartFrame(void) {
         NodeMachine.scale_danger();    // Scale danger
         NodeMachine.scale_contact();   // same for contact
         rblog("StartFrame: Game new round\n");
-        Game.DetermineIfHostageRescueMap();
+        Game.DetermineMapGoal();
         Game.SetNewRound(false);
     }
 

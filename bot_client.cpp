@@ -888,7 +888,7 @@ void BotClient_CS_HLTV(void *p, int bot_index) {
             // New round started.
             Game.SetNewRound(true);
             Game.SetRoundTime(gpGlobals->time);
-            Game.DetermineIfHostageRescueMap();
+            Game.DetermineMapGoal();
         }
         state = 0;
     }
