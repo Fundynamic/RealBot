@@ -119,6 +119,7 @@ extern bool end_round;          // End round
 
 cBot::cBot() {
     pBotHostage = NULL;
+    fMoveToNodeTime = -1;
     clearHostages();
 }
 
@@ -161,7 +162,8 @@ void cBot::SpawnInit() {
     f_bot_see_enemy_time = gpGlobals->time;
     f_bot_find_enemy_time = gpGlobals->time;
     f_shoot_time = gpGlobals->time;
-    fMoveToNodeTime = gpGlobals->time;
+    fMoveToNodeTime = -1;
+    nodeTimeIncreasedAmount = 0;
     prev_time = gpGlobals->time;
     fBlindedTime = gpGlobals->time;
     f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.1, 0.9);
@@ -330,7 +332,8 @@ void cBot::NewRound() {
     f_bot_see_enemy_time = gpGlobals->time;
     f_bot_find_enemy_time = gpGlobals->time;
     f_shoot_time = gpGlobals->time;
-    fMoveToNodeTime = gpGlobals->time;
+    fMoveToNodeTime = -1;
+    nodeTimeIncreasedAmount = 0;
     prev_time = gpGlobals->time;
     fBlindedTime = gpGlobals->time;
     f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.1, 0.9);
@@ -472,6 +475,10 @@ void cBot::NewRound() {
             }
         }
     }
+
+    // find a hostage to rescue and set global hostageRescue flag
+    findHostageToRescue();
+    rprint("NewRound", "Initialization new round finished");
 }
 
 /******************************************************************************
@@ -1907,7 +1914,7 @@ void cBot::Act() {
     if (f_c4_time > gpGlobals->time) {
         // make sure we override this, or else we learn that we get stuck or something
         // which is not the case.
-        fMoveToNodeTime = gpGlobals->time + 2;
+        setTimeToMoveToNode(2);
 
         // terrorist
         if (isTerrorist()) {
@@ -2177,6 +2184,7 @@ void cBot::nextPathNodeIndex() {
  * Set the node to follow next as the previous one (ie, decrease index). Calls forgetPath when index is getting < 0
  */
 void cBot::prevPathNodeIndex() {
+    rprint("prevPathNodeIndex");
     this->pathNodeIndex--;
     if (this->pathNodeIndex < 0) {
         forgetPath();
@@ -2209,7 +2217,14 @@ bool cBot::hasEnemy(edict_t * pEdict) {
 
 // Returns true if bot has a path to follow
 bool cBot::shouldBeWandering() {
-    return this->fWanderTime > gpGlobals->time;
+    if (this->fWanderTime > gpGlobals->time) {
+        char msg[255];
+        memset(msg, 0, sizeof(msg));
+        sprintf(msg, "Wander time is %f , globals time is %f, so should still wander", this->fWanderTime, gpGlobals->time);
+        rprint(msg);
+        return true;
+    }
+    return false;
 }
 
 void cBot::setMoveSpeed(float value) {
@@ -2219,6 +2234,10 @@ void cBot::setMoveSpeed(float value) {
 void cBot::startWandering(float time) {
     this->fWanderTime = gpGlobals->time + time;
     setMoveSpeed(f_max_speed);
+    char msg[255];
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "Start wandering for %f seconds", time);
+    rprint("startWandering", msg);
 }
 
 void cBot::stopMoving() {
@@ -2226,7 +2245,7 @@ void cBot::stopMoving() {
 }
 
 void cBot::forgetGoal() {
-    rprint("ForgetGoal");
+    rprint("forgetGoal");
     this->iGoalNode = -1;
 }
 
@@ -2239,6 +2258,7 @@ int cBot::getPreviousPathNodeIndex() {
 }
 
 void cBot::forgetPath() {
+    rprint("forgetPath");
     this->pathNodeIndex = -1;
     NodeMachine.path_clear(this->iBotIndex);
 }
@@ -2260,7 +2280,7 @@ void cBot::setGoalNode(int value) {
         rprint("setGoalNode()", "WARN: Setting a goal lower than 0, assuming this is not intentional. If you need to forget a goal, use forgetGoal()");
     }
     this->iGoalNode = value;
-    tNode *node = NodeMachine.getNode(this->iGoalNode);
+//    tNode *node = NodeMachine.getNode(this->iGoalNode);
 
     char msg[255];
     sprintf(msg, "Setting iGoalNode to %d", value);
@@ -2846,14 +2866,13 @@ edict_t * cBot::getHostageToRescue() {
 }
 
 edict_t * cBot::findHostageToRescue() {
-    rprint("findHostageToRescue");
     edict_t *pHostage = NULL;
 
     // Search for all hostages in the game
     while ((pHostage = UTIL_FindEntityByClassname(pHostage, "hostage_entity")) != NULL) {
-        Game.bHostageRescueMap = true; // HACK HACK
         if (!isHostageRescueable(this, pHostage)) continue;
         if (!canSeeEntity(pHostage)) continue;
+        if (getDistanceTo(pHostage->v.origin) > (NODE_ZONE*1.5)) continue; // skip too far hostages
 
         this->rprint("HostageNear()", "I have found a new hostage target");
         return pHostage;
@@ -2862,6 +2881,9 @@ edict_t * cBot::findHostageToRescue() {
     return NULL;
 }
 
+bool cBot::hasTimeToMoveToNode() {
+    return fMoveToNodeTime > -1 && fMoveToNodeTime > gpGlobals->time;
+}
 /**
 This function will set the iCloseNode variable, which is the node most closest to
 the bot. Returns the closest node it found.
@@ -3144,7 +3166,7 @@ void cBot::Think() {
     if (f_freeze_time > gpGlobals->time) {
         f_move_speed = 0.0;
         lastSeenEnemyVector = Vector(0, 0, 0);
-        fMoveToNodeTime = gpGlobals->time + 2;
+        setTimeToMoveToNode(2);
         vHead = vBody = pEdict->v.origin;
 
         // find any spawnpoint to look at:
@@ -3254,8 +3276,37 @@ bool cBot::isEscortingHostages() {
     bool result = getAmountOfHostagesBeingRescued() > 0;
     if (result) {
         rprint("I am guiding hostage(s)");
+        checkOfHostagesStillFollowMe();
     }
     return result;
+}
+
+void cBot::checkOfHostagesStillFollowMe() {
+    rprint("checkOfHostagesStillFollowMe");
+    if (hostage1) {
+        if (!canSeeEntity(hostage1)) {
+            rprint("lost track of hostage1");
+            hostage1 = NULL;
+        }
+    }
+    if (hostage2) {
+        if (!canSeeEntity(hostage2)) {
+            rprint("lost track of hostage2");
+            hostage2 = NULL;
+        }
+    }
+    if (hostage3) {
+        if (!canSeeEntity(hostage3)) {
+            rprint("lost track of hostage3");
+            hostage3 = NULL;
+        }
+    }
+    if (hostage4) {
+        if (!canSeeEntity(hostage4)) {
+            rprint("lost track of hostage4");
+            hostage4 = NULL;
+        }
+    }
 }
 
 void cBot::clearHostages() {
@@ -3812,10 +3863,10 @@ void cBot::rememberHostageIsFollowingMe(edict_t *pHostage) {
 }
 
 void cBot::checkIfHostagesAreRescued() {
-    if (isHostageRescued(hostage1))  forgetHostage(hostage1);
-    if (isHostageRescued(hostage2))  forgetHostage(hostage2);
-    if (isHostageRescued(hostage3))  forgetHostage(hostage3);
-    if (isHostageRescued(hostage4))  forgetHostage(hostage4);
+    if (isHostageRescued(this, hostage1))  forgetHostage(hostage1);
+    if (isHostageRescued(this, hostage2))  forgetHostage(hostage2);
+    if (isHostageRescued(this, hostage3))  forgetHostage(hostage3);
+    if (isHostageRescued(this, hostage4))  forgetHostage(hostage4);
 }
 
 bool cBot::isOnSameTeamAs(cBot *pBot) {
@@ -3836,6 +3887,86 @@ bool cBot::wantsToBuyStuff() {
 
 bool cBot::isUsingConsole() {
     return console_nr > 0;
+}
+
+bool cBot::shouldBeAbleToMove() {
+    return f_freeze_time + 3 < gpGlobals->time
+        && f_stuck_time < gpGlobals->time
+        && f_camp_time < gpGlobals->time
+        && f_wait_time < gpGlobals->time
+        && f_c4_time < gpGlobals->time
+        && f_jump_time + 1 < gpGlobals->time;
+}
+
+edict_t *cBot::getEntityBetweenMeAndNextNode() {
+    TraceResult tr;
+    Vector vOrigin = pEdict->v.origin;
+
+    tNode *node = NodeMachine.getNode(getCurrentPathNodeToHeadFor());
+
+    //Using TraceHull to detect de_aztec bridge and other entities.
+    //DONT_IGNORE_MONSTERS, we reached it only when there are no other bots standing in our way!
+    //UTIL_TraceHull(vOrigin, vNode, dont_ignore_monsters, point_hull, pBot->pEdict, &tr);
+    //UTIL_TraceHull(vOrigin, vNode, dont_ignore_monsters, human_hull, pBot->pEdict, &tr);
+    UTIL_TraceHull(vOrigin, node->origin, dont_ignore_monsters, head_hull, pEdict, &tr);
+
+    // if nothing hit:
+    if (tr.flFraction < 1.0) {
+        if (tr.pHit)
+            return tr.pHit;
+    }
+
+    return NULL;
+}
+
+/**
+ * Get distance to the next node we're heading for
+ * @return
+ */
+float cBot::getDistanceToNextNode() {
+    tNode *node = NodeMachine.getNode(getCurrentPathNodeToHeadFor());
+    return getDistanceTo(node->origin);
+}
+
+void cBot::setBodyToNode(int nodeIndex) {
+    tNode *node = NodeMachine.getNode(nodeIndex);
+    if (node) {
+        vBody = node->origin;
+    }
+}
+
+void cBot::lookAtNode(int nodeIndex) {
+    tNode *node = NodeMachine.getNode(nodeIndex);
+    if (node) {
+        vHead = node->origin;
+    }
+}
+
+/**
+ * Sets timer to allow movement to node, when timer expires we will think about severing the connection
+ * we used.
+ * @param timeInSeconds
+ */
+void cBot::setTimeToMoveToNode(float timeInSeconds) {
+    this->nodeTimeIncreasedAmount = 0;
+    this->fMoveToNodeTime = (gpGlobals->time + timeInSeconds);
+}
+
+/**
+ * Whatever was set, increase the time given in function param. This expands the time a bit.
+ * @param timeInSeconds
+ */
+void cBot::increaseTimeToMoveToNode(float timeInSeconds) {
+    if (nodeTimeIncreasedAmount < 2) {
+        nodeTimeIncreasedAmount++;
+        char msg[255];
+        memset(msg, 0, sizeof(msg));
+        sprintf(msg, "increaseTimeToMoveToNode with %f for the %d time", timeInSeconds, nodeTimeIncreasedAmount);
+        rprint("increaseTimeToMoveToNode");
+        this->fMoveToNodeTime += timeInSeconds;
+    } else {
+        rprint("Refused to increase time, already gave 3 more tries");
+    }
 }
 
 // $Log: bot.cpp,v $

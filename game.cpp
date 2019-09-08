@@ -114,9 +114,33 @@ void cGame::Init() {
 
 }                               // Init()
 
+/**
+ * If the c4 is dropped (not planted), then return true.
+ * @return
+ */
+bool cGame::isC4Dropped() {
+    return vDroppedC4 != Vector(9999, 9999, 9999);
+}
+
 // Returns random sentence for speech
 char *cGame::RandomSentence() {
     return cSpeechSentences[RANDOM_LONG(0, 15)];
+}
+
+void cGame::DetermineIfHostageRescueMap() {
+    rblog("DetermineIfHostageRescueMap called\n");
+    edict_t *pHostage = NULL;
+
+    int hostagesFound = 0;
+    while ((pHostage = UTIL_FindEntityByClassname(pHostage, "hostage_entity")) != NULL) {
+        hostagesFound++;
+    }
+
+    char msg[255];
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "DetermineIfHostageRescueMap: There are %d hostages found to rescue\n", hostagesFound);
+    rblog(msg);
+    Game.bHostageRescueMap = hostagesFound > 0;
 }
 
 // GAME: Set round time
@@ -551,6 +575,8 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     // Parsing name into bot identity
     INI_PARSE_BOTS(botName, pBot);
 
+    pBot->findHostageToRescue();
+
     // return success
     return GAME_MSG_SUCCESS;
 }                               // CreateBot()
@@ -588,7 +614,7 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
 
     // print in console only when on debug print
     if (Game.bDebug) {
-        SERVER_PRINT(cMessage);
+//        SERVER_PRINT(cMessage);
         rblog(cMessage);
     }
 }  // REALBOT_PRINT()

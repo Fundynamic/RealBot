@@ -76,7 +76,7 @@ void FUNC_CheckForBombPlanted();
 int FUNC_GiveHostage(cBot * pBot);                      // gives any hostage we still have to go for
 
 bool isHostageRescueable(cBot *pBot, edict_t *pHostage);
-bool isHostageRescued(edict_t *pHostage);
+bool isHostageRescued(cBot *pBot, edict_t *pHostage);
 bool isHostageFree(cBot * pBot, edict_t * pHostage);   // is this hostage not used by any other bot?
 
 void FUNC_RemoveHostage(cBot * pBot, edict_t * pEdict); // remove hostage from memory

@@ -75,6 +75,7 @@ public:
    void SetPlayingRounds(int iMin, int iMax);
    void SetNewRound(bool bState);
    void SetRoundTime(float fTime);
+   void DetermineIfHostageRescueMap();
 
    // ---------------------
    char *RandomSentence();
@@ -91,6 +92,7 @@ public:
 
    // ---------------------
    void UpdateGameStatus();     // Updates global game variables
+   bool isC4Dropped();
 
    // ---------------------
    // public variables

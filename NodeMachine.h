@@ -207,7 +207,7 @@ public:
 
     bool remove_neighbour_nodes(int iNode);
 
-    int neighbour_node(tNode Node);
+    int freeNeighbourNodeIndex(tNode *Node);
 
     int is_neighbour_node(tNode node, int iNode);
 

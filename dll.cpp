@@ -396,6 +396,7 @@ int Spawn(edict_t *pent) {
             prev_num_bots = num_bots;
             num_bots = 0;
             bot_check_time = gpGlobals->time + 30.0;
+            rblog("SPAWN : f_load_time is set\n");
             f_load_time = gpGlobals->time + 6;
 
             // Node machine loads
@@ -593,6 +594,7 @@ void StartFrame(void) {
     // with the current time. If the current time somehow was less (before) the previous time, then we
     // assume a reset/restart/reload of a map.
     if ((gpGlobals->time + 0.1) < previous_time) {
+        rblog("NEW MAP because time is reset #1\n");
         check_server_cmd = 0.0;        // reset at start of map
 
         count = 0;
@@ -727,11 +729,14 @@ void StartFrame(void) {
     // a few seconds after map load we assign goals
     if (f_load_time < gpGlobals->time && f_load_time != 0.0) {
         f_load_time = 0.0;     // do not load again
+        rblog("NEW MAP because time is reset #2\n");
+        Game.DetermineIfHostageRescueMap();
         NodeMachine.goals();
     }
 
     // Fix kill all with new round
     if (Game.NewRound()) {
+        rblog("NEW ROUND because game.NewRound() is true\n");
         // Send a message to clients about RealBot every round
         if (Game.iVersionBroadcasting == BROADCAST_ROUND) {
             welcome_sent = false;
@@ -748,10 +753,6 @@ void StartFrame(void) {
         Game.vDroppedC4 = Vector(9999, 9999, 9999);
 
         end_round = false;
-
-        // Hackish way to update state if this is a hostage rescue map
-        edict_t *pHostage = NULL;
-        Game.bHostageRescueMap = UTIL_FindEntityByClassname(pHostage, "hostage_entity") != NULL;
     } // new round - before any bots realized yet
 
     // When min players is set
@@ -888,7 +889,6 @@ void StartFrame(void) {
         }
     }
 
-
     if (draw_connodes) {
         for (player_index = 1; player_index <= gpGlobals->maxClients;
              player_index++) {
@@ -912,6 +912,8 @@ void StartFrame(void) {
     if (Game.NewRound()) {
         NodeMachine.scale_danger();    // Scale danger
         NodeMachine.scale_contact();   // same for contact
+        rblog("StartFrame: Game new round\n");
+        Game.DetermineIfHostageRescueMap();
         Game.SetNewRound(false);
     }
 

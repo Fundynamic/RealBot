@@ -41,8 +41,6 @@
 #include "NodeMachine.h"
 
 extern cBot bots[32];
-extern edict_t *listenserver_edict;
-extern bool bombplanted;
 extern int mod_id;
 
 extern int m_spriteTexture;
@@ -54,7 +52,6 @@ extern FILE *fpRblog;
 extern cNodeMachine NodeMachine;
 
 // For taking cover decision
-
 #define TOTAL_SCORE 16300       // 16000 money + 100 health + 100 fear + 100 camp desire
 
 bool
@@ -644,16 +641,16 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
     edict_t *pHostage = NULL;
 
     if (pBot->hasHostageToRescue()) {
-        pBot->rprint("Has hostage to rescue");
+//        pBot->rprint("Has hostage to rescue");
         pHostage = pBot->getHostageToRescue();
     } else {
-        pBot->rprint("No hostage to rescue, finding one");
+//        pBot->rprint("No hostage to rescue, finding one");
         pHostage = pBot->findHostageToRescue();
     }
 
     if (pHostage == NULL) {
-        pBot->rprint("No hostage found to rescue");
-        return; // nothing to do
+        // Note: this means a hostage that is near and visible and rescueable etc.
+        return; // nothing to do yet
     }
 
     // Whenever we have a hostage to go after
@@ -712,33 +709,33 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
     }
 }
 
-bool isHostageRescued(edict_t *pHostage) {
+bool isHostageRescued(cBot *pBot, edict_t *pHostage) {
     if (pHostage == NULL) return false;
-//    char msg[255];
-//    memset(msg, 0, sizeof(msg));
-//    sprintf(msg, "v.name = %s v.effects for hostage is [%hhx]", pHostage->v.classname, pHostage->v.effects);
-//    REALBOT_PRINT("isHostageRescued()", msg);
 
     if (FBitSet(pHostage->v.effects, EF_NODRAW)) {
-        REALBOT_PRINT("isHostageRescued()", "Hostage is rescued");
+//        pBot->rprint("isHostageRescued()", "Hostage is rescued");
         return true;
     }
-    REALBOT_PRINT("isHostageRescued()", "Hostage is NOT rescued");
+//    pBot->rprint("isHostageRescued()", "Hostage is NOT rescued");
     return false;
 }
 
 bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {
-    pBot->rprint("isHostageRescueable");
+//    pBot->rprint("isHostageRescueable");
     if (pHostage == NULL) return false;
 
     // Already rescued?
-    if (isHostageRescued(pHostage)) return false;
+    if (isHostageRescued(pBot, pHostage)) return false;
     // dead
     if (pHostage->v.health < 1) return false;
     // Already moving? (used by human player?)
     if (FUNC_PlayerSpeed(pHostage) > 2) return false;
-    // Already used by this bot?
-    if (pBot->isUsingHostage(pHostage)) return false;
+    // Already used by bot?
+
+    if (pBot != NULL) {
+        if (pBot->isUsingHostage(pHostage)) return false;
+    }
+
     // Is the hostage not used by *any other* bot?
     if (!isHostageFree(pBot, pHostage)) return false;
     // yes we can rescue this hostage

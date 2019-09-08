@@ -89,10 +89,12 @@ edict_t *pfnFindEntityByString(edict_t * pEdictStartSearchAfter,
 
    // Counter-Strike - New Round Started
    if (strcmp(pszValue, "info_map_parameters") == 0) {
+       rblog("pfnFindEntityByString: Game new round\n");
 
       // New round started.
       Game.SetNewRound(true);
       Game.SetRoundTime(gpGlobals->time);
+      Game.DetermineIfHostageRescueMap();
    }
 
    if (Game.bEngineDebug)

@@ -164,6 +164,9 @@ private:
 
     edict_t *pEnemyEdict;        // Enemy edict
 
+    float fMoveToNodeTime;       // How long we should take to move to next node.
+    int nodeTimeIncreasedAmount; // how many times did we increase the time to reach node?
+
 public:
     // Constructor
     cBot();
@@ -178,6 +181,9 @@ public:
     edict_t * findHostageToRescue();         // finds a hostage to rescue
     edict_t * getHostageToRescue();          // returns hostage state pointer
     bool isEscortingHostages();            // Does the bot has used any hostages yet?
+    void checkOfHostagesStillFollowMe();
+
+    bool hasTimeToMoveToNode();
 
     // ------------------------
     // TIMERS
@@ -225,7 +231,6 @@ public:
     float f_shoot_time;          // Shoot time.
 
     float f_light_time;          // light timer
-    float fMoveToNodeTime;       // How long we should take to move to next node.
 
     float fKickTime;
     float fCreateTime;
@@ -513,6 +518,19 @@ public:
     void checkIfHostagesAreRescued();
 
     bool isOnSameTeamAs(cBot *pBot);
+
+    bool shouldBeAbleToMove();
+
+    edict_t *getEntityBetweenMeAndNextNode();
+
+    float getDistanceToNextNode();
+
+    void setBodyToNode(int nodeIndex);
+
+    void lookAtNode(int nodeIndex);
+
+    void setTimeToMoveToNode(float timeInSeconds);
+    void increaseTimeToMoveToNode(float timeInSeconds);
 };
 
 // new UTIL.CPP functions...
