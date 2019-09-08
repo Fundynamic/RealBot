@@ -1312,6 +1312,7 @@ void cBot::FindCover() {
         pathNodeIndex = -1;
 
         // Calculate a path to this position and get the heck there.
+        rprint("createPath -> find cover node #2");
         NodeMachine.createPath(iNodeFrom, iCoverNode, iBotIndex, this, PATH_NONE);
         f_cover_time = gpGlobals->time + 8;
         bTakenCover = true;
@@ -1326,8 +1327,8 @@ void cBot::FindCover() {
                 pathNodeIndex = -1;
 
                 // Calculate a path to this position and get the heck there.
-                NodeMachine.createPath(iNodeFrom, iNodeCover, iBotIndex, this,
-                                       PATH_NONE);
+                rprint("createPath -> find cover node");
+                NodeMachine.createPath(iNodeFrom, iNodeCover, iBotIndex, this, PATH_NONE);
                 f_cover_time = gpGlobals->time + 8;
                 bTakenCover = true;
             }
@@ -3321,41 +3322,53 @@ void cBot::Think() {
 Return true if one of the pointers is not NULL
 **/
 bool cBot::isEscortingHostages() {
-    return getAmountOfHostagesBeingRescued() > 0;
+    bool result = getAmountOfHostagesBeingRescued() > 0;
+    if (result) {
+        rprint("I am escorting hostages!");
+    }
+    return result;
 }
 
 void cBot::checkOfHostagesStillFollowMe() {
+//    this->rprint("checkOfHostagesStillFollowMe - START");
     if (hostage1) {
-        if (isHostageRescueable(this, hostage1) && !canSeeEntity(hostage1)) {
+        if (!isHostageRescued(this, hostage1) && FUNC_EdictIsAlive(hostage1) && !canSeeEntity(hostage1)) {
             rprint("lost track of hostage1");
             forgetHostage(hostage1);
         }
     }
     if (hostage2) {
-        if (isHostageRescueable(this, hostage2) && !canSeeEntity(hostage2)) {
+        if (!isHostageRescued(this, hostage2) && FUNC_EdictIsAlive(hostage2) && !canSeeEntity(hostage2)) {
             rprint("lost track of hostage2");
             forgetHostage(hostage2);
         }
     }
     if (hostage3) {
-        if (isHostageRescueable(this, hostage3) && !canSeeEntity(hostage3)) {
+        if (!isHostageRescued(this, hostage3) && FUNC_EdictIsAlive(hostage3) && !canSeeEntity(hostage3)) {
             rprint("lost track of hostage3");
             forgetHostage(hostage3);
         }
     }
     if (isHostageRescueable(this, hostage4) && hostage4) {
-        if (!canSeeEntity(hostage4)) {
+        if (!isHostageRescued(this, hostage4) && FUNC_EdictIsAlive(hostage4) && !canSeeEntity(hostage4)) {
             rprint("lost track of hostage4");
             forgetHostage(hostage4);
         }
     }
+//    rprint("checkOfHostagesStillFollowMe - END");
 }
 
 void cBot::clearHostages() {
+//    rprint("clearHostages");
+//    forgetHostage(hostage1);
+//    forgetHostage(hostage2);
+//    forgetHostage(hostage3);
+//    forgetHostage(hostage4);
     hostage1 = NULL;
     hostage2 = NULL;
     hostage3 = NULL;
     hostage4 = NULL;
+    pBotHostage = NULL;
 }
 
 // BOT: CheckGear, part of UpdateStatus()
@@ -3992,7 +4005,10 @@ edict_t *cBot::getEntityBetweenMeAndNextNode() {
  */
 float cBot::getDistanceToNextNode() {
     tNode *node = NodeMachine.getNode(getCurrentPathNodeToHeadFor());
-    return getDistanceTo(node->origin);
+    if (node) {
+        return getDistanceTo(node->origin);
+    }
+    return MAP_MAX_SIZE;
 }
 
 void cBot::setBodyToNode(int nodeIndex) {

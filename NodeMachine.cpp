@@ -553,7 +553,8 @@ int cNodeMachine::freeNeighbourNodeIndex(tNode *Node) {
 
 // Return the node id from bot path on Index NR
 int cNodeMachine::getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex) {
-    if (botIndex > -1 && pathNodeIndex > -1 && pathNodeIndex < MAX_PATH_NODES) {
+    if (botIndex > -1 && botIndex < MAX_BOTS &&
+        pathNodeIndex > -1 && pathNodeIndex < MAX_PATH_NODES) {
         return iPath[botIndex][pathNodeIndex];
     }
 
@@ -1698,7 +1699,7 @@ void cNodeMachine::danger(int iNode, int iTeam) {
 }
 
 // Adds a new goal to the array
-void cNodeMachine::addGoal(edict_t *pEdict, int iType, Vector vVec) {
+void cNodeMachine::addGoal(edict_t *pEdict, int goalType, Vector vVec) {
     //
     // 14/06/04
     // Be carefull with adding SERVER_PRINT messages here
@@ -1717,6 +1718,9 @@ void cNodeMachine::addGoal(edict_t *pEdict, int iType, Vector vVec) {
     }
 
     int distance = NODE_ZONE * 2;
+    if (goalType == GOAL_HOSTAGE) {
+        distance = NODE_ZONE * 0.8;
+    }
     int nNode = getCloseNode(vVec, distance, pEdict);
 
     if (nNode < 0) {
@@ -1729,10 +1733,14 @@ void cNodeMachine::addGoal(edict_t *pEdict, int iType, Vector vVec) {
     }
 
     tGoal *goal = getGoal(index);
+    if (goal == NULL) {
+        rblog("No valid goal index found - bailing\n");
+        return;
+    }
     goal->iNode = nNode;
     goal->index = index;
     goal->pGoalEdict = pEdict;
-    goal->iType = iType;
+    goal->iType = goalType;
     strcpy(goal->name, getGoalTypeAsText(*goal));
 
     char msg[255];
@@ -1746,6 +1754,9 @@ tGoal *cNodeMachine::getGoal(int index) {
         rblog("ERROR: Asking to retrieve goal with invalid index! Returning goal NULL\n");
         return NULL;
     }
+//    char msg[255];
+//    sprintf(msg, "Getting goal by index [%d]\n", index);
+//    rblog(msg);
     return &Goals[index];
 }
 
@@ -1805,7 +1816,7 @@ int cNodeMachine::getGoalIndexFromNode(int iNode) {
 void cNodeMachine::updateGoals() {
     for (int i = 0; i < MAX_GOALS; i++) {
         tGoal *goal = getGoal(i);
-        if (goal == NULL) continue;
+        if (goal == NULL || goal->iNode < 0) continue;
 
         if (goal->iType == GOAL_HOSTAGE) {
             initGoal(i);
@@ -1822,7 +1833,7 @@ void cNodeMachine::updateGoals() {
             continue; // skip dead or already rescued hostages
         }
 
-        addGoal(pent, GOAL_HOSTAGE, pent->v.origin);
+        addGoal(pent, GOAL_HOSTAGE, pent->v.origin+ Vector(0,0,32));
     }
 }
 
@@ -1882,7 +1893,7 @@ void cNodeMachine::setUpInitialGoals() {
 
     // GOAL #5 - Hostages (this is the 'starting' position):
     while ((pent = UTIL_FindEntityByClassname(pent, "hostage_entity")) != NULL) {
-        addGoal(pent, GOAL_HOSTAGE, pent->v.origin);
+        addGoal(pent, GOAL_HOSTAGE, pent->v.origin + Vector(0,0,32));
     }
 
     // GOAL  #6 - VIP (this is the 'starting' position) (EVY)
@@ -2124,7 +2135,12 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
     // PATHFINDER: End
 
     // RESULT: Success
-    if (!succes) return false;
+    if (!succes) {
+        if (pBot) {
+            pBot->rprint("createPath", "Failed to create path");
+        }
+        return false;
+    }
     // Build path (from goal to start, read out parent waypoint to backtrace)
     int temp_path[MAX_PATH_NODES];
 
@@ -2191,17 +2207,21 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
         path_index++;
     }
 
-    if (pBot != NULL) {
-        pBot->beginWalkingPath();
-    }
-
     // Finally there is the goal
     iPath[botIndex][path_index] = nodeTargetIndex;
-    path_index++;
-    iPath[botIndex][path_index] = -1;     // terminate path
 
-    // set timer (how much time do we allow ourselves to reach the following node)
-    pBot->setTimeToMoveToNode(2);
+    // terminate path
+    path_index++;
+    iPath[botIndex][path_index] = -1;
+
+    // And set bot in motion
+    if (pBot != NULL) {
+        pBot->beginWalkingPath();
+        pBot->setTimeToMoveToNode(2); // set timer (how much time do we allow ourselves to reach the following node)
+        pBot->rprint("createPath", "path creation finished");
+    } else {
+        rblog("createPath (without bot) - path creation finished\n");
+    }
 
     return true; // path found
 }
@@ -2367,21 +2387,26 @@ int cNodeMachine::node_look_camp(Vector vOrigin, int iTeam,
 
 // Walk the path Neo
 void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
+    pBot->rprint("cNodeMachine::path_walk", "START");
     int BotIndex = pBot->iBotIndex;
 
     // Check if path is valid
     if (iPath[BotIndex][0] < 0) {
+        pBot->rprint("cNodeMachine::path_walk", "invalid path");
         pBot->f_move_speed = 0.0; // do not move
         return;                   // back out
     }
 
     // If we should wait, we do nothing here
-    if (pBot->f_wait_time > gpGlobals->time)
+    if (pBot->f_wait_time > gpGlobals->time) {
+        pBot->rprint("cNodeMachine::path_walk", "wait time");
         return;
+    }
 
     pBot->f_move_speed = pBot->f_max_speed;
 
     // Walk the path
+    pBot->rprint("cNodeMachine::path_walk", "determine current path node to head for");
     int currentNodeToHeadFor = pBot->getCurrentPathNodeToHeadFor();        // Node we are heading for
 
     if (currentNodeToHeadFor < 0) {
@@ -2399,7 +2424,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
     // when pButtonEdict is filled in, we check if we are close!
     if (pBot->pButtonEdict) {
-        REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Interacting with button logic");
+        pBot->rprint("cNodeMachine::path_walk", "Interacting with button logic");
         Vector vButtonVector = VecBModelOrigin(pBot->pButtonEdict);
 
         float fDistance = 90;
@@ -2460,12 +2485,17 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
         }
     }
 
+    pBot->rprint("cNodeMachine::path_walk", "before getNextPathNode");
     int nextNodeToHeadFor = pBot->getNextPathNode();              // the node we will head for after reaching currentNode
 
-    edict_t *pEntityHit = pBot->getEntityBetweenMeAndNextNode();
+    if (currentNodeToHeadFor < 0) {
+        pBot->rprint("cNodeMachine::path_walk", "currentNodeToHeadFor < 0 - so bail");
+        return;
+    }
 
-    if (pBot->f_strafe_time < gpGlobals->time)
+    if (pBot->f_strafe_time < gpGlobals->time && currentNodeToHeadFor > -1) {
         pBot->vBody = Nodes[currentNodeToHeadFor].origin;
+    }
 
     // Overwrite vBody when we are 'very close' to the bomb.
     // FIXED: Terrorists only
@@ -2501,23 +2531,30 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
             pBot->f_hold_duck = gpGlobals->time + 0.2;
         }
 
-        if (pBot->getDistanceToNextNode() < 25) {
-            bNearNode = true;
-        }
+        bNearNode = pBot->getDistanceToNextNode() < 25;
+
     } else {
+
+        pBot->rprint("cNodeMachine::path_walk", "not on ladder");
         float requiredDistance = NODE_ZONE;
 
         if (Nodes[currentNodeToHeadFor].iNodeBits & BIT_LADDER) {
+            pBot->rprint("cNodeMachine::path_walk", "going to ladder");
             // Going to a ladder waypoint
             requiredDistance = 25;
         } else {
+            pBot->rprint("cNodeMachine::path_walk", "not going to ladder");
+
             if (pBot->isHeadingForGoalNode()) {
+                pBot->rprint("cNodeMachine::path_walk", "is heading for goal node");
+
                 tGoal *goalData = pBot->getGoalData();
-                if (goalData->iType == GOAL_HOSTAGE) {
+                if (goalData && goalData->iType == GOAL_HOSTAGE) {
                     pBot->rprint("bNear", "next node is destination and GOAL_HOSTAGE, so need to get really close");
                     requiredDistance = 25; // get really close to hostage
                 }
             }
+            pBot->rprint("cNodeMachine::path_walk", "not going to ladder - end");
         }
 
         bNearNode = pBot->getDistanceToNextNode() < requiredDistance;
@@ -2529,9 +2566,8 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
         }
     }
 
-    currentNodeToHeadFor = pBot->getCurrentPathNodeToHeadFor();
     bool shouldDrawWaypointBeamsFromBot = false;
-    if (currentNodeToHeadFor > -1 && shouldDrawWaypointBeamsFromBot) {
+    if (shouldDrawWaypointBeamsFromBot) {
         tNode *nodeHeadingFor = this->getNode(currentNodeToHeadFor);
 
         int player_index = 0;
@@ -2670,6 +2706,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                     } else if (iGoalType == GOAL_IMPORTANT) {
 
                     } else if (iGoalType == GOAL_RESCUEZONE) {
+                        pBot->rprint("Arrived at goal rescue zone, forgetting hostages");
                         pBot->clearHostages(); // clear hostages
                     }
                 }
@@ -2707,6 +2744,9 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
         pBot->iJumpTries = 0;
         pBot->rprint("not stuck for more than 2 seconds so reset jump and duck tries");
     }
+
+    pBot->rprint("cNodeMachine::path_walk", "before getEntityBetweenMeAndNextNode");
+    edict_t *pEntityHit = pBot->getEntityBetweenMeAndNextNode();
 
     // When blocked by an entity, we should figure out why:
     if (pEntityHit && // we are blocked by an entity
@@ -2904,8 +2944,8 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                         // when valid...
                         if (iCurrentNode > -1) {
                             pBot->forgetPath();
-                            createPath(iCurrentNode, iButtonNode, pBot->iBotIndex, pBot,
-                                       PATH_NONE);
+                            pBot->rprint("createPath -> for button");
+                            createPath(iCurrentNode, iButtonNode, pBot->iBotIndex, pBot, PATH_NONE);
                             pBot->pButtonEdict = pButtonEdict;
                             return;
                         }
@@ -3095,6 +3135,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
 // Think about path creation here
 void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
+    pBot->rprint("cNodeMachine::path_think", "START");
     if (pBot->shouldBeWandering()) {
         int currentNode = -1;
         for (int attempts = 1; attempts < 5; attempts++) {
@@ -3110,7 +3151,9 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     }
 
     // Heading for hostage (directly) so do not do things with paths
+    pBot->rprint("cNodeMachine::path_think", "hasHostageToRescue");
     if (pBot->hasHostageToRescue()) {
+        pBot->rprint("cNodeMachine::path_think", "canSeeHostageToRescue");
         if (pBot->canSeeHostageToRescue()) {
             pBot->rprint("cNodeMachine::path_think", "has hostage and can see hostage, will not do anything");
             return; // bot has hostage, can see hostage
@@ -3120,6 +3163,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     }
 
     if (pBot->f_c4_time > gpGlobals->time) {
+        pBot->rprint("cNodeMachine::path_think", "c4 time");
         //???
         REALBOT_PRINT(pBot, "cNodeMachine::path_think", "Not allowed to think , c4 is planted");
         return;
@@ -3127,9 +3171,11 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 
     // When camping we do not think about paths, we think where to look at
     if (pBot->f_camp_time > gpGlobals->time) {
+        pBot->rprint("cNodeMachine::path_think", "camp time");
         if (!pBot->hasGoal()) {
             pBot->rprint("Setting goal to look for camping");
-            pBot->setGoalNode(node_look_camp(pBot->pEdict->v.origin, UTIL_GetTeam(pBot->pEdict), pBot->pEdict));
+            int noteToLookAt = node_look_camp(pBot->pEdict->v.origin, UTIL_GetTeam(pBot->pEdict), pBot->pEdict);
+            pBot->setGoalNode(noteToLookAt);
         }
         REALBOT_PRINT(pBot, "cNodeMachine::path_think", "Camping!");
         return;
@@ -3138,6 +3184,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     int BotIndex = pBot->iBotIndex;
 
     if (pBot->isWalkingPath()) {
+        pBot->rprint("cNodeMachine::path_think", "isWalkingPath");
         path_walk(pBot, moved_distance);  // walk the path
         return;
     }
@@ -3148,6 +3195,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 //        return;
 //    }
 
+    pBot->rprint("cNodeMachine::path_think", "before stopMoving");
     // No path
     pBot->stopMoving();
 
@@ -3172,6 +3220,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         }
 
         // Finally create a path
+        pBot->rprint("createPath -> bot has goal");
         createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
 
         if (pBot->getPathNodeIndex()) {
@@ -3184,8 +3233,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     }
 
     // There is no goal
-
-    REALBOT_PRINT(pBot, "cNodeMachine::path_think", "No goal yet\n");
+    pBot->rprint("cNodeMachine::path_think", "No goal yet");
 
     // Depending on team we have a goal
     int iCurrentNode = pBot->determineCurrentNodeWithTwoAttempts();
@@ -3295,8 +3343,9 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
                 float goalscore = 0.0;
                 if (pBot->isCounterTerrorist()) {
                     if (pBot->isEscortingHostages()) {
+                        pBot->rprint("I am escorting hostages - should ignore existing hostages");
                         // already escorting hostages, low interest for other hostages
-                        goalscore = 0.2;
+                        goalscore = 0.5;
                     } else {
                         // always go to the most furthest hostage spot, and add some randomness here, else
                         // all bots go to there.
@@ -3314,6 +3363,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
             } else if (goalType == GOAL_RESCUEZONE) {
                 if (pBot->isCounterTerrorist()) {
                     if (pBot->isEscortingHostages()) {
+                        pBot->rprint("I am escorting hostages - prioritizing for rescue zone");
                         // highest priority
                         score = 2.0;
                     } else {
@@ -3473,6 +3523,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     //////////////////////////////////////// GOAL PICKING FINISHED //////////////////////////////////////////
 
     // create path
+    pBot->rprint("createPath -> goal picking finished");
     createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
 
     // If we still did not find a path, we set wander time
@@ -3482,6 +3533,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
                       "Ah damn, i finally knew where to go, now i don't know how. Well lets try something close first.");
         pBot->rprint("Setting a random goal");
         pBot->setGoalNode(getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict));
+        pBot->rprint("createPath -> random goal");
         createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
 
         if (!pBot->isWalkingPath()) {

@@ -110,7 +110,8 @@
 
 // Meridian stuff
 #define SIZE_MEREDIAN    256
-#define MAX_MEREDIANS    16384 / SIZE_MEREDIAN   // Size of HL map divided by SIZE of a meridian to evenly spread
+#define MAP_MAX_SIZE     16384
+#define MAX_MEREDIANS    MAP_MAX_SIZE / SIZE_MEREDIAN   // Size of HL map divided by SIZE of a meridian to evenly spread
 #define MAX_NODES_IN_MEREDIANS    120     // EVY: higher number, number of nodes per meredian
 //#define MAX_NODES_IN_MEREDIANS       80      // (size meredian / zone (~6) times 2 (surface) , rounded to 80
 

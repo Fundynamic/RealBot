@@ -96,7 +96,7 @@ public:
 
     bool hasGoalWithEdict(edict_t *pEdict);
 
-    void addGoal(edict_t *pEdict, int iType, Vector vVec);
+    void addGoal(edict_t *pEdict, int goalType, Vector vVec);
 
     tGoal * getRandomGoalByType(int goalType);    // return a node close to a iType goal (random)
     bool node_float(Vector vOrigin, edict_t *pEdict);

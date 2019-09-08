@@ -748,6 +748,7 @@ bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {
     // Already used by bot?
 
     if (pBot != NULL) {
+//        rblog("isHostageRescueable - pBot is != NULL\n");
         if (pBot->isUsingHostage(pHostage)) return false;
         // Is the hostage not used by *any other* bot?
         if (!isHostageFree(pBot, pHostage)) {
@@ -817,5 +818,9 @@ void rblog(char *txt) {
     // and to reallog file
     if (fpRblog) {
         fprintf(fpRblog, "%s", txt);        // print the text into the file
+
+        // do this so we have more info when things crash (file is flushed)
+        fclose(fpRblog);
+        fpRblog = fopen("reallog.txt", "at"); //
     }
 }
