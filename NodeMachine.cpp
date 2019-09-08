@@ -2519,7 +2519,8 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     }
 
     currentNodeToHeadFor = pBot->getCurrentPathNodeToHeadFor();
-    if (currentNodeToHeadFor > -1) {
+    bool shouldDrawWaypointBeamsFromBot = false;
+    if (currentNodeToHeadFor > -1 && shouldDrawWaypointBeamsFromBot) {
         tNode *nodeHeadingFor = this->getNode(currentNodeToHeadFor);
 
         int player_index = 0;
@@ -2529,7 +2530,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
             if (pPlayer && !pPlayer->free) {
                 if (FBitSet(pPlayer->v.flags, FL_CLIENT) &&
-                    false) { // do not draw for now
+                    shouldDrawWaypointBeamsFromBot) { // do not draw for now
 
                     WaypointDrawBeam(
                             pPlayer, // player sees beam
@@ -2561,7 +2562,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                 }
             }
         }
-    }
+    } // Draw waypoint beams
 
     // reached node
     if (bNearNode) {
