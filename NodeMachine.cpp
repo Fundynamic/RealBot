@@ -3308,7 +3308,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         float goalAlreadyUsedScore = 0.0;
         float teamMembers = 1.0; // count self by default
 
-        for (int botIndex = 0; botIndex < 32; botIndex++) {
+        for (int botIndex = 0; botIndex < MAX_BOTS; botIndex++) {
             // not a bot
             cBot *botPointer = &bots[botIndex];
             if (botPointer == NULL ||
@@ -3380,7 +3380,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
                 float goalscore = 0.0;
                 if (pBot->isTerrorist()) {
                     if (pBot->hasBomb()) {
-                        goalscore = 0.7 * Goals[goalIndex].iChecked;
+                        goalscore = 2.0; // plant it!
                     } else {
                         float mul = fDistanceToGoal / MAX_GOAL_DISTANCE;
                         goalscore = (0.7 * mul);
@@ -3388,7 +3388,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 
                 } else if (pBot->isCounterTerrorist()) {
                     if (Game.bBombPlanted) {
-                        goalscore = 0.7;
+                        goalscore = 2.0; // pick
                     } else {
                         float mul = fDistanceToGoal / MAX_GOAL_DISTANCE;
                         goalscore = (0.7 * mul);
