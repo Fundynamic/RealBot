@@ -215,4 +215,4 @@ ModelManifest.xml
 CMakeLists.txt
 cmake-build-debug/
 
-#*.o
+*.o
