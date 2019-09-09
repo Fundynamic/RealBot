@@ -147,7 +147,7 @@ public:
     void connections(edict_t *pEntity); // Draw neighbours
 
     // -----------------
-    void players_plot();         // Players plot around!
+    void addNodesForPlayers();         // Players plot around!
     void init_players();         // Initialize players (dll load)
     void init_round();           // Initialize on round start
 

@@ -130,19 +130,35 @@ char *cGame::RandomSentence() {
 }
 
 void cGame::DetermineMapGoal() {
-    rblog("DetermineIfHostageRescueMap called\n");
-    edict_t *pHostage = NULL;
+    rblog("DetermineMapGoal called\n");
+    edict_t *pEnt = NULL;
 
     int hostagesFound = 0;
-    while ((pHostage = UTIL_FindEntityByClassname(pHostage, "hostage_entity")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "hostage_entity")) != NULL) {
         hostagesFound++;
     }
 
     char msg[255];
     memset(msg, 0, sizeof(msg));
-    sprintf(msg, "DetermineIfHostageRescueMap: There are %d hostages found to rescue\n", hostagesFound);
+    sprintf(msg, "DetermineMapGoal: There are %d hostages found to rescue\n", hostagesFound);
     rblog(msg);
     Game.bHostageRescueMap = hostagesFound > 0;
+
+
+    int bombSpots = 0;
+    // GOAL #4 - Bombspot zone
+    // Bomb spot
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "func_bomb_target")) != NULL) {
+        bombSpots++;
+    }
+
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "info_bomb_target")) != NULL) {
+        bombSpots++;
+    }
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "DetermineMapGoal: There are %d bomb spots in this level\n", bombSpots);
+    Game.bBombPlantMap = bombSpots > 0;
+    rblog(msg);
 }
 
 // GAME: Set round time

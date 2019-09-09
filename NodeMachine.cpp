@@ -432,9 +432,10 @@ int cNodeMachine::getCloseNode(Vector vOrigin, float fDist, edict_t *pEdict) {
     // Search in this meredian
     for (int i = 0; i < MAX_NODES_IN_MEREDIANS; i++) {
         if (Meredians[iX][iY].iNodes[i] < 0) continue; // skip invalid node indexes
+
         int iNode = Meredians[iX][iY].iNodes[i];
 
-        if (Nodes[iNode].origin.z > vOrigin.z) continue; // do not pick nodes higher than us
+//        if (Nodes[iNode].origin.z > (vOrigin.z + 32)) continue; // do not pick nodes higher than us
 
         if (func_distance(vOrigin, Nodes[iNode].origin) < fDist) {
             TraceResult tr;
@@ -619,7 +620,7 @@ static Vector FloorBelow(Vector V) {
 }
 
 // Check whether we can reach End from Start being a normal player
-// It uses (or should use) different heurestics:
+// It uses (or should use) different heuristics:
 // - plain walking on a floor with upward jumps or downward falls
 // - downward falls either from solid ground or from a point in the air
 //   to a point in water or a point in the air
@@ -633,7 +634,6 @@ int cNodeMachine::Reachable(const int iStart, const int iEnd) {
     Start = Nodes[iStart].origin;
     End = Nodes[iEnd].origin;
 #ifdef DEBUG_REACHABLE
-
     printf("Reachable %d(%.0f,%.0f,%.0f)%s", iStart, Start.x, Start.y,
            Start.z,
            (Nodes[iStart].iNodeBits & BIT_LADDER) ? "OnLadder" : "");
@@ -743,64 +743,53 @@ int cNodeMachine::Reachable(const int iStart, const int iEnd) {
 
 // Adding a node: another way...
 int cNodeMachine::add2(Vector vOrigin, int iType, edict_t *pEntity) {
-    int i;
-    int iX, iY;
-
-#ifdef DEBUG_ADD
-
-    printf("add2(%.0f,%.0f,%.0f)\n", vOrigin.x, vOrigin.y, vOrigin.z);
-    fflush(stdout);
-#endif
-
     // Do not add a node when there is already one close
     if (getCloseNode(vOrigin, NODE_ZONE, pEntity) > -1)
         return -1;
 
-    for (i = 0; i < MAX_NODES; i++)
-        if (Nodes[i].origin == Vector(9999, 9999, 9999))
-            break;
+    int newNodeIndex = getFreeNodeIndex();
 
     // failed too find a free slot to add a new node
-    if (i >= MAX_NODES)
+    if (newNodeIndex >= MAX_NODES)
         return -1;
 
-    Nodes[i].origin = vOrigin;
-    if (i > iMaxUsedNodes)
-        iMaxUsedNodes = i;
+    Nodes[newNodeIndex].origin = vOrigin;
+    if (newNodeIndex > iMaxUsedNodes)
+        iMaxUsedNodes = newNodeIndex;
 
-#ifdef DEBUG_ADD
-
-    printf("  will use node id %d\n", i);
-    fflush(stdout);
-#endif
     // Set different flags about the node
-    Nodes[i].iNodeBits = iType;  // EVY's extension
+    Nodes[newNodeIndex].iNodeBits = iType;  // EVY's extension
     if (pEntity) {
         // ladder
         if (FUNC_IsOnLadder(pEntity))
-            Nodes[i].iNodeBits |= BIT_LADDER;
+            Nodes[newNodeIndex].iNodeBits |= BIT_LADDER;
 
         // water at origin (=waist) or at the feet (-30)
         if (UTIL_PointContents(pEntity->v.origin) == CONTENTS_WATER ||
             UTIL_PointContents(pEntity->v.origin - Vector(0, 0, 30)) ==
             CONTENTS_WATER)
-            Nodes[i].iNodeBits |= BIT_WATER;
+            Nodes[newNodeIndex].iNodeBits |= BIT_WATER;
 
         // record jumping
         if (pEntity->v.button & IN_JUMP)
-            Nodes[i].iNodeBits |= BIT_JUMP;
+            Nodes[newNodeIndex].iNodeBits |= BIT_JUMP;
     } else {
         // water at origin (=waist) or at the feet (-30)
         if (UTIL_PointContents(vOrigin) == CONTENTS_WATER ||
             UTIL_PointContents(vOrigin - Vector(0, 0, 30)) == CONTENTS_WATER)
-            Nodes[i].iNodeBits |= BIT_WATER;
+            Nodes[newNodeIndex].iNodeBits |= BIT_WATER;
     }
 
-    // add to meredians database
-    VectorToMeredian(Nodes[i].origin, &iX, &iY);
+    // add to meredians
+    int iX, iY;
+    VectorToMeredian(Nodes[newNodeIndex].origin, &iX, &iY);
 
-    if (iX > -1 && iY > -1)
-        AddToMeredian(iX, iY, i);
+    if (iX > -1 && iY > -1) {
+        AddToMeredian(iX, iY, newNodeIndex);
+    } else {
+        rblog("ERROR: Could not add node, no meredian found to add to.\n");
+        return -1;
+    }
 
     // Connect this node to other nodes (and vice versa)
     // TODO should use the Meredian structure to only check for nodes in adjacents meredians... (faster algo)
@@ -808,30 +797,33 @@ int cNodeMachine::add2(Vector vOrigin, int iType, edict_t *pEntity) {
     for (j = 0, MyNeighbourCount = 0;
          j < iMaxUsedNodes && MyNeighbourCount < MAX_NEIGHBOURS; j++) {
 
-        if (j == i)
+        if (j == newNodeIndex)
             continue;              // Exclude self
+
         if (Nodes[j].origin == Vector(9999, 9999, 9999))
             continue;              // Skip non existing nodes
 
         // When walking the human player can't pass a certain speed and distance
         // however, when a human is falling, the distance will be bigger.
-        if (horizontal_distance(Nodes[i].origin, Nodes[j].origin) >
-            3 * NODE_ZONE)
+        int maxDistance = 3 * NODE_ZONE;
+
+        if (horizontal_distance(Nodes[newNodeIndex].origin, Nodes[j].origin) > maxDistance)
             continue;
 
-        // j is a potential candidate for a neighbourood
+        // j is a potential candidate for a neighbour
         // Let's do further tests
 
-        if (Reachable(i, j)) {    // Can reach j from i ?
-            add_neighbour_node(i, j);      // Add j as a neighbour of mine
+        if (Reachable(newNodeIndex, j)) {             // Can reach j from newNodeIndex ?
+            add_neighbour_node(newNodeIndex, j);      // Add j as a neighbour of mine
             MyNeighbourCount++;
         }
-        if (Reachable(j, i))      // Can reach i from j ?
-            add_neighbour_node(j, i);      // Add i as a neighbour of j
 
+        if (Reachable(j, newNodeIndex)) {             // Can reach newNodeIndex from j ?
+            add_neighbour_node(j, newNodeIndex);      // Add i as a neighbour of j
+        }
     }
 
-    return i;
+    return newNodeIndex;
 }
 
 /**
@@ -869,7 +861,6 @@ int cNodeMachine::addNode(Vector vOrigin, edict_t *pEntity) {
     bool bIsInWater = false;
     bool indexNodeFloats = false;
     bool bIndexOnCrate = false;
-    bool bDucks = false;
 
     if (pEntity) {
         // Does this thing float?
@@ -894,9 +885,8 @@ int cNodeMachine::addNode(Vector vOrigin, edict_t *pEntity) {
             indexNodeFloats = false;
 
         if (pEntity->v.button & IN_DUCK) {
-            bDucks = true;
-//            // ??
-//            Nodes[index].iNodeBits |= BIT_DUCK;
+            // ??
+            Nodes[currentIndex].iNodeBits |= BIT_DUCK;
         }
 
     }                            // do only check pEntity when its not NULL
@@ -1125,33 +1115,26 @@ void cNodeMachine::init_round() {
             Goals[g].iBadScore--;
 }
 
-// Set up origin for players etc.
-void cNodeMachine::players_plot() {
+/**
+ * Look at players and plot nodes if not any nearby.
+ */
+void cNodeMachine::addNodesForPlayers() {
     for (int index = 1; index <= gpGlobals->maxClients; index++) {
         edict_t *pPlayer = INDEXENT(index);
 
-        // skip invalid players
-        if ((pPlayer) && (!pPlayer->free))
-            if (IsAlive(pPlayer)) {
-                int iPlayerIndex = index - 1;
-                // update this player information
-                // FIX: Increased distance.. with 75%
-                if (func_distance
-                            (pPlayer->v.origin,
-                             Players[iPlayerIndex].vPrevPos) > (NODE_ZONE * 1.75)) {
-                    //UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "NodeMachine: Players plot\n");
-                    Players[iPlayerIndex].vPrevPos = pPlayer->v.origin;
-#ifdef USE_EVY_ADD
+        // skip invalid (dead, not playing) players
+        if ((pPlayer) && (!pPlayer->free)) {
+            if (pPlayer->free) continue;
+            if (!IsAlive(pPlayer)) continue;
 
-                    add2(pPlayer->v.origin, 0, pPlayer);     // Add a node
-#else
+            int iPlayerIndex = index - 1;
 
-                    add2(pPlayer->v.origin, 0, pPlayer);     // Add a node
-#endif
-
-                }
+            // within a certain distance no node found? add one
+            if (func_distance(pPlayer->v.origin, Players[iPlayerIndex].vPrevPos) > (NODE_ZONE * 1.25)) {
+                Players[iPlayerIndex].vPrevPos = pPlayer->v.origin;
+                add2(pPlayer->v.origin, 0, pPlayer);
             }
-
+        }
     }
 }
 
@@ -2406,11 +2389,11 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     pBot->f_move_speed = pBot->f_max_speed;
 
     // Walk the path
-    pBot->rprint("cNodeMachine::path_walk", "determine current path node to head for");
+    pBot->rprint_trace("cNodeMachine::path_walk", "determine current path node to head for");
     int currentNodeToHeadFor = pBot->getCurrentPathNodeToHeadFor();        // Node we are heading for
 
     if (currentNodeToHeadFor < 0) {
-        REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "There is no node to go to!");
+//        REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "There is no node to go to!");
 
         // ?? Assumes we had arrived, so remember the previous goal?!?
         if (pBot->hasGoal()) {
@@ -2475,7 +2458,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                 // wait a little
                 pBot->f_wait_time = gpGlobals->time + 0.5;
                 pBot->fButtonTime = gpGlobals->time + 5.0;
-                pBot->f_node_timer = gpGlobals->time + 3;
+                pBot->setTimeToMoveToNode(3);
                 pBot->forgetPath();
                 return;
             } else {
@@ -2485,7 +2468,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
         }
     }
 
-    pBot->rprint("cNodeMachine::path_walk", "before getNextPathNode");
+    pBot->rprint_trace("cNodeMachine::path_walk", "before getNextPathNode");
     int nextNodeToHeadFor = pBot->getNextPathNode();              // the node we will head for after reaching currentNode
 
     if (currentNodeToHeadFor < 0) {
@@ -3151,14 +3134,14 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     }
 
     // Heading for hostage (directly) so do not do things with paths
-    pBot->rprint("cNodeMachine::path_think", "hasHostageToRescue");
+    pBot->rprint_trace("cNodeMachine::path_think", "hasHostageToRescue");
     if (pBot->hasHostageToRescue()) {
-        pBot->rprint("cNodeMachine::path_think", "canSeeHostageToRescue");
+        pBot->rprint_trace("cNodeMachine::path_think", "canSeeHostageToRescue");
         if (pBot->canSeeHostageToRescue()) {
-            pBot->rprint("cNodeMachine::path_think", "has hostage and can see hostage, will not do anything");
+            pBot->rprint_trace("cNodeMachine::path_think", "has hostage and can see hostage, will not do anything");
             return; // bot has hostage, can see hostage
         } else {
-            pBot->rprint("cNodeMachine::path_think", "has hostage to rescue, but can't see it");
+            pBot->rprint_trace("cNodeMachine::path_think", "has hostage to rescue, but can't see it");
         }
     }
 
@@ -3184,7 +3167,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     int BotIndex = pBot->iBotIndex;
 
     if (pBot->isWalkingPath()) {
-        pBot->rprint("cNodeMachine::path_think", "isWalkingPath");
+        pBot->rprint_trace("cNodeMachine::path_think", "isWalkingPath");
         path_walk(pBot, moved_distance);  // walk the path
         return;
     }

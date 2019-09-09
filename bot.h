@@ -199,7 +199,6 @@ public:
     float f_allow_keypress;      // Timer to avoid 'too quick' using/defusing/etc
     float f_defuse;              // Timer to press the use key for defusing
 
-    float f_node_timer;          // timer, to ensure navigation when something goes wrong
     float f_use_timer;           // time for use button (hostage rescue, preventing to fast using)
     float fBlindedTime;          // How long it is blinded ( when > globals->time)
 
@@ -544,6 +543,10 @@ public:
     void increaseTimeToMoveToNode(float timeInSeconds);
 
     float getMoveToNodeTimeRemaining();
+
+    bool shouldActWithC4() const;
+
+    int keyPressed(int key) const;
 };
 
 // new UTIL.CPP functions...

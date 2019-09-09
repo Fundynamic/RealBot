@@ -590,8 +590,7 @@ UTIL_LogPrintf (char *fmt, ...)
 }
 
 void
-UTIL_BotPressKey (cBot * pBot, int type)
-{
+UTIL_BotPressKey (cBot * pBot, int type) {
   if (type == IN_JUMP || type == IN_DUCK)
     if (pBot->f_freeze_time > gpGlobals->time)
       return;			// do nothing when in freezetime
@@ -603,6 +602,7 @@ UTIL_BotPressKey (cBot * pBot, int type)
   if (type == IN_JUMP && pBot->f_camp_time > gpGlobals->time)
     return;			// Do not jump when camping.
 
+    // don't jump from ladder
   if (FUNC_IsOnLadder (pBot->pEdict) && type == IN_JUMP)
     return;
 

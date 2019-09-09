@@ -841,8 +841,9 @@ void StartFrame(void) {
         }
 
     }
-    // We have updated our 'goal' waypoints. Now we can change goals.
-    NodeMachine.players_plot();       // NODE MACHINE, PLAYERS PLOT THE HELL OUTTA HERE
+
+    NodeMachine.addNodesForPlayers();
+
     count = 0;
     waits = 0;
 

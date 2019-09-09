@@ -141,7 +141,6 @@ void cBot::SpawnInit() {
     f_may_jump_time = gpGlobals->time;
     f_defuse = gpGlobals->time;
     f_allow_keypress = gpGlobals->time;
-    f_node_timer = gpGlobals->time;
     f_use_timer = gpGlobals->time;
     f_light_time = gpGlobals->time;
     f_sec_weapon = gpGlobals->time;
@@ -312,7 +311,6 @@ void cBot::NewRound() {
     f_may_jump_time = gpGlobals->time;
     f_defuse = gpGlobals->time;
     f_allow_keypress = gpGlobals->time;
-    f_node_timer = gpGlobals->time;
     f_use_timer = gpGlobals->time;
     f_light_time = gpGlobals->time;
     f_sec_weapon = gpGlobals->time;
@@ -1756,35 +1754,11 @@ bool cBot::Defuse() {
     if (!isCounterTerrorist()) // non-Counter-Terrorists have no business here
         return false;
 
-    if (f_c4_time > gpGlobals->time && pEdict->v.button & IN_USE) {
-        f_node_timer = gpGlobals->time + 3;
-
-        // make all *OTHER* bots not try to defuse it (so they don't hijack defusion process)
-        for (int i = 1; i <= gpGlobals->maxClients; i++) {
-            edict_t *pPlayer = INDEXENT(i);
-            cBot *bot = UTIL_GetBotPointer(pPlayer);
-
-            // if bot and not the same as me (== this)
-            if (bot && bot != this)
-                if (bot->isCounterTerrorist()) // and on my team
-
-                    // and he is close to me, and not yet camping...
-                    if (func_distance(bot->pEdict->v.origin, pEdict->v.origin) < 250
-                        && bot->f_camp_time < gpGlobals->time) {
-
-                        // camp in random occasion
-                        if (RANDOM_LONG(0, 100) < ipCampRate) {
-                            bot->iGoalNode =
-                                    NodeMachine.getCloseNode(bot->pEdict->v.origin, 75,
-                                                             bot->pEdict);
-                            bot->iPathFlags = PATH_CAMP;
-                            Game.bBombDiscovered = true;
-                        }
-                    }
-        }
-
-        return true;              // we help the defuser, there is being reacted upon it.
-    }                            // help the defuser
+    // this bot is defusing
+    if (shouldActWithC4() && keyPressed(IN_USE)) {
+        setTimeToMoveToNode(3);
+        return true;
+    }
 
     // What i do, i search for the c4 timer, store its origin and check
     // if this bot is close. If so, the bot should be defusing the bomb
@@ -1800,72 +1774,124 @@ bool cBot::Defuse() {
         }
     }                            // --- find the c4
 
-    // When we found it, the vector of c4_origin should be something else than (9999,9999,9999)
-    if (vC4.x != 9999.0) {
+    if (vC4.x == 9999.0) {
+        rprint_normal("Defuse()", "No C4 planted yet");
+        return false;
+    }
 
-        // A c4 has been found, oh dear.
-        // Remember, pent=c4 now!
+    rprint_normal("Defuse()", "C4 is planted!");
 
-        // Calculate the distance between our position to the c4
-        float distance = func_distance(pEdict->v.origin, vC4);
+    // A c4 has been found, oh dear.
+    // Remember, pent=c4 now!
 
-        // can we see it?
-        // FIXME: See the bomb you cow!
-        if (canSeeVector(vC4)) {
-            // discovered!
-            Game.bBombDiscovered = true;
+    // Calculate the distance between our position to the c4
+    float distance = func_distance(pEdict->v.origin, vC4);
 
-            // We can do 2 things now
-            // - If we are not close, we check if we can walk to it, and if so we face to the c4
-            // - If we are close, we face it and (begin) defuse the bomb.
-            if (distance < 70) {
+    // can see C4
+    bool canSeeC4 = canSeeVector(vC4);
+
+    if (!canSeeC4) {
+        rprint_normal("Defuse()", "Cannot see planted C4");
+
+        // REMOVEME: debug code to enforce moving to planted c4
+        int iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE*2, NULL);
+        if (iGoalNode < 0) {
+            rprint_normal("Defuse()", "Expand search area #2");
+            // expand search area
+            iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE*4, NULL);
+        }
+        if (iGoalNode > -1) {
+            // we are not heading for this goal yet
+            if (getGoalNode() != iGoalNode) {
+                rprint_normal("Defuse()",
+                              "I don't have a goal towards the C4, overriding it now to C4 destination! #2");
+                forgetPath();
+                forgetGoal();
+                setGoalNode(iGoalNode);
                 vHead = vC4;
                 vBody = vC4;
-                f_node_timer = gpGlobals->time + 3; // we are going to do non-path-follow stuff, so keep timer updated
-                int angle_to_c4 =
-                        FUNC_InFieldOfView(pEdict, (vC4 - pEdict->v.origin));
-
-                // if defusion timer has not been set (ie, the bot is not yet going to defuse the bomb)
-                if (f_defuse < gpGlobals->time && angle_to_c4 < 35) {
-                    this->rprint("I'll commence defusing the bomb");
-                    // when we are 'about to' defuse, we simply set the timers
-                    f_defuse = gpGlobals->time + 90; // hold as long as you can
-                    f_allow_keypress = gpGlobals->time + 1.5;        // And stop any key pressing the first second
-                    // ABOUT TO DEFUSE BOMB
-                }
-
-                // Defusion timer is set and c4 is within vision
-                if (f_defuse > gpGlobals->time && angle_to_c4 < 35) {
-                    this->rprint("I'm defusing the bomb");
-                    f_move_speed = 0.0;
-                    f_c4_time = gpGlobals->time + 6;
-                    UTIL_BotPressKey(this, IN_DUCK);
-
-                    if (func_distance(pEdict->v.origin, vC4) > 50
-                        && f_allow_keypress + 0.5 > gpGlobals->time)
-                        f_move_speed = f_max_speed / 2;
-                }
-
-                if (f_allow_keypress < gpGlobals->time && f_defuse > gpGlobals->time) {
-                    UTIL_BotPressKey(this, IN_USE);
-                }
-
             } else {
+                rprint_normal("Defuse()", "I already have a goal towards the C4! #2");
+            }
+        } else {
+            rprint_normal("Cannot find node nearby C4");
+        }
 
-                // Check if we can walk to it
-                // TODO: work on this, it does not have to be nescesarily walkable.
-                // TODO TODO TODO , get this working with nodes
+        // we cannot see the bomb
+        return false;
+    }
+    
+    // discovered!
+    Game.bBombDiscovered = true;
+
+    // We can do 2 things now
+    // - If we are not close, we check if we can walk to it, and if so we face to the c4
+    // - If we are close, we face it and (begin) defuse the bomb.
+    if (distance < 70) {
+        vHead = vC4;
+        vBody = vC4;
+
+        setTimeToMoveToNode(3); // we are going to do non-path-follow stuff, so keep timer updated
+        int angle_to_c4 = FUNC_InFieldOfView(pEdict, (vC4 - pEdict->v.origin));
+
+        // if defusion timer has not been set (ie, the bot is not yet going to defuse the bomb)
+        if (f_defuse < gpGlobals->time && angle_to_c4 < 35) {
+            this->rprint("Defuse()", "I'll start defusing the bomb");
+            // when we are 'about to' defuse, we simply set the timers
+            f_defuse = gpGlobals->time + 90; // hold as long as you can
+            f_allow_keypress = gpGlobals->time + 1.5;        // And stop any key pressing the first second
+            // ABOUT TO DEFUSE BOMB
+        }
+
+        // Defusion timer is set and c4 is within vision
+        if (f_defuse > gpGlobals->time && angle_to_c4 < 35) {
+            this->rprint("Defuse()", "I'm defusing the bomb");
+            f_move_speed = 0.0;
+            f_c4_time = gpGlobals->time + 6;
+            UTIL_BotPressKey(this, IN_DUCK);
+
+            if (func_distance(pEdict->v.origin, vC4) > 50
+                && f_allow_keypress + 0.5 > gpGlobals->time)
+                f_move_speed = f_max_speed / 2;
+        }
+
+        if (f_allow_keypress < gpGlobals->time && f_defuse > gpGlobals->time) {
+            UTIL_BotPressKey(this, IN_USE);
+        }
+
+    } else {
+        rprint_normal("Defuse()", "I can see C4, but it is out of reach.");
+        int iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE*2, NULL);
+        if (iGoalNode < 0) {
+            rprint_normal("Defuse()", "Expand search area");
+            // expand search area
+            iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE*4, NULL);
+        }
+
+        if (iGoalNode > -1) {
+            // we are not heading for this goal yet
+            if (iGoalNode > -1 && getGoalNode() != iGoalNode) {
+                rprint_normal("Defuse()", "I don't have a goal towards the C4, overriding it now to C4 destination!");
+                forgetPath();
+                forgetGoal();
+                setGoalNode(iGoalNode);
                 vHead = vC4;
                 vBody = vC4;
-            }                      // distance < ...
+            } else {
+                rprint_normal("Defuse()", "I already have a goal towards the C4!");
+            }
+        } else {
+            rprint_normal("Defuse()", "C4 is somewhere without a close node.");
+        }
+        f_move_speed = f_max_speed;
+    }                      // distance < ...
 
-            // we can see the bomb, and we act upon it
-            return true;
-        }                         // can see C4
-    }                            // Found C4
+    // we can see the bomb, and we act upon it
+    return true;
+}
 
-    // we cannot see the bomb
-    return false;
+int cBot::keyPressed(int key) const {
+    return pEdict->v.button & key;
 }
 
 // BOT: Act
@@ -1914,7 +1940,7 @@ void cBot::Act() {
     // C4 timer is set, this means:
     // T -> Is planting bomb
     // CT-> Is defusing bomb
-    if (f_c4_time > gpGlobals->time) {
+    if (shouldActWithC4()) {
         // make sure we override this, or else we learn that we get stuck or something
         // which is not the case.
         setTimeToMoveToNode(2);
@@ -1926,10 +1952,11 @@ void cBot::Act() {
             f_strafe_speed = 0.0;
 
             // When no C4 selected yet, select it
-            if (current_weapon.iId != CS_WEAPON_C4)
+            if (!isHoldingWeapon(CS_WEAPON_C4)) {
                 UTIL_SelectItem(pEdict, "weapon_c4");
-            else
+            } else {
                 UTIL_BotPressKey(this, IN_ATTACK);  // plant it!
+            }
 
             // When we no longer have the C4 , we stop doing this stupid shit
             if (!hasBomb()) {
@@ -1939,9 +1966,8 @@ void cBot::Act() {
                 pathNodeIndex = -1;
                 f_c4_time = gpGlobals->time;
             }
-        }
-            // counter
-        else {
+        } else {
+            // counter-terrorist
             Defuse();              // old routine from RB AI V1.0 defusing, should get here and more cleaned up
         }
     }
@@ -2048,6 +2074,8 @@ void cBot::Act() {
     botFixIdealYaw(pEdict);
     botFixIdealPitch(pEdict);
 }
+
+bool cBot::shouldActWithC4() const { return f_c4_time > gpGlobals->time; }
 
 // BOT: On ladder?
 bool cBot::isOnLadder() {
@@ -2928,7 +2956,10 @@ void cBot::ThinkAboutGoals() {
             // VIP
         } else {
             if (Game.bBombPlanted) {
-                Defuse();           // defuse (or set timers for it)
+                if (isCounterTerrorist()) {
+                    // defuse (or set timers for it)
+                    Defuse();
+                }
             } else {
                 if (Game.bHostageRescueMap) {
                     TryToGetHostageTargetToFollowMe(this);
@@ -3237,7 +3268,6 @@ void cBot::Think() {
     if (Game.RoundTime() + CVAR_GET_FLOAT("mp_freezetime") > gpGlobals->time
         && f_freeze_time < gpGlobals->time) {
         f_freeze_time = gpGlobals->time + RANDOM_FLOAT(0.1, 2.0);
-        f_node_timer = gpGlobals->time + 5.0;
     }
 
     // 1 SECOND START OF ROUND
