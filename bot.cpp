@@ -1791,33 +1791,7 @@ bool cBot::Defuse() {
     bool canSeeC4 = canSeeVector(vC4);
 
     if (!canSeeC4) {
-        rprint_normal("Defuse()", "Cannot see planted C4");
-
-        // REMOVEME: debug code to enforce moving to planted c4
-        int iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE*2, NULL);
-        if (iGoalNode < 0) {
-            rprint_normal("Defuse()", "Expand search area #2");
-            // expand search area
-            iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE*4, NULL);
-        }
-        if (iGoalNode > -1) {
-            // we are not heading for this goal yet
-            if (getGoalNode() != iGoalNode) {
-                rprint_normal("Defuse()",
-                              "I don't have a goal towards the C4, overriding it now to C4 destination! #2");
-                forgetPath();
-                forgetGoal();
-                setGoalNode(iGoalNode);
-                vHead = vC4;
-                vBody = vC4;
-            } else {
-                rprint_normal("Defuse()", "I already have a goal towards the C4! #2");
-            }
-        } else {
-            rprint_normal("Cannot find node nearby C4");
-        }
-
-        // we cannot see the bomb
+        rprint_trace("Defuse()", "Cannot see planted C4 and nobody saw bomb planted");
         return false;
     }
     
