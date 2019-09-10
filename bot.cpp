@@ -1795,8 +1795,8 @@ bool cBot::Defuse() {
         return false;
     }
     
-    // discovered!
-    Game.bBombDiscovered = true;
+    // it can be seen, so it has been discovered
+    if (!Game.isPlantedC4Discovered()) Game.vPlantedC4 = vC4;
 
     // We can do 2 things now
     // - If we are not close, we check if we can walk to it, and if so we face to the c4
@@ -1835,7 +1835,7 @@ bool cBot::Defuse() {
         }
 
     } else {
-        rprint_normal("Defuse()", "I can see C4, but it is out of reach.");
+        rprint_trace("Defuse()", "I can see C4, but it is out of reach.");
         int iGoalNode = NodeMachine.getCloseNode(vC4, distanceForC4ToBeInReach, NULL);
         if (iGoalNode < 0) {
             rprint_normal("Defuse()", "No node close, so just look at it/body face at it and move towards it.");
@@ -1887,7 +1887,7 @@ void cBot::Act() {
         PickBestWeapon();         // pick weapon, do not stare with knife
 
         // when dropped C4 and CT we look at C4
-        if (iTeam == 2 && Game.vDroppedC4 != Vector(9999, 9999, 9999)) {
+        if (isCounterTerrorist() && Game.vDroppedC4 != Vector(9999, 9999, 9999)) {
             // look at dropped C4
             if (EntityIsVisible(pEdict, Game.vDroppedC4))
                 vHead = Game.vDroppedC4;

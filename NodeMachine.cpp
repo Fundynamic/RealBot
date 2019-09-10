@@ -2678,7 +2678,9 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                     }
                 }
 
-                if (Game.bBombPlanted && !Game.bBombDiscovered) {
+                // At destination, bomb is planted and we have not discovered the C4 yet...
+                // TODO: Remember which goals/bomb spots have been visited so bots won't visit this bomb spot again?
+                if (Game.bBombPlanted && !Game.isPlantedC4Discovered()) {
                     int iGoalType = getGoalIndexFromNode(pBot->getGoalNode());
 
                     if (iGoalType == GOAL_BOMBSPOT && pBot->iTeam == 2) {
@@ -3233,7 +3235,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         return;
     }
 
-    // DETERMINE GOAL
+    // DETERMINE GOAL / FIND GOAL
 
     // Loop through all goals.
     float highestScore = 0.0;
@@ -3372,12 +3374,48 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 
                 } else if (pBot->isCounterTerrorist()) {
                     if (Game.bBombPlanted) {
-                        goalscore = 2.0; // pick
+                        if (Game.isPlantedC4Discovered()) {
+                            pBot->rprint_trace("path_think/determine goal", "I know where the C4 is planted, evaluating if this is the closest bombspot.");
+                            // find a node close to the C4
+                            int nodeCloseToC4 = getCloseNode(Game.vPlantedC4, NODE_ZONE * 2, NULL);
+                            if (nodeCloseToC4 > -1) {
+                                // measure distance compared to goal node we are evaluating
+                                float distanceToC4FromCloseNode = func_distance(
+                                        Game.vPlantedC4,
+                                        node_vector(Goals[nodeCloseToC4].iNode)
+                                );
+
+                                // the distance from this goal node
+                                float distanceToC4FromThisGoalNode = func_distance(
+                                        Game.vPlantedC4,
+                                        node_vector(Goals[goalIndex].iNode)
+                                );
+
+                                float score = distanceToC4FromCloseNode / distanceToC4FromThisGoalNode;
+                                goalscore = 1.5 + score;
+                                char msg[255];
+                                memset(msg, 0, sizeof(msg));
+                                sprintf(msg, "Distance from C4 to closest node is %f, distance from evaluating node to C4 is %f, resulting into score of %f",
+                                        distanceToC4FromCloseNode,
+                                        distanceToC4FromThisGoalNode,
+                                        goalscore);
+                                pBot->rprint_trace("path_think/determine goal", msg);
+                            } else {
+                                pBot->rprint_trace("path_think/determine goal", "We know where the C4 is planted, but unfortunately we can't find a close node to the planted c4.");
+                                // we can't find a node close to the c4, so we gamble
+                                goalscore = 2.0; // pick
+                            }
+                        } else {
+                            pBot->rprint_trace("path_think/determine goal", "No clue where bomb is, picking bombspot to evaluate");
+                            goalscore = 2.0; // pick any bombspot
+                        }
                     } else {
+                        pBot->rprint_trace("path_think/determine goal", "Bomb is not planted");
                         float mul = fDistanceToGoal / MAX_GOAL_DISTANCE;
                         goalscore = (0.7 * mul);
                     }
                 }
+                // this is weird? what?
                 score = (score + goalscore) / 2.0;
             } // GOAL is a bombspot
         } // bomb plant map
@@ -3416,7 +3454,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 
         // was previous goal as well, don't go there
         if (pBot->iPreviousGoalNode == goalIndex) {
-            score = 0.2; // low chance
+            score *= 0.2; // low chance
         }
 
 
@@ -3424,8 +3462,23 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         // the next job is to determine if it is 'more important' to pick than the one before
         // Refactor this please...
 
-        // finally update values, and get to goal
-        if (score > highestScore) {
+        // even though its float comparison, it can h appen since we hard-set it to 2.0 at some places, making
+        // some scores the same
+        char msg[255];
+        memset(msg, 0, sizeof(msg));
+        sprintf(msg, "Evaluating goal %s gives a score of %f, highest score so far is %f\n",
+                Goals[goalIndex].name,
+                score,
+                highestScore);
+        pBot->rprint_trace("path_think/determine goal", msg);
+        if (score == highestScore && RANDOM_LONG(0,100) < 50) {
+            pBot->rprint_trace("path_think/determine goal", "SCORE == HIGHEST SCORE and chosen to override randomly.");
+            highestScore = score;
+            iFinalGoalNode = Goals[goalIndex].iNode;
+            iFinalGoalIndex = goalIndex;
+        } else if (score > highestScore) {
+            // accept duplication for now for the sake of logging
+            pBot->rprint_trace("path_think/determine goal", "determine goal: SCORE > HIGHEST SCORE");
             highestScore = score;
             iFinalGoalNode = Goals[goalIndex].iNode;
             iFinalGoalIndex = goalIndex;

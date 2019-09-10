@@ -97,6 +97,7 @@ public:
    // ---------------------
    void UpdateGameStatus();     // Updates global game variables
    bool isC4Dropped();
+   bool isPlantedC4Discovered();
 
    // ---------------------
    // public variables
@@ -111,7 +112,7 @@ public:
    bool bBombPlanted;           // Bomb planted?
    bool bHostageRescueMap;      // Hostage rescue map? (CS_...)
    bool bBombPlantMap;          // Bomb plant map? (DE_...)
-   bool bBombDiscovered;        // Is the bomb discovered?
+   Vector vPlantedC4;           // Is the bomb discovered?
 
    // Server vars
    int iVersionBroadcasting;    // 0 = every round , 1 = every new map

@@ -889,6 +889,8 @@ void BotClient_CS_HLTV(void *p, int bot_index) {
             Game.SetNewRound(true);
             Game.SetRoundTime(gpGlobals->time);
             Game.DetermineMapGoal();
+            // re-initialize planted c4 vector
+            Game.vPlantedC4 = Vector(9999, 9999, 9999);
         }
         state = 0;
     }

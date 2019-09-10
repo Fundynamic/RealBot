@@ -81,7 +81,7 @@ void cGame::Init() {
 
     // Bomb planted
     bBombPlanted = false;
-    bBombDiscovered = false;
+    vPlantedC4 = Vector(9999, 9999, 9999);
     bHostageRescueMap = false;
 
     // Chat related
@@ -122,6 +122,14 @@ void cGame::Init() {
  */
 bool cGame::isC4Dropped() {
     return vDroppedC4 != Vector(9999, 9999, 9999);
+}
+
+/**
+ * Is the C4 - when planted - discovered?
+ * @return
+ */
+bool cGame::isPlantedC4Discovered() {
+    return vPlantedC4 != Vector(9999, 9999, 9999);
 }
 
 // Returns random sentence for speech
@@ -359,7 +367,6 @@ void cGame::UpdateGameStatus() {
     // ------------------
     // Same as dropped c4, its NOT, unless stated otherwise.
     pEnt = NULL;
-    Vector vVec = Vector(9999, 9999, 9999);
     bool bPlanted = bBombPlanted;
 
     while ((pEnt = UTIL_FindEntityByClassname(pEnt, "grenade")) != NULL) {
@@ -372,7 +379,7 @@ void cGame::UpdateGameStatus() {
     // Discovered the bomb is planted and it was a different value than before (not planted).
     // all counter-terrorists should know this, and they should head for the bomb
     if (bPlanted && // found a planted bomb
-        bPlanted != bBombPlanted // and a milisecond ago we didnt know that
+        bPlanted != bBombPlanted // and previously we didn't know that
             ) {
 
         int i;
@@ -380,8 +387,8 @@ void cGame::UpdateGameStatus() {
             edict_t *pPlayer = INDEXENT(i);
             cBot *bot = UTIL_GetBotPointer(pPlayer);
 
-            if (bot)         // valid bot
-            {
+            // valid bot
+            if (bot) {
                 if (bot->isCounterTerrorist()) {
                     bot->forgetPath();
                     bot->rprint("Setting goal for bombspot");
@@ -392,9 +399,6 @@ void cGame::UpdateGameStatus() {
                 }             // ct
             }                // bot
         }                   // through all clients
-
-        // It is not yet discovered
-        bBombDiscovered = false;
 
         // Now update bBombPlanted
         bBombPlanted = bPlanted;
