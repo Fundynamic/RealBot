@@ -2630,7 +2630,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
 
         // When our target was our goal, we are there
-        if (isHeadingForGoalNode && pBot->getDistanceToNextNode()) {
+        if (isHeadingForGoalNode && pBot->getDistanceToNextNode() < NODE_ZONE) {
             REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Executing destination logic");
 
             // reached the end
