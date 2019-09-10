@@ -1827,7 +1827,8 @@ bool cBot::Defuse() {
     // We can do 2 things now
     // - If we are not close, we check if we can walk to it, and if so we face to the c4
     // - If we are close, we face it and (begin) defuse the bomb.
-    if (distance < 70) {
+    int distanceForC4ToBeInReach = 70;
+    if (distance < distanceForC4ToBeInReach) {
         vHead = vC4;
         vBody = vC4;
 
@@ -1861,11 +1862,11 @@ bool cBot::Defuse() {
 
     } else {
         rprint_normal("Defuse()", "I can see C4, but it is out of reach.");
-        int iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE*2, NULL);
+        int iGoalNode = NodeMachine.getCloseNode(vC4, distanceForC4ToBeInReach, NULL);
         if (iGoalNode < 0) {
-            rprint_normal("Defuse()", "Expand search area");
-            // expand search area
-            iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE*4, NULL);
+            rprint_normal("Defuse()", "No node close, so just look at it/body face at it and move towards it.");
+            vHead = vC4;
+            vBody = vC4;
         }
 
         if (iGoalNode > -1) {
@@ -1875,8 +1876,6 @@ bool cBot::Defuse() {
                 forgetPath();
                 forgetGoal();
                 setGoalNode(iGoalNode);
-                vHead = vC4;
-                vBody = vC4;
             } else {
                 rprint_normal("Defuse()", "I already have a goal towards the C4!");
             }
