@@ -309,8 +309,9 @@ void cNodeMachine::path_clear(int botIndex) {
 
 // Return
 Vector cNodeMachine::node_vector(int iNode) {
-    if (iNode > -1)
+    if (iNode > -1) {
         return Nodes[iNode].origin;
+    }
 
     return Vector(9999, 9999, 9999);
 }
