@@ -547,6 +547,8 @@ public:
     bool shouldActWithC4() const;
 
     int keyPressed(int key) const;
+
+    bool shouldCamp();
 };
 
 // new UTIL.CPP functions...

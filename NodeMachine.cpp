@@ -2015,7 +2015,7 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
         char msg[255];
         memset(msg, 0, sizeof(msg));
         sprintf(msg, "createPath(from->%d, to->%d, botIndex->%d)", nodeStartIndex, nodeTargetIndex, botIndex);
-        pBot->rprint("createPath", msg);
+        pBot->rprint("cNodeMachine::createPath", msg);
     }
 
     if (nodeStartIndex < 0 || nodeTargetIndex < 0 || botIndex < 0)
@@ -2121,7 +2121,7 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
     // RESULT: Success
     if (!succes) {
         if (pBot) {
-            pBot->rprint("createPath", "Failed to create path");
+            pBot->rprint("cNodeMachine::createPath", "Failed to create path");
         }
         return false;
     }
@@ -2185,7 +2185,7 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
             char pathMsg[255];
             memset(pathMsg, 0, sizeof(pathMsg));
             sprintf(pathMsg, "Bot [%d] path index [%d] has node [%d]", botIndex, path_index, node);
-            pBot->rprint("createPath", pathMsg);
+            pBot->rprint("cNodeMachine::createPath", pathMsg);
         }
 
         path_index++;
@@ -2202,7 +2202,7 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
     if (pBot != NULL) {
         pBot->beginWalkingPath();
         pBot->setTimeToMoveToNode(2); // set timer (how much time do we allow ourselves to reach the following node)
-        pBot->rprint("createPath", "path creation finished");
+        pBot->rprint("cNodeMachine::createPath", "Path creation finished successfully");
     } else {
         rblog("createPath (without bot) - path creation finished\n");
     }
@@ -2680,21 +2680,25 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
                 // At destination, bomb is planted and we have not discovered the C4 yet...
                 // TODO: Remember which goals/bomb spots have been visited so bots won't visit this bomb spot again?
-                if (Game.bBombPlanted && !Game.isPlantedC4Discovered()) {
-                    int iGoalType = getGoalIndexFromNode(pBot->getGoalNode());
+                int iGoalType = getGoalIndexFromNode(pBot->getGoalNode());
 
-                    if (iGoalType == GOAL_BOMBSPOT && pBot->iTeam == 2) {
-                        if (!pBot->Defuse()) {
-                            // sector clear!
-                            if (FUNC_DoRadio(pBot))
-                                UTIL_BotRadioMessage(pBot, 3, "4", "");
+                if (pBot->isCounterTerrorist()) {
+                    if (Game.bBombPlanted && !Game.isPlantedC4Discovered()) {
+                        // call out sector clear
+                        if (iGoalType == GOAL_BOMBSPOT) {
+                            if (!pBot->Defuse()) {
+                                // sector clear!
+                                if (FUNC_DoRadio(pBot))
+                                    UTIL_BotRadioMessage(pBot, 3, "4", "");
+                            }
                         }
-                    } else if (iGoalType == GOAL_IMPORTANT) {
-
-                    } else if (iGoalType == GOAL_RESCUEZONE) {
-                        pBot->rprint("Arrived at goal rescue zone, forgetting hostages");
-                        pBot->clearHostages(); // clear hostages
+                        else if (iGoalType == GOAL_RESCUEZONE) {
+                            pBot->rprint("Arrived at goal rescue zone, forgetting hostages");
+                            pBot->clearHostages(); // clear hostages
+                        }
                     }
+                } else {
+                    // nothing to do here it seems... (bomb planting logic is elsewhere)
                 }
             }
 
@@ -3156,18 +3160,16 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     }
 
     // When camping we do not think about paths, we think where to look at
-    if (pBot->f_camp_time > gpGlobals->time) {
+    if (pBot->shouldCamp()) {
         pBot->rprint("cNodeMachine::path_think", "camp time");
         if (!pBot->hasGoal()) {
             pBot->rprint("Setting goal to look for camping");
             int noteToLookAt = node_look_camp(pBot->pEdict->v.origin, UTIL_GetTeam(pBot->pEdict), pBot->pEdict);
             pBot->setGoalNode(noteToLookAt);
         }
-        REALBOT_PRINT(pBot, "cNodeMachine::path_think", "Camping!");
+        pBot->rprint("cNodeMachine::path_think", "Camping!");
         return;
     }
-
-    int BotIndex = pBot->iBotIndex;
 
     if (pBot->isWalkingPath()) {
         pBot->rprint_trace("cNodeMachine::path_think", "isWalkingPath");
@@ -3175,13 +3177,10 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         return;
     }
 
-//    if (pBot->hasEnemy()) {
-////        pBot->rprint("cNodeMachine::path_think", "no goal - but bot has enemy. Bailing.");
-//        // bail, as we have an enemy
-//        return;
-//    }
+    pBot->rprint("cNodeMachine::path_think", "I am not walking a path.");
 
-    pBot->rprint("cNodeMachine::path_think", "before stopMoving");
+    int thisBotIndex = pBot->iBotIndex;
+
     // No path
     pBot->stopMoving();
 
@@ -3198,16 +3197,16 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 
         // we are already pretty close to our goal. Close enough to consider it achieved and forgetting it, so in the next
         // frame we might think of a new goal
-        if ((pBot->getDistanceTo(pBot->getGoalNode()) < 50) || iCurrentNode == pBot->getGoalNode()) {
-            pBot->rprint("I think I am fairly close enough so that I can forget about the goal now");
+        if ((pBot->getDistanceTo(pBot->getGoalNode()) < NODE_ZONE) || iCurrentNode == pBot->getGoalNode()) {
+            pBot->rprint("cNodeMachine::path_think()", "I think I am fairly close enough so that I can forget about the goal now");
             pBot->forgetGoal();
             pBot->forgetPath();
             return;
         }
 
         // Finally create a path
-        pBot->rprint("createPath -> bot has goal");
-        createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
+        pBot->rprint("cNodeMachine::path_think()", "Create path to goal node");
+        createPath(iCurrentNode, pBot->getGoalNode(), thisBotIndex, pBot, pBot->iPathFlags);
 
         if (pBot->getPathNodeIndex()) {
             pBot->rprint("cNodeMachine::path_think()",
@@ -3376,6 +3375,11 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
                     if (Game.bBombPlanted) {
                         if (Game.isPlantedC4Discovered()) {
                             pBot->rprint_trace("path_think/determine goal", "I know where the C4 is planted, evaluating if this is the closest bombspot.");
+                            char msg[255];
+                            memset(msg, 0, sizeof(msg));
+                            sprintf(msg, "C4 is located at %f, %f, %f", Game.vPlantedC4.x, Game.vPlantedC4.y, Game.vPlantedC4.z);
+                            pBot->rprint_trace("path_think/determine goal", msg);
+
                             // find a node close to the C4
                             int nodeCloseToC4 = getCloseNode(Game.vPlantedC4, NODE_ZONE * 2, NULL);
                             if (nodeCloseToC4 > -1) {
@@ -3393,7 +3397,6 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
 
                                 float score = distanceToC4FromCloseNode / distanceToC4FromThisGoalNode;
                                 goalscore = 1.5 + score;
-                                char msg[255];
                                 memset(msg, 0, sizeof(msg));
                                 sprintf(msg, "Distance from C4 to closest node is %f, distance from evaluating node to C4 is %f, resulting into score of %f",
                                         distanceToC4FromCloseNode,
@@ -3466,7 +3469,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         // some scores the same
         char msg[255];
         memset(msg, 0, sizeof(msg));
-        sprintf(msg, "Evaluating goal %s gives a score of %f, highest score so far is %f\n",
+        sprintf(msg, "Evaluating goal %s gives a score of %f, highest score so far is %f",
                 Goals[goalIndex].name,
                 score,
                 highestScore);
@@ -3486,7 +3489,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     }
 
     if (iFinalGoalNode < 0) {
-        pBot->rprint("I cannot determine a goal, bugged?");
+        pBot->rprint("path_think/determine goal", "I cannot determine a goal, bugged?");
     }
 
     // when afraid , use path_danger
@@ -3531,7 +3534,7 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
     }
 
     // Finally, we set it for real
-    pBot->rprint("Setting final goal after choosing a goal from goals list");
+    pBot->rprint("path_think/determine goal", "Setting final goal after choosing a goal from goals list");
     pBot->setGoalNode(iFinalGoalNode, iFinalGoalIndex);
     tGoal *goalData = pBot->getGoalData();
 
@@ -3554,27 +3557,26 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         );
     }
 
-    pBot->rprint("cNodeMachine::path_think", msg);
+    pBot->rprint("path_think/determine goal", msg);
 
+    pBot->rprint("path_think/determine goal", "GOAL PICKING FINISHED");
     //////////////////////////////////////// GOAL PICKING FINISHED //////////////////////////////////////////
     //////////////////////////////////////// GOAL PICKING FINISHED //////////////////////////////////////////
 
     // create path
-    pBot->rprint("createPath -> goal picking finished");
-    createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
+    bool success = createPath(iCurrentNode, pBot->getGoalNode(), thisBotIndex, pBot, pBot->iPathFlags);
 
     // If we still did not find a path, we set wander time
     // for 1 second we wait before a new attempt to find a goal and create a path.
-    if (!pBot->isWalkingPath()) {
-        REALBOT_PRINT(pBot, "cNodeMachine::path_think()",
-                      "Ah damn, i finally knew where to go, now i don't know how. Well lets try something close first.");
-        pBot->rprint("Setting a random goal");
-        pBot->setGoalNode(getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict));
-        pBot->rprint("createPath -> random goal");
-        createPath(iCurrentNode, pBot->getGoalNode(), BotIndex, pBot, pBot->iPathFlags);
+    if (!success) {
+        pBot->rprint("cNodeMachine::path_think()", "Unable to create path to destination.");
+        pBot->rprint("cNodeMachine::path_think()", "Finding node nearby to move to");
+        pBot->setGoalNode(getCloseNode(pBot->pEdict->v.origin, NODE_ZONE * 5, pBot->pEdict));
 
-        if (!pBot->isWalkingPath()) {
-            REALBOT_PRINT(pBot, "cNodeMachine::path_think()", "Ok, thats it; i am screwed!");
+        bool successToAlternative = createPath(iCurrentNode, pBot->getGoalNode(), thisBotIndex, pBot, pBot->iPathFlags);
+
+        if (!successToAlternative) {
+            pBot->rprint("cNodeMachine::path_think()", "Unable to create path to node nearby.");
             pBot->forgetPath();
             pBot->forgetGoal();
         }

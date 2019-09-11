@@ -776,23 +776,22 @@ void cBot::FightEnemy() {
     else                       // ---- CANNOT SEE ENEMY
     {
         if (f_bot_find_enemy_time < gpGlobals->time) {
-            //DebugOut("BotFightEnemy() : Lost enemy out of sight for 10 seconds.\n");
             pEnemyEdict = NULL;
             lastSeenEnemyVector = Vector(0, 0, 0);
-            pathNodeIndex = -1;
-            iGoalNode = -1;
+            rprint_trace("FightEnemy()", "Lost enemy out of sight, forgetting path and goal");
+            forgetPath();
+            forgetGoal();
         } else {
 
             // When we have the enemy for the first time out of sight
             // we calculate a path to the last seen position
             if (!bFirstOutOfSight) {
-
-                rprint("Enemy out of sight, calculating path towards it");
+                rprint_trace("FightEnemy()", "Enemy out of sight, calculating path towards it.");
                 // Only change path when we update our information here
                 int iGoal = NodeMachine.getCloseNode(lastSeenEnemyVector, NODE_ZONE, pEdict);
                 if (iGoal > -1) {
-                    iGoalNode = iGoal;
-                    pathNodeIndex = -1; // force recalculation of path
+                    setGoalNode(iGoal);
+                    forgetPath();
                 }
 
                 bFirstOutOfSight = true;
@@ -1276,6 +1275,7 @@ void cBot::FindCover() {
                 cover_vect = v_right;
         }
     }
+
     // Now check at the left
     UTIL_TraceLine(v_src, v_left, dont_ignore_monsters,
                    pEdict->v.pContainingEntity, &tr);
@@ -1306,23 +1306,25 @@ void cBot::FindCover() {
     bool bTakenCover = false;
 
     if (iCoverNode > -1) {
-        iGoalNode = iCoverNode;
-        pathNodeIndex = -1;
+        rprint("FindCover()", "cover node found (node based)");
+        setGoalNode(iCoverNode);
+        forgetPath();
 
         // Calculate a path to this position and get the heck there.
-        rprint("createPath -> find cover node #2");
         NodeMachine.createPath(iNodeFrom, iCoverNode, iBotIndex, this, PATH_NONE);
         f_cover_time = gpGlobals->time + 8;
         bTakenCover = true;
     } else {
+
         // --------------------------------------------------
         // If cover_vect is found, we find a node close to it
         // --------------------------------------------------
         if (cover_vect != Vector(9999, 9999, 9999)) {
+            rprint("FindCover()", "cover node found (cover_vect based)");
             int iNodeCover = NodeMachine.getCloseNode(cover_vect, 60, pEdict);
             if (iNodeCover > -1) {
-                iGoalNode = iNodeCover;
-                pathNodeIndex = -1;
+                setGoalNode(iNodeCover);
+                forgetPath();
 
                 // Calculate a path to this position and get the heck there.
                 rprint("createPath -> find cover node");
@@ -1532,13 +1534,15 @@ void cBot::InteractWithPlayers() {
                 zoomed++;
             }
         }
+
         // INITIALIZATION:
-        int iGoal =
-                NodeMachine.getCloseNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
+        int iGoal = NodeMachine.getCloseNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
         if (iGoal > -1) {
-            iGoalNode = iGoal;
-            pathNodeIndex = -1;
+            rprint_trace("InteractWithPlayers()", "Found a new enemy, setting goal and forgetting path");
+            setGoalNode(iGoal);
+            forgetPath();
         }
+
         // Speed our enemy runs
         // int run_speed = FUNC_PlayerSpeed(pBot->pBotEnemy);
         // Distance between Us and Enemy.
@@ -1578,12 +1582,12 @@ void cBot::InteractWithPlayers() {
         //
 
         // INITIALIZATION:
-        int iGoal =
-                NodeMachine.getCloseNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
+        int iGoal = NodeMachine.getCloseNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
 
         if (iGoal > -1) {
-            iGoalNode = iGoal;
-            pathNodeIndex = -1;
+            rprint_trace("InteractWithPlayers()", "Found a *newer* enemy, so picking goal node to that");
+            setGoalNode(iGoal);
+            forgetPath();
         }
     }
 }
@@ -1765,16 +1769,15 @@ bool cBot::Defuse() {
     // if the timers are set. The above check makes sure that no other
     // bot will be defusing the bomb.
     edict_t *pent = NULL;
-    Vector vC4;
-    vC4.x = 9999.0;
+    bool c4Found = false;
     while ((pent = UTIL_FindEntityByClassname(pent, "grenade")) != NULL) {
         if (UTIL_GetGrenadeType(pent) == 4) {     // It is a C4
-            vC4 = pent->v.origin;  // store origin
-            break;                 // done our part now
+            c4Found = true;
+            break;
         }
-    }                            // --- find the c4
+    }
 
-    if (vC4.x == 9999.0) {
+    if (!c4Found) {
         rprint_normal("Defuse()", "No C4 planted yet");
         return false;
     }
@@ -1785,18 +1788,22 @@ bool cBot::Defuse() {
     // Remember, pent=c4 now!
 
     // Calculate the distance between our position to the c4
+    Vector vC4 = pent->v.origin;
     float distance = func_distance(pEdict->v.origin, vC4);
 
     // can see C4
     bool canSeeC4 = canSeeVector(vC4);
 
     if (!canSeeC4) {
-        rprint_trace("Defuse()", "Cannot see planted C4 and nobody saw bomb planted");
+        rprint_trace("Defuse()", "Cannot see planted C4 - bailing");
         return false;
     }
     
     // it can be seen, so it has been discovered
-    if (!Game.isPlantedC4Discovered()) Game.vPlantedC4 = vC4;
+    if (!Game.isPlantedC4Discovered()) {
+        this->rprint_trace("Defuse()", "C4 is discovered, remembering its coordinates");
+        Game.vPlantedC4 = vC4;
+    }
 
     // We can do 2 things now
     // - If we are not close, we check if we can walk to it, and if so we face to the c4
@@ -1932,12 +1939,12 @@ void cBot::Act() {
             }
 
             // When we no longer have the C4 , we stop doing this stupid shit
-            if (!hasBomb()) {
+            if (!hasBomb() || Game.bBombPlanted) {
+                rprint_trace("Act()", "I was planting the C4, and it got planted (I no longer have the C4), so find a nearby node to camp/guard the C4");
                 f_c4_time = gpGlobals->time;
-                iGoalNode = NodeMachine.getCloseNode(pEdict->v.origin, 200, pEdict);
+                setGoalNode(NodeMachine.getCloseNode(pEdict->v.origin, 200, pEdict));
                 iPathFlags = PATH_CAMP;
-                pathNodeIndex = -1;
-                f_c4_time = gpGlobals->time;
+                forgetPath();
             }
         } else {
             // counter-terrorist
@@ -2048,7 +2055,9 @@ void cBot::Act() {
     botFixIdealPitch(pEdict);
 }
 
-bool cBot::shouldActWithC4() const { return f_c4_time > gpGlobals->time; }
+bool cBot::shouldActWithC4() const {
+    return f_c4_time > gpGlobals->time;
+}
 
 // BOT: On ladder?
 bool cBot::isOnLadder() {
@@ -2270,7 +2279,7 @@ void cBot::stopMoving() {
 }
 
 void cBot::forgetGoal() {
-    rprint("forgetGoal");
+    rprint_trace("forgetGoal");
     this->iGoalNode = -1;
     this->goalIndex = -1;
 }
@@ -2320,7 +2329,7 @@ void cBot::setGoalNode(int nodeIndex, int iGoalIndex) {
                 goalPtr->iChecked
         );
     } else {
-        sprintf(msg, "Setting iGoalNode to %d and goalIndex %d - could not retrieve goal data.", nodeIndex, goalIndex);
+        sprintf(msg, "Setting iGoalNode to [%d] and goalIndex [%d] - could not retrieve goal data.", nodeIndex, goalIndex);
     }
     rprint("setGoalNode()", msg);
 }
@@ -2834,30 +2843,30 @@ void cBot::Memory() {
             }
         } else {
             vEar = Vector(9999, 9999, 9999);
-
-            // check for any 'beeps' of the bomb!
-            if (iTeam == 2 && Game.bBombPlanted) {
-                // find the bomb vector
-                edict_t *pent = NULL;
-                Vector vC4 = Vector(9999, 9999, 9999);
-                while ((pent =
-                                UTIL_FindEntityByClassname(pent, "grenade")) != NULL) {
-                    if (UTIL_GetGrenadeType(pent) == 4)      // It is a C4
-                    {
-                        vC4 = pent->v.origin; // store origin
-                        break;        // done our part now
-                    }
-                }                   // --- find the c4
-
-                if (vC4 != Vector(9999, 9999, 9999)) {
-                    if (func_distance(vC4, NodeMachine.node_vector(iGoalNode))
-                        > 100 && func_distance(pEdict->v.origin, vC4) < 1024) {
-                        // set new goal node
-                        iGoalNode = NodeMachine.getCloseNode(vC4, NODE_ZONE, NULL);
-                        pathNodeIndex = -1;
-                    }
-                }
-            }
+//
+//            // check for any 'beeps' of the bomb!
+//            if (isCounterTerrorist() && Game.bBombPlanted) {
+//                // find the bomb vector
+//                edict_t *pent = NULL;
+//                Vector vC4 = Vector(9999, 9999, 9999);
+//                while ((pent = UTIL_FindEntityByClassname(pent, "grenade")) != NULL) {
+//                    if (UTIL_GetGrenadeType(pent) == 4)      // It is a C4
+//                    {
+//                        vC4 = pent->v.origin; // store origin
+//                        break;        // done our part now
+//                    }
+//                }                   // --- find the c4
+//
+//                if (vC4 != Vector(9999, 9999, 9999)) {
+//
+//                    if (func_distance(vC4, NodeMachine.node_vector(iGoalNode)) > 100 &&
+//                        func_distance(pEdict->v.origin, vC4) < 1024) {
+//                        // set new goal node
+//                        setGoalNode(NodeMachine.getCloseNode(vC4, NODE_ZONE, NULL));
+//                        forgetPath();
+//                    }
+//                }
+//            }
         }
 
     } else {
@@ -4092,6 +4101,10 @@ void cBot::increaseTimeToMoveToNode(float timeInSeconds) {
 
 float cBot::getMoveToNodeTimeRemaining() {
     return gpGlobals->time - fMoveToNodeTime;
+}
+
+bool cBot::shouldCamp() {
+    return f_camp_time > gpGlobals->time;
 }
 
 // $Log: bot.cpp,v $
