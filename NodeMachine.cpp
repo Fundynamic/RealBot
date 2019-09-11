@@ -3195,15 +3195,6 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
             return;
         }
 
-        // we are already pretty close to our goal. Close enough to consider it achieved and forgetting it, so in the next
-        // frame we might think of a new goal
-        if ((pBot->getDistanceTo(pBot->getGoalNode()) < NODE_ZONE) || iCurrentNode == pBot->getGoalNode()) {
-            pBot->rprint("cNodeMachine::path_think()", "I think I am fairly close enough so that I can forget about the goal now");
-            pBot->forgetGoal();
-            pBot->forgetPath();
-            return;
-        }
-
         // Finally create a path
         pBot->rprint("cNodeMachine::path_think()", "Create path to goal node");
         createPath(iCurrentNode, pBot->getGoalNode(), thisBotIndex, pBot, pBot->iPathFlags);
