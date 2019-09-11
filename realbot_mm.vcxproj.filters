@@ -79,6 +79,9 @@
     <ClInclude Include="NodeMachine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="NodeDataTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="todo.txt" />

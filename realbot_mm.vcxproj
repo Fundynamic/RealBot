@@ -111,6 +111,7 @@
     <ClInclude Include="engine.h" />
     <ClInclude Include="game.h" />
     <ClInclude Include="IniParser.h" />
+    <ClInclude Include="NodeDataTypes.h" />
     <ClInclude Include="NodeMachine.h" />
   </ItemGroup>
   <ItemGroup>
