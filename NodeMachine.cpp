@@ -1812,6 +1812,10 @@ void cNodeMachine::updateGoals() {
         if (goal->iType == GOAL_HOSTAGE) {
             initGoal(i);
         }
+
+        if (goal->iType == GOAL_VIP) {
+            initGoal(i);
+        }
     }
 
     edict_t *pent = NULL;
@@ -1827,6 +1831,21 @@ void cNodeMachine::updateGoals() {
         addGoal(pent, GOAL_HOSTAGE, pent->v.origin+ Vector(0,0,32));
     }
 
+    // SEARCH PLAYERS FOR ENEMIES
+    for (int i = 1; i <= gpGlobals->maxClients; i++) {
+        edict_t *pPlayer = INDEXENT(i);
+
+        // skip invalid players and skip self (i.e. this bot)
+        if ((pPlayer) && (!pPlayer->free)) {
+            // skip this player if not alive (i.e. dead or dying)
+            if (!IsAlive(pPlayer))
+                continue;
+        }
+
+        if (UTIL_IsVip(pPlayer)) {
+            addGoal(pPlayer, GOAL_VIP, pPlayer->v.origin + Vector(0,0,32));
+        }
+    }
 }
 
 /**
@@ -2629,7 +2648,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
         // When our target was our goal, we are there
         if (isHeadingForGoalNode) {
-            REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Executing destination logic");
+            pBot->rprint_trace("cNodeMachine::path_walk()", "Executing destination logic");
 
             // reached the end
             pBot->iPreviousGoalNode = pBot->getGoalNode();
@@ -2732,7 +2751,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         pBot->rprint("not stuck for more than 2 seconds so reset jump and duck tries");
     }
 
-    pBot->rprint("cNodeMachine::path_walk", "before getEntityBetweenMeAndNextNode");
+    pBot->rprint_trace("cNodeMachine::path_walk", "before getEntityBetweenMeAndNextNode");
     edict_t *pEntityHit = pBot->getEntityBetweenMeAndNextNode();
 
     // When blocked by an entity, we should figure out why:
@@ -3137,7 +3156,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         return;
     }
 
-    pBot->rprint("cNodeMachine::path_think", "I am not walking a path.");
+    pBot->rprint_trace("cNodeMachine::path_think", "I am not walking a path.");
 
     int thisBotIndex = pBot->iBotIndex;
 
@@ -3169,7 +3188,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     }
 
     // There is no goal
-    pBot->rprint("cNodeMachine::path_think", "No goal yet");
+    pBot->rprint_trace("cNodeMachine::path_think", "No goal yet");
 
     // Depending on team we have a goal
     int iCurrentNode = pBot->determineCurrentNodeWithTwoAttempts();
@@ -3181,7 +3200,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     if (iCurrentNode < 0) {
         pBot->startWandering(3);
         pBot->forgetGoal();
-        pBot->rprint("cNodeMachine::path_think", "No node nearby, start wandering.");
+        pBot->rprint_trace("cNodeMachine::path_think", "No node nearby, start wandering.");
         return;
     }
 
@@ -3205,7 +3224,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     // A score of 1.0 is max.
     int maxCheckedScore = 5;
 
-    REALBOT_PRINT(pBot, "cNodeMachine::path_think", "going to choose goal");
+    pBot->rprint_normal("cNodeMachine::path_think", "going to choose goal");
     for (goalIndex = 0; goalIndex < MAX_GOALS; goalIndex++) {
 
         // Make sure this goal is valid
@@ -3391,12 +3410,31 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         if (goalType == GOAL_VIPSAFETY)        // basic goals added for as_ maps
         {
             // Maximum importance when acting as CT should check whether we are the VIP!
-            if (pBot->iTeam == 2) {
-                score = 2.0;
-            } else {            // We are T
-                score = (score + 1.0) / 2.0;
+            if (pBot->isCounterTerrorist()) {
+                if (pBot->vip) {
+                    // VIP wants to get out
+                    score = 2.0;
+                }
+            } else {
+                // terrorists pick random
+                score = (score + RANDOM_FLOAT(0.0, 1.0)) / 2.0;
             }
-        } else if (goalType == GOAL_ESCAPEZONE)     // basic goals added for es_  maps
+        }
+
+        if (goalType == GOAL_VIP) {
+            if (pBot->isCounterTerrorist()) {
+                if (pBot->vip) {
+                    score = 0; // do not chase yourself
+                } else {
+                    // if distance is too big, go to it. (guard the VIP)
+                    int maxDistanceWeKeepToVIP = 500;
+                    float goalScore = maxDistanceWeKeepToVIP / fDistanceToGoal;
+                    score = (score + goalScore) / 2.0;
+                }
+            }
+        }
+
+        if (goalType == GOAL_ESCAPEZONE)     // basic goals added for es_  maps
         {
             // Maximum importance when acting as T
             if (pBot->iTeam == 1) {
