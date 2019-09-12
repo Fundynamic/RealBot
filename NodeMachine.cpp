@@ -2758,9 +2758,9 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
             }
 
             // check if door has a button you have to use to open it
-            const char *doorButton = STRING(pEntityHit->v.targetname);
+            const char *doorButtonToLookFor = STRING(pEntityHit->v.targetname);
 
-            if (doorButton) {
+            if (doorButtonToLookFor) {
                 // find this entity
                 edict_t *pButtonEdict = NULL;
                 edict_t *pent = NULL;
@@ -2771,55 +2771,45 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                     // skip anything that could be 'self' (unlikely)
                     if (pent == pEntityHit) continue;
 
-                    // get vectr
-                    Vector vPentVector = VecBModelOrigin(pent);
-
                     // found button entity matching target
-                    if (strcmp(STRING(pent->v.target), doorButton) == 0) {
-                        UTIL_TraceLine(pBot->pEdict->v.origin, vPentVector,
+                    if (strcmp(STRING(pent->v.target), doorButtonToLookFor) == 0) {
+                        Vector buttonVector = VecBModelOrigin(pent);
+
+                        UTIL_TraceLine(pBot->pEdict->v.origin, buttonVector,
                                        ignore_monsters, dont_ignore_glass,
                                        pBot->pEdict, &trb);
 
-
-                        bool isGood = false;
-
                         // if nothing hit:
-                        if (trb.flFraction >= 1.0)
-                            isGood = true;
-                        else {
-                            // we hit this button we check for
-                            if (trb.pHit == pent)
-                                isGood = true;
-                        }
-
-                        if (isGood) {
+                        if (trb.flFraction >= 1.0) {
                             // Button found to head for!
                             pButtonEdict = pent;
                             break;
                         } else {
-                            // we failed here
-                            // it is probably a button 'on the other side of the wall'
-                            // as most doors have 2 buttons to access it (ie prodigy)
-                            //SERVER_PRINT("TRACELINE FAILS\n");
+                            // we hit this button we check for
+                            if (trb.pHit == pent) {
+                                // Button found to head for!
+                                pButtonEdict = pent;
+                                break;
+                            }
                         }
                     }
-                }                   // while
+                } // while (func_button)
 
+                // still nothing found
                 if (pButtonEdict == NULL) {
                     // TOUCH buttons (are not func_button!)
                     pent = NULL;
+
                     // search for all buttons
                     while ((pent = UTIL_FindEntityByClassname(pent, "trigger_multiple")) != NULL) {
                         // skip anything that could be 'self' (unlikely)
                         if (pent == pEntityHit)
                             continue;
 
-                        // get vectr
-                        Vector vPentVector = VecBModelOrigin(pent);
-
                         // found button entity
-                        if (strcmp(STRING(pent->v.target), doorButton) == 0) {
-                            //SERVER_PRINT("Found a match, going to check if we can reach it!\n");
+                        if (strcmp(STRING(pent->v.target), doorButtonToLookFor) == 0) {
+                            // get vectr
+                            Vector vPentVector = VecBModelOrigin(pent);
 
                             UTIL_TraceHull(pBot->pEdict->v.origin, vPentVector,
                                            dont_ignore_monsters, point_hull,
@@ -2828,9 +2818,10 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                             bool isGood = false;
 
                             // if nothing hit:
-                            if (trb.flFraction >= 1.0)
-                                isGood = true;
-                            else {
+                            if (trb.flFraction >= 1.0) {
+                                pButtonEdict = pent;
+                                break;
+                            } else {
                                 // we hit this button we check for
                                 if (trb.pHit == pent)
                                     isGood = true;
@@ -2838,8 +2829,6 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
                             if (isGood) {
                                 // Button found to head for!
-                                pButtonEdict = pent;
-                                break;
                             } else {
                                 // we failed here
                                 // it is probably a button 'on the other side of the wall'
