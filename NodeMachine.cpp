@@ -1702,9 +1702,15 @@ void cNodeMachine::addGoal(edict_t *pEdict, int goalType, Vector vVec) {
     }
 
     int distance = NODE_ZONE * 2;
-    if (goalType == GOAL_HOSTAGE) {
+
+    // some goals require very close nodes
+    if (goalType == GOAL_HOSTAGE ||
+        goalType == GOAL_VIPSAFETY ||
+        goalType == GOAL_RESCUEZONE ||
+        goalType == GOAL_BOMBSPOT) {
         distance = NODE_ZONE * 0.8;
     }
+
     int nNode = getCloseNode(vVec, distance, pEdict);
 
     if (nNode < 0) {
@@ -2494,9 +2500,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         }
 
         bNearNode = pBot->getDistanceToNextNode() < 25;
-
     } else {
-
         pBot->rprint_trace("cNodeMachine::path_walk", "not on ladder");
         float requiredDistance = NODE_ZONE;
 
@@ -2511,13 +2515,27 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                 pBot->rprint_trace("cNodeMachine::path_walk", "is heading for goal node");
 
                 tGoal *goalData = pBot->getGoalData();
-                if (goalData && goalData->iType == GOAL_HOSTAGE) {
-                    pBot->rprint_normal("bNear", "next node is destination and GOAL_HOSTAGE, so need to get really close");
-                    requiredDistance = 25; // get really close to hostage
+                if (goalData) {
+                    char msg[255];
+                    sprintf(msg, "Heading for goal node of type [%s]", goalData->name);
+                    pBot->rprint_trace("cNodeMachine::path_walk (bNear)", msg);
+                    if (goalData->iType == GOAL_HOSTAGE) {
+                        pBot->rprint_normal("cNodeMachine::path_walk (bNear)", "next node is destination and GOAL_HOSTAGE, so need to get really close");
+                        requiredDistance = 25; // get really close to hostage
+                    } else if (goalData->iType == GOAL_VIPSAFETY) {
+                        pBot->rprint_normal("cNodeMachine::path_walk (bNear)", "next node is destination and GOAL_VIPSAFETY, so need to get really close");
+                        requiredDistance = 25; // get really close to safety zone
+                    }
                 }
+            } else {
+                char msg[255];
+                sprintf(msg, "Heading for node (non goal) %d, distance for bNear is %f", pBot->getCurrentPathNodeToHeadFor(), requiredDistance);
+                pBot->rprint_trace("cNodeMachine::path_walk (bNear)", msg);
             }
+
             pBot->rprint_trace("cNodeMachine::path_walk", "not going to ladder - end");
         }
+
 
         bNearNode = pBot->getDistanceToNextNode() < requiredDistance;
 
@@ -2575,6 +2593,9 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
     // reached node
     if (bNearNode) {
+        // first determine if we where heading for a goal node
+        bool isHeadingForGoalNode = pBot->isHeadingForGoalNode();
+
         // increase index on path, so we will go to next node
         pBot->nextPathNodeIndex();
 
@@ -2584,7 +2605,6 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         // give time (2 seconds) to move to next node
         pBot->setTimeToMoveToNode(2.0f);
 
-        bool isHeadingForGoalNode = pBot->isHeadingForGoalNode();
 
         if (!isHeadingForGoalNode) {
             char msg[255];
@@ -2607,9 +2627,8 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
             pBot->rprint("cNodeMachine::path_walk()", msg);
         }
 
-
         // When our target was our goal, we are there
-        if (isHeadingForGoalNode && pBot->getDistanceToNextNode() < NODE_ZONE) {
+        if (isHeadingForGoalNode) {
             REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "Executing destination logic");
 
             // reached the end
