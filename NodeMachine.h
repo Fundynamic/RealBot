@@ -132,8 +132,8 @@ public:
     // -----------------
     bool createPath(int nodeStartIndex, int nodeTargetIndex, int botIndex, cBot *pBot, int iFlags);   // know the path
     void path_draw(edict_t *pEntity);   // draw the path
-    void path_walk(cBot *pBot, float moved_distance);   // walk the path
-    void path_think(cBot *pBot, float moved_distance);  // think about paths
+    void path_walk(cBot *pBot, float distanceMoved);   // walk the path
+    void path_think(cBot *pBot, float distanceMoved);  // think about paths
     void path_clear(int botIndex);
 
     int getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex);
@@ -209,6 +209,10 @@ private:
     void initGoals();
 
     void initGoal(int g);
+
+    bool isEntityDoor(const edict_t *pEntityHit) const;
+
+    bool isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHit) const;
 };
 
 #endif // NODEMACHINE_H

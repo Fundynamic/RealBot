@@ -359,9 +359,9 @@ public:
     char arg3[25];
 
     // Timers
-    float prev_time;
+    float distanceMovedTimer;
 
-    Vector v_prev_origin;
+    Vector prevOrigin;
     Vector lastSeenEnemyVector;              // Vector where we last saw our enemy (when not 0,0,0)
 
     float f_jump_time;
@@ -549,6 +549,15 @@ public:
     int keyPressed(int key) const;
 
     bool shouldCamp();
+    bool shouldWait();
+    void setTimeToWait(float timeInSeconds);
+
+    bool shouldBeAbleToInteractWithButton();
+
+    bool hasButtonToInteractWith();
+    bool hasCurrentNode();
+
+    bool createPath(int destinationNode, int flags);
 };
 
 // new UTIL.CPP functions...

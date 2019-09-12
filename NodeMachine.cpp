@@ -2369,38 +2369,32 @@ int cNodeMachine::node_look_camp(Vector vOrigin, int iTeam,
     return iBestNode;
 }
 
-// Walk the path Neo
-void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
+/**
+ * This function moves the bot from one node to the next. Considering distanceMoved and timers to unstuck himself or learn
+ * from bad connections.
+ * @param pBot
+ * @param distanceMoved
+ */
+void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     pBot->rprint("cNodeMachine::path_walk", "START");
     int BotIndex = pBot->iBotIndex;
 
     // Check if path is valid
     if (iPath[BotIndex][0] < 0) {
         pBot->rprint("cNodeMachine::path_walk", "invalid path");
-        pBot->f_move_speed = 0.0; // do not move
+        pBot->stopMoving();
         return;                   // back out
     }
 
-    // If we should wait, we do nothing here
-    if (pBot->f_wait_time > gpGlobals->time) {
-        pBot->rprint("cNodeMachine::path_walk", "wait time");
-        return;
-    }
-
-    pBot->f_move_speed = pBot->f_max_speed;
+    pBot->setMoveSpeed(pBot->f_max_speed);
 
     // Walk the path
     pBot->rprint_trace("cNodeMachine::path_walk", "determine current path node to head for");
     int currentNodeToHeadFor = pBot->getCurrentPathNodeToHeadFor();        // Node we are heading for
 
+    // possibly end of path reached, overshoot destination?
     if (currentNodeToHeadFor < 0) {
-//        REALBOT_PRINT(pBot, "cNodeMachine::path_walk()", "There is no node to go to!");
-
-        // ?? Assumes we had arrived, so remember the previous goal?!?
-        if (pBot->hasGoal()) {
-            pBot->iPreviousGoalNode = pBot->getGoalNode();
-        }
-
+        pBot->rprint_trace("cNodeMachine::path_walk", "there is no current node to head for");
         pBot->forgetGoal();
         pBot->forgetPath();
         return;
@@ -2454,16 +2448,14 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                 if (!bTrigger)
                     UTIL_BotPressKey(pBot, IN_USE);
 
-                SERVER_PRINT("This button i was looking for, is close, i can see it, i use it!!!\n");
+                pBot->rprint_trace("cNodeMachine::path_walk", "This is the button I was looking for, it is close and I can use it");
 
                 // wait a little
-                pBot->f_wait_time = gpGlobals->time + 0.5;
+                pBot->setTimeToWait(0.5);
                 pBot->fButtonTime = gpGlobals->time + 5.0;
                 pBot->setTimeToMoveToNode(3);
                 pBot->forgetPath();
                 return;
-            } else {
-                SERVER_PRINT("TRACELINE FUCKED UP!\n");
             }
             return;
         }
@@ -2740,70 +2732,50 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
     // When blocked by an entity, we should figure out why:
     if (pEntityHit && // we are blocked by an entity
-        pBot->pButtonEdict == NULL &&  // we do not have an interaction with a button set up
+        !pBot->hasButtonToInteractWith() &&  // we do not have an interaction with a button set up
         pBot->shouldBeAbleToMove() && // we should be able to move
-        pBot->fButtonTime < gpGlobals->time) {
+        pBot->shouldBeAbleToInteractWithButton()) {
 
         // hit by a door?
-        bool bDoor = false;
-
-        // normal door (can be used as an elevator)
-        if (strcmp(STRING(pEntityHit->v.classname), "func_door") == 0) bDoor = true;
-        // I am not 100% sure about func_wall, but include it anyway
-        if (strcmp(STRING(pEntityHit->v.classname), "func_wall") == 0) bDoor = true;
-        // rotating door
-        if (strcmp(STRING(pEntityHit->v.classname), "func_door_rotating") == 0) bDoor = true;
+        bool bDoor = isEntityDoor(pEntityHit);
 
         // a door is blocking us
         if (bDoor) {
             // check if we have to 'use' it
-            if (FBitSet(pEntityHit->v.spawnflags, SF_DOOR_USE_ONLY) &&
-                !(FBitSet(pEntityHit->v.spawnflags, SF_DOOR_NO_AUTO_RETURN))) {
+            if (isDoorThatOpensWhenPressingUseButton(pEntityHit)) {
                 // use only, press use and wait
                 pBot->vHead = VecBModelOrigin(pEntityHit);
                 pBot->vBody = pBot->vHead;
                 UTIL_BotPressKey(pBot, IN_USE);
-                pBot->f_wait_time = gpGlobals->time + 0.5;
+                pBot->setTimeToWait(0.5);
                 pBot->fButtonTime = gpGlobals->time + 5;
                 pBot->pButtonEdict = NULL;
 
+                pBot->rprint_trace("cNodeMachine::path_walk", "I have pressed USE to open a door");
                 // TODO: when this door is opened by a trigger_multiple (on touch)
                 // then we do not have to wait and press USE at all.
-
-                //SERVER_PRINT("We have to use this door in order to get it opened!\n");
                 return;
             }
-            // this thing has a name (needs button to activate)
-            if (STRING(pEntityHit->v.targetname)) {
+
+            // check if door has a button you have to use to open it
+            const char *doorButton = STRING(pEntityHit->v.targetname);
+
+            if (doorButton) {
                 // find this entity
                 edict_t *pButtonEdict = NULL;
                 edict_t *pent = NULL;
                 TraceResult trb;
 
-
                 // search for all buttons
-                while ((pent =
-                                UTIL_FindEntityByClassname(pent,
-                                                           "func_button")) != NULL) {
+                while ((pent = UTIL_FindEntityByClassname(pent, "func_button")) != NULL) {
                     // skip anything that could be 'self' (unlikely)
-                    if (pent == pEntityHit)
-                        continue;
-
-                    /*
-                       SERVER_PRINT("FUNC_DOOR: target-> '");
-                       SERVER_PRINT(STRING(pent->v.target));
-                       SERVER_PRINT("' (Targetname='");
-                       SERVER_PRINT(STRING(pEntityHit->v.targetname));
-                       SERVER_PRINT("'\n");
-                     */
+                    if (pent == pEntityHit) continue;
 
                     // get vectr
                     Vector vPentVector = VecBModelOrigin(pent);
 
-                    // found button entity
-                    if (strcmp
-                                (STRING(pent->v.target),
-                                 STRING(pEntityHit->v.targetname)) == 0) {
+                    // found button entity matching target
+                    if (strcmp(STRING(pent->v.target), doorButton) == 0) {
                         UTIL_TraceLine(pBot->pEdict->v.origin, vPentVector,
                                        ignore_monsters, dont_ignore_glass,
                                        pBot->pEdict, &trb);
@@ -2837,29 +2809,16 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                     // TOUCH buttons (are not func_button!)
                     pent = NULL;
                     // search for all buttons
-                    while ((pent =
-                                    UTIL_FindEntityByClassname(pent,
-                                                               "trigger_multiple")) !=
-                           NULL) {
+                    while ((pent = UTIL_FindEntityByClassname(pent, "trigger_multiple")) != NULL) {
                         // skip anything that could be 'self' (unlikely)
                         if (pent == pEntityHit)
                             continue;
-
-                        /*
-                           SERVER_PRINT("TRIGGER_MULTIPLE: target-> '");
-                           SERVER_PRINT(STRING(pent->v.target));
-                           SERVER_PRINT("' (Targetname='");
-                           SERVER_PRINT(STRING(pEntityHit->v.targetname));
-                           SERVER_PRINT("'\n");
-                         */
 
                         // get vectr
                         Vector vPentVector = VecBModelOrigin(pent);
 
                         // found button entity
-                        if (strcmp
-                                    (STRING(pent->v.target),
-                                     STRING(pEntityHit->v.targetname)) == 0) {
+                        if (strcmp(STRING(pent->v.target), doorButton) == 0) {
                             //SERVER_PRINT("Found a match, going to check if we can reach it!\n");
 
                             UTIL_TraceHull(pBot->pEdict->v.origin, vPentVector,
@@ -2887,9 +2846,8 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                                 // as most doors have 2 buttons to access it (ie prodigy)
 
                                 // hits by worldspawn here
-                                if (strcmp
-                                            (STRING(trb.pHit->v.classname),
-                                             "worldspawn") == 0) {
+                                if (strcmp(STRING(trb.pHit->v.classname), "worldspawn") == 0) {
+
                                     // DE_PRODIGY FIX:
                                     // Somehow the button is not detectable. Find a node, that is close to it.
                                     // then retry the traceline. It should NOT hit a thing now.
@@ -2907,7 +2865,6 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                                         // if nothing hit:
                                         if (trb.flFraction >= 1.0) {
                                             pButtonEdict = pent;
-                                            //                      SERVER_PRINT("I don't like it, but i have detected it anyways!");
                                             break;
                                         }
                                     }
@@ -2915,8 +2872,9 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
 
                             }
                         }
-                    }                // while
+                    } // while
                 }
+
                 // We have found a button to go to
                 if (pButtonEdict) {
                     // Get its vector
@@ -2926,22 +2884,10 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
                     int iButtonNode = getCloseNode(vButtonVector, NODE_ZONE, pButtonEdict);
 
                     // When node found, create path to it
-                    if (iButtonNode > -1) {
-                        // Get current node
-                        int iCurrentNode = getCloseNode(pBot->pEdict->v.origin, NODE_ZONE,
-                                                        pBot->pEdict);
-
-                        // when valid...
-                        if (iCurrentNode > -1) {
-                            pBot->forgetPath();
-                            pBot->rprint("createPath -> for button");
-                            createPath(iCurrentNode, iButtonNode, pBot->iBotIndex, pBot, PATH_NONE);
-                            pBot->pButtonEdict = pButtonEdict;
-                            return;
-                        }
-
-                    }                // button node
-                }                   // pButtonEdict found
+                    if (pBot->createPath(iButtonNode, PATH_NONE)) {
+                        pBot->pButtonEdict = pButtonEdict;
+                    }
+                }  // pButtonEdict found
             }
         }
     } // door logic
@@ -3024,7 +2970,7 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     // - learn from mistakes
     // - unstuck
     // - go back in path...
-    bool isStuck = moved_distance < 0.5 && pBot->shouldBeAbleToMove()
+    bool isStuck = distanceMoved < 0.5 && pBot->shouldBeAbleToMove()
                    && (pBot->fNotStuckTime + 0.5) < gpGlobals->time; // also did not evaluate this logic for 0.5 second
     if (isStuck) {
         pBot->fNotStuckTime = gpGlobals->time;
@@ -3123,8 +3069,24 @@ void cNodeMachine::path_walk(cBot *pBot, float moved_distance) {
     }
 }
 
+/**
+ * Returns true when entity is a door that can be used
+ * @param pEntityHit
+ * @return
+ */
+bool cNodeMachine::isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHit) const {
+    return FBitSet(pEntityHit->v.spawnflags, SF_DOOR_USE_ONLY) &&
+    !(FBitSet(pEntityHit->v.spawnflags, SF_DOOR_NO_AUTO_RETURN));
+}
+
+bool cNodeMachine::isEntityDoor(const edict_t *pEntityHit) const {
+    return  strcmp(STRING(pEntityHit->v.classname), "func_door") == 0 || // normal door (can be used as an elevator)
+            strcmp(STRING(pEntityHit->v.classname), "func_wall") == 0 || // I am not 100% sure about func_wall, but include it anyway
+            strcmp(STRING(pEntityHit->v.classname), "func_door_rotating"); // rotating door
+}
+
 // Think about path creation here
-void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
+void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     pBot->rprint_trace("cNodeMachine::path_think", "START");
     if (pBot->shouldBeWandering()) {
         int currentNode = -1;
@@ -3152,28 +3114,32 @@ void cNodeMachine::path_think(cBot *pBot, float moved_distance) {
         }
     }
 
-    if (pBot->f_c4_time > gpGlobals->time) {
-        pBot->rprint("cNodeMachine::path_think", "c4 time");
-        //???
-        REALBOT_PRINT(pBot, "cNodeMachine::path_think", "Not allowed to think , c4 is planted");
+    if (pBot->shouldActWithC4()) {
+        pBot->rprint("cNodeMachine::path_think", "Time to do things with a C4");
         return;
     }
 
     // When camping we do not think about paths, we think where to look at
     if (pBot->shouldCamp()) {
-        pBot->rprint("cNodeMachine::path_think", "camp time");
+        pBot->rprint("cNodeMachine::path_think", "Time to camp");
         if (!pBot->hasGoal()) {
-            pBot->rprint("Setting goal to look for camping");
+            pBot->rprint("cNodeMachine::path_think", "Setting goal to look for camping");
             int noteToLookAt = node_look_camp(pBot->pEdict->v.origin, UTIL_GetTeam(pBot->pEdict), pBot->pEdict);
             pBot->setGoalNode(noteToLookAt);
         }
-        pBot->rprint("cNodeMachine::path_think", "Camping!");
         return;
     }
 
+    // If we should wait, we do nothing here
+    if (pBot->shouldWait()) {
+        pBot->rprint("cNodeMachine::path_walk", "Time to wait");
+        return;
+    }
+
+    // After above checks where we may not walk or anything, we come here and only execute when we have a path
     if (pBot->isWalkingPath()) {
         pBot->rprint_trace("cNodeMachine::path_think", "isWalkingPath");
-        path_walk(pBot, moved_distance);  // walk the path
+        path_walk(pBot, distanceMoved);  // walk the path
         return;
     }
 

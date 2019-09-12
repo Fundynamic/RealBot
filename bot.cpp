@@ -163,7 +163,7 @@ void cBot::SpawnInit() {
     f_shoot_time = gpGlobals->time;
     fMoveToNodeTime = -1;
     nodeTimeIncreasedAmount = 0;
-    prev_time = gpGlobals->time;
+    distanceMovedTimer = gpGlobals->time;
     fBlindedTime = gpGlobals->time;
     f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.1, 0.9);
     fWanderTime = gpGlobals->time;
@@ -277,7 +277,7 @@ void cBot::SpawnInit() {
     // ------------------------
     // VECTORS
     // ------------------------
-    v_prev_origin = Vector(9999.0, 9999.0, 9999.0);
+    prevOrigin = Vector(9999.0, 9999.0, 9999.0);
     lastSeenEnemyVector = Vector(0, 0, 0);
     vEar = Vector(9999, 9999, 9999);
 
@@ -333,7 +333,7 @@ void cBot::NewRound() {
     f_shoot_time = gpGlobals->time;
     fMoveToNodeTime = -1;
     nodeTimeIncreasedAmount = 0;
-    prev_time = gpGlobals->time;
+    distanceMovedTimer = gpGlobals->time;
     fBlindedTime = gpGlobals->time;
     f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.1, 0.9);
     fWanderTime = gpGlobals->time;
@@ -432,7 +432,7 @@ void cBot::NewRound() {
     // ------------------------
     // VECTORS
     // ------------------------
-    v_prev_origin = Vector(9999.0, 9999.0, 9999.0);
+    prevOrigin = Vector(9999.0, 9999.0, 9999.0);
     lastSeenEnemyVector = Vector(0, 0, 0);
     vEar = Vector(9999, 9999, 9999);
 
@@ -2986,7 +2986,7 @@ This function will set the iCloseNode variable, which is the node most closest t
 the bot. Returns the closest node it found.
 **/
 int cBot::determineCurrentNode() {
-    iCloseNode = determineCurrentNode(100);
+    iCloseNode = determineCurrentNode(NODE_ZONE);
     return iCloseNode;
 }
 
@@ -2995,9 +2995,9 @@ This function will set the iCloseNode variable, which is the node most closest t
 the bot. Returns the closest node it found.
 **/
 int cBot::determineCurrentNodeWithTwoAttempts() {
-    iCloseNode = determineCurrentNode(50);
+    iCloseNode = determineCurrentNode();
     if (iCloseNode < 0) {
-        iCloseNode = determineCurrentNode(100);
+        iCloseNode = determineCurrentNode(NODE_ZONE * 2);
     }
     return iCloseNode;
 }
@@ -3011,10 +3011,14 @@ int cBot::determineCurrentNode(float range) {
 
 /**
  * This returns the current node (iCloseNode) set. Instead of using determineCurrentNode, which is expensive,
- * call this to return the cached value.
+ * call this to return the cached value. It will however call determineCurrentNode when node is < 0, usually it means
+ * the state has been set.
  * @return
  */
 int cBot::getCurrentNode() {
+    if (iCloseNode < 0) {
+        determineCurrentNode();
+    }
     return iCloseNode;
 }
 
@@ -3051,7 +3055,7 @@ bool cBot::isDead() {
 
 // BOT: Think
 void cBot::Think() {
-    float moved_distance;        // length of v_diff vector (distance bot moved)
+    float distanceMoved;        // length of v_diff vector (distance bot moved)
 
     // BOT: If a bot did not join a team yet, then do it
     if (!hasJoinedTeam) {
@@ -3174,17 +3178,19 @@ void cBot::Think() {
     }
 
     // Move speed... moved_distance.
-    if (prev_time <= gpGlobals->time) {
-
+    if (distanceMovedTimer <= gpGlobals->time) {
         // see how far bot has moved since the previous position...
-        Vector v_diff = v_prev_origin - pEdict->v.origin;
-        moved_distance = v_diff.Length();
+        Vector v_diff = prevOrigin - pEdict->v.origin;
+        distanceMoved = v_diff.Length();
 
         // save current position as previous
-        v_prev_origin = pEdict->v.origin;
-        prev_time = gpGlobals->time + 0.1;
+        prevOrigin = pEdict->v.origin;
+        distanceMovedTimer = gpGlobals->time + 0.1;
     } else {
-        moved_distance = 0.5;
+        // HACK HACK:
+        if (!shouldBeAbleToMove()) {
+            distanceMoved = 0.5;
+        }
     }
 
     // NEW ROUND
@@ -3356,7 +3362,7 @@ void cBot::Think() {
     }
 
     // WALK()
-    NodeMachine.path_think(this, moved_distance);
+    NodeMachine.path_think(this, distanceMoved);
 
     // CHECKAROUND()
     CheckAround();
@@ -4019,9 +4025,9 @@ bool cBot::isUsingConsole() {
 bool cBot::shouldBeAbleToMove() {
     return f_freeze_time + 3 < gpGlobals->time
         && f_stuck_time < gpGlobals->time
-        && f_camp_time < gpGlobals->time
-        && f_wait_time < gpGlobals->time
-        && f_c4_time < gpGlobals->time
+        && !shouldCamp()
+        && !shouldWait()
+        && !shouldActWithC4()
         && f_jump_time + 1 < gpGlobals->time;
 }
 
@@ -4105,6 +4111,54 @@ float cBot::getMoveToNodeTimeRemaining() {
 
 bool cBot::shouldCamp() {
     return f_camp_time > gpGlobals->time;
+}
+
+bool cBot::shouldWait() {
+    return f_wait_time > gpGlobals->time;
+}
+
+void cBot::setTimeToWait(float timeInSeconds) {
+    this->f_wait_time = gpGlobals->time + timeInSeconds;
+}
+
+bool cBot::shouldBeAbleToInteractWithButton() {
+    return fButtonTime < gpGlobals->time;
+}
+
+bool cBot::hasButtonToInteractWith() {
+    return pButtonEdict != NULL;
+}
+
+bool cBot::hasCurrentNode() {
+    return iCloseNode > -1;
+}
+
+/**
+ * Attempts to create a path from current node to destination. Returns true on success, false on failure.
+ * @param destinationNode
+ * @param flags
+ * @return
+ */
+bool cBot::createPath(int destinationNode, int flags) {
+    if (destinationNode < 0 || destinationNode >= MAX_NODES) {
+        rprint("createPath()", "Unable to create path because destination node provided is < 0 or > MAX_NODES");
+        return false;
+    }
+
+    int currentNode = getCurrentNode();
+    if (currentNode < 0) {
+        rprint("createPath()", "Unable to create path to destination because I am not close to a start node");
+        return false;
+    }
+
+    forgetPath();
+
+    char msg[255];
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "Creating path from currentNode [%d] to destination node [%d]", currentNode, destinationNode);
+    rprint("createPath()", msg);
+
+    return NodeMachine.createPath(currentNode, destinationNode, iBotIndex, this, flags);
 }
 
 // $Log: bot.cpp,v $
