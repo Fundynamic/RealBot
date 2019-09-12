@@ -1798,6 +1798,7 @@ int cNodeMachine::getGoalIndexFromNode(int iNode) {
 }
 
 void cNodeMachine::updateGoals() {
+    // init hostage goals
     for (int i = 0; i < MAX_GOALS; i++) {
         tGoal *goal = getGoal(i);
         if (goal == NULL || goal->iNode < 0) continue;
@@ -1819,6 +1820,7 @@ void cNodeMachine::updateGoals() {
 
         addGoal(pent, GOAL_HOSTAGE, pent->v.origin+ Vector(0,0,32));
     }
+
 }
 
 /**
@@ -1836,18 +1838,13 @@ void cNodeMachine::setUpInitialGoals() {
 
     edict_t *pent = NULL;
 
-    // TODO: when a bot knows the goal , the path, but fails, we should make it
-    // GOAL_UNREACHABLE to prevent stupid actions in the future
-
     // GOAL #1 - Counter Terrorist Spawn points.
     while ((pent = UTIL_FindEntityByClassname(pent, "info_player_start")) != NULL) {
         addGoal(pent, GOAL_SPAWNCT, pent->v.origin);
     }
 
     // GOAL #2 - Terrorist Spawn points.
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent,
-                                               "info_player_deathmatch")) != NULL) {
+    while ((pent = UTIL_FindEntityByClassname(pent, "info_player_deathmatch")) != NULL) {
         addGoal(pent, GOAL_SPAWNT, pent->v.origin);
     }
 
@@ -1856,22 +1853,18 @@ void cNodeMachine::setUpInitialGoals() {
         addGoal(pent, GOAL_RESCUEZONE, VecBModelOrigin(pent));
     }
 
-    // EVY: rescue zone can also be an entitity of info_hostage_rescue
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent,
-                                               "info_hostage_rescue")) != NULL) {
+    // rescue zone can also be an entity of info_hostage_rescue
+    while ((pent = UTIL_FindEntityByClassname(pent, "info_hostage_rescue")) != NULL) {
         addGoal(pent, GOAL_RESCUEZONE, VecBModelOrigin(pent));
     }
 
     // GOAL #4 - Bombspot zone
     // Bomb spot
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent, "func_bomb_target")) != NULL) {
+    while ((pent = UTIL_FindEntityByClassname(pent, "func_bomb_target")) != NULL) {
         addGoal(pent, GOAL_BOMBSPOT, VecBModelOrigin(pent));
     }
 
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent, "info_bomb_target")) != NULL) {
+    while ((pent = UTIL_FindEntityByClassname(pent, "info_bomb_target")) != NULL) {
         addGoal(pent, GOAL_BOMBSPOT, VecBModelOrigin(pent));
     }
 
@@ -1882,34 +1875,27 @@ void cNodeMachine::setUpInitialGoals() {
 
     // GOAL  #6 - VIP (this is the 'starting' position) (EVY)
     while ((pent = UTIL_FindEntityByClassname(pent, "info_vip_start")) != NULL) {
-        if (hasGoalWithEdict(pent) == false)
-            addGoal(pent, GOAL_VIP, VecBModelOrigin(pent));
+        addGoal(pent, GOAL_VIP, VecBModelOrigin(pent));
     }
 
     // GOAL  #7 - VIP safety (this is the 'rescue' position) (EVY)
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent,
-                                               "func_vip_safetyzone")) != NULL) {
-        if (hasGoalWithEdict(pent) == false)
-            addGoal(pent, GOAL_VIPSAFETY, VecBModelOrigin(pent));
+    while ((pent = UTIL_FindEntityByClassname(pent, "func_vip_safetyzone")) != NULL) {
+        addGoal(pent, GOAL_VIPSAFETY, VecBModelOrigin(pent));
     }
 
     // GOAL  #8 - Escape zone for es_ (EVY)
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent, "func_escapezone")) != NULL) {
-        if (hasGoalWithEdict(pent) == false)
-            addGoal(pent, GOAL_ESCAPEZONE, VecBModelOrigin(pent));
+    while ((pent = UTIL_FindEntityByClassname(pent, "func_escapezone")) != NULL) {
+        addGoal(pent, GOAL_ESCAPEZONE, VecBModelOrigin(pent));
     }
 
     // 05/07/04
     // GOAL  #9 - Free weapons on the ground EVY
-    while ((pent =
-                    UTIL_FindEntityByClassname(pent, "armoury_entity")) != NULL) {
-        if (hasGoalWithEdict(pent) == false)
-            addGoal(pent, GOAL_WEAPON, VecBModelOrigin(pent));
+    while ((pent = UTIL_FindEntityByClassname(pent, "armoury_entity")) != NULL) {
+        addGoal(pent, GOAL_WEAPON, VecBModelOrigin(pent));
     }
 
-    // Add important goals: (from ini file)
+    // TODO: Add important goals: (from ini file)
+
     rblog("cNodeMachine::goals() - END\n");
 }
 
