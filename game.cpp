@@ -152,6 +152,22 @@ void cGame::DetermineMapGoal() {
     rblog(msg);
     Game.bHostageRescueMap = hostagesFound > 0;
 
+    int rescueZonesFound = 0;
+    // GOAL #3 - Hostage rescue zone
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "func_hostage_rescue")) != NULL) {
+        rescueZonesFound++;
+    }
+
+    // rescue zone can also be an entity of info_hostage_rescue
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "info_hostage_rescue")) != NULL) {
+        rescueZonesFound++;
+    }
+
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "DetermineMapGoal: There are %d rescue zones found\n", rescueZonesFound);
+    rblog(msg);
+    Game.bHostageRescueZoneFound = rescueZonesFound > 0;
+
 
     int bombSpots = 0;
     // GOAL #4 - Bombspot zone

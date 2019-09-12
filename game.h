@@ -111,6 +111,7 @@ public:
    Vector vDroppedC4;           // Dropped C4?
    bool bBombPlanted;           // Bomb planted?
    bool bHostageRescueMap;      // Hostage rescue map? (CS_...)
+   bool bHostageRescueZoneFound; // Is any rescue zone found? (CS_...)
    bool bBombPlantMap;          // Bomb plant map? (DE_...)
    Vector vPlantedC4;           // Is the bomb discovered?
 

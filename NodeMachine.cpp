@@ -3255,6 +3255,17 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         }
 
         if (Game.bHostageRescueMap) {
+            // Deal with CS_ASSAULT case, where no rescue zone is given
+            if (!Game.bHostageRescueZoneFound && goalType == GOAL_SPAWNCT) {
+                if (pBot->isCounterTerrorist()) {
+                    if (pBot->isEscortingHostages()) {
+                        pBot->rprint("I am escorting hostages - assuming ct spawn is rescue zone and prioritizing");
+                        // highest priority
+                        score = 2.0;
+                    }
+                }
+            }
+
             if (goalType == GOAL_HOSTAGE) {
                 // counter-terrorist should
                 float goalscore = 0.0;
