@@ -43,11 +43,16 @@ bool EntityIsVisible(edict_t * pEntity, Vector dest);
 // bot_func.cpp
 bool VectorIsVisible(Vector start, Vector dest, char *checkname);
 float func_distance(Vector v1, Vector v2);
-void WaypointDrawBeam(edict_t * pEntity, Vector start, Vector end,
-                      int width, int noise, int red, int green, int blue,
-                      int brightness, int speed);
-cBot *getNearbyBotInFOV(cBot * pBot);
-bool isAnyPlayerNearbyBotInFOV(cBot * pBot);
+
+void DrawBeam(edict_t * visibleForWho, Vector start, Vector end);
+void DrawBeam(edict_t * visibleForWho, Vector start, Vector end, int red, int green, int blue);
+void DrawBeam(edict_t * visibleForWho, Vector start, Vector end,
+              int width, int noise, int red, int green, int blue,
+              int brightness, int speed);
+
+cBot *getCloseFellowBot(cBot * pBot);
+edict_t * getPlayerNearbyBotInFOV(cBot * pBot);
+
 bool BotShouldJump(cBot * pBot);
 bool BotShouldDuck(cBot * pBot);
 void TryToGetHostageTargetToFollowMe(cBot * pBot);

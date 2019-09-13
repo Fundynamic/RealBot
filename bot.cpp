@@ -445,10 +445,7 @@ void cBot::NewRound() {
 
     // initalize a few other stuff
     NodeMachine.path_clear(iBotIndex);
-
-    // Set on camp mode
-    if (RANDOM_LONG(0, 100) < ipCampRate)
-        iPathFlags = PATH_CAMP;
+    iPathFlags = PATH_NONE;
 
     played_rounds++;
 
@@ -752,19 +749,23 @@ void cBot::FightEnemy() {
             }
         }
 
-        // TODO TODO TODO: Code fighting styles ?
+        // NOT blinded by flashbang, try to find cover?
         if (f_cover_time < gpGlobals->time) {
             // COVER: Not taking cover now, fight using fightstyles.
-            if (vip)               // when vip, we always take cover.
-            {
+
+            // when vip, we always take cover.
+            if (vip) {
                 // Camp, take cover, etc.
                 BOT_DecideTakeCover(this);
-                if (FUNC_DoRadio(this))
-                    UTIL_BotRadioMessage(this, 3, "3", "");  // need f*cking backup
+
+                if (FUNC_DoRadio(this)) {
+                    UTIL_BotRadioMessage(this, 3, "3", "");  // need backup
+                }
             } else {
                 // DECIDE: Should we take cover or not.
-                if (FUNC_ShouldTakeCover(this))
+                if (FUNC_ShouldTakeCover(this)) {
                     FindCover();
+                }
             }
         } else {
 
@@ -1218,26 +1219,25 @@ void cBot::FindCover() {
     // We have now our first 'left' and 'right'
 
     // First check the right..
-    UTIL_TraceLine(v_src, v_right, dont_ignore_monsters,
-                   pEdict->v.pContainingEntity, &tr);
+    UTIL_TraceLine(v_src, v_right, dont_ignore_monsters, pEdict->v.pContainingEntity, &tr);
+
     if (tr.flFraction >= 1.0) {
         // We can see it
         // Now trace from that vector to our threat
-        UTIL_TraceLine(v_right, dest, dont_ignore_monsters,
-                       pEdict->v.pContainingEntity, &tr);
+        UTIL_TraceLine(v_right, dest, dont_ignore_monsters, pEdict->v.pContainingEntity, &tr);
 
         // If this is blocking.. then its a good wpt
         if (tr.flFraction < 1.0)
             cover_vect = v_right;
     }
+
     // Now check at the left
-    UTIL_TraceLine(v_src, v_left, dont_ignore_monsters,
-                   pEdict->v.pContainingEntity, &tr);
+    UTIL_TraceLine(v_src, v_left, dont_ignore_monsters, pEdict->v.pContainingEntity, &tr);
+
     if (tr.flFraction >= 1.0) {
         // We can see it
         // Now trace from that vector to our threat
-        UTIL_TraceLine(v_left, dest, dont_ignore_monsters,
-                       pEdict->v.pContainingEntity, &tr);
+        UTIL_TraceLine(v_left, dest, dont_ignore_monsters, pEdict->v.pContainingEntity, &tr);
 
         // If this is blocking.. then its a good wpt
         if (tr.flFraction < 1.0) {
@@ -1311,7 +1311,7 @@ void cBot::FindCover() {
         forgetPath();
 
         // Calculate a path to this position and get the heck there.
-        NodeMachine.createPath(iNodeFrom, iCoverNode, iBotIndex, this, PATH_NONE);
+        createPath(iCoverNode);
         f_cover_time = gpGlobals->time + 8;
         bTakenCover = true;
     } else {
@@ -2771,7 +2771,6 @@ void cBot::Memory() {
             }
         }
 
-
         // Fill in hearing vectory if any:
         if (pHearPlayer != NULL) {
             if (RANDOM_LONG(0, 100) < (ipFearRate + 10)) {
@@ -2808,17 +2807,19 @@ void cBot::Memory() {
                 float fTime = 5 + (ipFearRate / 7);
 
                 if (RANDOM_LONG(0, 100) < ipFearRate
-                    && f_walk_time + 1 < gpGlobals->time)
+                    && f_walk_time + 5 < gpGlobals->time) // last 5 seconds did not walk
                     f_walk_time = gpGlobals->time + fTime;
 
                 if (RANDOM_LONG(0, 100) < ipCampRate
-                    && f_camp_time + 1 < gpGlobals->time
-                    && f_walk_time < gpGlobals->time)
+                    && f_camp_time + 30 < gpGlobals->time // last 30 seconds did not camp
+                    ) {
                     f_camp_time = gpGlobals->time + fTime;
+                }
 
             } else {
                 fMemoryTime = gpGlobals->time + 5;
             }
+
             /*
 
 
@@ -3589,6 +3590,7 @@ bool BotRadioAction() {
 
                 // If we want to listen to the radio... then handle it!
                 if (bWantToListen) {
+
                     // Report in team!
                     if (strstr(message, "#Report_in_team") != NULL) {
                         // gives human knowledge who is on his team
@@ -3612,6 +3614,7 @@ bool BotRadioAction() {
                     }
                     // Follow me!!
                     if (strstr(message, "#Follow_me") != NULL) {}
+
                     // You take the point!
                     // 23/06/04 - Stefan - Here the leader should break up his position?
                     // ie, the leader will be assigned to the bot this human/bot is facing?
@@ -3678,24 +3681,24 @@ bool BotRadioAction() {
                     // Go GO Go, stop camping, stop following, get the heck out of there!
                     if (strstr(message, "#Go_go_go") != NULL) {
                         unstood = true;
-                        BotPointer->forgetPath();
-                        BotPointer->f_camp_time = gpGlobals->time - 20;
+                        BotPointer->f_camp_time = gpGlobals->time - 30;
                         BotPointer->f_cover_time = gpGlobals->time - 10;
                         BotPointer->f_hold_duck = gpGlobals->time - 10;
                         BotPointer->f_jump_time = gpGlobals->time - 10;
+                        BotPointer->forgetPath();
                         BotPointer->forgetGoal();
                     }
 
                     if ((FUNC_DoRadio(BotPointer)) && (unstood)) {
                         if (BotPointer->console_nr == 0
                             && radios < (gpGlobals->maxClients / 4)) {
-                            if (report_back == false)
+                            if (!report_back) {
                                 UTIL_BotRadioMessage(BotPointer, 3, "1", "");   // Roger that!
-                            else
+                            } else {
                                 UTIL_BotRadioMessage(BotPointer, 3, "6", "");   // Reporting in!
+                            }
 
-                            BotPointer->f_console_timer =
-                                    gpGlobals->time + RANDOM_FLOAT(0.8, 2.0);
+                            BotPointer->f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.8, 2.0);
                             radios++;
                         }
                     }
@@ -4134,6 +4137,15 @@ bool cBot::hasCurrentNode() {
 }
 
 /**
+ * Shorthand method for creating path with flags PATH_NONE.
+ * @param destinationNode
+ * @return
+ */
+bool cBot::createPath(int destinationNode) {
+    return createPath(destinationNode, PATH_NONE);
+}
+
+/**
  * Attempts to create a path from current node to destination. Returns true on success, false on failure.
  * @param destinationNode
  * @param flags
@@ -4159,6 +4171,24 @@ bool cBot::createPath(int destinationNode, int flags) {
     rprint("createPath()", msg);
 
     return NodeMachine.createPath(currentNode, destinationNode, iBotIndex, this, flags);
+}
+
+void cBot::doDuck() {
+    UTIL_BotPressKey(this, IN_DUCK);
+    this->f_hold_duck = gpGlobals->time + 0.2;
+
+    this->increaseTimeToMoveToNode(1);
+}
+
+void cBot::doJump(Vector &vector) {
+    UTIL_BotPressKey(this, IN_JUMP);
+    UTIL_BotPressKey(this, IN_DUCK); // DUCK jump by default
+    this->f_hold_duck = gpGlobals->time + 0.2;
+
+    // stay focussed with body and head to this vector
+    this->vHead = vector;
+    this->vBody = vector;
+    this->increaseTimeToMoveToNode(1);
 }
 
 // $Log: bot.cpp,v $

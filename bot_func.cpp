@@ -127,6 +127,14 @@ float func_distance(Vector v1, Vector v2) {
         return 0.0;
 }
 
+/**
+ * return the absolute value of angle to destination entity (in degrees).
+ * Zero degrees means straight ahead,  45 degrees to the left or
+ * 45 degrees to the right is the limit of the normal view angle
+ * @param pEntity
+ * @param dest
+ * @return
+ */
 int FUNC_InFieldOfView(edict_t *pEntity, Vector dest) {
     // NOTE: Copy from Botman's BotInFieldOfView() routine.
     // find angles from source to destination...
@@ -157,12 +165,43 @@ int FUNC_InFieldOfView(edict_t *pEntity, Vector dest) {
     // rsm - END
 }
 
-// Draw waypoint beam?
-void
-WaypointDrawBeam(edict_t *pEntity, Vector start, Vector end, int width,
-                 int noise, int red, int green, int blue, int brightness,
-                 int speed) {
-    MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, NULL, pEntity);
+/**
+ * Shorthand function
+ * @param visibleForWho
+ * @param start
+ * @param end
+ */
+void DrawBeam(edict_t *visibleForWho, Vector start, Vector end) {
+    DrawBeam(visibleForWho, start, end, 25, 1, 255, 255, 255, 255, 1);
+}
+
+/**
+ * Shorthand function
+ * @param visibleForWho
+ * @param start
+ * @param end
+ */
+void DrawBeam(edict_t *visibleForWho, Vector start, Vector end, int r, int g, int b) {
+    DrawBeam(visibleForWho, start, end, 25, 1, r, g, b, 255, 1);
+}
+
+/**
+ * This function draws a beam , used for debugging all kinds of vector related things.
+ * @param visibleForWho
+ * @param start
+ * @param end
+ * @param width
+ * @param noise
+ * @param red
+ * @param green
+ * @param blue
+ * @param brightness
+ * @param speed
+ */
+void DrawBeam(edict_t *visibleForWho, Vector start, Vector end, int width,
+              int noise, int red, int green, int blue, int brightness,
+              int speed) {
+    MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, NULL, visibleForWho);
     WRITE_BYTE(TE_BEAMPOINTS);
     WRITE_COORD(start.x);
     WRITE_COORD(start.y);
@@ -187,15 +226,13 @@ WaypointDrawBeam(edict_t *pEntity, Vector start, Vector end, int width,
 }
 
 /**
- * Function takes care of near bot players, returns most 'closest in FOV' bot pointer
+ * Gets a bot close (NODE_ZONE distance)
  * @param pBot
  * @return
  */
-cBot *getNearbyBotInFOV(cBot *pBot) {
+cBot *getCloseFellowBot(cBot *pBot) {
     edict_t *pEdict = pBot->pEdict;
     cBot *closestBot = NULL;
-
-    int iClosestAngle = 180;
 
     // Loop through all clients
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
@@ -207,22 +244,17 @@ cBot *getNearbyBotInFOV(cBot *pBot) {
             if (!IsAlive(pPlayer))
                 continue;
 
+            cBot *pBotPointer = UTIL_GetBotPointer(pPlayer);
             // skip anything that is not a RealBot
-            if (UTIL_GetBotPointer(pPlayer) == NULL)       // not using FL_FAKECLIENT here so it is multi-bot compatible
+            if (pBotPointer == NULL)       // not using FL_FAKECLIENT here so it is multi-bot compatible
                 continue;
 
             int iAngle = FUNC_InFieldOfView(pBot->pEdict,
                                             (pPlayer->v.origin -
                                              pBot->pEdict->v.origin));
 
-            if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < 90
-                && iAngle < iClosestAngle) {
-                cBot *pBotPointer = UTIL_GetBotPointer(pPlayer);
-                iClosestAngle = iAngle;
-
-                if (pBotPointer != NULL) {
-                    closestBot = pBotPointer;    // set pointer
-                }
+            if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < NODE_ZONE) {
+                closestBot = pBotPointer;    // set pointer
             }
         }
     }
@@ -231,13 +263,13 @@ cBot *getNearbyBotInFOV(cBot *pBot) {
 }
 
 /**
- * Return TRUE of any players are near that could block him
+ * Return TRUE of any players are near that could block him and which are within FOV
  * @param pBot
  * @return
  */
-bool isAnyPlayerNearbyBotInFOV(cBot *pBot) {
+edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
     edict_t *pEdict = pBot->pEdict;
-    int iClosestAngle = 180;
+    int FOV = 90; // TODO: use server var "default_fov" ?
 
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
@@ -253,14 +285,45 @@ bool isAnyPlayerNearbyBotInFOV(cBot *pBot) {
                   || (pPlayer->v.flags & FL_CLIENT)))
                 continue;
 
-            int angle_to_player = FUNC_InFieldOfView(pBot->pEdict,
-                                                     (pPlayer->v.origin -
-                                                      pBot->pEdict->v.
-                                                              origin));
+            int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
 
-            if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < 90
-                && angle_to_player < iClosestAngle) {
-                iClosestAngle = angle_to_player;
+            int distance = NODE_ZONE;
+            if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance && angleToPlayer < FOV) {
+                return pPlayer;
+            }
+
+        }
+    }
+    return NULL;
+}
+
+/**
+ * Return TRUE of any players are near that could block him, regardless of FOV. Just checks distance
+ * @param pBot
+ * @return
+ */
+bool isAnyPlayerNearbyBot(cBot *pBot) {
+    edict_t *pEdict = pBot->pEdict;
+    int FOV = 120;
+
+    for (int i = 1; i <= gpGlobals->maxClients; i++) {
+        edict_t *pPlayer = INDEXENT(i);
+
+        // skip invalid players and skip self (i.e. this bot)
+        if ((pPlayer) && (!pPlayer->free) && (pPlayer != pEdict)) {
+            // skip this player if not alive (i.e. dead or dying)
+            if (!IsAlive(pPlayer))
+                continue;
+
+            if (!((pPlayer->v.flags & FL_THIRDPARTYBOT)
+                  || (pPlayer->v.flags & FL_FAKECLIENT)
+                  || (pPlayer->v.flags & FL_CLIENT)))
+                continue;
+
+            int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
+
+            int distance = NODE_ZONE;
+            if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance) {
                 return true;
             }
 
@@ -425,12 +488,15 @@ bool FUNC_DoRadio(cBot *pBot) {
 
 // DECIDE: Take cover or not
 bool FUNC_ShouldTakeCover(cBot *pBot) {
-    // Do not allow taking cover within 5 seconds again.
+    // Do not allow taking cover within 3 seconds again.
     if (pBot->f_cover_time + 3 > gpGlobals->time)
         return false;
 
     if (!pBot->hasEnemy())
         return false;
+
+    // wait 3 seconds before deciding again
+    pBot->f_cover_time = gpGlobals->time;
 
     // MONEY: The less we have, the more we want to take cover
     int vMoney = 16000 - pBot->bot_money;
@@ -441,13 +507,7 @@ bool FUNC_ShouldTakeCover(cBot *pBot) {
     // CAMP: The more we want, the more we want to take cover
     int vCamp = pBot->ipCampRate;
 
-    if (RANDOM_LONG(0, TOTAL_SCORE) < (vMoney + vHealth + vCamp))
-        return true;
-
-    // Fix #1 on taking cover
-    pBot->f_cover_time = gpGlobals->time;        // wait 3 seconds before deciding again
-
-    return false;
+    return RANDOM_LONG(0, TOTAL_SCORE) < (vMoney + vHealth + vCamp);
 }
 
 int FUNC_BotEstimateHearVector(cBot *pBot, Vector v_sound) {

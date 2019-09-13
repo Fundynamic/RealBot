@@ -1170,7 +1170,7 @@ void cNodeMachine::connections(edict_t *pEntity) {
                     }
                 }
 
-                WaypointDrawBeam(pEntity, start, end, 2, 0, red, green, blue, 255, 1);
+                DrawBeam(pEntity, start, end, 2, 0, red, green, blue, 255, 1);
             }
         }
 
@@ -1212,7 +1212,7 @@ void cNodeMachine::draw(edict_t *pEntity) {
                     r = 0;
 
                 if (max_drawn < 39) {
-                    WaypointDrawBeam(pEntity, start, end, 4, 0, r, g, b, l, 1);
+                    DrawBeam(pEntity, start, end, 4, 0, r, g, b, l, 1);
                     max_drawn++;
                 }
             }
@@ -1592,7 +1592,7 @@ void cNodeMachine::path_draw(edict_t *pEntity) {
                     blue = 0;
                 }
 
-                WaypointDrawBeam(pEntity, start, end, width, 0, red, green, blue, 255, 5);
+                DrawBeam(pEntity, start, end, width, 0, red, green, blue, 255, 5);
                 max_drawn++;
             }
         } // if iNode
@@ -2578,14 +2578,11 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                 if (FBitSet(pPlayer->v.flags, FL_CLIENT) &&
                     shouldDrawWaypointBeamsFromBot) { // do not draw for now
 
-                    WaypointDrawBeam(
+                    DrawBeam(
                             pPlayer, // player sees beam
                             pBot->pEdict->v.origin, // + Vector(0, 0, 32) (head?)
                             nodeHeadingFor->origin,
-                            25, 1,
-                            255, 255, 255,
-                            255,
-                            1
+                            255, 255, 255
                     );
 
                     int currentNode = pBot->determineCurrentNodeWithTwoAttempts();
@@ -2593,7 +2590,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                         tNode *node = getNode(currentNode);
 
                         // close node
-                        WaypointDrawBeam(
+                        DrawBeam(
                                 pPlayer, // player sees beam
                                 pBot->pEdict->v.origin + Vector(0, 0, 32),
                                 node->origin + Vector(0, 0, 32),
@@ -2659,38 +2656,35 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
             // When f_cover_time is > gpGlobals, we are taking cover
             // so we 'wait'
-            if (pBot->f_cover_time > gpGlobals->time) {
-                if (pBot->hasEnemy() && pBot->lastSeenEnemyVector != Vector(0, 0, 0)) {
-                    pBot->vHead = pBot->lastSeenEnemyVector;
-                }
-
-                pBot->f_wait_time = pBot->f_cover_time - RANDOM_FLOAT(0.0, 3.0);
-                pBot->f_cover_time = gpGlobals->time;
-
-                if (RANDOM_LONG(0, 100) < 75) {
-                    pBot->f_hold_duck = gpGlobals->time + RANDOM_FLOAT(1.0, 4.0);
-                }
-                pBot->rprint("Cover time");
-            } else {
+//            if (pBot->f_cover_time > gpGlobals->time) {
+//                if (pBot->hasEnemy() && pBot->lastSeenEnemyVector != Vector(0, 0, 0)) {
+//                    pBot->vHead = pBot->lastSeenEnemyVector;
+//                }
+//
+//                pBot->f_wait_time = pBot->f_cover_time - RANDOM_FLOAT(0.0, 3.0);
+//                pBot->f_cover_time = gpGlobals->time;
+//
+//                if (RANDOM_LONG(0, 100) < 75) {
+//                    pBot->f_hold_duck = gpGlobals->time + RANDOM_FLOAT(1.0, 4.0);
+//                }
+//                pBot->rprint("cNodeMachine::path_walk", "Taking cover time");
+//            }
+//            else {
                 if (pBot->iPathFlags == PATH_CAMP) {
-                    // Camp
-                    pBot->f_camp_time = gpGlobals->time + RANDOM_FLOAT(1, 5);
+                    pBot->rprint_trace("cNodeMachine::path_walk()", "Arrived at destination and marked as camp. So we camp");
+
+                    // Camp for a few seconds
+                    pBot->f_camp_time = gpGlobals->time + RANDOM_FLOAT(1, 10);
 
                     if (RANDOM_LONG(0, 100) < pBot->ipFearRate) {
                         pBot->iPathFlags = PATH_DANGER;
                     } else {
-                        pBot->iPathFlags = PATH_NONE;    // do not go to contact areas
+                        pBot->iPathFlags = PATH_NONE;
                     }
 
                     // RADIO: I am in position!
                     if (FUNC_DoRadio(pBot)) {
-                    }
-                } else {
-                    // Set on camp mode
-                    if (RANDOM_LONG(0, 100) < pBot->ipCampRate &&
-                        pBot->f_camp_time + ((100 - pBot->ipCampRate) / 2) <
-                        gpGlobals->time && !pBot->isEscortingHostages()) {
-                        pBot->iPathFlags = PATH_CAMP;
+
                     }
                 }
 
@@ -2716,7 +2710,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                 } else {
                     // nothing to do here it seems... (bomb planting logic is elsewhere)
                 }
-            }
+//            }
 
             return;
         }
@@ -2908,14 +2902,15 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
     // When we run out of time, we move back to previous to try again
     int previousPathNodeIndex = pBot->getPreviousPathNodeIndex();
-    if (!pBot->hasTimeToMoveToNode() && pBot->shouldBeAbleToMove() // had to move and didn't
-        //||
-        //         (moved_distance < 0.5 && pBot->shouldBeAbleToMove()
 
-            ) {
+    // If bot should be able to move, but time is up to reach the next node.
+    // Do some logic here to determine if the connection is faulty and if so remove it.
+    if (pBot->shouldBeAbleToMove() && !pBot->hasTimeToMoveToNode()) {
+        pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "START");
+
         // We have trouble with this one somehow? Check for nearby players before
         // we judge its done by worldspawn.
-        bool bPlayersNear = isAnyPlayerNearbyBotInFOV(pBot);
+        bool playersNearbyInFOV = getPlayerNearbyBotInFOV(pBot);
 
         // when we recorded a jump, this might help
         if (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP) {
@@ -2930,24 +2925,21 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         char msg[255];
         memset(msg, 0, sizeof(msg));
         bool isWalkingPath = pBot->isWalkingPath();
-        sprintf(msg, "players near? %d, shouldMove? %d, walking path? %d, previousPathNodeIndex? %d, iFrom %d, iTo %d",
-                bPlayersNear,
+        sprintf(msg, "players nearby in fov? %d, shouldMove? %d, walking path? %d, previousPathNodeIndex? %d, iFrom %d, iTo %d",
+                playersNearbyInFOV,
                 pBot->shouldBeAbleToMove(),
                 isWalkingPath,
                 previousPathNodeIndex,
                 iFrom,
                 iTo);
 
-        pBot->rprint("path_walk", msg);
+        pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", msg);
 
         pBot->setTimeToMoveToNode(2.0f);
-        pBot->rprint("MoveToNodeTime expired");
         pBot->fNotStuckTime = gpGlobals->time;
 
-        if (!bPlayersNear &&
-            pBot->shouldBeAbleToMove() &&
-            isWalkingPath &&
-            previousPathNodeIndex > -1) {
+        if (!playersNearbyInFOV && isWalkingPath && previousPathNodeIndex > -1) {
+            pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "No nearby players (in FOV), walking path and we came from previous node");
 
             int troubleIndex = GetTroubleIndexForConnection(iFrom, iTo);
             if (troubleIndex < 0) {
@@ -2956,23 +2948,23 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
             // Troubled connection already known, make it more troublesome!
             IncreaseAttemptsForTroubledConnection(troubleIndex);
-            pBot->rprint("path_walk", "a troubled connection!");
+            pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "a troubled connection!");
             if (hasAttemptedConnectionTooManyTimes(iFrom, iTo)) {
-                pBot->rprint("path_walk", "a troubled connection - tried too many times!");
+                pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "a troubled connection - tried too many times!");
 
                 // remove connection
                 if (!removeConnection(iFrom, iTo)) {
-                    pBot->rprint("path_walk", "for some reason the connection was not removed!?");
+                    pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "for some reason the connection was not removed!?");
                 } else {
-                    pBot->rprint("path_walk", "the connection is removed!");
+                    pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "the connection is removed!");
                 }
 
                 ClearTroubledConnection(iFrom, iTo);
             } else {
-                pBot->rprint("path_walk", "may attempt another time");
+                pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "may attempt another time");
             }
         } else {
-            pBot->rprint("path_walk", "this ought to be ok!?");
+            pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "this ought to be ok!?");
         }
 
         pBot->forgetPath();
@@ -2983,58 +2975,80 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     // - learn from mistakes
     // - unstuck
     // - go back in path...
-    bool isStuck = distanceMoved < 0.5 && pBot->shouldBeAbleToMove()
-                   && (pBot->fNotStuckTime + 0.5) < gpGlobals->time; // also did not evaluate this logic for 0.5 second
+    bool notStuckForAWhile = (pBot->fNotStuckTime + 0.5) < gpGlobals->time;
+
+    char msg[255];
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "Distance moved %f, should be able to move %d, notStuck flag %d", distanceMoved, pBot->shouldBeAbleToMove(), notStuckForAWhile);
+    pBot->rprint_trace("cNodeMachine::path_walk", msg);
+
+    bool isStuck = distanceMoved < 0.5 && pBot->shouldBeAbleToMove() && notStuckForAWhile; // also did not evaluate this logic for 0.5 second
+    Vector &vector = Nodes[currentNodeToHeadFor].origin;
+
     if (isStuck) {
+        pBot->rprint_trace("cNodeMachine::path_walk/isStuck", "START");
         pBot->fNotStuckTime = gpGlobals->time;
 
         // JUMP & DUCK
         if (BotShouldJump(pBot) || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP)) {
-            pBot->rprint("isStuck", "Duck-jump tries increased, increase node time - START");
-            UTIL_BotPressKey(pBot, IN_JUMP);
-            UTIL_BotPressKey(pBot, IN_DUCK); // DUCK jump by default
-            pBot->f_hold_duck = gpGlobals->time + 0.2;
-
-            // stay focussed with body and head to this vector
-            pBot->vHead = Nodes[currentNodeToHeadFor].origin;
-            pBot->vBody = Nodes[currentNodeToHeadFor].origin;
+            pBot->rprint("cNodeMachine::path_walk/isStuck", "Duck-jump tries increased, increase node time - START");
+            pBot->doJump(vector);
             pBot->iJumpTries++;
-            pBot->increaseTimeToMoveToNode(0.4);
-            pBot->rprint("isStuck", "Duck-jump tries increased, increase node time  - END");
+            pBot->rprint("cNodeMachine::path_walk/isStuck", "Duck-jump tries increased, increase node time  - END");
         } else if (BotShouldDuck(pBot) || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_DUCK)) {
-            pBot->rprint("isStuck", "Duck tries increased, increase node time - START");
-            //UTIL_ClientPrintAll(HUD_PRINTNOTIFY, "NodeMachine: I should duck.\n");
-            UTIL_BotPressKey(pBot, IN_DUCK);
-            pBot->f_hold_duck = gpGlobals->time + 0.2;
+            pBot->rprint("cNodeMachine::path_walk/isStuck", "Duck tries increased, increase node time - START");
+            pBot->doDuck();
             pBot->iDuckTries++;
-            pBot->increaseTimeToMoveToNode(0.4);
-            pBot->rprint("isStuck", "Duck tries increased, increase node time - END");
+            pBot->rprint("cNodeMachine::path_walk/isStuck", "Duck tries increased, increase node time - END");
         } else { // Should not duck nor jump
-            pBot->rprint("isStuck", "No need to duck or to jump - START");
+            pBot->rprint("cNodeMachine::path_walk/isStuck", "No need to duck or to jump");
 
             char msg[255];
+            memset(msg, 0, sizeof(msg));
             float timeRemaining = pBot->getMoveToNodeTimeRemaining();
-            sprintf(msg, "fNodeTimer still has %f to go before considered 'stuck'\n", timeRemaining);
-            pBot->rprint(msg);
+            sprintf(msg, "fNodeTimer still has %f to go before considered 'stuck' for connection", timeRemaining);
+            pBot->rprint("cNodeMachine::path_walk/isStuck", msg);
 
-            cBot *pBotStuck = getNearbyBotInFOV(pBot);
-            bool bPlayersNear = isAnyPlayerNearbyBotInFOV(pBot); // DUPLICATE of search_near_players?
+            cBot *pBotStuck = getCloseFellowBot(pBot);
+            edict_t *playerNearbyInFOV = getPlayerNearbyBotInFOV(pBot);
+
+            memset(msg, 0, sizeof(msg));
+            sprintf(msg, "Player in FOV? %d bot close ? %d", playerNearbyInFOV != NULL, pBotStuck != NULL);
+            pBot->rprint("cNodeMachine::path_walk/isStuck", msg);
+
+            if (playerNearbyInFOV) {
+                if (pBotStuck != NULL) {
+                    if (pBotStuck->pEdict == playerNearbyInFOV) {
+                        pBot->rprint("cNodeMachine::path_walk/isStuck", "The player nearby in FOV is the close bot as well: it is a fellow bot that blocks me");
+                    } else {
+                        pBot->rprint("cNodeMachine::path_walk/isStuck", "The player nearby in FOV is not the same as a bot close to me: another player blocks me");
+                    }
+                } else {
+                    pBot->rprint("cNodeMachine::path_walk/isStuck", "A player nearby in FOV is not a bot, and there are no bots nearby: another player blocks me");
+                }
+            } else {
+                if (pBotStuck != NULL) {
+                    pBot->rprint("cNodeMachine::path_walk/isStuck", "There is no player nearby, but a bot is close (possibly behind me). This bot might be blocking me?");
+                } else {
+                    pBot->rprint("cNodeMachine::path_walk/isStuck", "There is no bot nearby, there are no players nor bots blocking me! (so its something with the node connection?)");
+                }
+            }
 
             // should move, but no nearby bot found that could cause us to get stuck
             // - when no players are close (could be blocked by them, do not learn stupid things)
             if (pBotStuck == NULL) {
-                pBot->rprint("isStuck", "There is no other BOT around making me go stuck");
+                pBot->rprint("cNodeMachine::path_walk/isStuck", "There is no other BOT around making me go stuck");
 
                 // check if the connection we want is going up
                 // - when going up
                 // - when we should move
                 bool nodeToHeadForIsHigher = Nodes[currentNodeToHeadFor].origin.z > pBot->pEdict->v.origin.z;
                 if (nodeToHeadForIsHigher) {
-                    pBot->rprint("isStuck", "Node to head for is higher than me");
+                    pBot->rprint("cNodeMachine::path_walk/isStuck", "Node to head for is higher than me");
                     // check if the next node is floating (skip self)
 
                     if (node_float(Nodes[currentNodeToHeadFor].origin, pBot->pEdict)) {
-                        pBot->rprint("isStuck", "Node to head for is higher than me - and is floating");
+                        pBot->rprint("cNodeMachine::path_walk/isStuck", "Node to head for is higher than me - and is floating");
 
                         // it floats, cannot reach
                         // Our previous node in the list sent us here, so disable that connection
@@ -3047,8 +3061,8 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                         pBot->forgetPath();
                     }
                 }
-            } else if (bPlayersNear) {
-                pBot->rprint("isStuck", "bPlayersNear = true and should be able to move");
+            } else if (playerNearbyInFOV) {
+                pBot->rprint("cNodeMachine::path_walk/isStuck", "bPlayersNear = true and should be able to move");
                 // Depending on how the other bot looks, act
                 // pBotStuck -> faces pBot , do same
                 // pBotStuck -> cannot see pBot, do opposite
@@ -3062,22 +3076,13 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         } // normal stuck (not duck/jump)
     } // isStuck
     else {
+
         if (BotShouldJump(pBot)) {
             pBot->rprint("is NOT stuck", "should jump");
-            UTIL_BotPressKey(pBot, IN_JUMP);
-            UTIL_BotPressKey(pBot, IN_DUCK); // DUCK jump by default
-            pBot->f_hold_duck = gpGlobals->time + 0.2;
-
-            // stay focussed with body and head to this vector
-            pBot->vHead = Nodes[currentNodeToHeadFor].origin;
-            pBot->vBody = Nodes[currentNodeToHeadFor].origin;
-            pBot->increaseTimeToMoveToNode(1);
+            pBot->doJump(vector);
         } else if (BotShouldDuck(pBot)) {
             pBot->rprint("is NOT stuck", "should duck");
-            UTIL_BotPressKey(pBot, IN_DUCK);
-            pBot->f_hold_duck = gpGlobals->time + 0.2;
-
-            pBot->increaseTimeToMoveToNode(1);
+            pBot->doDuck();
         }
     }
 }
@@ -3562,6 +3567,17 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     pBot->rprint("path_think/determine goal", "GOAL PICKING FINISHED");
     //////////////////////////////////////// GOAL PICKING FINISHED //////////////////////////////////////////
     //////////////////////////////////////// GOAL PICKING FINISHED //////////////////////////////////////////
+
+    pBot->rprint("path_think", "Determining if I should camp at this goal or not...");
+    // Set on camp mode
+    if (RANDOM_LONG(0, 100) < pBot->ipCampRate &&
+        pBot->f_camp_time + ((100 - pBot->ipCampRate) / 2) <
+        gpGlobals->time &&
+        !pBot->isEscortingHostages() &&
+        !pBot->vip) {
+        pBot->iPathFlags = PATH_CAMP;
+        pBot->rprint("path_think", "Set camp flag for path");
+    }
 
     // create path
     bool success = createPath(iCurrentNode, pBot->getGoalNode(), thisBotIndex, pBot, pBot->iPathFlags);

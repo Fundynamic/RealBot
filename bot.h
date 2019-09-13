@@ -558,6 +558,10 @@ public:
     bool hasCurrentNode();
 
     bool createPath(int destinationNode, int flags);
+    bool createPath(int destinationNode);
+
+    void doJump(Vector &vector);
+    void doDuck();
 };
 
 // new UTIL.CPP functions...
