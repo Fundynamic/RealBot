@@ -731,6 +731,7 @@ void StartFrame(void) {
         f_load_time = 0.0;     // do not load again
         rblog("NEW MAP because time is reset #2\n");
         Game.DetermineMapGoal();
+        Game.resetRoundTime();
         NodeMachine.setUpInitialGoals();
     }
 
@@ -914,6 +915,7 @@ void StartFrame(void) {
         NodeMachine.scale_danger();    // Scale danger
         NodeMachine.scale_contact();   // same for contact
         rblog("StartFrame: Game new round\n");
+        Game.resetRoundTime();
         Game.DetermineMapGoal();
         Game.SetNewRound(false);
     }

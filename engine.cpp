@@ -96,7 +96,7 @@ edict_t *pfnFindEntityByString(edict_t *pEdictStartSearchAfter,
 
         // New round started.
         Game.SetNewRound(true);
-        Game.SetRoundTime(gpGlobals->time);
+        Game.resetRoundTime();
         Game.DetermineMapGoal();
     }
 

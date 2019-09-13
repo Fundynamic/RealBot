@@ -2415,7 +2415,7 @@ bool cBot::hasSecondaryWeapon(int weaponId) {
 void cBot::performBuyWeapon(const char *menuItem, const char *subMenuItem) {
     // To be sure the console will only change when we MAY change.
     // The values will only be changed when console_nr is 0
-    if (Game.RoundTime() + 4 < gpGlobals->time)
+    if (Game.getRoundStartedTime() + 4 < gpGlobals->time)
         return;                   // Not valid to buy
 
     if (this->console_nr == 0) {
@@ -3249,19 +3249,19 @@ void cBot::Think() {
 
 
     // NEW: When round time is over and still busy playing, kill bots
-    if (Game.RoundTime() + 10.0 + (CVAR_GET_FLOAT("mp_roundtime") * 60) +
+    if (Game.getRoundStartedTime() + 10.0 + (CVAR_GET_FLOAT("mp_roundtime") * 60) +
         CVAR_GET_FLOAT("mp_freezetime") < gpGlobals->time)
         end_round = true;
 
     // FREEZETIME:
-    if (Game.RoundTime() + CVAR_GET_FLOAT("mp_freezetime") > gpGlobals->time
+    if (Game.getRoundStartedTime() + CVAR_GET_FLOAT("mp_freezetime") > gpGlobals->time
         && f_freeze_time < gpGlobals->time) {
         f_freeze_time = gpGlobals->time + RANDOM_FLOAT(0.1, 2.0);
     }
 
     // 1 SECOND START OF ROUND
-    if (Game.RoundTime() + CVAR_GET_FLOAT("mp_freezetime") + 1 > gpGlobals->time &&
-        Game.RoundTime() + CVAR_GET_FLOAT("mp_freezetime") < gpGlobals->time) {
+    if (Game.getRoundStartedTime() + CVAR_GET_FLOAT("mp_freezetime") + 1 > gpGlobals->time &&
+            Game.getRoundStartedTime() + CVAR_GET_FLOAT("mp_freezetime") < gpGlobals->time) {
         // TODO: Issue radio command?
     }
 
@@ -3312,7 +3312,7 @@ void cBot::Think() {
         bool bMayFromGame = true;
 
         if (Game.fWalkWithKnife > 0)
-            if (Game.RoundTime() + Game.fWalkWithKnife < gpGlobals->time)
+            if (Game.getRoundStartedTime() + Game.fWalkWithKnife < gpGlobals->time)
                 bMayFromGame = false;
 
         if (Game.fWalkWithKnife == 0)

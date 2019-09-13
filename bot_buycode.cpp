@@ -65,7 +65,7 @@ int ListIdWeapon(int weapon_id) {
 void BotPrepareConsoleCommandsToBuyWeapon(cBot *pBot, const char *arg1, const char *arg2) {
     // To be sure the console will only change when we MAY change.
     // The values will only be changed when console_nr is 0
-    if (Game.RoundTime() + 4 < gpGlobals->time)
+    if (Game.getRoundStartedTime() + 4 < gpGlobals->time)
         return;                   // Not valid to buy
 
     if (pBot->console_nr == 0) {
@@ -443,7 +443,7 @@ void ConsoleThink(cBot *pBot) {
     // buy time is in minutes, we need
     // gpGlobals->time is in seconds, so we need to translate the minutes into seconds
     float buyTime = CVAR_GET_FLOAT("mp_buytime") * 60;
-    if (Game.RoundTime() + buyTime > gpGlobals->time &&
+    if (Game.getRoundStartedTime() + buyTime > gpGlobals->time &&
         pBot->wantsToBuyStuff()) {
         BotDecideWhatToBuy(pBot);
     }

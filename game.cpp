@@ -71,7 +71,7 @@ void cGame::Init() {
     bInstalledCorrectly = true;
 
     // Round time
-    fRoundTime = 0.0;
+    fRoundTime = gpGlobals->time;
 
     // Dropped C4 location
     vDroppedC4 = Vector(9999, 9999, 9999);
@@ -185,6 +185,11 @@ void cGame::DetermineMapGoal() {
     rblog(msg);
 }
 
+void cGame::resetRoundTime() {
+    // start counting down, but include freezetime to match up with the count-down
+    SetRoundTime(gpGlobals->time + CVAR_GET_FLOAT("mp_freezetime"));
+}
+
 // GAME: Set round time
 void cGame::SetRoundTime(float fTime) {
     fRoundTime = fTime;
@@ -192,8 +197,16 @@ void cGame::SetRoundTime(float fTime) {
 
 // GAME: Get round time
 // NOTE: This is the time when a round has just started!
-float cGame::RoundTime() {
+float cGame::getRoundStartedTime() {
     return fRoundTime;
+}
+
+float cGame::getRoundTimeElapsed() {
+    if (getRoundStartedTime() > -1) {
+        return gpGlobals->time - getRoundStartedTime();
+    } else {
+        return -1;
+    }
 }
 
 // GAME: Set new round flag
@@ -636,18 +649,23 @@ void REALBOT_PRINT(const char *Function, const char *msg) {
 
 // Debug message
 void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
-    // Message format:
-    // Function name - [BOT NAME, BOT TEAM]: Message
-
     char cMessage[512];
     char team[9];
     char name[MAX_NAME_LENGTH];
+    char mapName[32];
 
     memset(team, 0, sizeof(team));       // clear
     memset(name, 0, sizeof(name));       // clear
+    memset(mapName, 0, sizeof(mapName));       // clear
 
     strcpy(team, "TERROR");      // t
     strcpy(name, "FUNCTION");
+
+    if (gpGlobals->mapname) {
+        strcpy(mapName, STRING(gpGlobals->mapname));
+    } else {
+        strcpy(mapName, "NA");
+    }
 
     if (pBot) {
         memset(name, 0, sizeof(name));    // clear
@@ -658,8 +676,18 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
         strcpy(team, "NONE");
     }
 
-    float gameTime = gpGlobals->time;
-    sprintf(cMessage, "RBPRINT->[%f] - [%s '%s']-[Team %s] : %s\n", gameTime, name, Function, team, msg);
+    float roundElapsedTimeInSeconds = Game.getRoundTimeElapsed();
+    if (roundElapsedTimeInSeconds < 0) roundElapsedTimeInSeconds = 1; // sensible default to prevent division by 0
+    // Counter-Strike uses a timer that counts down, so we need to reverse it as well
+    float roundTimeInMinutes = CVAR_GET_FLOAT("mp_roundtime");
+    if (roundTimeInMinutes < 0) roundTimeInMinutes = 4; // sensible default
+
+    float roundTimeInSeconds = roundTimeInMinutes * 60;
+    float roundTimeRemaining = roundTimeInSeconds - roundElapsedTimeInSeconds;
+    int minutesLeft = roundTimeRemaining / 60;
+    int secondsLeft = (int)roundTimeRemaining % 60;
+
+    sprintf(cMessage, "[realbot] [%s] [%0d:%0d] - [%s '%s']-[Team %s] : %s\n", mapName, minutesLeft, secondsLeft, name, Function, team, msg);
 
     // print in console only when on debug print
     if (Game.bDebug) {

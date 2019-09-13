@@ -78,6 +78,7 @@ public:
    bool NamesAvailable();
    void SetPlayingRounds(int iMin, int iMax);
    void SetNewRound(bool bState);
+   void resetRoundTime();
    void SetRoundTime(float fTime);
    void DetermineMapGoal();
 
@@ -89,7 +90,8 @@ public:
    int GetMaxPlayRounds();
 
    bool NewRound();             // New round?
-   float RoundTime();           // When did the round start? (time)
+   float getRoundStartedTime();           // When did the round start? (time)
+   float getRoundTimeElapsed();           // difference between now and round started time
 
    int createBot(edict_t * pPlayer, const char *teamArg, const char *skillArg,
                  const char *modelArg, const char *nameArg);
