@@ -3254,8 +3254,7 @@ void cBot::Think() {
         end_round = true;
 
     // FREEZETIME:
-    if (Game.getRoundStartedTime() + CVAR_GET_FLOAT("mp_freezetime") > gpGlobals->time
-        && f_freeze_time < gpGlobals->time) {
+    if (Game.getRoundStartedTime() > gpGlobals->time && f_freeze_time < gpGlobals->time) {
         f_freeze_time = gpGlobals->time + RANDOM_FLOAT(0.1, 2.0);
     }
 
@@ -4026,7 +4025,7 @@ bool cBot::isUsingConsole() {
 }
 
 bool cBot::shouldBeAbleToMove() {
-    return f_freeze_time + 3 < gpGlobals->time
+    return f_freeze_time + 0.5 < gpGlobals->time
         && f_stuck_time < gpGlobals->time
         && !shouldCamp()
         && !shouldWait()
