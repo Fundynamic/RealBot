@@ -541,8 +541,8 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "model", "");
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "rate", "3500.000000");
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_updaterate", "20");
-    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_lw", "1");
-    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_lc", "1");
+//    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_lw", "1");
+//    (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_lc", "1");
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "tracker", "0");
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "cl_dlmax", "128");
 
