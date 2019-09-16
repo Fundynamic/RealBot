@@ -127,6 +127,7 @@ cBot::cBot() {
  Function purpose: Initializes bot vars on spawn
  ******************************************************************************/
 void cBot::SpawnInit() {
+    rprint_trace("SpawnInit()", "START");
 
     // ------------------------
     // TIMERS
@@ -290,13 +291,14 @@ void cBot::SpawnInit() {
     memset(&(current_weapon), 0, sizeof(current_weapon));
     memset(&(m_rgAmmo), 0, sizeof(m_rgAmmo));
 
-
+    rprint_trace("SpawnInit()", "END");
 }
 
 /******************************************************************************
  Function purpose: Initializes bot vars on new round
  ******************************************************************************/
 void cBot::NewRound() {
+    rprint_trace("NewRound()", "START");
 
     // ------------------------
     // TIMERS
