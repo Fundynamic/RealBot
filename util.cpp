@@ -526,20 +526,16 @@ void UTIL_LogPrintf(char *fmt, ...) {
 }
 
 void UTIL_BotPressKey(cBot *pBot, int type) {
-    if (type == IN_JUMP || type == IN_DUCK)
-        if (pBot->f_freeze_time > gpGlobals->time)
-            return;                // do nothing when in freezetime
+    if (type == IN_JUMP || type == IN_DUCK) {
+        if (pBot->isFreezeTime()) return;                // do nothing when in freezetime
+    }
 
-    if (type == IN_JUMP)
-        if (pBot->f_may_jump_time > gpGlobals->time)
-            return;                // do nothing when we may not jump
-
-    if (type == IN_JUMP && pBot->f_camp_time > gpGlobals->time)
-        return;                   // Do not jump when camping.
-
-    // don't jump from ladder
-    if (FUNC_IsOnLadder(pBot->pEdict) && type == IN_JUMP) {
-        return;
+    if (type == IN_JUMP) {
+        if (pBot->f_may_jump_time > gpGlobals->time || // do nothing when we may not jump
+            pBot->f_camp_time > gpGlobals->time || // when camping do not jump
+            FUNC_IsOnLadder(pBot->pEdict)    // don't jump from ladder
+            )
+            return;
     }
 
     // KEY: Reload
@@ -554,6 +550,7 @@ void UTIL_BotPressKey(cBot *pBot, int type) {
             pBot->f_update_weapon_time = gpGlobals->time + 0.7;
     }
     // KEY: End
+
     pBot->pEdict->v.button |= type;
 
     if (type == IN_JUMP) {

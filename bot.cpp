@@ -148,7 +148,7 @@ void cBot::SpawnInit() {
     f_gren_time = gpGlobals->time;
     f_walk_time = gpGlobals->time;
     f_hear_time = gpGlobals->time;
-    f_freeze_time = gpGlobals->time - 1;
+    freezeTime = gpGlobals->time - 1;
     f_cover_time = gpGlobals->time;
     f_stuck_time = gpGlobals->time;
     f_c4_time = gpGlobals->time;
@@ -318,7 +318,7 @@ void cBot::NewRound() {
     f_gren_time = gpGlobals->time;
     f_walk_time = gpGlobals->time;
     f_hear_time = gpGlobals->time;
-    f_freeze_time = gpGlobals->time - 1;
+    freezeTime = gpGlobals->time - 1;
     f_cover_time = gpGlobals->time;
     f_stuck_time = gpGlobals->time;
     f_c4_time = gpGlobals->time;
@@ -1196,8 +1196,7 @@ void cBot::Combat() {
 
 /******************************************************************************
  Function purpose: Find cover
- Note: Ugly code used in very old days. Using tracelines to get a cover
-       node.
+ Note: Using tracelines to get a cover node.
  ******************************************************************************/
 void cBot::FindCover() {
     TraceResult tr;
@@ -3249,24 +3248,28 @@ void cBot::Think() {
 
 
     // NEW: When round time is over and still busy playing, kill bots
-    if (Game.getRoundStartedTime() + 10.0 + (CVAR_GET_FLOAT("mp_roundtime") * 60) +
-        CVAR_GET_FLOAT("mp_freezetime") < gpGlobals->time)
+    float roundTimeInSeconds = CVAR_GET_FLOAT("mp_roundtime") * 60;
+    float freezeTime = CVAR_GET_FLOAT("mp_freezetime");
+    if (Game.getRoundStartedTime() + 10.0 + roundTimeInSeconds + freezeTime < gpGlobals->time) {
         end_round = true;
+        // round is ended
+    }
 
     // FREEZETIME:
-    if (Game.getRoundStartedTime() > gpGlobals->time && f_freeze_time < gpGlobals->time) {
-        f_freeze_time = gpGlobals->time + RANDOM_FLOAT(0.1, 2.0);
+    if (Game.getRoundStartedTime() > gpGlobals->time && freezeTime < gpGlobals->time) {
+        freezeTime = gpGlobals->time + RANDOM_FLOAT(0.1, 2.0);
     }
 
     // 1 SECOND START OF ROUND
-    if (Game.getRoundStartedTime() + CVAR_GET_FLOAT("mp_freezetime") + 1 > gpGlobals->time &&
-            Game.getRoundStartedTime() + CVAR_GET_FLOAT("mp_freezetime") < gpGlobals->time) {
+    if (Game.getRoundStartedTime() + 1 > gpGlobals->time &&
+        Game.getRoundStartedTime() < gpGlobals->time) {
         // TODO: Issue radio command?
+        this->rprint_trace("cBot::Think()", "First second of round");
     }
 
     // SITUATION: In freezetime
-    if (f_freeze_time > gpGlobals->time) {
-        f_move_speed = 0.0;
+    if (isFreezeTime()) {
+        stopMoving();
         lastSeenEnemyVector = Vector(0, 0, 0);
         setTimeToMoveToNode(2);
         vHead = vBody = pEdict->v.origin;
@@ -3326,7 +3329,7 @@ void cBot::Think() {
 
         if (CarryWeapon(CS_WEAPON_KNIFE) == false
             && f_camp_time < gpGlobals->time
-            && f_freeze_time < gpGlobals->time
+            && freezeTime < gpGlobals->time
             && f_c4_time < gpGlobals->time
             && f_update_weapon_time < gpGlobals->time && bWalkKnife
             && bMayFromGame) {
@@ -3370,6 +3373,10 @@ void cBot::Think() {
     // SITUATION: Passed Freezetime
 
 } // THINK()
+
+bool cBot::isFreezeTime() const {
+    return freezeTime > gpGlobals->time;
+}
 
 /**
 Return true if one of the pointers is not NULL
@@ -4025,12 +4032,12 @@ bool cBot::isUsingConsole() {
 }
 
 bool cBot::shouldBeAbleToMove() {
-    return f_freeze_time + 0.5 < gpGlobals->time
-        && f_stuck_time < gpGlobals->time
-        && !shouldCamp()
-        && !shouldWait()
-        && !shouldActWithC4()
-        && f_jump_time + 1 < gpGlobals->time;
+    return freezeTime + 0.5 < gpGlobals->time
+           && f_stuck_time < gpGlobals->time
+           && !shouldCamp()
+           && !shouldWait()
+           && !shouldActWithC4()
+           && f_jump_time + 1 < gpGlobals->time;
 }
 
 edict_t *cBot::getEntityBetweenMeAndNextNode() {

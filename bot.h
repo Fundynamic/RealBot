@@ -169,6 +169,8 @@ private:
     float fMoveToNodeTime;       // How long we should take to move to next node.
     int nodeTimeIncreasedAmount; // how many times did we increase the time to reach node?
 
+    float freezeTime;         // How long it should 'freeze'.
+
 public:
     // Constructor
     cBot();
@@ -227,7 +229,6 @@ public:
     float f_follow_time;         // How long to follow our friend
     float f_update_weapon_time;  // Aargh
     float f_stuck_time;          // How long stuck
-    float f_freeze_time;         // How long it should 'freeze'.
 
     float f_shoot_time;          // Shoot time.
 
@@ -562,6 +563,8 @@ public:
 
     void doJump(Vector &vector);
     void doDuck();
+
+    bool isFreezeTime() const;
 };
 
 // new UTIL.CPP functions...
