@@ -554,6 +554,7 @@ void UTIL_BotPressKey(cBot *pBot, int type) {
     pBot->pEdict->v.button |= type;
 
     if (type == IN_JUMP) {
+        // also hold duck , so we duck jump
         if (pBot->f_hold_duck < gpGlobals->time)
             pBot->f_hold_duck = gpGlobals->time + 0.35;
 
@@ -592,9 +593,6 @@ int UTIL_GiveWeaponType(int weapon_id) {
         case CS_WEAPON_SHIELD:
             kind = SHIELD;            // 08/07/04 - Also take shield into account
     }
-
-
-
 
     // When the kind of weapon is still not found, its a primary (in CS)
     if (kind == NONE)
@@ -671,11 +669,8 @@ int UTIL_GiveWeaponId(const char *name) {
             return CS_WEAPON_SHIELD;
 
         char buffer[80];
-        _snprintf(buffer, 79, "UTIL_GiveWeaponId: Unknown weapon name %s\n",
-                  name);
+        _snprintf(buffer, 79, "UTIL_GiveWeaponId: Unknown weapon name %s\n",  name);
         rblog(buffer);
-
-
     }
 
     return -1;
