@@ -3196,12 +3196,14 @@ void cBot::Think() {
         // save current position as previous
         prevOrigin = pEdict->v.origin;
         distanceMovedTimer = gpGlobals->time + 0.1;
-    } else {
-        // HACK HACK:
-        if (!shouldBeAbleToMove()) {
-            distanceMoved = 0.5;
-        }
     }
+//
+//    else {
+//        // HACK HACK:
+//        if (!shouldBeAbleToMove()) {
+//            distanceMoved = 0.5;
+//        }
+//    }
 
     // NEW ROUND
     if (Game.NewRound() && mod_id == CSTRIKE_DLL) {
