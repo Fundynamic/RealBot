@@ -879,8 +879,7 @@ void rblog(char *txt) {
     if (fpRblog) {
         fprintf(fpRblog, "%s", txt);        // print the text into the file
 
-        // do this so we have more info when things crash (file is flushed)
-        fclose(fpRblog);
-        fpRblog = fopen("reallog.txt", "at"); //
+        // this way we make sure we have all latest info - even with crashes
+        fflush(fpRblog);
     }
 }
