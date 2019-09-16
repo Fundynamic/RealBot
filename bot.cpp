@@ -496,7 +496,13 @@ void cBot::PrepareChat(char sentence[128]) {
  Function purpose: Return reaction time based upon skill
  ******************************************************************************/
 float cBot::ReactionTime(int iSkill) {
-    return RANDOM_FLOAT(fpMinReactTime, fpMaxReactTime);
+    float time = RANDOM_FLOAT(fpMinReactTime, fpMaxReactTime);
+    if (Game.messageVerbosity > 1) {
+        char msg[255];
+        sprintf(msg, "minReactTime %f, maxReactTime %f, skill %d, results into %f", fpMinReactTime, fpMaxReactTime, iSkill, time);
+        rprint_trace("ReactionTime()", msg);
+    }
+    return time;
 }
 
 /******************************************************************************
@@ -3112,7 +3118,8 @@ void cBot::Think() {
         }
 
         if (console_nr == 0) {
-            SpawnInit();
+            rprint("NewRound - because console_nr ?!");
+            NewRound();
             bInitialize = false;
         }
 
