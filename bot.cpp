@@ -3259,8 +3259,8 @@ void cBot::Think() {
 
     // NEW: When round time is over and still busy playing, kill bots
     float roundTimeInSeconds = CVAR_GET_FLOAT("mp_roundtime") * 60;
-    float freezeTime = CVAR_GET_FLOAT("mp_freezetime");
-    if (Game.getRoundStartedTime() + 10.0 + roundTimeInSeconds + freezeTime < gpGlobals->time) {
+    float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
+    if (Game.getRoundStartedTime() + 10.0 + roundTimeInSeconds + freezeTimeCVAR < gpGlobals->time) {
         end_round = true;
         // round is ended
     }
