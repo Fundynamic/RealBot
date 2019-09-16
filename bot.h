@@ -565,6 +565,8 @@ public:
     void doDuck();
 
     bool isFreezeTime() const;
+
+    void rememberEnemyFound();
 };
 
 // new UTIL.CPP functions...

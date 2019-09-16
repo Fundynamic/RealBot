@@ -510,7 +510,6 @@ int cBot::FindEnemy() {
         return -1;
     float fNearestDistance = 9999;       // Nearest distance
     edict_t *pNewEnemy = NULL;   // New enemy found
-    int iResult = -1;            // What to return?
 
     // SEARCH PLAYERS FOR ENEMIES
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
@@ -552,42 +551,43 @@ int cBot::FindEnemy() {
     }                            // FOR
 
     // We found a new enemy & the new enemy is different then previous pointer
-    if ((pNewEnemy) && (pNewEnemy != pEnemyEdict)) {
-        int iCurrentNode = NodeMachine.getCloseNode(pEdict->v.origin, (NODE_ZONE * 2), pEdict);
-
+    if (pNewEnemy && pNewEnemy != pEnemyEdict) {
+        int iCurrentNode = determineCurrentNode();
 
         // Add 'contact' data
-        if (iCurrentNode > -1)
+        if (iCurrentNode > -1) {
             NodeMachine.contact(iCurrentNode, UTIL_GetTeam(pEdict));
+        }
 
         // We have a reaction time to this new enemy
-        f_bot_find_enemy_time = gpGlobals->time + REMEMBER_ENEMY_TIME;
+        rememberEnemyFound();
+        f_shoot_time = gpGlobals->time + ReactionTime(bot_skill);
+        pEnemyEdict = pNewEnemy; // Update pointer
 
         // We did not have an enemy before
         if (pEnemyEdict == NULL) {
-            pEnemyEdict = pNewEnemy;
-            f_bot_find_enemy_time = gpGlobals->time + REMEMBER_ENEMY_TIME; // Set timer
+            rprint_trace("FindEnemy()", "Found new enemy");
 
             // RADIO: When we found a NEW enemy but NOT via a friend
-            if (FUNC_DoRadio(this))
+            if (FUNC_DoRadio(this)) {
                 UTIL_BotRadioMessage(this, 3, "2", "");
-
-            // 25/06/04 - Stefan
-            // FIX: There was no 'reaction time' here
-            f_shoot_time = gpGlobals->time + ReactionTime(bot_skill);
+            }
 
             // We found a new enemy
-            iResult = 0;
-        } else                    // we found an enemy that is newer/more dangerous then previous
-        {
-            pEnemyEdict = pNewEnemy; // Update pointer
-            f_bot_find_enemy_time = gpGlobals->time + REMEMBER_ENEMY_TIME; // Set timer
-            f_shoot_time = gpGlobals->time + ReactionTime(bot_skill);
-            iResult = 3;           // we found a 'newer' enemy. Won't be doing anything in BotFight()
+            return 0;
+        } else {
+            // we found an enemy that is newer/more dangerous then previous
+            rprint_trace("FindEnemy()", "Found 'newer' enemy");
+            return 3;
         }
     }
 
-    return iResult;              // return result
+    // nothing found
+    return -1;              // return result
+}
+
+void cBot::rememberEnemyFound() {
+    f_bot_find_enemy_time = gpGlobals->time + REMEMBER_ENEMY_TIME;
 }
 
 /******************************************************************************
@@ -980,7 +980,8 @@ void cBot::PickBestWeapon() {
  ******************************************************************************/
 void cBot::FireWeapon() {
     // We may not shoot!
-    if (f_shoot_time > gpGlobals->time || f_update_weapon_time > gpGlobals->time)
+    if (f_shoot_time > gpGlobals->time ||
+        f_update_weapon_time > gpGlobals->time)
         return;
 
     if (!isSeeingEnemy()) {
