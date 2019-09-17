@@ -151,7 +151,6 @@ void cBot::SpawnInit() {
     f_hear_time = gpGlobals->time;
     freezeTime = gpGlobals->time - 1;
     f_cover_time = gpGlobals->time;
-    f_stuck_time = gpGlobals->time;
     f_c4_time = gpGlobals->time;
     f_update_weapon_time = gpGlobals->time;
     f_follow_time = gpGlobals->time;
@@ -323,7 +322,6 @@ void cBot::NewRound() {
     f_hear_time = gpGlobals->time;
     freezeTime = gpGlobals->time - 1;
     f_cover_time = gpGlobals->time;
-    f_stuck_time = gpGlobals->time;
     f_c4_time = gpGlobals->time;
     f_update_weapon_time = gpGlobals->time;
     f_follow_time = gpGlobals->time;
@@ -3221,15 +3219,17 @@ void cBot::Think() {
     // --------------------------------
     // IMPORTANT THINKING GOING ON HERE
     // --------------------------------
-    int iChange = prev_health - bot_health;
+    int healthChange = prev_health - bot_health;
 
     // handle damage taken
     if (prev_health > bot_health
-        && iChange > RANDOM_LONG(CSTRIKE_MIN_DAMAGE, CSTRIKE_MAX_DAMAGE)
-        && pEnemyEdict != NULL) {
+        && healthChange > RANDOM_LONG(CSTRIKE_MIN_DAMAGE, CSTRIKE_MAX_DAMAGE)
+        && hasEnemy()) {
 
-        if (FUNC_DoRadio(this))
-            UTIL_BotRadioMessage(this, 3, "3", "");        // need f*cking backup
+        // need backup!
+        if (FUNC_DoRadio(this)) {
+            UTIL_BotRadioMessage(this, 3, "3", "");
+        }
 
         BOT_DecideTakeCover(this);
     }
@@ -3240,16 +3240,18 @@ void cBot::Think() {
     BotConsole(this);
 
     // BOT: Blinded
-    if (fBlindedTime > gpGlobals->time) {
+    if (isBlindedByFlashbang()) {
         // Dude we are messed up.
 
         // 01/07/04 - Stefan - Pointed out on the forums by Josh Borke... (do not shoot when dontshoot is on)
         // shoot randomly
-        if (Game.bDoNotShoot == false)
-            if ((RANDOM_LONG(0, 100) < ipFearRate) && RANDOM_LONG(0, 100))
+        if (!Game.bDoNotShoot) {
+            if ((RANDOM_LONG(0, 100) < ipFearRate) && RANDOM_LONG(0, 100)) {
                 UTIL_BotPressKey(this, IN_ATTACK);
+            }
+        }
 
-        rprint("Blinded");
+        rprint_trace("Think()", "Blinded");
         return;
     }
 
@@ -3305,6 +3307,7 @@ void cBot::Think() {
             vBody = vHead = pent->v.origin;
         }
 
+        rprint_trace("Think()", "isFreezeTime");
         return;
     }
 
@@ -3312,9 +3315,8 @@ void cBot::Think() {
     // MAIN STATE: We have no enemy...
     // **---**---**---**---**---**---**
     if (!hasEnemy()) {
-//        this->rprint("!hasEnemy()");
 
-        if (Game.bDoNotShoot == false) {
+        if (!Game.bDoNotShoot) {
             InteractWithPlayers();
         }
 
@@ -4040,11 +4042,10 @@ bool cBot::isUsingConsole() {
 
 bool cBot::shouldBeAbleToMove() {
     return freezeTime + 0.5 < gpGlobals->time
-           && f_stuck_time < gpGlobals->time
            && !shouldCamp()
            && !shouldWait()
            && !shouldActWithC4()
-           && f_jump_time + 1 < gpGlobals->time;
+           && f_jump_time + 1 < gpGlobals->time; // after jumping, you move slower for a second
 }
 
 edict_t *cBot::getEntityBetweenMeAndNextNode() {

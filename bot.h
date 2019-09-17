@@ -231,7 +231,6 @@ public:
 
     float f_follow_time;         // How long to follow our friend
     float f_update_weapon_time;  // Aargh
-    float f_stuck_time;          // How long stuck
 
     float f_shoot_time;          // Shoot time.
 

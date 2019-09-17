@@ -2737,12 +2737,11 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     }
 
     // When longer not stuck for some time we clear stuff
-    if (pBot->fNotStuckTime + 2 < gpGlobals->time && // not stuck for 2 seconds
-        (pBot->iDuckTries != 0 || pBot->iJumpTries != 0) // values has been set
-            ) {
+    if (pBot->fNotStuckTime + 1 < gpGlobals->time) // not stuck for 1 second
+    {
         pBot->iDuckTries = 0;
         pBot->iJumpTries = 0;
-        pBot->rprint("not stuck for more than 2 seconds so reset jump and duck tries");
+        pBot->rprint_trace("path_walk", "Reset duck and jump tries because not stuck timer is > 1 second");
     }
 
     pBot->rprint_trace("cNodeMachine::path_walk", "before getEntityBetweenMeAndNextNode");
@@ -2975,11 +2974,18 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     // - learn from mistakes
     // - unstuck
     // - go back in path...
-    bool notStuckForAWhile = (pBot->fNotStuckTime + 0.5) < gpGlobals->time;
+
+    // the move timer is every 0.1 second, so the stuck timer has the same rithm
+    bool notStuckForAWhile = (pBot->fNotStuckTime + 0.1) < gpGlobals->time;
+
+    float expectedMoveDistance = NODE_ZONE;
+    if (pBot->isFreezeTime()) expectedMoveDistance = 0;
+    if (pBot->keyPressed(IN_DUCK)) expectedMoveDistance = NODE_ZONE / 2;
+    if (pBot->keyPressed(IN_JUMP)) expectedMoveDistance = NODE_ZONE / 2;
 
     char msg[255];
     memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Distance moved %f, should be able to move %d, notStuck flag %d", distanceMoved, pBot->shouldBeAbleToMove(), notStuckForAWhile);
+    sprintf(msg, "Distance moved %f, expected %f, should be able to move %d, notStuck flag %d", distanceMoved, expectedMoveDistance, pBot->shouldBeAbleToMove(), notStuckForAWhile);
     pBot->rprint_trace("cNodeMachine::path_walk", msg);
 
     bool isStuck = distanceMoved < 0.5 && pBot->shouldBeAbleToMove() && notStuckForAWhile; // also did not evaluate this logic for 0.5 second
