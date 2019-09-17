@@ -1604,7 +1604,7 @@ void cBot::InteractWithPlayers() {
 
 // BOT: INTERACT WITH PLAYERS
 void cBot::JoinTeam() {
-    if (!mod_id == CSTRIKE_DLL) return;
+    if (mod_id != CSTRIKE_DLL) return;
     // When bot plays Counter-Strike (only Counter-Strike is supported)
 
     char c_team[32];
@@ -3066,6 +3066,8 @@ bool cBot::isDead() {
 
 // BOT: Think
 void cBot::Think() {
+    if (mod_id != CSTRIKE_DLL) return; // do not support non-counter-strike mods
+
     // BOT: If a bot did not join a team yet, then do it
     if (!hasJoinedTeam) {
         rprint("Need to join team, doing that now");
@@ -3199,7 +3201,7 @@ void cBot::Think() {
     }
 
     // NEW ROUND
-    if (Game.NewRound() && mod_id == CSTRIKE_DLL) {
+    if (Game.NewRound()) {
         NewRound();
         Game.iProducedSentences = RANDOM_LONG(0, Game.iMaxSentences);
         ChatEngine.fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0, 0.5);
