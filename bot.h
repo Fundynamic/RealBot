@@ -171,6 +171,9 @@ private:
 
     float freezeTime;         // How long it should 'freeze'.
 
+    float distanceMoved;        // length of v_diff vector (distance bot moved) (timed calculation by distanceMovedTimer)
+    float distanceMovedTimer;
+
 public:
     // Constructor
     cBot();
@@ -358,9 +361,6 @@ public:
     char arg1[25];
     char arg2[25];
     char arg3[25];
-
-    // Timers
-    float distanceMovedTimer;
 
     Vector prevOrigin;
     Vector lastSeenEnemyVector;              // Vector where we last saw our enemy (when not 0,0,0)

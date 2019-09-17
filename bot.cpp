@@ -165,6 +165,7 @@ void cBot::SpawnInit() {
     fMoveToNodeTime = -1;
     nodeTimeIncreasedAmount = 0;
     distanceMovedTimer = gpGlobals->time;
+    distanceMoved = 0;
     fBlindedTime = gpGlobals->time;
     f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.1, 0.9);
     fWanderTime = gpGlobals->time;
@@ -336,6 +337,7 @@ void cBot::NewRound() {
     fMoveToNodeTime = -1;
     nodeTimeIncreasedAmount = 0;
     distanceMovedTimer = gpGlobals->time;
+    distanceMoved = 0;
     fBlindedTime = gpGlobals->time;
     f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.1, 0.9);
     fWanderTime = gpGlobals->time;
@@ -3064,8 +3066,6 @@ bool cBot::isDead() {
 
 // BOT: Think
 void cBot::Think() {
-    float distanceMoved;        // length of v_diff vector (distance bot moved)
-
     // BOT: If a bot did not join a team yet, then do it
     if (!hasJoinedTeam) {
         rprint("Need to join team, doing that now");
@@ -3197,13 +3197,6 @@ void cBot::Think() {
         prevOrigin = pEdict->v.origin;
         distanceMovedTimer = gpGlobals->time + 0.1;
     }
-//
-//    else {
-//        // HACK HACK:
-//        if (!shouldBeAbleToMove()) {
-//            distanceMoved = 0.5;
-//        }
-//    }
 
     // NEW ROUND
     if (Game.NewRound() && mod_id == CSTRIKE_DLL) {
