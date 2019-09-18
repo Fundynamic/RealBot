@@ -295,7 +295,7 @@ void GameDLLInit(void) {
     memset(bots, 0, sizeof(bots));
     rblog("OK\n");
 
-    rblog("Looking for realbot dll..");
+    rblog("Verifying realbot is installed correctly..");
 
     FILE *fp;
     bool bInstalledCorrectly = false;
