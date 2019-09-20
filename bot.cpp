@@ -3807,8 +3807,8 @@ float cBot::getDistanceTo(int nodeIndex) {
     if (nodePtr != NULL) {
         return getDistanceTo(nodePtr->origin);
     }
-    rprint("getDistanceTo(int nodeIndex)", "The given nodeIndex was invalid, returning 0 distance");
-    return 0;
+    rprint("getDistanceTo(int nodeIndex)", "The given nodeIndex was invalid, returning 9999 distance");
+    return 9999;
 }
 
 /**
