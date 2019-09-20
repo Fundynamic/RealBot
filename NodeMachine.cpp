@@ -231,8 +231,9 @@ int cNodeMachine::GetTroubleIndexForConnection(int iFrom, int iTo) {
  * @return index of newly created index
  */
 int cNodeMachine::AddTroubledConnection(int iFrom, int iTo) {
-    if (GetTroubleIndexForConnection(iFrom, iTo) > -1)
-        return false; // already exists
+    int existingIndex = GetTroubleIndexForConnection(iFrom, iTo);
+    if (existingIndex > -1)
+        return existingIndex; // already exists
 
     int iNew = -1;
     int t;
