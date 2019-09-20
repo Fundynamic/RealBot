@@ -249,10 +249,6 @@ cBot *getCloseFellowBot(cBot *pBot) {
             if (pBotPointer == NULL)       // not using FL_FAKECLIENT here so it is multi-bot compatible
                 continue;
 
-            int iAngle = FUNC_InFieldOfView(pBot->pEdict,
-                                            (pPlayer->v.origin -
-                                             pBot->pEdict->v.origin));
-
             if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < NODE_ZONE) {
                 closestBot = pBotPointer;    // set pointer
             }
