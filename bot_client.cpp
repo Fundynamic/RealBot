@@ -495,7 +495,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
                 // move to damage vector
                 pBot->f_camp_time = gpGlobals->time;        // stop camping
                 pBot->rprint("Damage taken, change goal to damage origin.");
-                pBot->setGoalNode(NodeMachine.getCloseNode(damage_origin, 150, NULL));
+                pBot->setGoalNode(NodeMachine.getClosestNode(damage_origin, 150, NULL));
                 pBot->forgetPath();
 
                 ///////////// END STEFAN
@@ -814,7 +814,7 @@ void BotClient_Valve_ScreenFade(void *p, int bot_index) {
         cBot *pBot;
         pBot = &bots[bot_index];
 
-        int iCurrentNode = NodeMachine.getCloseNode(pBot->pEdict->v.origin, NODE_ZONE, pBot->pEdict);
+        int iCurrentNode = NodeMachine.getClosestNode(pBot->pEdict->v.origin, NODE_ZONE, pBot->pEdict);
         int iCoverNode = NodeMachine.node_cover(iCurrentNode, iCurrentNode, pBot->pEdict);
 
         if (iCoverNode > -1) {

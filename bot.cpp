@@ -797,7 +797,7 @@ void cBot::FightEnemy() {
             if (!bFirstOutOfSight) {
                 rprint_trace("FightEnemy()", "Enemy out of sight, calculating path towards it.");
                 // Only change path when we update our information here
-                int iGoal = NodeMachine.getCloseNode(lastSeenEnemyVector, NODE_ZONE, pEdict);
+                int iGoal = NodeMachine.getClosestNode(lastSeenEnemyVector, NODE_ZONE, pEdict);
                 if (iGoal > -1) {
                     setGoalNode(iGoal);
                     forgetPath();
@@ -1304,8 +1304,8 @@ void cBot::FindCover() {
         }
     }
 
-    int iNodeEnemy = NodeMachine.getCloseNode(pEnemyEdict->v.origin, 60, pEnemyEdict);
-    int iNodeFrom = NodeMachine.getCloseNode(pEdict->v.origin, NODE_ZONE, pEdict);
+    int iNodeEnemy = NodeMachine.getClosestNode(pEnemyEdict->v.origin, 60, pEnemyEdict);
+    int iNodeFrom = NodeMachine.getClosestNode(pEdict->v.origin, NODE_ZONE, pEdict);
 
     // --------------
     // TEST TEST TEST
@@ -1329,7 +1329,7 @@ void cBot::FindCover() {
         // --------------------------------------------------
         if (cover_vect != Vector(9999, 9999, 9999)) {
             rprint("FindCover()", "cover node found (cover_vect based)");
-            int iNodeCover = NodeMachine.getCloseNode(cover_vect, 60, pEdict);
+            int iNodeCover = NodeMachine.getClosestNode(cover_vect, 60, pEdict);
             if (iNodeCover > -1) {
                 setGoalNode(iNodeCover);
                 forgetPath();
@@ -1544,7 +1544,7 @@ void cBot::InteractWithPlayers() {
         }
 
         // INITIALIZATION:
-        int iGoal = NodeMachine.getCloseNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
+        int iGoal = NodeMachine.getClosestNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
         if (iGoal > -1) {
             rprint_trace("InteractWithPlayers()", "Found a new enemy, setting goal and forgetting path");
             setGoalNode(iGoal);
@@ -1590,7 +1590,7 @@ void cBot::InteractWithPlayers() {
         //
 
         // INITIALIZATION:
-        int iGoal = NodeMachine.getCloseNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
+        int iGoal = NodeMachine.getClosestNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
 
         if (iGoal > -1) {
             rprint_trace("InteractWithPlayers()", "Found a *newer* enemy, so picking goal node to that");
@@ -1851,7 +1851,7 @@ bool cBot::Defuse() {
 
     } else {
         rprint_trace("Defuse()", "I can see C4, but it is out of reach.");
-        int iGoalNode = NodeMachine.getCloseNode(vC4, distanceForC4ToBeInReach, NULL);
+        int iGoalNode = NodeMachine.getClosestNode(vC4, distanceForC4ToBeInReach, NULL);
         if (iGoalNode < 0) {
             rprint_normal("Defuse()", "No node close, so just look at it/body face at it and move towards it.");
             vHead = vC4;
@@ -1950,7 +1950,7 @@ void cBot::Act() {
             if (!hasBomb() || Game.bBombPlanted) {
                 rprint_trace("Act()", "I was planting the C4, and it got planted (I no longer have the C4), so find a nearby node to camp/guard the C4");
                 f_c4_time = gpGlobals->time;
-                setGoalNode(NodeMachine.getCloseNode(pEdict->v.origin, 200, pEdict));
+                setGoalNode(NodeMachine.getClosestNode(pEdict->v.origin, 200, pEdict));
                 iPathFlags = PATH_CAMP;
                 forgetPath();
             }
@@ -2803,7 +2803,7 @@ void cBot::Memory() {
                                point_hull, pEdict, &tr);
 
                 int iNodeHearPlayer =
-                        NodeMachine.getCloseNode(vHear, NODE_ZONE * 2, pHearPlayer);
+                        NodeMachine.getClosestNode(vHear, NODE_ZONE * 2, pHearPlayer);
 
                 // if nothing hit:
                 if (tr.flFraction >= 1.0) {
@@ -3015,7 +3015,7 @@ int cBot::determineCurrentNodeWithTwoAttempts() {
 Find node close to bot, given range. Does not cache result.
 **/
 int cBot::determineCurrentNode(float range) {
-    return NodeMachine.getCloseNode(pEdict->v.origin, range, pEdict);
+    return NodeMachine.getClosestNode(pEdict->v.origin, range, pEdict);
 }
 
 /**
@@ -3618,7 +3618,7 @@ bool BotRadioAction() {
 
                         // get to the leader position
                         BotPointer->rprint("Setting goal from regroup team");
-                        BotPointer->setGoalNode(NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE * 2, plr));
+                        BotPointer->setGoalNode(NodeMachine.getClosestNode(plr->v.origin, NODE_ZONE * 2, plr));
                         BotPointer->forgetPath();
                     }
 
@@ -3642,7 +3642,7 @@ bool BotRadioAction() {
 
                         // Find player who issues this message and go to it
                         int iBackupNode =
-                                NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE, plr);
+                                NodeMachine.getClosestNode(plr->v.origin, NODE_ZONE, plr);
 
                         // Help this player
                         if (iBackupNode > -1) {
@@ -3675,7 +3675,7 @@ bool BotRadioAction() {
                         unstood = true;
 
                         // get source of backup
-                        int iBackupNode = NodeMachine.getCloseNode(plr->v.origin, NODE_ZONE, plr);
+                        int iBackupNode = NodeMachine.getClosestNode(plr->v.origin, NODE_ZONE, plr);
 
                         if (iBackupNode > -1) {
                             BotPointer->rprint("Setting goal for backup");
@@ -3948,7 +3948,7 @@ void BotThink(cBot *pBot) {
 void cBot::Dump(void) {
     char buffer[181];
     int iCurrentNode =
-            NodeMachine.getCloseNode(pEdict->v.origin, (NODE_ZONE * 2), pEdict);
+            NodeMachine.getClosestNode(pEdict->v.origin, (NODE_ZONE * 2), pEdict);
 
     _snprintf(buffer, 180,
               "%s (#%d %s): timers, now= %.0f, c4_time=%.0f, camp_time=%.0f, wait_time=%.0f, cover_time=%.0f, wander=%.0f, MoveToNodeTime=%.0f\n",

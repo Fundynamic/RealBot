@@ -49,7 +49,8 @@ public:
 
     int add2(Vector vOrigin, int iType, edict_t *pEntity);
 
-    int getCloseNode(Vector vOrigin, float fDist, edict_t *pEdict);    // returns a close node
+    int getClosestNode(Vector vOrigin, float fDist, edict_t *pEdict);    // returns a close node
+    int getFurthestNode(Vector vOrigin, float fDist, edict_t *pEdict);    // returns a node within dist, but most far away
     int getFreeNodeIndex();
 
     // -----------------

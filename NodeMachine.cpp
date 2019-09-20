@@ -431,12 +431,10 @@ bool cNodeMachine::node_on_crate(Vector vOrigin, edict_t *pEdict) {
  * @param pEdict
  * @return
  */
-int cNodeMachine::getCloseNode(Vector vOrigin, float fDist, edict_t *pEdict) {
+int cNodeMachine::getClosestNode(Vector vOrigin, float fDist, edict_t *pEdict) {
     // REDO: Need faster method to find a node
     // TOADD: For secure results all nodes should be checked to figure out the real
     //        'closest' node.
-
-    int iNodeOutOfFOV = -1;
 
     // Use Meredians to search for nodes
     // TODO: we should take care in the situation where we're at the 'edge' of such a meridian (subspace). So we should
@@ -449,6 +447,9 @@ int cNodeMachine::getCloseNode(Vector vOrigin, float fDist, edict_t *pEdict) {
         return -1;
     }
 
+    float dist = fDist;
+    int iCloseNode = -1;
+
     // Search in this meredian
     for (int i = 0; i < MAX_NODES_IN_MEREDIANS; i++) {
         if (Meredians[iX][iY].iNodes[i] < 0) continue; // skip invalid node indexes
@@ -457,7 +458,10 @@ int cNodeMachine::getCloseNode(Vector vOrigin, float fDist, edict_t *pEdict) {
 
 //        if (Nodes[iNode].origin.z > (vOrigin.z + 32)) continue; // do not pick nodes higher than us
 
-        if (func_distance(vOrigin, Nodes[iNode].origin) < fDist) {
+        float distanceFromTo = func_distance(vOrigin, Nodes[iNode].origin);
+        if (distanceFromTo < dist) {
+            dist = distanceFromTo;
+
             TraceResult tr;
             Vector nodeVector = Nodes[iNode].origin;
 
@@ -479,19 +483,82 @@ int cNodeMachine::getCloseNode(Vector vOrigin, float fDist, edict_t *pEdict) {
                 if (pEdict != NULL) {
                     if (FInViewCone(&nodeVector, pEdict) // in FOV
                         && FVisible(nodeVector, pEdict)) {
-                        return iNode;
+                        iCloseNode = iNode;
                     } else {
-                        iNodeOutOfFOV = iNode;
+                        iCloseNode = iNode;
                     }
-
-                } else {
-                    return iNode;
                 }
             }
-            //return iNode;
         }
     }
-    return iNodeOutOfFOV;        // fail
+    return iCloseNode;
+}
+
+/**
+ * Find a node as far away from vOrigin but still within distance fDist. Ignoring any pEdict it hits.
+ * @param vOrigin
+ * @param fDist
+ * @param pEdict
+ * @return
+ */
+int cNodeMachine::getFurthestNode(Vector vOrigin, float fDist, edict_t *pEdict) {
+    // Use Meredians to search for nodes
+    // TODO: we should take care in the situation where we're at the 'edge' of such a meridian (subspace). So we should
+    // basicly take edging meridians as well when too close to the edge.
+    int iX, iY;
+    VectorToMeredian(vOrigin, &iX, &iY);
+
+    // no Meridian coordinates found, bail
+    if (iX < 0 || iY < 0) {
+        return -1;
+    }
+
+    float dist = 0;
+    int iFarNode = -1;
+
+    // Search in this meredian
+    for (int i = 0; i < MAX_NODES_IN_MEREDIANS; i++) {
+        if (Meredians[iX][iY].iNodes[i] < 0) continue; // skip invalid node indexes
+
+        int iNode = Meredians[iX][iY].iNodes[i];
+
+//        if (Nodes[iNode].origin.z > (vOrigin.z + 32)) continue; // do not pick nodes higher than us
+
+        float distanceFromTo = func_distance(vOrigin, Nodes[iNode].origin);
+        if (distanceFromTo < fDist && // within range
+            distanceFromTo > dist) { // but furthest so far
+            dist = distanceFromTo;
+
+            TraceResult tr;
+            Vector nodeVector = Nodes[iNode].origin;
+
+            //Using TraceHull to detect de_aztec bridge and other entities.
+            //DONT_IGNORE_MONSTERS, we reached it only when there are no other bots standing in our way!
+            //UTIL_TraceHull(vOrigin, nodeVector, dont_ignore_monsters, point_hull, pEdict, &tr);
+            //UTIL_TraceHull(vOrigin, nodeVector, dont_ignore_monsters, human_hull, pEdict, &tr);
+            if (pEdict) {
+                UTIL_TraceHull(vOrigin, nodeVector, dont_ignore_monsters,
+                               head_hull, pEdict->v.pContainingEntity,
+                               &tr);
+            } else {
+                UTIL_TraceHull(vOrigin, nodeVector, dont_ignore_monsters,
+                               head_hull, NULL, &tr);
+            }
+
+            // if nothing hit:
+            if (tr.flFraction >= 1.0) {
+                if (pEdict != NULL) {
+                    if (FInViewCone(&nodeVector, pEdict) // in FOV
+                        && FVisible(nodeVector, pEdict)) {
+                        iFarNode = iNode;
+                    } else {
+                        iFarNode = iNode;
+                    }
+                }
+            }
+        }
+    }
+    return iFarNode;
 }
 
 // Adds a neighbour connection to a node ID
@@ -764,7 +831,7 @@ int cNodeMachine::Reachable(const int iStart, const int iEnd) {
 // Adding a node: another way...
 int cNodeMachine::add2(Vector vOrigin, int iType, edict_t *pEntity) {
     // Do not add a node when there is already one close
-    if (getCloseNode(vOrigin, NODE_ZONE, pEntity) > -1)
+    if (getClosestNode(vOrigin, NODE_ZONE, pEntity) > -1)
         return -1;
 
     int newNodeIndex = getFreeNodeIndex();
@@ -865,7 +932,7 @@ int cNodeMachine::getFreeNodeIndex() {
 int cNodeMachine::addNode(Vector vOrigin, edict_t *pEntity) {
 
     // Do not add a node when there is already one close
-    if (getCloseNode(vOrigin, NODE_ZONE, pEntity) > -1)
+    if (getClosestNode(vOrigin, NODE_ZONE, pEntity) > -1)
         return -1;
 
     int currentIndex = getFreeNodeIndex();
@@ -1170,11 +1237,11 @@ void cNodeMachine::connections(edict_t *pEntity) {
             closeNode = botPointer.determineCurrentNodeWithTwoAttempts();
             sprintf(msg, "Bot [%d] is at node %d\n", draw_nodepath, closeNode);
         } else {
-            closeNode = getCloseNode(pEntity->v.origin, NODE_ZONE, pEntity);
+            closeNode = getClosestNode(pEntity->v.origin, NODE_ZONE, pEntity);
             sprintf(msg, "No bot used for slot [%d], YOU are at node %d\n", draw_nodepath, closeNode);
         }
     } else {
-        closeNode = getCloseNode(pEntity->v.origin, NODE_ZONE, pEntity);
+        closeNode = getClosestNode(pEntity->v.origin, NODE_ZONE, pEntity);
         sprintf(msg, "YOU are at node %d\n", closeNode);
     }
 
@@ -1266,7 +1333,7 @@ void cNodeMachine::draw(edict_t *pEntity) {
             }
         }                         // for
     }
-    int iNodeClose = getCloseNode(pEntity->v.origin, NODE_ZONE, pEntity);
+    int iNodeClose = getClosestNode(pEntity->v.origin, NODE_ZONE, pEntity);
 
     char msg[50];
     char Flags[10];
@@ -1759,7 +1826,7 @@ void cNodeMachine::addGoal(edict_t *pEdict, int goalType, Vector vVec) {
         distance = NODE_ZONE * 0.8;
     }
 
-    int nNode = getCloseNode(vVec, distance, pEdict);
+    int nNode = getClosestNode(vVec, distance, pEdict);
 
     if (nNode < 0) {
         rblog("Cannot find near node, adding one");
@@ -2442,7 +2509,7 @@ int cNodeMachine::node_look_camp(Vector vOrigin, int iTeam,
 
     // Theory:
     // Find a node, far, and a lot danger...
-    int iFrom = getCloseNode(vOrigin, 75, pEdict);
+    int iFrom = getClosestNode(vOrigin, 75, pEdict);
     // Search in this meredian
     for (int i = 0; i < MAX_NODES; i++) {
         int iNode = i;
@@ -2967,7 +3034,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                                     // Somehow the button is not detectable. Find a node, that is close to it.
                                     // then retry the traceline. It should NOT hit a thing now.
                                     // On success, it is still our button
-                                    int iClose = getCloseNode(vPentVector, NODE_ZONE, pent);
+                                    int iClose = getClosestNode(vPentVector, NODE_ZONE, pent);
 
                                     if (iClose > -1) {
                                         // retry the tracehull
@@ -2996,7 +3063,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                     Vector vButtonVector = VecBModelOrigin(pButtonEdict);
 
                     // Search a node close to it
-                    int iButtonNode = getCloseNode(vButtonVector, NODE_ZONE, pButtonEdict);
+                    int iButtonNode = getClosestNode(vButtonVector, NODE_ZONE, pButtonEdict);
 
                     // When node found, create path to it
                     if (pBot->createPath(iButtonNode, PATH_NONE)) {
@@ -3290,11 +3357,10 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         pBot->rprint("cNodeMachine::path_think()", "Create path to goal node");
         createPath(iCurrentNode, pBot->getGoalNode(), thisBotIndex, pBot, pBot->iPathFlags);
 
-        if (pBot->getPathNodeIndex()) {
+        if (pBot->getPathNodeIndex() < 0) {
             pBot->rprint("cNodeMachine::path_think()",
-                         "there is a goal, no path, and we could not get a path to our goal; so i have choosen to go to a nice nearby and try again");
-            pBot->setGoalNode(getCloseNode(pBot->pEdict->v.origin, 300, pBot->pEdict)
-            );
+                         "there is a goal, no path, and we could not get a path to our goal; so i have choosen to find a node further away and try again");
+            pBot->setGoalNode(getFurthestNode(pBot->pEdict->v.origin, 400, pBot->pEdict));
         }
         return;
     }
@@ -3474,7 +3540,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
                             pBot->rprint_trace("path_think/determine goal", msg);
 
                             // find a node close to the C4
-                            int nodeCloseToC4 = getCloseNode(Game.vPlantedC4, NODE_ZONE * 2, NULL);
+                            int nodeCloseToC4 = getClosestNode(Game.vPlantedC4, NODE_ZONE * 2, NULL);
                             if (nodeCloseToC4 > -1) {
                                 // measure distance compared to goal node we are evaluating
                                 float distanceToC4FromCloseNode = func_distance(
@@ -3611,7 +3677,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
 
     // a few situations override the final goal node... (Stefan, what!?)
     if (pBot->pButtonEdict) {
-        iFinalGoalNode = getCloseNode(VecBModelOrigin(pBot->pButtonEdict), NODE_ZONE, pBot->pButtonEdict);
+        iFinalGoalNode = getClosestNode(VecBModelOrigin(pBot->pButtonEdict), NODE_ZONE, pBot->pButtonEdict);
     }
 
     // Well it looks like we override the 'final' goal node (not so final after all huh?) to the dropped c4
@@ -3620,7 +3686,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
 
         // randomly, if we 'feel like picking up the bomb' just override the 'final' goal node
         if (RANDOM_LONG(0, 100) < pBot->ipDroppedBomb) {
-            iFinalGoalNode = getCloseNode(Game.vDroppedC4, 75, NULL);
+            iFinalGoalNode = getClosestNode(Game.vDroppedC4, 75, NULL);
         }
     }
 
@@ -3694,7 +3760,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     if (!success) {
         pBot->rprint("cNodeMachine::path_think()", "Unable to create path to destination.");
         pBot->rprint("cNodeMachine::path_think()", "Finding node nearby to move to");
-        pBot->setGoalNode(getCloseNode(pBot->pEdict->v.origin, NODE_ZONE * 5, pBot->pEdict));
+        pBot->setGoalNode(getClosestNode(pBot->pEdict->v.origin, NODE_ZONE * 5, pBot->pEdict));
 
         bool successToAlternative = createPath(iCurrentNode, pBot->getGoalNode(), thisBotIndex, pBot, pBot->iPathFlags);
 

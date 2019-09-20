@@ -1638,7 +1638,7 @@ void RealBot_ServerCommand(void) {
         int iOnNode = -1;
 
         if (pHostEdict != NULL) {
-            iOnNode = NodeMachine.getCloseNode(pHostEdict->v.origin, 35, pHostEdict);
+            iOnNode = NodeMachine.getClosestNode(pHostEdict->v.origin, 35, pHostEdict);
         }
 
         if (iOnNode > -1) {
