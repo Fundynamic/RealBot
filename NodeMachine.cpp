@@ -1164,10 +1164,24 @@ void cNodeMachine::addNodesForPlayers() {
 
 // Draw connections of the node we are standing on
 void cNodeMachine::connections(edict_t *pEntity) {
-    int closeNode = getCloseNode(pEntity->v.origin, NODE_ZONE, pEntity);
 
-    char msg[30];
-    sprintf(msg, "At node %d\n", closeNode);
+    int closeNode = -1;
+    char msg[75];
+    memset(msg, 0, sizeof(msg));
+    if (draw_nodepath > -1 && draw_nodepath < 32) {
+        cBot botPointer = bots[draw_nodepath];
+        if (botPointer.bIsUsed) {
+            closeNode = botPointer.determineCurrentNodeWithTwoAttempts();
+            sprintf(msg, "Bot [%d] is at node %d\n", draw_nodepath, closeNode);
+        } else {
+            closeNode = getCloseNode(pEntity->v.origin, NODE_ZONE, pEntity);
+            sprintf(msg, "No bot used for slot [%d], YOU are at node %d\n", draw_nodepath, closeNode);
+        }
+    } else {
+        closeNode = getCloseNode(pEntity->v.origin, NODE_ZONE, pEntity);
+        sprintf(msg, "YOU are at node %d\n", closeNode);
+    }
+
     CenterMessage(msg);
 
     if (closeNode > -1) {
@@ -1184,13 +1198,28 @@ void cNodeMachine::connections(edict_t *pEntity) {
                 int blue = 0;
 
                 int troubleIndex = GetTroubleIndexForConnection(closeNode, neighbourNode);
+
                 if (troubleIndex > -1) {
                     int tries = Troubles[troubleIndex].iTries;
-                    if (tries == 1) red = 255;
+                    if (tries == 1) {
+                        red = 255;
+                        green = 255;
+                        blue = 0;
+                    }
+
                     if (tries == 2) {
                         red = 255;
                         green = 0;
+                        blue = 0;
                     }
+
+                    if (tries > 2) {
+                        red = 128;
+                        green = 0;
+                        blue = 0;
+                    }
+                } else {
+                    // other info?
                 }
 
                 DrawBeam(pEntity, start, end, 2, 0, red, green, blue, 255, 1);
@@ -1621,11 +1650,11 @@ void cNodeMachine::path_draw(edict_t *pEntity) {
         } // if iNode
     } // for
 
-    int iNodeClose = getCloseNode(pEntity->v.origin, 35, pEntity);
+//    int iNodeClose = getCloseNode(pEntity->v.origin, 35, pEntity);
 
-    char msg[30];
-    sprintf(msg, "At node %d\n", iNodeClose);
-    CenterMessage(msg);
+//    char msg[30];
+//    sprintf(msg, "At node %d\n", iNodeClose);
+//    CenterMessage(msg);
 }
 
 // Spread contact areas
