@@ -79,7 +79,7 @@ public:
 
     bool hasAttemptedConnectionTooManyTimes(int iFrom, int iTo);
 
-    void IncreaseAttemptsForTroubledConnection(int iFrom, int iTo);
+    bool IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(int iFrom, int iTo);
     void IncreaseAttemptsForTroubledConnection(int index);
 
     bool ClearTroubledConnection(int iFrom, int iTo);

@@ -272,13 +272,33 @@ bool cNodeMachine::hasAttemptedConnectionTooManyTimes(int iFrom, int iTo) {
     return false;
 }
 
-void cNodeMachine::IncreaseAttemptsForTroubledConnection(int iFrom, int iTo) {
-    int t = GetTroubleIndexForConnection(iFrom, iTo);
-    IncreaseAttemptsForTroubledConnection(t);
+bool cNodeMachine::IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(int iFrom, int iTo) {
+    int index = AddTroubledConnection(iFrom, iTo);
+    IncreaseAttemptsForTroubledConnection(index);
+    if (hasAttemptedConnectionTooManyTimes(iFrom, iTo)) {
+        rblog("a troubled connection - tried too many times!\n");
+
+        // remove connection
+        if (!removeConnection(iFrom, iTo)) {
+            rblog("for some reason the connection was not removed!?\n");
+        } else {
+            rblog("the connection is removed!\n");
+        }
+
+        ClearTroubledConnection(iFrom, iTo);
+        return false;
+    } else {
+        rblog("may attempt another time\n");
+        return true;
+    }
 }
 
 void cNodeMachine::IncreaseAttemptsForTroubledConnection(int index) {
     if (index < 0 || index >= MAX_TROUBLE) return;
+    char msg[255];
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "Increasing trouble for connection [%d] (from %d, to %d)\n", index, Troubles[index].iFrom, Troubles[index].iTo);
+    rblog(msg);
     Troubles[index].iTries++;
 }
 
@@ -2940,29 +2960,8 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
         if (!playersNearbyInFOV && isWalkingPath && previousPathNodeIndex > -1) {
             pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "No nearby players (in FOV), walking path and we came from previous node");
-
-            int troubleIndex = GetTroubleIndexForConnection(iFrom, iTo);
-            if (troubleIndex < 0) {
-                troubleIndex = AddTroubledConnection(iFrom, iTo);
-            }
-
             // Troubled connection already known, make it more troublesome!
-            IncreaseAttemptsForTroubledConnection(troubleIndex);
-            pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "a troubled connection!");
-            if (hasAttemptedConnectionTooManyTimes(iFrom, iTo)) {
-                pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "a troubled connection - tried too many times!");
-
-                // remove connection
-                if (!removeConnection(iFrom, iTo)) {
-                    pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "for some reason the connection was not removed!?");
-                } else {
-                    pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "the connection is removed!");
-                }
-
-                ClearTroubledConnection(iFrom, iTo);
-            } else {
-                pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "may attempt another time");
-            }
+            IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
         } else {
             pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "this ought to be ok!?");
         }
@@ -2977,19 +2976,21 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     // - go back in path...
 
     // the move timer is every 0.1 second, so the stuck timer has the same rithm
-    bool notStuckForAWhile = (pBot->fNotStuckTime + 0.1) < gpGlobals->time;
+    double timeEvaluatingMoveSpeed = 0.1;
+    bool notStuckForAWhile = (pBot->fNotStuckTime + timeEvaluatingMoveSpeed) < gpGlobals->time;
 
-    float expectedMoveDistance = NODE_ZONE;
+    double speedInOneTenthOfASecond = (pBot->f_move_speed * timeEvaluatingMoveSpeed) * 0.8;
+    float expectedMoveDistance = speedInOneTenthOfASecond;
     if (pBot->isFreezeTime()) expectedMoveDistance = 0;
-    if (pBot->keyPressed(IN_DUCK)) expectedMoveDistance = NODE_ZONE / 2;
-    if (pBot->keyPressed(IN_JUMP)) expectedMoveDistance = NODE_ZONE / 2;
+    if (pBot->keyPressed(IN_DUCK)) expectedMoveDistance = speedInOneTenthOfASecond / 2;
+    if (pBot->keyPressed(IN_JUMP)) expectedMoveDistance = speedInOneTenthOfASecond / 2;
 
     char msg[255];
     memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Distance moved %f, expected %f, should be able to move %d, notStuck flag %d", distanceMoved, expectedMoveDistance, pBot->shouldBeAbleToMove(), notStuckForAWhile);
+    sprintf(msg, "Distance moved %f, expected %f, should be able to move %d, notStuck for a while %d", distanceMoved, expectedMoveDistance, pBot->shouldBeAbleToMove(), notStuckForAWhile);
     pBot->rprint_trace("cNodeMachine::path_walk", msg);
 
-    bool isStuck = distanceMoved < 0.5 && pBot->shouldBeAbleToMove() && notStuckForAWhile; // also did not evaluate this logic for 0.5 second
+    bool isStuck = distanceMoved < expectedMoveDistance && pBot->shouldBeAbleToMove() && notStuckForAWhile; // also did not evaluate this logic for 0.5 second
     Vector &vector = Nodes[currentNodeToHeadFor].origin;
 
     if (isStuck) {
@@ -3055,17 +3056,28 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                     // check if the next node is floating (skip self)
 
                     if (node_float(Nodes[currentNodeToHeadFor].origin, pBot->pEdict)) {
-                        pBot->rprint("cNodeMachine::path_walk/isStuck", "Node to head for is higher than me - and is floating");
+                        pBot->rprint("cNodeMachine::path_walk/isStuck", "Node to head for is higher than me - and is floating, that is not good - removing");
 
                         // it floats, cannot reach
                         // Our previous node in the list sent us here, so disable that connection
-                        int iCurrentPathId = pBot->getPathNodeIndex() - 1;
-                        int iPrevNode = -1;
-                        if (iCurrentPathId > -1)
-                            iPrevNode = iPath[BotIndex][iCurrentPathId];
+                        int iFrom = pBot->getPreviousPathNodeToHeadFor();
+                        int iTo = currentNodeToHeadFor;
 
-                        removeConnection(iPrevNode, currentNodeToHeadFor);
+                        removeConnection(iFrom, iTo);
+
                         pBot->forgetPath();
+                    } else {
+                        pBot->rprint("cNodeMachine::path_walk/isStuck", "I probably missed a connection now, so lets check...");
+                        if (pBot->canSeeVector(Nodes[currentNodeToHeadFor].origin)) {
+                            pBot->rprint("cNodeMachine::path_walk/isStuck", "I can still see the current node to head for");
+                        } else {
+                            pBot->rprint("cNodeMachine::path_walk/isStuck", "I can no longer see the current node to head for");
+                            int iFrom = pBot->getPreviousPathNodeToHeadFor();
+                            int iTo = currentNodeToHeadFor;
+                            IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
+                            pBot->forgetPath();
+                        }
+                        // probably our movement went wrong in between, troubled connection?
                     }
                 }
             } else if (playerNearbyInFOV) {
