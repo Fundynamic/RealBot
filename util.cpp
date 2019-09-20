@@ -98,8 +98,7 @@ void
 UTIL_TraceHull(const Vector &vecStart, const Vector &vecEnd,
                IGNORE_MONSTERS igmon, int hullNumber, edict_t *pentIgnore,
                TraceResult *ptr) {
-    TRACE_HULL(vecStart, vecEnd, (igmon == ignore_monsters ? TRUE : FALSE),
-               hullNumber, pentIgnore, ptr);
+    TRACE_HULL(vecStart, vecEnd, (igmon == ignore_monsters ? TRUE : FALSE), hullNumber, pentIgnore, ptr);
 }
 
 void UTIL_MakeVectors(const Vector &vecAngles) {
