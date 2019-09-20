@@ -198,9 +198,10 @@ private:
 
     void PlotGoals(int GoalColor);
 
-    void closeAllWaypoints(int nodeIndex) const;
+    void makeAllWaypointsAvailable() const;
 
-    void openWaypoint(int nodeStartIndex, int parent, float cost) const;
+    void closeNode(int nodeIndex, int parent, float cost);
+    void openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighboursFrom, int destinationNodeIndex, int botTeam);
 
     char *getGoalTypeAsText(const tGoal &goal) const;
 

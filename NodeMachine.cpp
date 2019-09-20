@@ -319,12 +319,8 @@ bool cNodeMachine::ClearTroubledConnection(int iFrom, int iTo) {
 }
 
 void cNodeMachine::path_clear(int botIndex) {
-    // only clear path when the very first node in the list is actually filled, else assume it has been cleared
-    // before - so no need to do it again
-    if (iPath[botIndex][0] > -1) {
-        for (int nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++) {
-            iPath[botIndex][nodeIndex] = -1;
-        }
+    for (int nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++) {
+        iPath[botIndex][nodeIndex] = -1;
     }
 }
 
@@ -2096,98 +2092,106 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
 
     // start or target vector may not be invalid
     if (Nodes[nodeStartIndex].origin == INVALID_VECTOR ||
-        Nodes[nodeTargetIndex].origin == INVALID_VECTOR)
+        Nodes[nodeTargetIndex].origin == INVALID_VECTOR) {
+        rblog("Invalid start and target index\n");
         return false;
+    }
 
     int path_index = 0, nodeIndex;
 
     path_clear(botIndex);
 
     // INIT: Start
-    closeAllWaypoints(nodeIndex);
+    makeAllWaypointsAvailable();
 
     // Our start waypoint is open
-    float cost = func_distance(Nodes[nodeStartIndex].origin, Nodes[nodeTargetIndex].origin);
-    openWaypoint(nodeStartIndex, nodeStartIndex, cost);
+    float gCost = 0.0f; // distance from starting node
+    float hCost = func_distance(Nodes[nodeStartIndex].origin,
+                                Nodes[nodeTargetIndex].origin); // distance from end node to node
+    float cost = gCost + hCost;
+    closeNode(nodeStartIndex, nodeStartIndex, cost);
+    openNeighbourNodes(nodeStartIndex, nodeStartIndex, nodeTargetIndex, -1);
 
-    bool valid = true;           // is it still valid to loop through the lists for pathfinding?
-    bool succes = false;         // any succes finding the goal?
+    bool pathFound = false;           // is it still valid to loop through the lists for pathfinding?
 
+    int nodesEvaluated = 0;
     // INIT: End
     // PATHFINDER: Start
-    while (valid) {
-        bool foundNodeToOpen = false;
+    while (!pathFound) {
+        float lowestScore = 99999999.0f;
+        int nodeToClose = -1;
 
-        // go through all open waypoints
+        // go through all OPEN waypoints
         for (nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++) {
+            tNodestar &nodeStar = astar_list[nodeIndex];
+
+            if (nodeStar.state == CLOSED || nodeStar.state == AVAILABLE) continue;
+
+            // OPEN waypoint
             tNode &node = Nodes[nodeIndex];
+            if (node.origin == INVALID_VECTOR) {
+                rblog("Evaluating an INVALID vector!?!\n");
+                nodeStar.state = CLOSED;
+                continue; // it is an invalid vector
+            }
 
-            if (node.origin != INVALID_VECTOR) {
-                if (astar_list[nodeIndex].state == OPEN) {
-                    if (nodeIndex == nodeTargetIndex) {
-                        succes = true;
-                        valid = false;        // not valid to check anymore
-                        break;        // Get out of here
-                    }
+            // nodeIndex is target, so target found
+            if (nodeIndex == nodeTargetIndex) {
+                pathFound = true;
+                rblog("Target found\n");
+                break; // Get out of here
+            }
 
-                    // open this waypoint
-                    int the_wpt = -1;
-
-                    double lowest_cost = 99999999;
-                    double cost = 99999999;
-
-                    // Now loop from here through all closed waypoints
-                    int j = 0;       // <-- ADDED BY PMB FOR ISO COMPLIANCE (ELSE LINUX GOES MAD)
-
-                    for (j = 0; j < MAX_NEIGHBOURS; j++) {
-                        int neighbourNodeIndex = node.iNeighbour[j];
-                        if (neighbourNodeIndex < 0) continue;
-
-                        // consider this node if CLOSED and calculate cost to target from there
-                        if (astar_list[neighbourNodeIndex].state == CLOSED) {
-                            cost = astar_list[nodeIndex].cost +
-                                   (double) func_distance(Nodes[neighbourNodeIndex].origin,
-                                                          Nodes[nodeTargetIndex].origin);
-
-                            double dangerCost = InfoNodes[neighbourNodeIndex].fDanger[botTeam] * cost;
-                            double contactCost = InfoNodes[neighbourNodeIndex].fContact[botTeam] * cost;
-
-                            cost += dangerCost;
-                            cost += contactCost;
-
-                            if (cost < lowest_cost) {
-                                the_wpt = neighbourNodeIndex;
-                                lowest_cost = cost;
-                            }
-                        }
-                    }  // for j
-
-                    // this waypoint has the lowest cost to get to the next best waypoint
-                    if (the_wpt > -1) {
-                        j = the_wpt;
-                        openWaypoint(j, nodeIndex, lowest_cost);
-                        foundNodeToOpen = true;
-                    } else {
-
-                    }
-                }
+            // open is not target, so go over its neighbours (which have been opened) and find the lowest cost
+            if (nodeStar.cost < lowestScore) {
+                nodeToClose = nodeIndex;
+                lowestScore = nodeStar.cost;
             }
         }
 
-        // when no closed waypoints found
-        if (!foundNodeToOpen) {
+        // a node that should be closed is an evaluated node and the most preferred one.
+        // open up all neighbouring nodes, and close this one
+        if (nodeToClose > -1) {
+            char msg[255];
+            sprintf(msg, "Found node to close [%d]\n", nodeToClose);
+            rblog(msg);
+            astar_list[nodeToClose].state = CLOSED;
+            int botTeam = -1;
+            if (pBot) {
+                botTeam = pBot->iTeam;
+            }
+
+            openNeighbourNodes(nodeStartIndex, nodeToClose, nodeTargetIndex, botTeam);
+        } else {
+            rblog("Did not find any open waypoint\n");
             break;
         }
     }
     // PATHFINDER: End
 
     // RESULT: Success
-    if (!succes) {
+    if (!pathFound) {
         if (pBot) {
             pBot->rprint("cNodeMachine::createPath", "Failed to create path");
         }
         return false;
     }
+
+    for (nodeIndex = 0; nodeIndex < MAX_PATH_NODES; nodeIndex++) {
+
+        tNodestar &nodeStar = astar_list[nodeIndex];
+        if (nodeStar.state == AVAILABLE) continue;
+
+        char msg[255];
+        memset(msg, 0, sizeof(msg));
+        if (nodeStar.state == CLOSED) {
+            sprintf(msg, "Node [%d] is CLOSED. Cost = %f. Parent = %d\n");
+        } else if (nodeStar.state == OPEN) {
+            sprintf(msg, "Node [%d] is OPEN. Cost = %f. Parent = %d\n");
+        }
+        rblog(msg);
+    }
+
     // Build path (from goal to start, read out parent waypoint to backtrace)
     int temp_path[MAX_PATH_NODES];
 
@@ -2274,27 +2278,80 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
 }
 
 /**
- * Open a waypoint/node for pathfinding
+ * A closed node means it has been evaluated.
+ * @param nodeIndex
+ * @param parent
+ * @param cost
+ */
+void cNodeMachine::closeNode(int nodeIndex, int parent, float cost) {
+    astar_list[nodeIndex].state = CLOSED;
+    astar_list[nodeIndex].parent = parent;
+    astar_list[nodeIndex].cost = cost;
+}
+
+/**
+ * Open all neighbouring nodes, calculate costs for each neighbouring node
  * @param nodeStartIndex
  * @param parent
  * @param cost
  */
-void cNodeMachine::openWaypoint(int nodeStartIndex, int parent, float cost) const {
-    astar_list[nodeStartIndex].state = OPEN;
-    astar_list[nodeStartIndex].parent = parent;
-    astar_list[nodeStartIndex].cost = cost;
+void cNodeMachine::openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighboursFrom, int destinationNodeIndex, int botTeam) {
+    tNode &startNode = Nodes[startNodeIndex]; // very start of path
+    tNode &destNode = Nodes[destinationNodeIndex]; // destination for path
+
+    tNode &node = Nodes[nodeToOpenNeighboursFrom]; // node evaluating neighbours
+
+    for (int i = 0; i < MAX_NEIGHBOURS; i++) {
+        int neighbourNode = node.iNeighbour[i];
+        if (neighbourNode < 0) continue; // skip invalid nodes
+        if (Nodes[neighbourNode].origin == INVALID_VECTOR) continue; // skip nodes with invalid vector
+
+        float gCost = func_distance(startNode.origin, destNode.origin); // distance from starting node
+        float hCost = func_distance(node.origin, destNode.origin); // distance from end node to node
+        float cost = gCost + hCost;
+
+        if (botTeam > -1) {
+            double dangerCost = InfoNodes[neighbourNode].fDanger[botTeam] * cost;
+            double contactCost = InfoNodes[neighbourNode].fContact[botTeam] * cost;
+
+            cost += dangerCost;
+            cost += contactCost;
+        }
+
+        // TODO: Add costs for how easy it is to navigate (ie some kind of arrival speed score? if given?)
+
+        tNodestar &nodeStar = astar_list[neighbourNode];
+        char msg[255];
+        if (nodeStar.state == AVAILABLE) {
+            sprintf(msg, "Found AVAILABLE node to OPEN [%d]\n", neighbourNode);
+            rblog(msg);
+            nodeStar.state = OPEN;
+            nodeStar.parent = nodeToOpenNeighboursFrom;
+            nodeStar.cost = cost;
+        } else if (nodeStar.state == OPEN) {
+            // only overwrite when cost < current cost remembered
+            if (nodeStar.cost > cost) {
+                sprintf(msg, "Found OPEN node to overwrite ([%d]), because our cost [%f] is lower than nodeStar cost [%f]\n", neighbourNode, cost, nodeStar.cost);
+                rblog(msg);
+                nodeStar.parent = nodeToOpenNeighboursFrom;
+                nodeStar.cost = cost;
+            }
+        }
+    }
 }
 
 /**
- * A* method, close all waypoints (nodes to traverse)
+ * This marks all waypoints to be available to be evaluated again
  * @param nodeIndex
  */
-void cNodeMachine::closeAllWaypoints(int nodeIndex) const {
+void cNodeMachine::makeAllWaypointsAvailable() const {
+    int nodeIndex = 0;
     for (nodeIndex = 0; nodeIndex < MAX_NODES; nodeIndex++) {
         astar_list[nodeIndex].cost = 0;
         astar_list[nodeIndex].parent = -1;
-        astar_list[nodeIndex].state = CLOSED;
+        astar_list[nodeIndex].state = AVAILABLE;
     }
+    rblog("All nodes set to AVAILABLE\n");
 }
 
 // Find a node which has almost no danger!

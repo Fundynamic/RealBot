@@ -115,9 +115,10 @@
 #define MAX_NODES_IN_MEREDIANS    120     // EVY: higher number, number of nodes per meredian
 //#define MAX_NODES_IN_MEREDIANS       80      // (size meredian / zone (~6) times 2 (surface) , rounded to 80
 
-// Pathfinder
-#define OPEN            1   // open
-#define CLOSED            2   // closed, but may open
+// A* defines OPEN/CLOSED lists
+#define OPEN              1   // open, can still re-evaluate
+#define CLOSED            2   // closed, do nothing with it
+#define AVAILABLE         3   // available, may open
 
 const unsigned long g_iMaxVisibilityByte = (MAX_NODES * MAX_NODES) / 8;
 
