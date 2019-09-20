@@ -443,6 +443,8 @@ int cNodeMachine::getCloseNode(Vector vOrigin, float fDist, edict_t *pEdict) {
     int iNodeOutOfFOV = -1;
 
     // Use Meredians to search for nodes
+    // TODO: we should take care in the situation where we're at the 'edge' of such a meridian (subspace). So we should
+    // basicly take edging meridians as well when too close to the edge.
     int iX, iY;
     VectorToMeredian(vOrigin, &iX, &iY);
 
