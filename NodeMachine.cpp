@@ -272,6 +272,14 @@ bool cNodeMachine::hasAttemptedConnectionTooManyTimes(int iFrom, int iTo) {
     return false;
 }
 
+/**
+ * Remembers that this is a bad connection, increases a counter. When counter exceeds max attempts, it will
+ * remove the connection. When it removes the connection, this method will return "false". If a bot
+ * may have another go with this connection, this method will return "true".
+ * @param iFrom
+ * @param iTo
+ * @return
+ */
 bool cNodeMachine::IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(int iFrom, int iTo) {
     int index = AddTroubledConnection(iFrom, iTo);
     IncreaseAttemptsForTroubledConnection(index);
@@ -2648,15 +2656,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         }
     }
 
-    pBot->rprint_trace("cNodeMachine::path_walk", "before getNextPathNode");
-    int nextNodeToHeadFor = pBot->getNextPathNode();              // the node we will head for after reaching currentNode
-
-    if (currentNodeToHeadFor < 0) {
-        pBot->rprint("cNodeMachine::path_walk", "currentNodeToHeadFor < 0 - so bail");
-        return;
-    }
-
-    if (pBot->f_strafe_time < gpGlobals->time && currentNodeToHeadFor > -1) {
+    if (pBot->f_strafe_time < gpGlobals->time) {
         pBot->vBody = Nodes[currentNodeToHeadFor].origin;
     }
 
@@ -2785,121 +2785,14 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
     // reached node
     if (bNearNode) {
-        // first determine if we where heading for a goal node
-        bool isHeadingForGoalNode = pBot->isHeadingForGoalNode();
-
-        // increase index on path, so we will go to next node
-        pBot->nextPathNodeIndex();
-
-        // Calculate vis table from here
-        vis_calculate(currentNodeToHeadFor);
-
-        // give time (2 seconds) to move to next node
-        pBot->setTimeToMoveToNode(2.0f);
-
-
-        if (!isHeadingForGoalNode) {
-            char msg[255];
-            memset(msg, 0, sizeof(msg));
-
-            int currentPathNode = pBot->getCurrentPathNodeToHeadFor();
-
-            if (currentPathNode > -1) {
-                int troubleIndex = GetTroubleIndexForConnection(pBot->getPreviousPathNodeToHeadFor(),
-                                                                currentNodeToHeadFor);
-                if (troubleIndex > -1) {
-                    tTrouble &trouble = Troubles[troubleIndex];
-                    sprintf(msg, "Heading to next node: %d, trouble (tries) %d", currentPathNode, trouble.iTries);
-                } else {
-                    sprintf(msg, "Heading to next node: %d - with no trouble", currentPathNode);
-                }
-            } else {
-                sprintf(msg, "Heading to next node: %d", currentPathNode);
-            }
-            pBot->rprint("cNodeMachine::path_walk()", msg);
-        }
-
-        // When our target was our goal, we are there
-        if (isHeadingForGoalNode) {
-            pBot->rprint_trace("cNodeMachine::path_walk()", "Executing destination logic");
-
-            // reached the end
-            pBot->iPreviousGoalNode = pBot->getGoalNode();
-            pBot->forgetGoal();
-            pBot->forgetPath();
-
-            // Do logic when arriving at destination now:
-
-            // When f_cover_time is > gpGlobals, we are taking cover
-            // so we 'wait'
-//            if (pBot->f_cover_time > gpGlobals->time) {
-//                if (pBot->hasEnemy() && pBot->lastSeenEnemyVector != Vector(0, 0, 0)) {
-//                    pBot->vHead = pBot->lastSeenEnemyVector;
-//                }
-//
-//                pBot->f_wait_time = pBot->f_cover_time - RANDOM_FLOAT(0.0, 3.0);
-//                pBot->f_cover_time = gpGlobals->time;
-//
-//                if (RANDOM_LONG(0, 100) < 75) {
-//                    pBot->f_hold_duck = gpGlobals->time + RANDOM_FLOAT(1.0, 4.0);
-//                }
-//                pBot->rprint("cNodeMachine::path_walk", "Taking cover time");
-//            }
-//            else {
-                if (pBot->iPathFlags == PATH_CAMP) {
-                    pBot->rprint_trace("cNodeMachine::path_walk()", "Arrived at destination and marked as camp. So we camp");
-
-                    // Camp for a few seconds
-                    pBot->f_camp_time = gpGlobals->time + RANDOM_FLOAT(1, 10);
-
-                    if (RANDOM_LONG(0, 100) < pBot->ipFearRate) {
-                        pBot->iPathFlags = PATH_DANGER;
-                    } else {
-                        pBot->iPathFlags = PATH_NONE;
-                    }
-
-                    // RADIO: I am in position!
-                    if (FUNC_DoRadio(pBot)) {
-
-                    }
-                }
-
-                // At destination, bomb is planted and we have not discovered the C4 yet...
-                // TODO: Remember which goals/bomb spots have been visited so bots won't visit this bomb spot again?
-                int iGoalType = getGoalIndexFromNode(pBot->getGoalNode());
-
-                if (pBot->isCounterTerrorist()) {
-                    if (Game.bBombPlanted && !Game.isPlantedC4Discovered()) {
-                        // call out sector clear
-                        if (iGoalType == GOAL_BOMBSPOT) {
-                            if (!pBot->Defuse()) {
-                                // sector clear!
-                                if (FUNC_DoRadio(pBot))
-                                    UTIL_BotRadioMessage(pBot, 3, "4", "");
-                            }
-                        }
-                        else if (iGoalType == GOAL_RESCUEZONE) {
-                            pBot->rprint("Arrived at goal rescue zone, forgetting hostages");
-                            pBot->clearHostages(); // clear hostages
-                        }
-                    }
-                } else {
-                    // nothing to do here it seems... (bomb planting logic is elsewhere)
-                }
-//            }
-
-            return;
-        }
-
-        // near node. Execute lines below when not near node (ie, heading for next node)
+        ExecuteNearNodeLogic(pBot);
         return;
     }
 
-    ///////////////////////
-    // Not near next node, the code next is about moving towards the node...
-    ///////////////////////
-
     // TODO TODO TODO Water Navigation
+
+    pBot->rprint_trace("cNodeMachine::path_walk", "before getNextPathNode");
+    int nextNodeToHeadFor = pBot->getNextPathNode();              // the node we will head for after reaching currentNode
 
     // NO ENEMY, CHECK AROUND AREA
     // This determines where to look at, no enemy == look at next node
@@ -2913,7 +2806,8 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     }
 
     // When longer not stuck for some time we clear stuff
-    if (pBot->fNotStuckTime + 1 < gpGlobals->time) // not stuck for 1 second
+    if (pBot->fNotStuckTime + 1 < gpGlobals->time && // not stuck for 1 second
+        pBot->iDuckTries != 0 && pBot->iJumpTries != 0) // so we don't keep doing this
     {
         pBot->iDuckTries = 0;
         pBot->iJumpTries = 0;
@@ -2930,10 +2824,9 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         pBot->shouldBeAbleToInteractWithButton()) {
 
         // hit by a door?
-        bool bDoor = isEntityDoor(pEntityHit);
 
         // a door is blocking us
-        if (bDoor) {
+        if (isEntityDoor(pEntityHit)) {
             // check if we have to 'use' it
             if (isDoorThatOpensWhenPressingUseButton(pEntityHit)) {
                 // use only, press use and wait
@@ -3074,37 +2967,38 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         }
     } // door logic
 
-
     // When we run out of time, we move back to previous to try again
-    int previousPathNodeIndex = pBot->getPreviousPathNodeIndex();
+    int previousPathNode = pBot->getPreviousPathNodeToHeadFor();
 
-    // If bot should be able to move, but time is up to reach the next node.
+    // If bot should be able to move, but time is up to reach the next node. (ie, even with
+    // all the unstuck attempts). So after a while we give up and mark this as a bad connection.
     // Do some logic here to determine if the connection is faulty and if so remove it.
     if (pBot->shouldBeAbleToMove() && !pBot->hasTimeToMoveToNode()) {
         pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "START");
 
         // We have trouble with this one somehow? Check for nearby players before
-        // we judge its done by worldspawn.
+        // we judge its done by our own inability to traverse the path.
         bool playersNearbyInFOV = getPlayerNearbyBotInFOV(pBot);
 
         // when we recorded a jump, this might help
-        if (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP) {
-            UTIL_BotPressKey(pBot, IN_JUMP);
+        if (previousPathNode > -1 && Nodes[previousPathNode].iNodeBits & BIT_JUMP) {
+            pBot->rprint_trace("path_walk", "Node bits suggest me to jump");
+            pBot->doJump();
         }
 
         // Add this connection to the 'troubled ones'
-        int iFrom = pBot->getPreviousPathNodeToHeadFor();
+        int iFrom = previousPathNode;
         int iTo = currentNodeToHeadFor;
 
-        // Not near players, and we should move!!
         char msg[255];
         memset(msg, 0, sizeof(msg));
         bool isWalkingPath = pBot->isWalkingPath();
+
         sprintf(msg, "players nearby in fov? %d, shouldMove? %d, walking path? %d, previousPathNodeIndex? %d, iFrom %d, iTo %d",
                 playersNearbyInFOV,
                 pBot->shouldBeAbleToMove(),
                 isWalkingPath,
-                previousPathNodeIndex,
+                previousPathNode,
                 iFrom,
                 iTo);
 
@@ -3113,7 +3007,10 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         pBot->setTimeToMoveToNode(2.0f);
         pBot->fNotStuckTime = gpGlobals->time;
 
-        if (!playersNearbyInFOV && isWalkingPath && previousPathNodeIndex > -1) {
+        if (!playersNearbyInFOV &&  // no players blocking us
+            isWalkingPath && // walking a path
+            iFrom > -1)
+        {
             pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "No nearby players (in FOV), walking path and we came from previous node");
             // Troubled connection already known, make it more troublesome!
             IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
@@ -3130,15 +3027,14 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     // - unstuck
     // - go back in path...
 
-    // the move timer is every 0.1 second, so the stuck timer has the same rithm
-    double timeEvaluatingMoveSpeed = 0.1;
+    float timeEvaluatingMoveSpeed = 0.1;
     bool notStuckForAWhile = (pBot->fNotStuckTime + timeEvaluatingMoveSpeed) < gpGlobals->time;
 
     double speedInOneTenthOfASecond = (pBot->f_move_speed * timeEvaluatingMoveSpeed) * 0.8;
-    float expectedMoveDistance = speedInOneTenthOfASecond;
+    double expectedMoveDistance = speedInOneTenthOfASecond;
     if (pBot->isFreezeTime()) expectedMoveDistance = 0;
-    if (pBot->keyPressed(IN_DUCK)) expectedMoveDistance = speedInOneTenthOfASecond / 2;
-    if (pBot->keyPressed(IN_JUMP)) expectedMoveDistance = speedInOneTenthOfASecond / 2;
+    if (pBot->isDucking()) expectedMoveDistance = speedInOneTenthOfASecond / 3.0;
+    if (pBot->isJumping()) expectedMoveDistance = speedInOneTenthOfASecond / 3.0;
 
     char msg[255];
     memset(msg, 0, sizeof(msg));
@@ -3149,115 +3045,240 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     Vector &vector = Nodes[currentNodeToHeadFor].origin;
 
     if (isStuck) {
-        pBot->rprint_trace("cNodeMachine::path_walk/isStuck", "START");
-        pBot->fNotStuckTime = gpGlobals->time;
+        pBot->rprint_trace("cNodeMachine::path_walk", "Stuck!");
+        ExecuteIsStuckLogic(pBot, currentNodeToHeadFor, vector);
+        return;
+    } else {
+        pBot->rprint_trace("cNodeMachine::path_walk", "Not stuck");
+    }
 
-        // JUMP & DUCK
-        if (BotShouldJump(pBot) || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP)) {
-            pBot->rprint("cNodeMachine::path_walk/isStuck", "Duck-jump tries increased, increase node time - START");
-            pBot->doJump(vector);
-            pBot->iJumpTries++;
-            pBot->rprint("cNodeMachine::path_walk/isStuck", "Duck-jump tries increased, increase node time  - END");
-        } else if (BotShouldDuck(pBot) || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_DUCK)) {
-            pBot->rprint("cNodeMachine::path_walk/isStuck", "Duck tries increased, increase node time - START");
-            pBot->doDuck();
-            pBot->iDuckTries++;
-            pBot->rprint("cNodeMachine::path_walk/isStuck", "Duck tries increased, increase node time - END");
-        } else { // Should not duck nor jump
-            pBot->rprint("cNodeMachine::path_walk/isStuck", "No need to duck or to jump");
+    // Not stuck. React to environment to make sure we get to our destination
+    if (BotShouldJump(pBot)) {
+        pBot->rprint("cNodeMachine::path_walk", "Jump!");
+        pBot->doJump(vector);
+    } else if (BotShouldDuck(pBot)) {
+        pBot->rprint("cNodeMachine::path_walk", "Duck!");
+        pBot->doDuck();
+    }
+}
 
-            char msg[255];
-            memset(msg, 0, sizeof(msg));
-            float timeRemaining = pBot->getMoveToNodeTimeRemaining();
-            sprintf(msg, "fNodeTimer still has %f to go before considered 'stuck' for connection", timeRemaining);
-            pBot->rprint("cNodeMachine::path_walk/isStuck", msg);
+void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vector &vector) {
+    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "START");
+    pBot->fNotStuckTime = gpGlobals->time;
 
-            cBot *pBotStuck = getCloseFellowBot(pBot);
-            edict_t *playerNearbyInFOV = getPlayerNearbyBotInFOV(pBot);
+    // JUMP & DUCK
+    if (BotShouldJump(pBot) || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP)) {
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased, increase node time - START");
+        pBot->doJump(vector);
+        pBot->iJumpTries++;
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased, increase node time  - END");
+    } else if (BotShouldDuck(pBot) || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_DUCK)) {
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck tries increased, increase node time - START");
+        pBot->doDuck();
+        pBot->iDuckTries++;
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck tries increased, increase node time - END");
+    } else { // Should not duck nor jump
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "No need to duck or to jump");
 
-            memset(msg, 0, sizeof(msg));
-            sprintf(msg, "Player in FOV? %d bot close ? %d", playerNearbyInFOV != NULL, pBotStuck != NULL);
-            pBot->rprint("cNodeMachine::path_walk/isStuck", msg);
+        char msg[255];
+        memset(msg, 0, sizeof(msg));
+        float timeRemaining = pBot->getMoveToNodeTimeRemaining();
+        sprintf(msg, "fNodeTimer still has %f to go before considered 'stuck' for connection", timeRemaining);
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", msg);
 
-            if (playerNearbyInFOV) {
-                if (pBotStuck != NULL) {
-                    if (pBotStuck->pEdict == playerNearbyInFOV) {
-                        pBot->rprint("cNodeMachine::path_walk/isStuck", "The player nearby in FOV is the close bot as well: it is a fellow bot that blocks me");
-                    } else {
-                        pBot->rprint("cNodeMachine::path_walk/isStuck", "The player nearby in FOV is not the same as a bot close to me: another player blocks me");
-                    }
+        cBot *pBotStuck = getCloseFellowBot(pBot);
+        edict_t *playerNearbyInFOV = getPlayerNearbyBotInFOV(pBot);
+
+        memset(msg, 0, sizeof(msg));
+        sprintf(msg, "Player in FOV? %d bot close ? %d", playerNearbyInFOV != NULL, pBotStuck != NULL);
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", msg);
+
+        if (playerNearbyInFOV) {
+            if (pBotStuck != NULL) {
+                if (pBotStuck->pEdict == playerNearbyInFOV) {
+                    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "The player nearby in FOV is the close bot as well: it is a fellow bot that blocks me");
                 } else {
-                    pBot->rprint("cNodeMachine::path_walk/isStuck", "A player nearby in FOV is not a bot, and there are no bots nearby: another player blocks me");
+                    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "The player nearby in FOV is not the same as a bot close to me: another player blocks me");
                 }
             } else {
-                if (pBotStuck != NULL) {
-                    pBot->rprint("cNodeMachine::path_walk/isStuck", "There is no player nearby, but a bot is close (possibly behind me). This bot might be blocking me?");
-                } else {
-                    pBot->rprint("cNodeMachine::path_walk/isStuck", "There is no bot nearby, there are no players nor bots blocking me! (so its something with the node connection?)");
-                }
+                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "A player nearby in FOV is not a bot, and there are no bots nearby: another player blocks me");
             }
+        } else {
+            if (pBotStuck != NULL) {
+                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "There is no player nearby, but a bot is close (possibly behind me). This bot might be blocking me?");
+            } else {
+                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "There is no bot nearby, there are no players nor bots blocking me! (so its something with the node connection?)");
+            }
+        }
 
-            // should move, but no nearby bot found that could cause us to get stuck
-            // - when no players are close (could be blocked by them, do not learn stupid things)
-            if (pBotStuck == NULL) {
-                pBot->rprint("cNodeMachine::path_walk/isStuck", "There is no other BOT around making me go stuck");
+        // should move, but no nearby bot found that could cause us to get stuck
+        // - when no players are close (could be blocked by them, do not learn stupid things)
+        if (pBotStuck == NULL) {
+            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "There is no other BOT around making me go stuck");
 
-                // check if the connection we want is going up
-                // - when going up
-                // - when we should move
-                bool nodeToHeadForIsHigher = Nodes[currentNodeToHeadFor].origin.z > pBot->pEdict->v.origin.z;
-                if (nodeToHeadForIsHigher) {
-                    pBot->rprint("cNodeMachine::path_walk/isStuck", "Node to head for is higher than me");
-                    // check if the next node is floating (skip self)
+            // check if the connection we want is going up
+            // - when going up
+            // - when we should move
+            bool nodeToHeadForIsHigher = Nodes[currentNodeToHeadFor].origin.z > pBot->pEdict->v.origin.z;
+            if (nodeToHeadForIsHigher) {
+                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Node to head for is higher than me");
+                // check if the next node is floating (skip self)
 
-                    if (node_float(Nodes[currentNodeToHeadFor].origin, pBot->pEdict)) {
-                        pBot->rprint("cNodeMachine::path_walk/isStuck", "Node to head for is higher than me - and is floating, that is not good - removing");
+                if (node_float(Nodes[currentNodeToHeadFor].origin, pBot->pEdict)) {
+                    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Node to head for is higher than me - and is floating, that is not good - removing");
 
-                        // it floats, cannot reach
-                        // Our previous node in the list sent us here, so disable that connection
+                    // it floats, cannot reach
+                    // Our previous node in the list sent us here, so disable that connection
+                    int iFrom = pBot->getPreviousPathNodeToHeadFor();
+                    int iTo = currentNodeToHeadFor;
+
+                    removeConnection(iFrom, iTo);
+
+                    pBot->forgetPath();
+                } else {
+                    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "I probably missed a connection now, so lets check...");
+                    if (pBot->canSeeVector(Nodes[currentNodeToHeadFor].origin)) {
+                        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "I can still see the current node to head for");
+                    } else {
+                        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "I can no longer see the current node to head for");
                         int iFrom = pBot->getPreviousPathNodeToHeadFor();
                         int iTo = currentNodeToHeadFor;
-
-                        removeConnection(iFrom, iTo);
-
+                        IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
                         pBot->forgetPath();
-                    } else {
-                        pBot->rprint("cNodeMachine::path_walk/isStuck", "I probably missed a connection now, so lets check...");
-                        if (pBot->canSeeVector(Nodes[currentNodeToHeadFor].origin)) {
-                            pBot->rprint("cNodeMachine::path_walk/isStuck", "I can still see the current node to head for");
-                        } else {
-                            pBot->rprint("cNodeMachine::path_walk/isStuck", "I can no longer see the current node to head for");
-                            int iFrom = pBot->getPreviousPathNodeToHeadFor();
-                            int iTo = currentNodeToHeadFor;
-                            IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
-                            pBot->forgetPath();
-                        }
-                        // probably our movement went wrong in between, troubled connection?
                     }
+                    // probably our movement went wrong in between, troubled connection?
                 }
-            } else if (playerNearbyInFOV) {
-                pBot->rprint("cNodeMachine::path_walk/isStuck", "bPlayersNear = true and should be able to move");
-                // Depending on how the other bot looks, act
-                // pBotStuck -> faces pBot , do same
-                // pBotStuck -> cannot see pBot, do opposite
-                // Check if pBotStuck can see pBot (pBot can see pBotStuck!)
             } else {
-                pBot->rprint("no pBotStuck pointer available - stuck by 'world'");
+                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "no bot holding me back, must be bad connection");
+                int iFrom = pBot->getPreviousPathNodeToHeadFor();
+                int iTo = currentNodeToHeadFor;
+                IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
+                pBot->fNotStuckTime = gpGlobals->time + 1; // give a bit more time to unstuck
+                pBot->forgetPath();
+                pBot->forgetGoal();
+            }
+        } else if (playerNearbyInFOV) {
+            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "bPlayersNear = true and should be able to move");
+            pBot->setTimeToWait(0.3f);
+            // Depending on how the other bot looks, act
+            // pBotStuck -> faces pBot , do same
+            // pBotStuck -> cannot see pBot, do opposite
+            // Check if pBotStuck can see pBot (pBot can see pBotStuck!)
+        } else {
+            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "pBotStuck pointer available - stuck by 'world'");
 //                // we are stuck by 'world', we go back one step?
 //                pBot->prevPathNodeIndex();
 //                pBot->f_stuck_time = gpGlobals->time + 0.2;
-            }
-        } // normal stuck (not duck/jump)
-    } // isStuck
-    else {
-
-        if (BotShouldJump(pBot)) {
-            pBot->rprint("is NOT stuck", "should jump");
-            pBot->doJump(vector);
-        } else if (BotShouldDuck(pBot)) {
-            pBot->rprint("is NOT stuck", "should duck");
-            pBot->doDuck();
         }
+    } // normal stuck (not duck/jump)
+    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished");
+}
+
+void cNodeMachine::ExecuteNearNodeLogic(cBot *pBot) {
+    pBot->rprint_trace("cNodeMachine::ExecuteNearNodeLogic", "Start");
+    int currentNodeToHeadFor = pBot->getCurrentPathNodeToHeadFor();
+
+    // first determine if we where heading for a goal node
+    bool isHeadingForGoalNode = pBot->isHeadingForGoalNode();
+
+    // increase index on path, so we will go to next node
+    pBot->nextPathIndex();
+
+    // Calculate vis table from here
+    vis_calculate(currentNodeToHeadFor);
+
+    // give time (2 seconds) to move to next node
+    pBot->setTimeToMoveToNode(2.0f);
+
+
+    if (!isHeadingForGoalNode) {
+        char msg[255];
+        memset(msg, 0, sizeof(msg));
+
+        int currentPathNode = pBot->getCurrentPathNodeToHeadFor();
+
+        if (currentPathNode > -1) {
+            int troubleIndex = GetTroubleIndexForConnection(pBot->getPreviousPathNodeToHeadFor(), currentNodeToHeadFor);
+            if (troubleIndex > -1) {
+                tTrouble &trouble = Troubles[troubleIndex];
+                sprintf(msg, "Heading to next node: %d, trouble (tries) %d", currentPathNode, trouble.iTries);
+            } else {
+                sprintf(msg, "Heading to next node: %d - with no trouble", currentPathNode);
+            }
+        } else {
+            sprintf(msg, "Heading to next node: %d", currentPathNode);
+        }
+        pBot->rprint("cNodeMachine::path_walk()", msg);
+    }
+
+    // When our target was our goal, we are there
+    if (isHeadingForGoalNode) {
+        pBot->rprint_trace("cNodeMachine::path_walk()", "Executing destination logic");
+
+        // reached the end
+        pBot->iPreviousGoalNode = pBot->getGoalNode();
+        pBot->forgetGoal();
+        pBot->forgetPath();
+
+        // Do logic when arriving at destination now:
+
+        // When f_cover_time is > gpGlobals, we are taking cover
+        // so we 'wait'
+//            if (pBot->f_cover_time > gpGlobals->time) {
+//                if (pBot->hasEnemy() && pBot->lastSeenEnemyVector != Vector(0, 0, 0)) {
+//                    pBot->vHead = pBot->lastSeenEnemyVector;
+//                }
+//
+//                pBot->f_wait_time = pBot->f_cover_time - RANDOM_FLOAT(0.0, 3.0);
+//                pBot->f_cover_time = gpGlobals->time;
+//
+//                if (RANDOM_LONG(0, 100) < 75) {
+//                    pBot->f_hold_duck = gpGlobals->time + RANDOM_FLOAT(1.0, 4.0);
+//                }
+//                pBot->rprint("cNodeMachine::path_walk", "Taking cover time");
+//            }
+//            else {
+        if (pBot->iPathFlags == PATH_CAMP) {
+            pBot->rprint_trace("cNodeMachine::path_walk()", "Arrived at destination and marked as camp. So we camp");
+
+            // Camp for a few seconds
+            pBot->f_camp_time = gpGlobals->time + RANDOM_FLOAT(1, 10);
+
+            if (RANDOM_LONG(0, 100) < pBot->ipFearRate) {
+                pBot->iPathFlags = PATH_DANGER;
+            } else {
+                pBot->iPathFlags = PATH_NONE;
+            }
+
+            // RADIO: I am in position!
+            if (FUNC_DoRadio(pBot)) {
+
+            }
+        }
+
+        // At destination, bomb is planted and we have not discovered the C4 yet...
+        // TODO: Remember which goals/bomb spots have been visited so bots won't visit this bomb spot again?
+        int iGoalType = getGoalIndexFromNode(pBot->getGoalNode());
+
+        if (pBot->isCounterTerrorist()) {
+            if (Game.bBombPlanted && !Game.isPlantedC4Discovered()) {
+                // call out sector clear
+                if (iGoalType == GOAL_BOMBSPOT) {
+                    if (!pBot->Defuse()) {
+                        // sector clear!
+                        if (FUNC_DoRadio(pBot))
+                            UTIL_BotRadioMessage(pBot, 3, "4", "");
+                    }
+                }
+                else if (iGoalType == GOAL_RESCUEZONE) {
+                    pBot->rprint("Arrived at goal rescue zone, forgetting hostages");
+                    pBot->clearHostages(); // clear hostages
+                }
+            }
+        } else {
+            // nothing to do here it seems... (bomb planting logic is elsewhere)
+        }
+        return;
     }
 }
 
@@ -3357,7 +3378,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         pBot->rprint("cNodeMachine::path_think()", "Create path to goal node");
         createPath(iCurrentNode, pBot->getGoalNode(), thisBotIndex, pBot, pBot->iPathFlags);
 
-        if (pBot->getPathNodeIndex() < 0) {
+        if (pBot->getPathIndex() < 0) {
             pBot->rprint("cNodeMachine::path_think()",
                          "there is a goal, no path, and we could not get a path to our goal; so i have choosen to find a node further away and try again");
             pBot->setGoalNode(getFurthestNode(pBot->pEdict->v.origin, 400, pBot->pEdict));

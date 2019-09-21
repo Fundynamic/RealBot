@@ -211,7 +211,7 @@ void cBot::SpawnInit() {
     bot_weapons = 0;
     bot_use_special = 0 + RANDOM_LONG(0, 2);
     console_nr = 0;
-    pathNodeIndex = -1;
+    pathIndex = -1;
     iPathFlags = PATH_DANGER;
 
     // Smarter Stuck stuff
@@ -361,7 +361,7 @@ void cBot::NewRound() {
     bot_armor = 0;
 //   bot_weapons = 0; // <- stefan: prevent from buying new stuff every round!
     console_nr = 0;
-    pathNodeIndex = -1;
+    pathIndex = -1;
     iGoalNode = -1;
     goalIndex = -1;
     iPreviousGoalNode = -1;
@@ -2151,8 +2151,7 @@ void cBot::CheckAround() {
     // -------------------------------------------------------------
     char item_name[40];
     edict_t *pent = NULL;
-    while ((pent =
-                    UTIL_FindEntityInSphere(pent, pEdict->v.origin, 60)) != NULL) {
+    while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 60)) != NULL) {
         strcpy(item_name, STRING(pent->v.classname));
 
         // See if it matches our object name
@@ -2197,24 +2196,24 @@ bool cBot::TakeCover() {
 /**
  * Set the node to follow next as the next one (ie, increase index)
  */
-void cBot::nextPathNodeIndex() {
-    this->pathNodeIndex++;
+void cBot::nextPathIndex() {
+    this->pathIndex++;
 }
 
 /**
  * Set the node to follow next as the previous one (ie, decrease index). Calls forgetPath when index is getting < 0
  */
-void cBot::prevPathNodeIndex() {
+void cBot::prevPathIndex() {
     rprint("prevPathNodeIndex");
-    this->pathNodeIndex--;
-    if (this->pathNodeIndex < 0) {
+    this->pathIndex--;
+    if (this->pathIndex < 0) {
         forgetPath();
     }
 }
 
 // Returns true if bot has a path to follow
 bool cBot::isWalkingPath() {
-    return this->pathNodeIndex > -1;
+    return this->pathIndex > -1;
 }
 
 // Returns true if bot has goal node
@@ -2292,17 +2291,17 @@ void cBot::forgetGoal() {
     this->goalIndex = -1;
 }
 
-int cBot::getPathNodeIndex() {
-    return this->pathNodeIndex;
+int cBot::getPathIndex() {
+    return this->pathIndex;
 }
 
-int cBot::getPreviousPathNodeIndex() {
-    return this->pathNodeIndex - 1;
+int cBot::getPreviousPathIndex() {
+    return this->pathIndex - 1;
 }
 
 void cBot::forgetPath() {
     rprint("forgetPath");
-    this->pathNodeIndex = -1;
+    this->pathIndex = -1;
     NodeMachine.path_clear(this->iBotIndex);
 }
 
@@ -3039,7 +3038,7 @@ int cBot::getCurrentNode() {
  * Aka, the node we are heading for.
  */
 int cBot::getCurrentPathNodeToHeadFor() {
-    return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, pathNodeIndex);
+    return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, pathIndex);
 }
 
 /**
@@ -3047,7 +3046,7 @@ int cBot::getCurrentPathNodeToHeadFor() {
  * return -1;
  */
 int cBot::getPreviousPathNodeToHeadFor() {
-    return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, getPreviousPathNodeIndex());
+    return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, getPreviousPathIndex());
 }
 
 bool cBot::isHeadingForGoalNode() {
@@ -3058,7 +3057,7 @@ bool cBot::isHeadingForGoalNode() {
  * Aka, the next node after we have arrived at the current path node.
  */
 int cBot::getNextPathNode() {
-    return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, pathNodeIndex + 1);
+    return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, pathIndex + 1);
 }
 
 // Is this bot dead?
@@ -3981,7 +3980,7 @@ void cBot::Dump(void) {
     strncat(buffer, "\n", 180);
     rblog(buffer);
     if (iGoalNode >= 0)
-        NodeMachine.dump_path(iBotIndex, pathNodeIndex);
+        NodeMachine.dump_path(iBotIndex, pathIndex);
 }
 
 /**
@@ -3989,7 +3988,7 @@ void cBot::Dump(void) {
  * isWalkingPath returns true.
  */
 void cBot::beginWalkingPath() {
-    this->pathNodeIndex = 0;
+    this->pathIndex = 0;
 }
 
 bool cBot::hasHostageToRescue() {
@@ -4049,7 +4048,7 @@ bool cBot::shouldBeAbleToMove() {
            && !shouldCamp()
            && !shouldWait()
            && !shouldActWithC4()
-           && f_jump_time + 1 < gpGlobals->time; // after jumping, you move slower for a second
+           && isJumping(); // after jumping, you move slower for a second
 }
 
 edict_t *cBot::getEntityBetweenMeAndNextNode() {
@@ -4064,10 +4063,11 @@ edict_t *cBot::getEntityBetweenMeAndNextNode() {
     //UTIL_TraceHull(vOrigin, vNode, dont_ignore_monsters, human_hull, pBot->pEdict, &tr);
     UTIL_TraceHull(vOrigin, node->origin, dont_ignore_monsters, head_hull, pEdict, &tr);
 
-    // if nothing hit:
+    // if nothing hit (else a wall is in between and we don't care about that):
     if (tr.flFraction < 1.0) {
-        if (tr.pHit)
+        if (tr.pHit) {
             return tr.pHit;
+        }
     }
 
     return NULL;
@@ -4198,15 +4198,33 @@ void cBot::doDuck() {
     this->increaseTimeToMoveToNode(1);
 }
 
-void cBot::doJump(Vector &vector) {
-    UTIL_BotPressKey(this, IN_JUMP);
-    UTIL_BotPressKey(this, IN_DUCK); // DUCK jump by default
-    this->f_hold_duck = gpGlobals->time + 0.2;
+bool cBot::isDucking() {
+    return keyPressed(IN_DUCK) || gpGlobals->time > this->f_hold_duck;
+}
 
+void cBot::doJump(Vector &vector) {
+    rprint_trace("doJump", "With vector");
     // stay focussed with body and head to this vector
     this->vHead = vector;
     this->vBody = vector;
+
+    doJump();
+}
+
+void cBot::doJump() {
+    rprint_trace("doJump", "no vector");
+    UTIL_BotPressKey(this, IN_JUMP);
+    this->f_jump_time = gpGlobals->time + 0.2;
+
+    // duck like this, because doDuck increases node time *again*, so no
+    UTIL_BotPressKey(this, IN_DUCK); // DUCK jump by default
+    this->f_hold_duck = gpGlobals->time + 0.2;
+
     this->increaseTimeToMoveToNode(1);
+}
+
+bool cBot::isJumping() {
+    return keyPressed(IN_JUMP) || (f_jump_time + 1) > gpGlobals->time;
 }
 
 // $Log: bot.cpp,v $

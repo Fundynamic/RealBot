@@ -137,6 +137,8 @@ public:
     void path_think(cBot *pBot, float distanceMoved);  // think about paths
     void path_clear(int botIndex);
 
+    void ExecuteNearNodeLogic(cBot *pBot);
+
     int getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex);
 
     // -----------------
@@ -215,6 +217,8 @@ private:
     bool isEntityDoor(const edict_t *pEntityHit) const;
 
     bool isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHit) const;
+
+    void ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vector &vector);
 };
 
 #endif // NODEMACHINE_H

@@ -155,7 +155,7 @@ class cBot {
 private:
     int iGoalNode;               // Goal Node #
     int goalIndex;               // is a goal node is set, it might be related to a goal, if so it is set here
-    int pathNodeIndex;           // Which node we want to move to, derived from Path
+    int pathIndex;               // Index on theWhich node we want to move to, derived from Path
 
     // Hostages edict
     edict_t *pBotHostage;        // the Hostage we will go after!
@@ -431,10 +431,6 @@ public:
     int determineCurrentNode(float range);
 
     // Get methods
-    int getCurrentNode();                      // the current (closest) node we are at
-    int getCurrentPathNodeToHeadFor();         // get Node from path
-    int getPreviousPathNodeToHeadFor();        // get previous Node from path
-    int getNextPathNode();                     // get next Node from path
     float getDistanceTo(int nodeIndex);
     float getDistanceTo(Vector vDest);
 
@@ -493,21 +489,31 @@ public:
 
     // ------------
     bool isWalkingPath();
+
     void beginWalkingPath();
-    void nextPathNodeIndex(); // increases index so we know which node to walk on path
-    void prevPathNodeIndex(); // decreases index so we know which node to walk on path
-    int getPathNodeIndex();
-    int getPreviousPathNodeIndex();
+    void nextPathIndex();       // increases index so we know which node to walk on path
+    void prevPathIndex();       // decreases index so we know which node to walk on path
     void stopMoving();
-    void setMoveSpeed(float value);
-    void startWandering(float time);
     void forgetGoal();
     void forgetPath();
     void forgetEnemy();
     void setGoalNode(tGoal *goal);
     void setGoalNode(int nodeIndex);
     void setGoalNode(int nodeIndex, int iGoalIndex);
+
+    int getCurrentNode();                      // the current (closest) node we are at
+    int getCurrentPathNodeToHeadFor();         // get Node from path
+    int getPreviousPathNodeToHeadFor();        // get previous Node from path
+    int getNextPathNode();                     // get next Node from path
+    int getPathIndex();
+    int getPreviousPathIndex();
+
     int getGoalNode();
+
+
+
+    void setMoveSpeed(float value);
+    void startWandering(float time);
 
     // -------------------
     void SpawnInit();            // When bot spawns again (added/revived)
@@ -563,7 +569,11 @@ public:
     bool createPath(int destinationNode);
 
     void doJump(Vector &vector);
+    void doJump();
+    bool isJumping();
+
     void doDuck();
+    bool isDucking();
 
     bool isFreezeTime() const;
 
