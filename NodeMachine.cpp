@@ -2252,9 +2252,9 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
         char msg[255];
         memset(msg, 0, sizeof(msg));
         if (nodeStar.state == CLOSED) {
-            sprintf(msg, "Node [%d] is CLOSED. Cost = %f. Parent = %d\n");
+            sprintf(msg, "Node [%d] is CLOSED. Cost = %f. Parent = %d\n", nodeIndex, nodeStar.cost, nodeStar.parent);
         } else if (nodeStar.state == OPEN) {
-            sprintf(msg, "Node [%d] is OPEN. Cost = %f. Parent = %d\n");
+            sprintf(msg, "Node [%d] is OPEN. Cost = %f. Parent = %d\n", nodeIndex, nodeStar.cost, nodeStar.parent);
         }
         rblog(msg);
     }
