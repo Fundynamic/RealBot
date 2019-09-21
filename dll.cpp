@@ -1993,21 +1993,40 @@ int Spawn_Post(edict_t *pent) {
     // MAPPERS: NEVER ALLOW A TRANSPARENT ENTITY TO WEAR THE FL_WORLDBRUSH FLAG !!!
 
     // is this a transparent entity ?
-    if (pent->v.rendermode == kRenderTransTexture)
-        pent->v.flags &= ~FL_WORLDBRUSH;  // then clear the FL_WORLDBRUSH flag
+    if (pent->v.rendermode == kRenderTransTexture //||
+//        (pent->v.rendermode == kRenderTransAlpha && strcmp("func_illusionary", STRING(pent->v.classname)) == 0)
+        ) { // func_illusionary on cs_italy uses this rendermode
 
-    // note by Stefan: what the fuck are we doing here?
+
+        pent->v.flags |= FL_WORLDBRUSH; // set WORLD BRUSH
+
+//        // this seems to enforce solidness, and hence the tracehull/line will detect it now.
+//        pent->v.solid = SOLID_BSP;
+//        pent->v.movetype = MOVETYPE_PUSHSTEP; // this seemed to be the best choice, does not do much
+//        pent->v.rendermode == kRenderNormal;
+    } else {
+    }
+
+    char msg[255];
+    sprintf(msg, "Found an entity %s - %s - %s with rendermode %d!\n", STRING(pent->v.classname), STRING(pent->v.netname), STRING(pent->v.model), pent->v.rendermode);
+    rblog(msg);
+
     // is this a trigger_multiple ?
     if (strcmp(STRING(pent->v.classname), "trigger_multiple") == 0) {
         //pent->v.flags &= ~FL_WORLDBRUSH; // then clear the FL_WORLDBRUSH flag
         pent->v.flags |= FL_WORLDBRUSH;   // make it detectable!
         pent->v.rendermode = kRenderNormal;
 
-        //pent->v.solid = SOLID_TRIGGER;
-        //pent->v.solid = SOLID_BSP;
-        //         SERVER_PRINT("Adjusted a trigger_multiple!!\n");
-    }
+        // Perhaps this fixes also the as_oilrig problem where a traceline goes through the button without
+        // detecting??
+        // this seems to enforce solidness, and hence the tracehull/line will detect it now.
+//        pent->v.solid = SOLID_BSP;
+//        pent->v.movetype = MOVETYPE_PUSHSTEP; // this seemed to be the best choice, does not do much
 
+//        pent->v.solid = SOLID_TRIGGER;
+//        pent->v.solid = SOLID_BSP;
+//                 SERVER_PRINT("Adjusted a trigger_multiple!!\n");
+    }
 
     RETURN_META_VALUE(MRES_IGNORED, 0);
 }
