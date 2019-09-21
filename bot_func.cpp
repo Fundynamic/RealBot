@@ -338,9 +338,12 @@ bool BotShouldJump(cBot *pBot) {
     // Trace
     // If blocked, then we SHOULD jump
 
-    // FIX: Do not jump when defusing!
-    if (pBot->f_defuse > gpGlobals->time)
+    if (pBot->isDefusing()) {
+        pBot->rprint_trace("BotShouldJump", "Returning false because defusing.");
         return false;
+    }
+
+    if (pBot->isJumping()) return false; // already jumping
 
     TraceResult tr;
     Vector v_jump, v_source, v_dest;
@@ -354,51 +357,103 @@ bool BotShouldJump(cBot *pBot) {
 
     UTIL_MakeVectors(v_jump);
 
-    // use center of the body first...
-
-    // maximum jump height is 45, so check one unit above that (MAX_JUMPHEIGHT)
-    v_source = pEdict->v.origin + Vector(0, 0, -36 + (MAX_JUMPHEIGHT + 1));
+    // Check if we can jump onto something with maximum jump height:
+    // maximum jump height, so check one unit above that (MAX_JUMPHEIGHT)
+    v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT + (MAX_JUMPHEIGHT + 1));
     v_dest = v_source + gpGlobals->v_forward * 90;
 
     // trace a line forward at maximum jump height...
-    UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull,
-                   pEdict->v.pContainingEntity, &tr);
-
-    //UTIL_TraceLine( v_source, v_dest, dont_ignore_monsters,
-    //              pEdict->v.pContainingEntity, &tr);
+    UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
 
     // if trace hit something, return FALSE
-    if (tr.flFraction < 1.0)
+    if (tr.flFraction < 1.0) {
+        pBot->rprint_trace("BotShouldJump", "I cannot jump because something is blocking the max jump height");
         return false;
+    } else {
+        pBot->rprint_trace("BotShouldJump", "I can make the jump, nothing blocking the jump height");
+    }
 
     // Ok the body is clear
-    v_source = pEdict->v.origin + Vector(0, 0, 34);
+    v_source = pEdict->v.origin + Vector(0, 0, ORIGIN_HEIGHT);
     v_dest = v_source + gpGlobals->v_forward * 90;
 
     // trace a line forward at maximum jump height...
-    //  UTIL_TraceLine( v_source, v_dest, dont_ignore_monsters,
-    //                pEdict->v.pContainingEntity, &tr);
-    UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull,
-                   pEdict->v.pContainingEntity, &tr);
-
-    if (tr.flFraction < 1.0)
-        return false;
-
-    // Ok the body is clear
-    v_source = pEdict->v.origin + Vector(0, 0, -14);
-    v_dest = v_source + gpGlobals->v_forward * 40;
-
-    // trace a line forward at maximum jump height...
-    //UTIL_TraceLine( v_source, v_dest, dont_ignore_monsters,
-    //              pEdict->v.pContainingEntity, &tr);
-    UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull,
-                   pEdict->v.pContainingEntity, &tr);
+    UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
 
     if (tr.flFraction < 1.0) {
-        //  if (BotCanJumpUp(pBot))
+        pBot->rprint_trace("BotShouldJump", "cannot jump because body is blocked");
+        return false;
+    } else {
+        pBot->rprint_trace("BotShouldJump", "Jump body is not blocked");
+    }
+
+    // Ok the body is clear
+    v_source = pEdict->v.origin + Vector(0, 0, -14); // 14 downwards (from center) ~ roughly the kneecaps
+    v_dest = v_source + gpGlobals->v_forward * 40;
+
+    UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
+//
+//    int player_index = 0;
+//    for (player_index = 1; player_index <= gpGlobals->maxClients;
+//         player_index++) {
+//        edict_t *pPlayer = INDEXENT(player_index);
+//
+//        if (pPlayer && !pPlayer->free) {
+//            if (FBitSet(pPlayer->v.flags, FL_CLIENT)) { // do not draw for now
+//
+//                DrawBeam(
+//                        pPlayer, // player sees beam
+//                        v_source, // + Vector(0, 0, 32) (head?)
+//                        v_dest,
+//                        255, 255, 255
+//                );
+//            }
+//        }
+//    }
+
+    if (tr.flFraction < 1.0) {
+        pBot->rprint_trace("BotShouldJump", "Yes should jump, -14 blocks something, so it is jumpable");
         return true;
     }
 
+    // "func_illusionary"
+    if (tr.pHit) {
+        pBot->rprint_trace("trace pHit", STRING(tr.pHit->v.classname));
+        if (strcmp("func_illusionary", STRING(tr.pHit->v.classname)) == 0) {
+        pBot->rprint_trace("BotShouldJump", "#1 Hit a func_illusionary, its a hit as well! (even though trace hit results no)");
+        return true;
+        }
+    }
+
+    char item_name[40];
+    edict_t *pent = NULL;
+    while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 45)) != NULL) {
+        strcpy(item_name, STRING(pent->v.classname));
+
+        if (FInViewCone(&pent->v.origin, pEdict)) {
+            if (strcmp("func_illusionary", item_name) == 0) {
+                return true;
+            }
+        }
+        // See if it matches our object name
+    }
+
+    v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT);
+    v_dest = v_source + gpGlobals->v_forward * 40;
+
+    UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, head_hull, pEdict->v.pContainingEntity, &tr);
+
+    if (tr.flFraction < 1.0) {
+        pBot->rprint_trace("BotShouldJump", "Yes should jump, -CROUCHED_HEIGHT blocks something, so it is jumpable");
+        return true;
+    }
+
+    if (tr.pHit && strcmp("func_illusionary", STRING(tr.pHit->v.classname)) == 0) {
+        pBot->rprint_trace("BotShouldJump", "#2 Hit a func_illusionary, its a hit as well! (even though trace hit results no)");
+        return true;
+    }
+
+    pBot->rprint_trace("BotShouldJump", "No, should not jump");
     return false;
 }
 

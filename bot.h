@@ -174,6 +174,8 @@ private:
     float distanceMoved;        // length of v_diff vector (distance bot moved) (timed calculation by distanceMovedTimer)
     float distanceMovedTimer;
 
+    float f_defuse;              // Timer to press the use key for defusing
+
 public:
     // Constructor
     cBot();
@@ -191,6 +193,7 @@ public:
     void checkOfHostagesStillFollowMe();
 
     bool hasTimeToMoveToNode();
+    bool isDefusing();
 
     // ------------------------
     // TIMERS
@@ -202,7 +205,6 @@ public:
     float fNotStuckTime;         // last time we got stuck
     float f_goback_time;         // time to go back (-movespeed)
     float f_allow_keypress;      // Timer to avoid 'too quick' using/defusing/etc
-    float f_defuse;              // Timer to press the use key for defusing
 
     float f_use_timer;           // time for use button (hostage rescue, preventing to fast using)
     float fBlindedTime;          // How long it is blinded ( when > globals->time)

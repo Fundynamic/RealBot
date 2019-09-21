@@ -2987,6 +2987,10 @@ edict_t * cBot::findHostageToRescue() {
     return NULL;
 }
 
+bool cBot::isDefusing() {
+    return f_defuse > gpGlobals->time;
+}
+
 bool cBot::hasTimeToMoveToNode() {
     return fMoveToNodeTime > -1 && fMoveToNodeTime > gpGlobals->time;
 }
