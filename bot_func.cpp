@@ -486,11 +486,9 @@ bool BotShouldJump(cBot *pBot) {
 
 // FUNCTION: Calculates angles as pEdict->v.v_angle should be when checking for body
 Vector FUNC_CalculateAngles(cBot *pBot) {
-    Vector v_body = Vector(0, 0, 0);
-
     // aim for the head and/or body
     Vector v_target = pBot->vBody - pBot->pEdict->v.origin;
-    v_body = UTIL_VecToAngles(v_target);
+    Vector v_body = UTIL_VecToAngles(v_target);
 
     if (v_body.y > 180)
         v_body.y -= 360;
@@ -507,8 +505,8 @@ Vector FUNC_CalculateAngles(cBot *pBot) {
 }
 
 bool BotShouldDuck(cBot *pBot) {
-
     // temp
+    // TODO: Deal with this, is it good code? remove the other stuff below the return statement?
     return BotCanDuckUnder(pBot);
 
     // WHen a bot should jump, something is blocking his way.
