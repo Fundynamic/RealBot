@@ -4056,7 +4056,7 @@ bool cBot::shouldBeAbleToMove() {
            && !shouldCamp()
            && !shouldWait()
            && !shouldActWithC4()
-           && isJumping(); // after jumping, you move slower for a second
+           && !isJumping(); // after jumping, you move slower for a second
 }
 
 edict_t *cBot::getEntityBetweenMeAndNextNode() {
@@ -4226,17 +4226,21 @@ void cBot::doJump(Vector &vector) {
 void cBot::doJump() {
     rprint_trace("doJump", "no vector");
     UTIL_BotPressKey(this, IN_JUMP);
-    this->f_jump_time = gpGlobals->time + 0.2;
+    this->f_jump_time = gpGlobals->time + 0.5;
 
     // duck like this, because doDuck increases node time *again*, so no
     UTIL_BotPressKey(this, IN_DUCK); // DUCK jump by default
-    this->f_hold_duck = gpGlobals->time + 0.2;
+    this->f_hold_duck = gpGlobals->time + 0.5;
 
-    this->increaseTimeToMoveToNode(1);
+    this->increaseTimeToMoveToNode(0.75);
 }
 
 bool cBot::isJumping() {
-    return keyPressed(IN_JUMP) || (f_jump_time + 1) > gpGlobals->time;
+    bool b = keyPressed(IN_JUMP) || f_jump_time > gpGlobals->time;
+    if (b) {
+        rprint_trace("isJumping", "Yes I am jumping");
+    }
+    return b;
 }
 
 // $Log: bot.cpp,v $
