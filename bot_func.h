@@ -54,6 +54,7 @@ cBot *getCloseFellowBot(cBot * pBot);
 edict_t * getPlayerNearbyBotInFOV(cBot * pBot);
 
 bool BotShouldJump(cBot * pBot);
+bool BotShouldJumpIfStuck(cBot * pBot);
 bool BotShouldDuck(cBot * pBot);
 void TryToGetHostageTargetToFollowMe(cBot * pBot);
 Vector FUNC_CalculateAngles(cBot * pBot);
