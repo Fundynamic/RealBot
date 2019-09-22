@@ -328,6 +328,45 @@ bool isAnyPlayerNearbyBot(cBot *pBot) {
     return false;
 }
 
+/**
+ * Returns true if bot should jump, deals with func_illusionary
+ * @param pBot
+ * @return
+ */
+bool BotShouldJumpIfStuck(cBot *pBot) {
+    if (pBot->isDefusing()) {
+        pBot->rprint_trace("BotShouldJumpIfStuck", "Returning false because defusing.");
+        return false;
+    }
+
+    if (pBot->isJumping()) return false; // already jumping
+
+    bool result = BotShouldJump(pBot);
+    if (result) return true;
+
+    // should not jump, perhaps its a func_illusionary causing that we're stuck?
+    edict_t *pEdict = pBot->pEdict;
+
+    char item_name[40];
+    edict_t *pent = NULL;
+    while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 45)) != NULL) {
+        strcpy(item_name, STRING(pent->v.classname));
+
+        if (FInViewCone(&pent->v.origin, pEdict)) {
+            if (strcmp("func_illusionary", item_name) == 0) {
+                return true; // yes it is the case
+            }
+        }
+    }
+
+    return false; // no need to jump
+}
+
+/**
+ * Returns true if bot should jump. Does *not* deal with func_illusionary.
+ * @param pBot
+ * @return
+ */
 bool BotShouldJump(cBot *pBot) {
     // WHen a bot should jump, something is blocking his way.
     // Most of the time it is a fence, or a 'half wall' that reaches from body to feet
@@ -391,8 +430,7 @@ bool BotShouldJump(cBot *pBot) {
     v_source = pEdict->v.origin + Vector(0, 0, -14); // 14 downwards (from center) ~ roughly the kneecaps
     v_dest = v_source + gpGlobals->v_forward * 40;
 
-    UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
-//
+    //
 //    int player_index = 0;
 //    for (player_index = 1; player_index <= gpGlobals->maxClients;
 //         player_index++) {
@@ -411,31 +449,20 @@ bool BotShouldJump(cBot *pBot) {
 //        }
 //    }
 
+    UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
+
     if (tr.flFraction < 1.0) {
-        pBot->rprint_trace("BotShouldJump", "Yes should jump, -14 blocks something, so it is jumpable");
+        pBot->rprint_trace("BotShouldJump", "Yes should jump, kneecaps hit something, so it is jumpable");
         return true;
     }
 
-    // "func_illusionary"
+    // "func_illusionary" - although on cs_italy this is not detected, and probably in a lot of other cases as well
     if (tr.pHit) {
         pBot->rprint_trace("trace pHit", STRING(tr.pHit->v.classname));
         if (strcmp("func_illusionary", STRING(tr.pHit->v.classname)) == 0) {
         pBot->rprint_trace("BotShouldJump", "#1 Hit a func_illusionary, its a hit as well! (even though trace hit results no)");
         return true;
         }
-    }
-
-    char item_name[40];
-    edict_t *pent = NULL;
-    while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 45)) != NULL) {
-        strcpy(item_name, STRING(pent->v.classname));
-
-        if (FInViewCone(&pent->v.origin, pEdict)) {
-            if (strcmp("func_illusionary", item_name) == 0) {
-                return true;
-            }
-        }
-        // See if it matches our object name
     }
 
     v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT);
