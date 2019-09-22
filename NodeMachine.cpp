@@ -1282,7 +1282,7 @@ void cNodeMachine::connections(edict_t *pEntity) {
 
                 if (troubleIndex > -1) {
                     int tries = Troubles[troubleIndex].iTries;
-                    if (tries == 1) {
+                    if (tries <= 1) {
                         red = 255;
                         green = 255;
                         blue = 0;
