@@ -1243,10 +1243,20 @@ void cNodeMachine::connections(edict_t *pEntity) {
         cBot botPointer = bots[draw_nodepath];
         if (botPointer.bIsUsed) {
             closeNode = botPointer.determineCurrentNodeWithTwoAttempts();
-            sprintf(msg, "Bot [%d] is at node %d\n", draw_nodepath, closeNode);
+            if (closeNode > -1) {
+                Vector &vector = Nodes[closeNode].origin;
+                sprintf(msg, "Bot [%d] is at node %d (%f,%f,%f)\n", draw_nodepath, closeNode, vector.x, vector.y, vector.z);
+            } else {
+                sprintf(msg, "Bot [%d] is at node %d\n", draw_nodepath, closeNode);
+            }
         } else {
             closeNode = getClosestNode(pEntity->v.origin, NODE_ZONE, pEntity);
-            sprintf(msg, "No bot used for slot [%d], YOU are at node %d\n", draw_nodepath, closeNode);
+            if (closeNode > -1) {
+                Vector &vector = Nodes[closeNode].origin;
+                sprintf(msg, "No bot used for slot [%d], YOU are at node %d (%f,%f,%f)\n", draw_nodepath, closeNode, vector.x, vector.y, vector.z);
+            } else {
+                sprintf(msg, "No bot used for slot [%d], YOU are at node %d\n", draw_nodepath, closeNode);
+            }
         }
     } else {
         closeNode = getClosestNode(pEntity->v.origin, NODE_ZONE, pEntity);
