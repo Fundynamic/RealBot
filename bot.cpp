@@ -3194,7 +3194,15 @@ void cBot::Think() {
     if (distanceMovedTimer <= gpGlobals->time) {
         // see how far bot has moved since the previous position...
         Vector v_diff = prevOrigin - pEdict->v.origin;
-        distanceMoved = v_diff.Length();
+        // make distanceMoved an average of this moment and the previous one.
+        float movedTwoTimes = distanceMoved + v_diff.Length();
+
+        // prevent division by zero
+        if (movedTwoTimes > 0.0f) {
+            distanceMoved = movedTwoTimes / 2;
+        } else {
+            distanceMoved = 0;
+        }
 
         // save current position as previous
         prevOrigin = pEdict->v.origin;
