@@ -4124,13 +4124,14 @@ void cBot::setTimeToMoveToNode(float timeInSeconds) {
 void cBot::increaseTimeToMoveToNode(float timeInSeconds) {
     if (nodeTimeIncreasedAmount < 2) {
         nodeTimeIncreasedAmount++;
+        this->fMoveToNodeTime += timeInSeconds;
+        float timeToMoveToNodeRemaining = getMoveToNodeTimeRemaining();
         char msg[255];
         memset(msg, 0, sizeof(msg));
-        sprintf(msg, "increaseTimeToMoveToNode with %f for the %d time", timeInSeconds, nodeTimeIncreasedAmount);
-        rprint("increaseTimeToMoveToNode");
-        this->fMoveToNodeTime += timeInSeconds;
+        sprintf(msg, "increaseTimeToMoveToNode with %f for the %d time, making time to move to node remaining %f.", timeInSeconds, nodeTimeIncreasedAmount, timeToMoveToNodeRemaining);
+        rprint_trace("increaseTimeToMoveToNode", msg);
     } else {
-        rprint("Refused to increase time");
+        rprint_trace("increaseTimeToMoveToNode", "Refused to increase time");
     }
 }
 
