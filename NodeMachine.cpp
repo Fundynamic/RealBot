@@ -3077,7 +3077,7 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vec
     pBot->fNotStuckTime = gpGlobals->time;
 
     // JUMP & DUCK
-    if (BotShouldJump(pBot) || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP)) {
+    if (BotShouldJumpIfStuck(pBot) || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP)) {
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased, increase node time - START");
         pBot->doJump(vector);
         pBot->iJumpTries++;
