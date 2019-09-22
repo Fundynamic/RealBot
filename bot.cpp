@@ -4201,13 +4201,17 @@ bool cBot::createPath(int destinationNode, int flags) {
 
 void cBot::doDuck() {
     UTIL_BotPressKey(this, IN_DUCK);
-    this->f_hold_duck = gpGlobals->time + 0.2;
+    this->f_hold_duck = gpGlobals->time + 0.5;
 
-    this->increaseTimeToMoveToNode(1);
+    this->increaseTimeToMoveToNode(0.5);
 }
 
 bool cBot::isDucking() {
-    return keyPressed(IN_DUCK) || gpGlobals->time > this->f_hold_duck;
+    bool b = keyPressed(IN_DUCK) || this->f_hold_duck > gpGlobals->time;
+    if (b) {
+        rprint_trace("isDucking", "Yes I am ducking");
+    }
+    return b;
 }
 
 void cBot::doJump(Vector &vector) {
