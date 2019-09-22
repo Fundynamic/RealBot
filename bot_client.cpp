@@ -460,17 +460,17 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
             cBot *pBot = &bots[bot_index];
 
             if (damage_bits & (DMG_FALL | DMG_CRUSH)) {
-                LOG_MESSAGE(PLID, "realbot - fixed connection with falling.");
+                pBot->rprint_trace("BotClient_Valve_Damage", "Taken fall damage!");
                 if (pBot->getPathIndex() > 0) { // was one node further, so we can use previous node!
-                    int iNode = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex,
-                                                                       pBot->getPreviousPathIndex());
+                    int iNode = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex, pBot->getPreviousPathIndex());
+
                     float fDist = fabs(damage_origin.z - NodeMachine.node_vector(iNode).z);
                     if (fDist > 90) {
                         // we know where we came from, and we know where we went to
                         int iNodeTo = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex,
                                                                              pBot->getPathIndex());
 
-                        // remove connection
+                        // remove connection?
                         NodeMachine.removeConnection(iNode, iNodeTo);
                     }
                 }
@@ -481,24 +481,48 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
                 return;
 
             // depending on bot skill slow this bot down a bit
-            pBot->f_move_speed *= (((10 - pBot->bot_skill) + 1) / 10);
+//            pBot->f_move_speed *= (((10 - pBot->bot_skill) + 1) / 10);
 
             // if the bot doesn't have an enemy and someone is shooting at it then
             // turn in the attacker's direction...
             if (!pBot->hasEnemy()) {
                 // face the attacker...
+                edict_t *damageInflictor = pBot->pEdict->v.dmg_inflictor;
+                if (damageInflictor) {
+                    if (strcmp(STRING(damageInflictor->v.classname), "player") == 0) {
+                        // Face danger vector
+                        pBot->vHead = damage_origin;
+                        pBot->vBody = damage_origin;
 
-                // Face danger vector
-                pBot->vHead = damage_origin;
-                pBot->vBody = damage_origin;
+                        // move to damage vector
+                        pBot->f_camp_time = gpGlobals->time;
+                        pBot->rprint("BotClient_Valve_Damage", "Damage taken, by player, change goal to damage origin.");
 
-                // move to damage vector
-                pBot->f_camp_time = gpGlobals->time;        // stop camping
-                pBot->rprint("Damage taken, change goal to damage origin.");
-                pBot->setGoalNode(NodeMachine.getClosestNode(damage_origin, 150, NULL));
-                pBot->forgetPath();
+                        char msg[255];
+                        sprintf(msg, "damage_origin (x,y,z) => (%f,%f,%f) | damageInflictor->v.origin (x,y,z) => (%f,%f,%f)",
+                                damage_origin.x,
+                                damage_origin.y,
+                                damage_origin.z,
+                                damageInflictor->v.origin.x,
+                                damageInflictor->v.origin.y,
+                                damageInflictor->v.origin.z
+                        );
+                        pBot->rprint("BotClient_Valve_Damage", msg);
+                        // with the above log message I confirmed that damageInflictor->v.origin is the same
+                        // as damage_origin
 
-                ///////////// END STEFAN
+                        pBot->setGoalNode(NodeMachine.getClosestNode(damage_origin, NODE_ZONE*2, damageInflictor));
+                        pBot->forgetPath();
+                    } else {
+                        char msg[255];
+                        sprintf(msg, "I have a damage inflictor! -> %s", STRING(damageInflictor->v.classname));
+                        pBot->rprint("BotClient_Valve_Damage", msg);
+                    }
+                } else {
+                    // probably never happens, if I see correctly the inflictor is 'worldspawn' if no entity
+                    // is responsible
+                    pBot->rprint("BotClient_Valve_Damage", "I have taken damage, without a damage conflictor");
+                }
             }
         }
     }
