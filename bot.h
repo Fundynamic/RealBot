@@ -540,7 +540,7 @@ public:
 
     bool shouldBeAbleToMove();
 
-    edict_t *getEntityBetweenMeAndNextNode();
+    edict_t *getEntityBetweenMeAndCurrentPathNodeToHeadFor();
 
     float getDistanceToNextNode();
 

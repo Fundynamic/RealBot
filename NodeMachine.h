@@ -217,10 +217,13 @@ private:
 
     bool isEntityDoor(const edict_t *pEntityHit) const;
     bool isEntityHostage(const edict_t *pEntityHit) const;
+    bool isEntityWorldspawn(const edict_t *pEntityHit) const;
 
     bool isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHit) const;
 
     void ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vector &vector);
+
+    void ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pS);
 };
 
 #endif // NODEMACHINE_H

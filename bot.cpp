@@ -136,7 +136,8 @@ void cBot::SpawnInit() {
     fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5, 5);
     fMemoryTime = gpGlobals->time;
     fDoRadio = gpGlobals->time;
-    fNotStuckTime = gpGlobals->time;
+    float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
+    fNotStuckTime = gpGlobals->time + freezeTimeCVAR + 0.5f;
     f_shoot_wait_time = gpGlobals->time;
     f_goback_time = gpGlobals->time;
     f_may_jump_time = gpGlobals->time;
@@ -309,7 +310,8 @@ void cBot::NewRound() {
     fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5, 5);
     fMemoryTime = gpGlobals->time;
     fDoRadio = gpGlobals->time;
-    fNotStuckTime = gpGlobals->time;
+    float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
+    fNotStuckTime = gpGlobals->time + freezeTimeCVAR + 0.5f;
     f_shoot_wait_time = gpGlobals->time;
     f_goback_time = gpGlobals->time;
     f_may_jump_time = gpGlobals->time;
@@ -1976,8 +1978,9 @@ void cBot::Act() {
     }
 
     // When we are at max speed, press IN_RUN to get a running animation
-    if (f_move_speed == f_max_speed)
-        pEdict->v.button |= IN_RUN;
+    if (f_move_speed == f_max_speed) {
+        UTIL_BotPressKey(this, IN_RUN);
+    }
 
     // FIXME: This should not be here! (REMOVEME)
     if (f_c4_time > gpGlobals->time)
@@ -2107,8 +2110,8 @@ void cBot::CheckAround() {
     v_left = v_source + gpGlobals->v_forward * (37);
 
     // now really go left/right
-    v_right = v_source + gpGlobals->v_right * (25);
-    v_left = v_source + gpGlobals->v_right * -(25);
+    v_right = v_right + gpGlobals->v_right * (25);
+    v_left = v_left + gpGlobals->v_right * -(25);
     bool bHitLeft, bHitRight, bHitCenter;
     bHitLeft = bHitRight = bHitCenter = false;
 
@@ -2173,8 +2176,7 @@ void cBot::CheckAround() {
                 {
 
                     // trace to vector to be sure we dont get blocked by anything else
-                    if (VectorIsVisibleWithEdict
-                            (pEdict, vBreakableOrigin, "func_breakable")) {
+                    if (VectorIsVisibleWithEdict(pEdict, vBreakableOrigin, "func_breakable")) {
                         setHeadAiming(vBreakableOrigin);
                         FireWeapon();
                     }
@@ -2997,7 +2999,7 @@ bool cBot::isDefusing() {
 }
 
 bool cBot::hasTimeToMoveToNode() {
-    return fMoveToNodeTime > -1 && fMoveToNodeTime > gpGlobals->time;
+    return fMoveToNodeTime > -1 && getMoveToNodeTimeRemaining() > 0;
 }
 /**
 This function will set the iCloseNode variable, which is the node most closest to
@@ -4068,14 +4070,16 @@ bool cBot::isUsingConsole() {
 }
 
 bool cBot::shouldBeAbleToMove() {
-    return freezeTime + 0.5 < gpGlobals->time
-           && !shouldCamp()
-           && !shouldWait()
-           && !shouldActWithC4()
-           && !isJumping(); // after jumping, you move slower for a second
+    return  !isDead() &&
+            !isFreezeTime() &&
+            !shouldCamp() &&
+            !shouldWait() &&
+            !shouldActWithC4();
+//            !isDucking() &&
+//            !isJumping();
 }
 
-edict_t *cBot::getEntityBetweenMeAndNextNode() {
+edict_t *cBot::getEntityBetweenMeAndCurrentPathNodeToHeadFor() {
     TraceResult tr;
     Vector vOrigin = pEdict->v.origin;
 
@@ -4129,8 +4133,13 @@ void cBot::lookAtNode(int nodeIndex) {
  * @param timeInSeconds
  */
 void cBot::setTimeToMoveToNode(float timeInSeconds) {
+    char msg[255];
+    float endTime = gpGlobals->time + timeInSeconds;
+    sprintf(msg, "Set to %f so results into end time of %f", timeInSeconds, endTime);
+    rprint_trace("setTimeToMoveToNode", msg);
+
     this->nodeTimeIncreasedAmount = 0;
-    this->fMoveToNodeTime = (gpGlobals->time + timeInSeconds);
+    this->fMoveToNodeTime = endTime;
 }
 
 /**
@@ -4152,7 +4161,7 @@ void cBot::increaseTimeToMoveToNode(float timeInSeconds) {
 }
 
 float cBot::getMoveToNodeTimeRemaining() {
-    return gpGlobals->time - fMoveToNodeTime;
+    return fMoveToNodeTime - gpGlobals->time;
 }
 
 bool cBot::shouldCamp() {

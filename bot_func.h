@@ -52,6 +52,7 @@ void DrawBeam(edict_t * visibleForWho, Vector start, Vector end,
 
 cBot *getCloseFellowBot(cBot * pBot);
 edict_t * getPlayerNearbyBotInFOV(cBot * pBot);
+edict_t * getEntityNearbyBotInFOV(cBot * pBot);
 
 bool BotShouldJump(cBot * pBot);
 bool BotShouldJumpIfStuck(cBot * pBot);
@@ -69,7 +70,7 @@ int FUNC_EdictHoldsWeapon(edict_t * pEdict);
 
 int FUNC_FindFarWaypoint(cBot * pBot, Vector avoid, bool safest);
 int FUNC_FindCover(int from, int to);
-int FUNC_PlayerSpeed(edict_t * pPlayer);
+int FUNC_PlayerSpeed(edict_t * edict);
 
 bool FUNC_PlayerRuns(int speed);
 void FUNC_HearingTodo(cBot * pBot);

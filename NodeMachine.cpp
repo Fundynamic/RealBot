@@ -2630,20 +2630,32 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
     // Check if path is valid
     if (iPath[BotIndex][0] < 0) {
-        pBot->rprint("cNodeMachine::path_walk", "invalid path");
+        pBot->rprint("cNodeMachine::path_walk", "Finished - invalid path");
         pBot->stopMoving();
         return;                   // back out
+    }
+
+    if (!pBot->shouldBeAbleToMove()) {
+        pBot->rprint("cNodeMachine::path_walk", "Finished - shouldBeAbleToMove is false");
+        return;
+    }
+
+    // When longer not stuck for some time we clear stuff
+    if (pBot->fNotStuckTime < gpGlobals->time)
+    {
+        pBot->iDuckTries = 0;
+        pBot->iJumpTries = 0;
+        pBot->rprint_trace("cNodeMachine::path_walk", "Reset duck and jump tries because not stuck timer is expired");
     }
 
     pBot->setMoveSpeed(pBot->f_max_speed);
 
     // Walk the path
-    pBot->rprint_trace("cNodeMachine::path_walk", "determine current path node to head for");
     int currentNodeToHeadFor = pBot->getCurrentPathNodeToHeadFor();        // Node we are heading for
 
     // possibly end of path reached, overshoot destination?
     if (currentNodeToHeadFor < 0) {
-        pBot->rprint_trace("cNodeMachine::path_walk", "there is no current node to head for");
+        pBot->rprint_trace("cNodeMachine::path_walk", "Finished - there is no current node to head for");
         pBot->forgetGoal();
         pBot->forgetPath();
         return;
@@ -2706,6 +2718,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                 pBot->forgetPath();
                 return;
             }
+            pBot->rprint_trace("cNodeMachine::path_walk", "Finished - close to button to interact with");
             return;
         }
     }
@@ -2721,6 +2734,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
             if (VectorIsVisibleWithEdict(pBot->pEdict, Game.vDroppedC4, "weaponbox")) {
                 if (func_distance(pBot->pEdict->v.origin, Game.vDroppedC4) < 200) {
                     pBot->vBody = Game.vDroppedC4;
+                    pBot->rprint_trace("cNodeMachine::path_walk", "Finished - C4 dropped!?");
                     return; // this basically enforces a T bot to pick up the bomb nearby
                 }
             }
@@ -2758,10 +2772,8 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
             // Going to a ladder waypoint
             requiredDistance = 25;
         } else {
-            pBot->rprint_trace("cNodeMachine::path_walk", "not going to ladder");
-
             if (pBot->isHeadingForGoalNode()) {
-                pBot->rprint_trace("cNodeMachine::path_walk", "is heading for goal node");
+                pBot->rprint_trace("cNodeMachine::path_walk", "Heading to goal node");
 
                 tGoal *goalData = pBot->getGoalData();
                 if (goalData) {
@@ -2777,14 +2789,13 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                     }
                 }
             } else {
-                char msg[255];
-                sprintf(msg, "Heading for node (non goal) %d, distance for bNear is %f", pBot->getCurrentPathNodeToHeadFor(), requiredDistance);
-                pBot->rprint_trace("cNodeMachine::path_walk (bNear)", msg);
+                pBot->rprint_trace("cNodeMachine::path_walk (bNear)", "Heading to normal node");
             }
-
-            pBot->rprint_trace("cNodeMachine::path_walk", "not going to ladder - end");
         }
 
+        char msg[255];
+        sprintf(msg, "Heading for node %d, required distance is %f, actual distance is %f, time remaining %f", pBot->getCurrentPathNodeToHeadFor(), requiredDistance, pBot->getDistanceToNextNode(), pBot->getMoveToNodeTimeRemaining());
+        pBot->rprint_trace("cNodeMachine::path_walk (bNear)", msg);
 
         bNearNode = pBot->getDistanceToNextNode() < requiredDistance;
 
@@ -2840,12 +2851,12 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     // reached node
     if (bNearNode) {
         ExecuteNearNodeLogic(pBot);
+        pBot->rprint_trace("cNodeMachine::path_walk", "Finished - near node logic executed");
         return;
     }
 
     // TODO TODO TODO Water Navigation
 
-    pBot->rprint_trace("cNodeMachine::path_walk", "before getNextPathNode");
     int nextNodeToHeadFor = pBot->getNextPathNode();              // the node we will head for after reaching currentNode
 
     // NO ENEMY, CHECK AROUND AREA
@@ -2859,222 +2870,33 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         }
     }
 
-    // When longer not stuck for some time we clear stuff
-    if (pBot->fNotStuckTime + 1 < gpGlobals->time && // not stuck for 1 second
-        pBot->iDuckTries != 0 && pBot->iJumpTries != 0) // so we don't keep doing this
-    {
-        pBot->iDuckTries = 0;
-        pBot->iJumpTries = 0;
-        pBot->rprint_trace("path_walk", "Reset duck and jump tries because not stuck timer is > 1 second");
-    }
+    edict_t *pEntityHit = pBot->getEntityBetweenMeAndCurrentPathNodeToHeadFor();
 
-    pBot->rprint_trace("cNodeMachine::path_walk", "before getEntityBetweenMeAndNextNode");
-    edict_t *pEntityHit = pBot->getEntityBetweenMeAndNextNode();
+    // Do note, at this point we are *not* near the node yet.
 
     // When blocked by an entity, we should figure out why:
     if (pEntityHit && // we are blocked by an entity
-        !pBot->hasButtonToInteractWith() &&  // we do not have an interaction with a button set up
-        pBot->shouldBeAbleToMove() && // we should be able to move
-        pBot->shouldBeAbleToInteractWithButton()) {
+        !isEntityWorldspawn(pEntityHit)) // and it is not worldspawn (ie, the map itself)
+    {
+        char msg[255];
+        sprintf(msg, "Entity [%s] between me and next node.", STRING(pEntityHit->v.classname));
+        pBot->rprint_trace("cNodeMachine::path_walk", msg);
 
         // hit by a door?
-
         // a door is blocking us
         if (isEntityDoor(pEntityHit)) {
-            // check if we have to 'use' it
-            if (isDoorThatOpensWhenPressingUseButton(pEntityHit)) {
-                // use only, press use and wait
-                pBot->vHead = VecBModelOrigin(pEntityHit);
-                pBot->vBody = pBot->vHead;
-                UTIL_BotPressKey(pBot, IN_USE);
-                pBot->setTimeToWait(0.5);
-                pBot->fButtonTime = gpGlobals->time + 5;
-                pBot->pButtonEdict = NULL;
-
-                pBot->rprint_trace("cNodeMachine::path_walk", "I have pressed USE to open a door");
-                // TODO: when this door is opened by a trigger_multiple (on touch)
-                // then we do not have to wait and press USE at all.
-                return;
-            }
-
-            // check if door has a button you have to use to open it
-            const char *doorButtonToLookFor = STRING(pEntityHit->v.targetname);
-
-            if (doorButtonToLookFor) {
-                // find this entity
-                edict_t *pButtonEdict = NULL;
-                edict_t *pent = NULL;
-                TraceResult trb;
-
-                // search for all buttons
-                while ((pent = UTIL_FindEntityByClassname(pent, "func_button")) != NULL) {
-                    // skip anything that could be 'self' (unlikely)
-                    if (pent == pEntityHit) continue;
-
-                    // found button entity matching target
-                    if (strcmp(STRING(pent->v.target), doorButtonToLookFor) == 0) {
-                        Vector buttonVector = VecBModelOrigin(pent);
-
-                        UTIL_TraceLine(pBot->pEdict->v.origin, buttonVector,
-                                       ignore_monsters, dont_ignore_glass,
-                                       pBot->pEdict, &trb);
-
-                        // if nothing hit:
-                        if (trb.flFraction >= 1.0) {
-                            // Button found to head for!
-                            pButtonEdict = pent;
-                            break;
-                        } else {
-                            // we hit this button we check for
-                            if (trb.pHit == pent) {
-                                // Button found to head for!
-                                pButtonEdict = pent;
-                                break;
-                            }
-                        }
-                    }
-                } // while (func_button)
-
-                // still nothing found
-                if (pButtonEdict == NULL) {
-                    // TOUCH buttons (are not func_button!)
-                    pent = NULL;
-
-                    // search for all buttons
-                    while ((pent = UTIL_FindEntityByClassname(pent, "trigger_multiple")) != NULL) {
-                        // skip anything that could be 'self' (unlikely)
-                        if (pent == pEntityHit)
-                            continue;
-
-                        // found button entity
-                        if (strcmp(STRING(pent->v.target), doorButtonToLookFor) == 0) {
-                            // get vectr
-                            Vector vPentVector = VecBModelOrigin(pent);
-
-                            UTIL_TraceHull(pBot->pEdict->v.origin, vPentVector,
-                                           dont_ignore_monsters, point_hull,
-                                           pBot->pEdict, &trb);
-
-                            bool isGood = false;
-
-                            // if nothing hit:
-                            if (trb.flFraction >= 1.0) {
-                                pButtonEdict = pent;
-                                break;
-                            } else {
-                                // we hit this button we check for
-                                if (trb.pHit == pent)
-                                    isGood = true;
-                            }
-
-                            if (isGood) {
-                                // Button found to head for!
-                            } else {
-                                // we failed here
-                                // it is probably a button 'on the other side of the wall'
-                                // as most doors have 2 buttons to access it (ie prodigy)
-
-                                // hits by worldspawn here
-                                if (strcmp(STRING(trb.pHit->v.classname), "worldspawn") == 0) {
-
-                                    // DE_PRODIGY FIX:
-                                    // Somehow the button is not detectable. Find a node, that is close to it.
-                                    // then retry the traceline. It should NOT hit a thing now.
-                                    // On success, it is still our button
-                                    int iClose = getClosestNode(vPentVector, NODE_ZONE, pent);
-
-                                    if (iClose > -1) {
-                                        // retry the tracehull
-                                        UTIL_TraceHull(pBot->pEdict->v.origin,
-                                                       node_vector(iClose),
-                                                       dont_ignore_monsters,
-                                                       point_hull,
-                                                       pBot->pEdict, &trb);
-
-                                        // if nothing hit:
-                                        if (trb.flFraction >= 1.0) {
-                                            pButtonEdict = pent;
-                                            break;
-                                        }
-                                    }
-                                }
-
-                            }
-                        }
-                    } // while
-                }
-
-                // We have found a button to go to
-                if (pButtonEdict) {
-                    // Get its vector
-                    Vector vButtonVector = VecBModelOrigin(pButtonEdict);
-
-                    // Search a node close to it
-                    int iButtonNode = getClosestNode(vButtonVector, NODE_ZONE, pButtonEdict);
-
-                    // When node found, create path to it
-                    if (pBot->createPath(iButtonNode, PATH_NONE)) {
-                        pBot->pButtonEdict = pButtonEdict;
-                    }
-                }  // pButtonEdict found
-            }
-        }
-    } // door logic
-
-    // When we run out of time, we move back to previous to try again
-    int previousPathNode = pBot->getPreviousPathNodeToHeadFor();
-
-    // If bot should be able to move, but time is up to reach the next node. (ie, even with
-    // all the unstuck attempts). So after a while we give up and mark this as a bad connection.
-    // Do some logic here to determine if the connection is faulty and if so remove it.
-    if (pBot->shouldBeAbleToMove() && !pBot->hasTimeToMoveToNode()) {
-        pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "START");
-
-        // We have trouble with this one somehow? Check for nearby players before
-        // we judge its done by our own inability to traverse the path.
-        bool playersNearbyInFOV = getPlayerNearbyBotInFOV(pBot);
-
-        // when we recorded a jump, this might help
-        if (previousPathNode > -1 && Nodes[previousPathNode].iNodeBits & BIT_JUMP) {
-            pBot->rprint_trace("path_walk", "Node bits suggest me to jump");
-            pBot->doJump();
+            pBot->rprint_trace("cNodeMachine::path_walk", "Entity between me and next node is a door.");
+            ExecuteDoorInteractionLogic(pBot, pEntityHit);
         }
 
-        // Add this connection to the 'troubled ones'
-        int iFrom = previousPathNode;
-        int iTo = currentNodeToHeadFor;
-
-        char msg[255];
-        memset(msg, 0, sizeof(msg));
-        bool isWalkingPath = pBot->isWalkingPath();
-
-        sprintf(msg, "players nearby in fov? %d, shouldMove? %d, walking path? %d, previousPathNodeIndex? %d, iFrom %d, iTo %d",
-                playersNearbyInFOV,
-                pBot->shouldBeAbleToMove(),
-                isWalkingPath,
-                previousPathNode,
-                iFrom,
-                iTo);
-
-        pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", msg);
-
-        pBot->setTimeToMoveToNode(2.0f);
-        pBot->fNotStuckTime = gpGlobals->time;
-
-        if (!playersNearbyInFOV &&  // no players blocking us
-            isWalkingPath && // walking a path
-            iFrom > -1)
-        {
-            pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "No nearby players (in FOV), walking path and we came from previous node");
-            // Troubled connection already known, make it more troublesome!
-            IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
-        } else {
-            pBot->rprint("cNodeMachine::path_walk/timeIsUpToMoveToNode", "this ought to be ok!?");
+        // hit by a hostage?, hostage is blocking our path
+        if (isEntityHostage(pEntityHit)) {
+            pBot->rprint_trace("cNodeMachine::path_walk", "Entity between me and next node is a hostage.");
         }
 
-        pBot->forgetPath();
+        pBot->rprint_trace("cNodeMachine::path_walk", "Finished - entity hit logic executed");
         return;
-    }
+    } // entity between me and node
 
     // When not moving (and we should move):
     // - learn from mistakes
@@ -3084,147 +2906,196 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     float timeEvaluatingMoveSpeed = 0.1;
     bool notStuckForAWhile = (pBot->fNotStuckTime + timeEvaluatingMoveSpeed) < gpGlobals->time;
 
-    double speedInOneTenthOfASecond = (pBot->f_move_speed * timeEvaluatingMoveSpeed) * 0.8;
+    double fraction = 0.7; // 0.7 is an arbitrary number based on several tests to consider stuck at a more sane moment. Else it would trigger stuck logic too soon, too often.
+    double speedInOneTenthOfASecond = (pBot->f_move_speed * timeEvaluatingMoveSpeed) * fraction;
     double expectedMoveDistance = speedInOneTenthOfASecond;
     if (pBot->isFreezeTime()) expectedMoveDistance = 0;
     if (pBot->isDucking()) expectedMoveDistance = speedInOneTenthOfASecond / 3.0;
     if (pBot->isJumping()) expectedMoveDistance = speedInOneTenthOfASecond / 3.0;
+    // no need for 'is walking' because walking time influence `f_move_speed` hence it is already taken care of
 
     char msg[255];
     memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Distance moved %f, expected %f, should be able to move %d, notStuck for a while %d", distanceMoved, expectedMoveDistance, pBot->shouldBeAbleToMove(), notStuckForAWhile);
+    sprintf(msg, "Distance moved %f, expected %f, should be able to move yes, notStuck for a while %d", distanceMoved, expectedMoveDistance, notStuckForAWhile);
     pBot->rprint_trace("cNodeMachine::path_walk", msg);
 
     bool isStuck = distanceMoved < expectedMoveDistance && pBot->shouldBeAbleToMove() && notStuckForAWhile; // also did not evaluate this logic for 0.5 second
     Vector &vector = Nodes[currentNodeToHeadFor].origin;
 
     if (isStuck) {
-        pBot->rprint_trace("cNodeMachine::path_walk", "Stuck!");
+        pBot->rprint_trace("cNodeMachine::path_walk", "!!!STUCK STUCK STUCK STUCK STUCK STUCK STUCK!!!");
         ExecuteIsStuckLogic(pBot, currentNodeToHeadFor, vector);
+        pBot->rprint_trace("cNodeMachine::path_walk", "Finished - ExecuteIsStuckLogic");
         return;
-    } else {
-        pBot->rprint_trace("cNodeMachine::path_walk", "Not stuck");
     }
 
-    // Not stuck. React to environment to make sure we get to our destination
-    if (BotShouldJump(pBot)) {
-        pBot->rprint("cNodeMachine::path_walk", "Jump!");
-        pBot->doJump(vector);
-    } else if (BotShouldDuck(pBot)) {
-        pBot->rprint("cNodeMachine::path_walk", "Duck!");
-        pBot->doDuck();
+    if (pBot->getMoveToNodeTimeRemaining() < 0) {
+        pBot->rprint_trace("cNodeMachine::path_walk/timeRemaining", "Time is up!");
+
+        int iFrom = pBot->getPreviousPathNodeToHeadFor();
+        int iTo = currentNodeToHeadFor;
+
+        IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
+
+        pBot->forgetPath();
+        pBot->rprint_trace("cNodeMachine::path_walk/timeRemaining", "Finished");
+        return;
     }
+
+    pBot->rprint_trace("cNodeMachine::path_walk", "Finished - really the end of the method");
 }
 
 void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vector &vector) {
     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "START");
-    pBot->fNotStuckTime = gpGlobals->time;
+    pBot->fNotStuckTime = gpGlobals->time + 0.25; // give some time to unstuck
+
+    int iFrom = pBot->getPreviousPathNodeToHeadFor();
+    int iTo = currentNodeToHeadFor;
 
     // JUMP & DUCK
-    if (BotShouldJumpIfStuck(pBot) || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_JUMP)) {
+    tNode &currentNode = Nodes[currentNodeToHeadFor];
+    if (BotShouldJumpIfStuck(pBot) || (currentNode.iNodeBits & BIT_JUMP)) {
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased, increase node time - START");
         pBot->doJump(vector);
         pBot->iJumpTries++;
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased, increase node time  - END");
-    } else if (BotShouldDuck(pBot) || (Nodes[currentNodeToHeadFor].iNodeBits & BIT_DUCK)) {
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
+        return;
+    } else if (BotShouldDuck(pBot) || (currentNode.iNodeBits & BIT_DUCK)) {
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck tries increased, increase node time - START");
         pBot->doDuck();
         pBot->iDuckTries++;
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck tries increased, increase node time - END");
-    } else { // Should not duck nor jump
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "No need to duck or to jump");
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
+        return;
+    } else if (pBot->isOnLadder()) {
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Is stuck on ladder, trying to get of the ladder by jumping");
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased");
+        pBot->doJump(vector);
+        pBot->iJumpTries++;
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
+        return;
+    }
 
-        char msg[255];
-        memset(msg, 0, sizeof(msg));
-        float timeRemaining = pBot->getMoveToNodeTimeRemaining();
-        sprintf(msg, "fNodeTimer still has %f to go before considered 'stuck' for connection", timeRemaining);
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", msg);
+    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "No need to duck or to jump");
 
-        cBot *pBotStuck = getCloseFellowBot(pBot);
-        edict_t *playerNearbyInFOV = getPlayerNearbyBotInFOV(pBot);
+    char msg[255];
+    memset(msg, 0, sizeof(msg));
+    float timeRemaining = pBot->getMoveToNodeTimeRemaining();
+    sprintf(msg, "I still have %f seconds to go to node before considered 'stuck' for connection", timeRemaining);
+    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", msg);
 
-        memset(msg, 0, sizeof(msg));
-        sprintf(msg, "Player in FOV? %d bot close ? %d", playerNearbyInFOV != NULL, pBotStuck != NULL);
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", msg);
+    cBot *pBotStuck = getCloseFellowBot(pBot);
+//        edict_t *playerNearbyInFOV = getPlayerNearbyBotInFOV(pBot);
+    edict_t *entityNearbyInFOV = getEntityNearbyBotInFOV(pBot);
 
-        if (playerNearbyInFOV) {
-            if (pBotStuck != NULL) {
-                if (pBotStuck->pEdict == playerNearbyInFOV) {
-                    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "The player nearby in FOV is the close bot as well: it is a fellow bot that blocks me");
-                } else {
-                    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "The player nearby in FOV is not the same as a bot close to me: another player blocks me");
-                }
+    edict_t *playerNearbyInFOV = NULL;
+    edict_t *hostageNearbyInFOV = NULL;
+    if (entityNearbyInFOV) {
+        if (strcmp(STRING(entityNearbyInFOV->v.classname), "player")) {
+            playerNearbyInFOV = entityNearbyInFOV;
+            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "A player is in front of me");
+        }
+        if (strcmp(STRING(entityNearbyInFOV->v.classname), "hostage_entity")) {
+            hostageNearbyInFOV = entityNearbyInFOV;
+            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "A hostage is in front of me");
+        }
+    }
+
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "Player in FOV? %d, hostage in FOV? %d bot close ? %d, time remaining? %f", playerNearbyInFOV != NULL, hostageNearbyInFOV != NULL, pBotStuck != NULL, timeRemaining);
+    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", msg);
+
+    if (playerNearbyInFOV) {
+        if (pBotStuck != NULL) {
+            if (pBotStuck->pEdict == playerNearbyInFOV) {
+                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "The player nearby in FOV is the close bot as well: it is a fellow bot that blocks me");
             } else {
-                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "A player nearby in FOV is not a bot, and there are no bots nearby: another player blocks me");
+                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "The player nearby in FOV is not the same as a bot close to me: another player blocks me");
             }
         } else {
-            if (pBotStuck != NULL) {
-                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "There is no player nearby, but a bot is close (possibly behind me). This bot might be blocking me?");
-            } else {
-                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "There is no bot nearby, there are no players nor bots blocking me! (so its something with the node connection?)");
-            }
+            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "A player nearby in FOV is not a bot, and there are no bots nearby: another player blocks me");
         }
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "playerNearbyInFOV - finished (TODO: Unstuck from player)");
+        // unstuck from player?
+        return;
+    }
 
-        // should move, but no nearby bot found that could cause us to get stuck
-        // - when no players are close (could be blocked by them, do not learn stupid things)
-        if (pBotStuck == NULL) {
-            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "There is no other BOT around making me go stuck");
+    if (hostageNearbyInFOV) {
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "A hostage is in front of me.");
+        if (pBot->getHostageToRescue() == hostageNearbyInFOV) {
+            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "The hostage I want to rescue is blocking me, so ignore");
+        }
+        if (pBot->isUsingHostage(hostageNearbyInFOV)) {
+            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "This is a hostage that is (should be) following me, so ignore");
+        }
+        // Depending on how the other bot looks, act
+        // pBotStuck -> faces pBot , do same
+        // pBotStuck -> cannot see pBot, do opposite
+        // Check if pBotStuck can see pBot (pBot can see pBotStuck!)
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "hostageNearbyInFOV - finished");
+        return;
+    }
 
-            // check if the connection we want is going up
-            // - when going up
-            // - when we should move
-            bool nodeToHeadForIsHigher = Nodes[currentNodeToHeadFor].origin.z > pBot->pEdict->v.origin.z;
-            if (nodeToHeadForIsHigher) {
-                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Node to head for is higher than me");
-                // check if the next node is floating (skip self)
+    if (timeRemaining < 0) {
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic/timeRemaining", "Time is up!");
 
-                if (node_float(Nodes[currentNodeToHeadFor].origin, pBot->pEdict)) {
-                    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Node to head for is higher than me - and is floating, that is not good - removing");
+        IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
 
-                    // it floats, cannot reach
-                    // Our previous node in the list sent us here, so disable that connection
-                    int iFrom = pBot->getPreviousPathNodeToHeadFor();
-                    int iTo = currentNodeToHeadFor;
+        pBot->forgetPath();
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic/timeRemaining", "Finished!");
+        return;
+    }
 
-                    removeConnection(iFrom, iTo);
+    // should move, but no nearby bot found that could cause us to get stuck
+    // - when no players are close (could be blocked by them, do not learn stupid things)
+    if (pBotStuck == NULL) {
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "There is no other BOT around making me go stuck");
 
-                    pBot->forgetPath();
-                } else {
-                    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "I probably missed a connection now, so lets check...");
-                    if (pBot->canSeeVector(Nodes[currentNodeToHeadFor].origin)) {
-                        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "I can still see the current node to head for");
-                    } else {
-                        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "I can no longer see the current node to head for");
-                        int iFrom = pBot->getPreviousPathNodeToHeadFor();
-                        int iTo = currentNodeToHeadFor;
-                        IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
-                        pBot->forgetPath();
-                    }
-                    // probably our movement went wrong in between, troubled connection?
-                }
-            } else {
-                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "no bot holding me back, must be bad connection");
-                int iFrom = pBot->getPreviousPathNodeToHeadFor();
-                int iTo = currentNodeToHeadFor;
-                IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
-                pBot->fNotStuckTime = gpGlobals->time + 1; // give a bit more time to unstuck
+        // check if the connection we want is going up
+        // - when going up
+        // - when we should move
+        bool nodeToHeadForIsHigher = currentNode.origin.z > pBot->pEdict->v.origin.z;
+        if (nodeToHeadForIsHigher) {
+            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Node to head for is higher than me");
+            // check if the next node is floating (skip self)
+
+            if (node_float(currentNode.origin, pBot->pEdict)) {
+                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Node to head for is higher than me - and is floating, that is not good - removing");
+
+                removeConnection(iFrom, iTo);
+
                 pBot->forgetPath();
-                pBot->forgetGoal();
+            } else {
+                pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "I probably missed a connection now, so lets check...");
+                if (pBot->canSeeVector(currentNode.origin)) {
+                    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "I can still see the current node to head for");
+                    // make sure we head to the current node
+                    pBot->vBody = currentNode.origin;
+                    pBot->vHead = currentNode.origin;
+                    pBot->fNotStuckTime = gpGlobals->time + 0.5; // give a bit more time
+                } else {
+                    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "I can no longer see the current node to head for");
+                    IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
+                    pBot->forgetPath();
+                }
+                // probably our movement went wrong in between, troubled connection?
             }
-        } else if (playerNearbyInFOV) {
-            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "bPlayersNear = true and should be able to move");
-            pBot->setTimeToWait(0.3f);
-            // Depending on how the other bot looks, act
-            // pBotStuck -> faces pBot , do same
-            // pBotStuck -> cannot see pBot, do opposite
-            // Check if pBotStuck can see pBot (pBot can see pBotStuck!)
         } else {
-            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "pBotStuck pointer available - stuck by 'world'");
-//                // we are stuck by 'world', we go back one step?
-//                pBot->prevPathNodeIndex();
-//                pBot->f_stuck_time = gpGlobals->time + 0.2;
+            pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "no bot holding me back, must be bad connection");
+
+            IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
+
+            pBot->forgetPath();
         }
-    } // normal stuck (not duck/jump)
+    } else {
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "pBotStuck pointer available - stuck by 'world'");
+//                // we are stuck by 'world', we go back one step?
+        pBot->prevPathIndex();
+//                pBot->f_stuck_time = gpGlobals->time + 0.2;
+    }
+
+    // normal stuck (not duck/jump)
     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished");
 }
 
@@ -3349,7 +3220,15 @@ bool cNodeMachine::isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHi
 bool cNodeMachine::isEntityDoor(const edict_t *pEntityHit) const {
     return  strcmp(STRING(pEntityHit->v.classname), "func_door") == 0 || // normal door (can be used as an elevator)
             strcmp(STRING(pEntityHit->v.classname), "func_wall") == 0 || // I am not 100% sure about func_wall, but include it anyway
-            strcmp(STRING(pEntityHit->v.classname), "func_door_rotating"); // rotating door
+            strcmp(STRING(pEntityHit->v.classname), "func_door_rotating") == 0; // rotating door
+}
+
+bool cNodeMachine::isEntityHostage(const edict_t *pEntityHit) const {
+    return  strcmp(STRING(pEntityHit->v.classname), "hostage_entity") == 0; // hostage
+}
+
+bool cNodeMachine::isEntityWorldspawn(const edict_t *pEntityHit) const {
+    return  strcmp(STRING(pEntityHit->v.classname), "worldspawn") == 0; // the world
 }
 
 // Think about path creation here
@@ -3370,9 +3249,8 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     }
 
     // Heading for hostage (directly) so do not do things with paths
-    pBot->rprint_trace("cNodeMachine::path_think", "hasHostageToRescue");
     if (pBot->hasHostageToRescue()) {
-        pBot->rprint_trace("cNodeMachine::path_think", "canSeeHostageToRescue");
+        pBot->rprint_trace("cNodeMachine::path_think", "hasHostageToRescue");
         if (pBot->canSeeHostageToRescue()) {
             pBot->rprint_trace("cNodeMachine::path_think", "has hostage and can see hostage, will not do anything");
             return; // bot has hostage, can see hostage
@@ -4638,6 +4516,167 @@ void cNodeMachine::Draw(void) {
     PlotGoals(9);                // 9 = green
     sprintf(Filename, "%s%4.4d.bmp", STRING(gpGlobals->mapname), Count++);
     WriteDebugBitmap(Filename);
+}
+
+void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) {
+    pBot->rprint_trace("cNodeMachine::ExecuteDoorInteractionLogic", "Start");
+
+    // check if we have to 'use' it
+    if (!pBot->hasButtonToInteractWith() && // we do not have an interaction with a button set up
+        pBot->shouldBeAbleToInteractWithButton() && // we have the time to interact
+        isDoorThatOpensWhenPressingUseButton(pEntityHit)) { // and it is a door that requires button interaction
+
+        // use only, press use and wait
+        pBot->vHead = VecBModelOrigin(pEntityHit);
+        pBot->vBody = pBot->vHead;
+        UTIL_BotPressKey(pBot, IN_USE);
+        pBot->setTimeToWait(0.5);
+        pBot->fButtonTime = gpGlobals->time + 5;
+        pBot->pButtonEdict = NULL;
+
+        pBot->rprint_trace("cNodeMachine::ExecuteDoorInteractionLogic", "I have pressed USE to open a door - finished");
+        // TODO: when this door is opened by a trigger_multiple (on touch)
+        // then we do not have to wait and press USE at all.
+        return;
+    }
+
+    // check if door has a button you have to use to open it
+    const char *doorButtonToLookFor = STRING(pEntityHit->v.targetname);
+
+    if (doorButtonToLookFor) {
+        char msg[255];
+        memset(msg, 0, sizeof(msg));
+        sprintf(msg, "There is a target button , named %s, to open this door [%s] - going to search for it.", doorButtonToLookFor, STRING(pEntityHit->v.classname));
+        pBot->rprint_trace("cNodeMachine::ExecuteDoorInteractionLogic", msg);
+
+        // find this entity
+        edict_t *pButtonEdict = NULL;
+        edict_t *pent = NULL;
+        TraceResult trb;
+
+        // search for all buttons
+        while ((pent = UTIL_FindEntityByClassname(pent, "func_button")) != NULL) {
+            // skip anything that could be 'self' (unlikely)
+            if (pent == pEntityHit) continue;
+
+            // found button entity matching target
+            if (strcmp(STRING(pent->v.target), doorButtonToLookFor) == 0) {
+                Vector buttonVector = VecBModelOrigin(pent);
+
+                UTIL_TraceLine(pBot->pEdict->v.origin, buttonVector,
+                               ignore_monsters, dont_ignore_glass,
+                               pBot->pEdict, &trb);
+
+                // if nothing hit:
+                if (trb.flFraction >= 1.0) {
+                    // Button found to head for!
+                    pButtonEdict = pent;
+                    break;
+                } else {
+                    // we hit this button we check for
+                    if (trb.pHit == pent) {
+                        // Button found to head for!
+                        pButtonEdict = pent;
+                        break;
+                    }
+                }
+            }
+        } // while (func_button)
+
+        // still nothing found
+        if (pButtonEdict == NULL) {
+            // TOUCH buttons (are not func_button!)
+            pent = NULL;
+
+            // search for all buttons
+            while ((pent = UTIL_FindEntityByClassname(pent, "trigger_multiple")) != NULL) {
+                // skip anything that could be 'self' (unlikely)
+                if (pent == pEntityHit)
+                    continue;
+
+                // found button entity
+                if (strcmp(STRING(pent->v.target), doorButtonToLookFor) == 0) {
+                    // get vectr
+                    Vector vPentVector = VecBModelOrigin(pent);
+
+                    UTIL_TraceHull(pBot->pEdict->v.origin, vPentVector,
+                                   dont_ignore_monsters, point_hull,
+                                   pBot->pEdict, &trb);
+
+                    bool isGood = false;
+
+                    // if nothing hit:
+                    if (trb.flFraction >= 1.0) {
+                        pButtonEdict = pent;
+                        break;
+                    } else {
+                        // we hit this button we check for
+                        if (trb.pHit == pent)
+                            isGood = true;
+                    }
+
+                    if (isGood) {
+                        // Button found to head for!
+                    } else {
+                        // we failed here
+                        // it is probably a button 'on the other side of the wall'
+                        // as most doors have 2 buttons to access it (ie prodigy)
+
+                        // hits by worldspawn here
+                        if (strcmp(STRING(trb.pHit->v.classname), "worldspawn") == 0) {
+
+                            // DE_PRODIGY FIX:
+                            // Somehow the button is not detectable. Find a node, that is close to it.
+                            // then retry the traceline. It should NOT hit a thing now.
+                            // On success, it is still our button
+                            int iClose = getClosestNode(vPentVector, NODE_ZONE, pent);
+
+                            if (iClose > -1) {
+                                // retry the tracehull
+                                UTIL_TraceHull(pBot->pEdict->v.origin,
+                                               node_vector(iClose),
+                                               dont_ignore_monsters,
+                                               point_hull,
+                                               pBot->pEdict, &trb);
+
+                                // if nothing hit:
+                                if (trb.flFraction >= 1.0) {
+                                    pButtonEdict = pent;
+                                    break;
+                                }
+                            }
+                        }
+
+                    }
+                }
+            } // while
+        }
+
+        // We have found a button to go to
+        if (pButtonEdict) {
+            memset(msg, 0, sizeof(msg));
+            // Get its vector
+            Vector vButtonVector = VecBModelOrigin(pButtonEdict);
+
+            // Search a node close to it
+            int iButtonNode = getClosestNode(vButtonVector, NODE_ZONE, pButtonEdict);
+
+            // When node found, create path to it
+            if (pBot->createPath(iButtonNode, PATH_NONE)) {
+                sprintf(msg, "Found a button at node %d and created a path to it.", iButtonNode);
+                pBot->pButtonEdict = pButtonEdict;
+            } else {
+                if (iButtonNode > -1) {
+                    sprintf(msg, "Found a button at node %d but failed to create a path to it.", iButtonNode);
+                } else {
+                    sprintf(msg, "Found a button, but there is no nearby node :/");
+                }
+            }
+            pBot->rprint_trace("cNodeMachine::ExecuteDoorInteractionLogic", msg);
+        } else {
+            pBot->rprint_trace("cNodeMachine::ExecuteDoorInteractionLogic", "There is a button to look for, but I could'nt find it?");
+        }
+    }
 }
 
 // $Log: NodeMachine.cpp,v $

@@ -294,6 +294,25 @@ edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
 }
 
 /**
+ * Return TRUE of any players are near that could block him and which are within FOV
+ * @param pBot
+ * @return
+ */
+edict_t * getEntityNearbyBotInFOV(cBot *pBot) {
+    edict_t *pEdict = pBot->pEdict;
+
+    edict_t *pent = NULL;
+    while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 45)) != NULL) {
+        if (pent == pEdict) continue; // skip self
+
+        if (FInViewCone(&pent->v.origin, pEdict)) {
+            return pent; // yes it is the case
+        }
+    }
+    return NULL;
+}
+
+/**
  * Return TRUE of any players are near that could block him, regardless of FOV. Just checks distance
  * @param pBot
  * @return
@@ -341,22 +360,24 @@ bool BotShouldJumpIfStuck(cBot *pBot) {
 
     if (pBot->isJumping()) return false; // already jumping
 
+    if (pBot->iJumpTries > 3) {
+        char msg[255];
+        sprintf(msg, "Returning false because jumped too many times (%d)", pBot->iJumpTries);
+        pBot->rprint_trace("BotShouldJumpIfStuck", msg);
+        return false;
+    }
+
     bool result = BotShouldJump(pBot);
-    if (result) return true;
+    if (result) {
+        pBot->rprint_trace("BotShouldJumpIfStuck", "BotShouldJump returns true, so returning that");
+        return true;
+    }
 
     // should not jump, perhaps its a func_illusionary causing that we're stuck?
-    edict_t *pEdict = pBot->pEdict;
+    edict_t *entityInFov = getEntityNearbyBotInFOV(pBot);
 
-    char item_name[40];
-    edict_t *pent = NULL;
-    while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 45)) != NULL) {
-        strcpy(item_name, STRING(pent->v.classname));
-
-        if (FInViewCone(&pent->v.origin, pEdict)) {
-            if (strcmp("func_illusionary", item_name) == 0) {
-                return true; // yes it is the case
-            }
-        }
+    if (entityInFov && strcmp("func_illusionary", STRING(entityInFov->v.classname)) == 0) {
+        return true; // yes it is the case
     }
 
     return false; // no need to jump
@@ -465,21 +486,6 @@ bool BotShouldJump(cBot *pBot) {
         }
     }
 
-    v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT);
-    v_dest = v_source + gpGlobals->v_forward * 40;
-
-    UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, head_hull, pEdict->v.pContainingEntity, &tr);
-
-    if (tr.flFraction < 1.0) {
-        pBot->rprint_trace("BotShouldJump", "Yes should jump, -CROUCHED_HEIGHT blocks something, so it is jumpable");
-        return true;
-    }
-
-    if (tr.pHit && strcmp("func_illusionary", STRING(tr.pHit->v.classname)) == 0) {
-        pBot->rprint_trace("BotShouldJump", "#2 Hit a func_illusionary, its a hit as well! (even though trace hit results no)");
-        return true;
-    }
-
     pBot->rprint_trace("BotShouldJump", "No, should not jump");
     return false;
 }
@@ -507,6 +513,13 @@ Vector FUNC_CalculateAngles(cBot *pBot) {
 bool BotShouldDuck(cBot *pBot) {
     // temp
     // TODO: Deal with this, is it good code? remove the other stuff below the return statement?
+
+    if (pBot->iDuckTries > 3) {
+        // tried to duck 3 times, so no longer!
+        pBot->rprint_trace("BotShouldDuck", "Returning false because ducked too many times.");
+        return false;
+    }
+
     return BotCanDuckUnder(pBot);
 
     // WHen a bot should jump, something is blocking his way.
@@ -594,9 +607,9 @@ int FUNC_BotEstimateHearVector(cBot *pBot, Vector v_sound) {
 
 // Added Stefan
 // 7 November 2001
-int FUNC_PlayerSpeed(edict_t *pPlayer) {
-    if (pPlayer != NULL)
-        return (int) pPlayer->v.velocity.Length2D();      // Return speed of any edict given
+int FUNC_PlayerSpeed(edict_t *edict) {
+    if (edict != NULL)
+        return (int) edict->v.velocity.Length2D();      // Return speed of any edict given
 
     return 0;
 }
@@ -830,7 +843,7 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
 
             if (angle_to_hostage <= 30
                 && (pBot->f_use_timer < gpGlobals->time)) {
-                pBot->rprint("Can see hostage AND really REALLY close AND facing!");
+                pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "I can see hostage AND really REALLY close AND facing!");
                 // within FOV and we assume we can now press the USE key. In order to make sure we press it once
                 // and not multiple times we set the timer.
                 pBot->f_use_timer = gpGlobals->time + 0.7f;
@@ -840,7 +853,7 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
                 // assuming it worked, remember bot is rescueing this hostage
                 pBot->rememberHostageIsFollowingMe(pHostage);
                 pBot->clearHostageToRescueTarget();
-                REALBOT_PRINT(pBot, "HostageNear()", "I pressed USE and assume i have used the hostage");
+                pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "I pressed USE and assume i have used the hostage");
                 pBot->f_wait_time = gpGlobals->time + 0.5f;
             }
         }
@@ -889,7 +902,6 @@ bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {
             return false;
         }
     }
-
 
     // yes we can rescue this hostage
     return true;
