@@ -207,19 +207,33 @@ void cNodeMachine::initGoal(int g) {
 }
 
 int cNodeMachine::GetTroubleIndexForConnection(int iFrom, int iTo) {
+    char msg[255];
+//    sprintf(msg, "GetTroubleIndexForConnection | from %d to %d\n", iFrom, iTo);
+//    rblog(msg);
     // in case of invalid values, return -1 - no need to loop
-    if (iFrom < -1 || iFrom >= MAX_NODES) return -1;
-    if (iTo < -1 || iTo >= MAX_NODES) return -1;
+    if (iFrom < -1 || iFrom >= MAX_NODES) {
+        rblog("GetTroubleIndexForConnection | invalid iFrom\n");
+        return -1;
+    }
+    if (iTo < -1 || iTo >= MAX_NODES) {
+        rblog("GetTroubleIndexForConnection | invalid iTo\n");
+        return -1;
+    }
 
     // seems to be valid, look for troubled connections
     int index;
     for (index = 0; index < MAX_TROUBLE; index++) {
-        if (Troubles[index].iFrom == iFrom && Troubles[index].iTo == iTo) {
+        if (Troubles[index].iFrom == iFrom &&
+            Troubles[index].iTo == iTo) {
+            memset(msg, 0, sizeof(msg));
+            sprintf(msg, "GetTroubleIndexForConnection | Found index [%d] for from %d to %d\n", index, iFrom, iTo);
+            rblog(msg);
             // found troubled connection, return its index
             return index;
         }
     }
 
+//    rblog("GetTroubleIndexForConnection | found no index matching from/to. Returning -1\n");
     return -1;
 }
 
@@ -239,33 +253,37 @@ int cNodeMachine::AddTroubledConnection(int iFrom, int iTo) {
     int t;
 
     for (t = 0; t < MAX_TROUBLE; t++)
-        if (Troubles[t].iFrom < 0 || Troubles[t].iTo < 0) {
+        if (Troubles[t].iFrom < 0 ||
+            Troubles[t].iTo < 0) {
             iNew = t;
             break;
         }
 
-    if (iNew < 0)
-        return false;
+    if (iNew < 0) {
+        return -1;
+    }
 
     Troubles[iNew].iFrom = iFrom;
     Troubles[iNew].iTo = iTo;
-    Troubles[iNew].iTries = 1;
+    Troubles[iNew].iTries = 0;
 
     return iNew;
 }
 
-bool cNodeMachine::hasAttemptedConnectionTooManyTimes(int iFrom, int iTo) {
-    // Max amount of trouble we may have in one game is 4 times.
-    int index = GetTroubleIndexForConnection(iFrom, iTo);
-
+bool cNodeMachine::hasAttemptedConnectionTooManyTimes(int index) {
     if (index < 0) {
-        rblog("invalid index for hasAttemptedConnectionTooManyTimes()\n");
+        rblog("(trouble) hasAttemptedConnectionTooManyTimes | invalid index for hasAttemptedConnectionTooManyTimes()\n");
         // deal with invalid connection
         return false;
     }
 
-    if (Troubles[index].iTries > 2) {
-        rblog("Connection has been tried too many times!\n");
+    tTrouble &trouble = Troubles[index];
+    char msg[255];
+    sprintf(msg, "(trouble) hasAttemptedConnectionTooManyTimes | Connection %d (%d->%d) has %d tries.\n", index, trouble.iFrom, trouble.iTo, trouble.iTries);
+    rblog(msg);
+
+    if (trouble.iTries > 2) {
+        rblog("(trouble) hasAttemptedConnectionTooManyTimes | Connection has been tried too many times!\n");
         // after 3 times we quit
         return true;
     }
@@ -283,35 +301,49 @@ bool cNodeMachine::hasAttemptedConnectionTooManyTimes(int iFrom, int iTo) {
 bool cNodeMachine::IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(int iFrom, int iTo) {
     int index = AddTroubledConnection(iFrom, iTo);
     IncreaseAttemptsForTroubledConnection(index);
-    if (hasAttemptedConnectionTooManyTimes(iFrom, iTo)) {
-        rblog("a troubled connection - tried too many times!\n");
+    if (hasAttemptedConnectionTooManyTimes(index)) {
+        rblog("(trouble) IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded | a troubled connection - tried too many times!\n");
 
         // remove connection
         if (!removeConnection(iFrom, iTo)) {
-            rblog("for some reason the connection was not removed!?\n");
+            rblog("(trouble) IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded | for some reason the connection was not removed!?\n");
         } else {
-            rblog("the connection is removed!\n");
+            rblog("(trouble) IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded | the connection is removed!\n");
         }
 
-        ClearTroubledConnection(iFrom, iTo);
         return false;
     } else {
-        rblog("may attempt another time\n");
+        rblog("(trouble) IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded | may attempt another time\n");
         return true;
     }
 }
 
 void cNodeMachine::IncreaseAttemptsForTroubledConnection(int index) {
     if (index < 0 || index >= MAX_TROUBLE) return;
+
     char msg[255];
     memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Increasing trouble for connection [%d] (from %d, to %d)\n", index, Troubles[index].iFrom, Troubles[index].iTo);
+    sprintf(msg, "(trouble) IncreaseAttemptsForTroubledConnection | Increasing trouble for connection [%d]\n", index);
     rblog(msg);
+
     Troubles[index].iTries++;
+
+    tTrouble &trouble = Troubles[index];
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "(trouble) IncreaseAttemptsForTroubledConnection | Connection %d (%d->%d) has %d tries.\n", index, trouble.iFrom, trouble.iTo, trouble.iTries);
+    rblog(msg);
 }
 
 bool cNodeMachine::ClearTroubledConnection(int iFrom, int iTo) {
+    char msg[255];
+    sprintf(msg, "(trouble) NodeMachine::ClearTroubledConnection | %d -> %d - START\n", iFrom, iTo);
+    rblog(msg);
+
     int index = GetTroubleIndexForConnection(iFrom, iTo);
+
+    memset(msg, 0, sizeof(msg));
+    sprintf(msg, "(trouble) NodeMachine::ClearTroubledConnection | %d -> %d has index %d\n", iFrom, iTo, index);
+    rblog(msg);
 
     if (index < 0) {
         // deal with scenario that this is a non-existing connection
@@ -587,17 +619,24 @@ bool cNodeMachine::add_neighbour_node(int iNode, int iToNode) {
 /**
  * Removes a neighbour connection from a node ID. Do note that we pass in node id's, ie not the actual indexes
  * of the iNeighbour[] array.
- * @param iNode
- * @param neighborNodeToRemove
+ * @param iFrom
+ * @param iTo
  * @return
  */
-bool cNodeMachine::removeConnection(int iNode, int neighborNodeToRemove) {
-    if (iNode < 0 || neighborNodeToRemove < 0) {
+bool cNodeMachine::removeConnection(int iFrom, int iTo) {
+    if (iFrom < 0 || iTo < 0) {
         return false;
     }
 
-    // Does the node connection exist already?
-    tNode *node = getNode(iNode);
+    char msg[255];
+    memset(msg, 0, sizeof(msg));
+
+    tNode *node = getNode(iFrom);
+    if (!node) {
+        sprintf(msg, "(trouble) cNodeMachine::removeConnection | From %d, to %d has no node! (error)\n", iFrom, iTo);
+        rblog(msg);
+        return false;
+    }
 
     bool removedOneOrMoreNeighbours = false;
 
@@ -606,19 +645,24 @@ bool cNodeMachine::removeConnection(int iNode, int neighborNodeToRemove) {
     for (i = 0; i < MAX_NEIGHBOURS; i++) {
         int neighbourNode = node->iNeighbour[i];
 
-        char msg[255];
-        memset(msg, 0, sizeof(msg));
         sprintf(msg,
-                "removeConnection(from->%d, to->%d), evaluating neighbour of node %d, neighbourIndex %d = node %d\n",
-                iNode, neighborNodeToRemove,
-                iNode, i, neighbourNode);
+                "(trouble) removeConnection(from->%d, to->%d), evaluating neighbour [%d] = node %d\n",
+                iFrom,
+                iTo,
+                i,
+                neighbourNode);
+
         rblog(msg);
 
-        if (node->iNeighbour[i] == neighborNodeToRemove) {
+        if (neighbourNode == iTo) {
+            rblog("(trouble) this is the connection to remove\n");
             node->iNeighbour[i] = -1;
-            rblog("Neighbour found to remove, resetting\n");
             removedOneOrMoreNeighbours = true;
         }
+    }
+
+    if (removedOneOrMoreNeighbours) {
+        ClearTroubledConnection(iFrom, iTo);
     }
 
     return removedOneOrMoreNeighbours;

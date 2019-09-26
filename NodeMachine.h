@@ -56,7 +56,7 @@ public:
     // -----------------
     bool add_neighbour_node(int iNode, int iToNode);
 
-    bool removeConnection(int iNode, int neighborNodeToRemove);
+    bool removeConnection(int iFrom, int iTo);
 
     bool remove_neighbour_nodes(int iNode);
 
@@ -78,9 +78,10 @@ public:
 
     int AddTroubledConnection(int iFrom, int iTo);
 
-    bool hasAttemptedConnectionTooManyTimes(int iFrom, int iTo);
 
     bool IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(int iFrom, int iTo);
+
+    bool hasAttemptedConnectionTooManyTimes(int index);
     void IncreaseAttemptsForTroubledConnection(int index);
 
     bool ClearTroubledConnection(int iFrom, int iTo);
