@@ -2441,10 +2441,10 @@ void cNodeMachine::openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighbou
 
         if (botTeam > -1) {
             double dangerCost = InfoNodes[neighbourNode].fDanger[botTeam] * cost;
-            double contactCost = InfoNodes[neighbourNode].fContact[botTeam] * cost;
+//            double contactCost = InfoNodes[neighbourNode].fContact[botTeam] * cost;
 
             cost += dangerCost;
-            cost += contactCost;
+//            cost += contactCost;
         }
 
         // TODO: Add costs for how easy it is to navigate (ie some kind of arrival speed score? if given?)
