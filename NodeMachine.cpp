@@ -1289,9 +1289,9 @@ void cNodeMachine::connections(edict_t *pEntity) {
             closeNode = botPointer.determineCurrentNodeWithTwoAttempts();
             if (closeNode > -1) {
                 Vector &vector = Nodes[closeNode].origin;
-                sprintf(msg, "Bot [%d] is at node %d (%f,%f,%f)\n", draw_nodepath, closeNode, vector.x, vector.y, vector.z);
+                sprintf(msg, "Bot [%s|%d] is at node %d (%f,%f,%f)\n", botPointer.name, draw_nodepath, closeNode, vector.x, vector.y, vector.z);
             } else {
-                sprintf(msg, "Bot [%d] is at node %d\n", draw_nodepath, closeNode);
+                sprintf(msg, "Bot [%s|%d] is at node %d\n", botPointer.name, draw_nodepath, closeNode);
             }
         } else {
             closeNode = getClosestNode(pEntity->v.origin, NODE_ZONE, pEntity);
@@ -2281,9 +2281,9 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
         // a node that should be closed is an evaluated node and the most preferred one.
         // open up all neighbouring nodes, and close this one
         if (nodeToClose > -1) {
-            char msg[255];
-            sprintf(msg, "Found node to close [%d]\n", nodeToClose);
-            rblog(msg);
+//            char msg[255];
+//            sprintf(msg, "Found node to close [%d]\n", nodeToClose);
+//            rblog(msg);
             astar_list[nodeToClose].state = CLOSED;
             int botTeam = -1;
             if (pBot) {
@@ -2292,7 +2292,7 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
 
             openNeighbourNodes(nodeStartIndex, nodeToClose, nodeTargetIndex, botTeam);
         } else {
-            rblog("Did not find any open waypoint\n");
+//            rblog("Did not find any open waypoint\n");
             break;
         }
     }
@@ -2311,14 +2311,14 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
         tNodestar &nodeStar = astar_list[nodeIndex];
         if (nodeStar.state == AVAILABLE) continue;
 
-        char msg[255];
-        memset(msg, 0, sizeof(msg));
-        if (nodeStar.state == CLOSED) {
-            sprintf(msg, "Node [%d] is CLOSED. Cost = %f. Parent = %d\n", nodeIndex, nodeStar.cost, nodeStar.parent);
-        } else if (nodeStar.state == OPEN) {
-            sprintf(msg, "Node [%d] is OPEN. Cost = %f. Parent = %d\n", nodeIndex, nodeStar.cost, nodeStar.parent);
-        }
-        rblog(msg);
+//        char msg[255];
+//        memset(msg, 0, sizeof(msg));
+//        if (nodeStar.state == CLOSED) {
+//            sprintf(msg, "Node [%d] is CLOSED. Cost = %f. Parent = %d\n", nodeIndex, nodeStar.cost, nodeStar.parent);
+//        } else if (nodeStar.state == OPEN) {
+//            sprintf(msg, "Node [%d] is OPEN. Cost = %f. Parent = %d\n", nodeIndex, nodeStar.cost, nodeStar.parent);
+//        }
+//        rblog(msg);
     }
 
     // Build path (from goal to start, read out parent waypoint to backtrace)
@@ -2450,18 +2450,18 @@ void cNodeMachine::openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighbou
         // TODO: Add costs for how easy it is to navigate (ie some kind of arrival speed score? if given?)
 
         tNodestar &nodeStar = astar_list[neighbourNode];
-        char msg[255];
+//        char msg[255];
         if (nodeStar.state == AVAILABLE) {
-            sprintf(msg, "Found AVAILABLE node to OPEN [%d]\n", neighbourNode);
-            rblog(msg);
+//            sprintf(msg, "Found AVAILABLE node to OPEN [%d]\n", neighbourNode);
+//            rblog(msg);
             nodeStar.state = OPEN;
             nodeStar.parent = nodeToOpenNeighboursFrom;
             nodeStar.cost = cost;
         } else if (nodeStar.state == OPEN) {
             // only overwrite when cost < current cost remembered
             if (nodeStar.cost > cost) {
-                sprintf(msg, "Found OPEN node to overwrite ([%d]), because our cost [%f] is lower than nodeStar cost [%f]\n", neighbourNode, cost, nodeStar.cost);
-                rblog(msg);
+//                sprintf(msg, "Found OPEN node to overwrite ([%d]), because our cost [%f] is lower than nodeStar cost [%f]\n", neighbourNode, cost, nodeStar.cost);
+//                rblog(msg);
                 nodeStar.parent = nodeToOpenNeighboursFrom;
                 nodeStar.cost = cost;
             }
@@ -2480,7 +2480,7 @@ void cNodeMachine::makeAllWaypointsAvailable() const {
         astar_list[nodeIndex].parent = -1;
         astar_list[nodeIndex].state = AVAILABLE;
     }
-    rblog("All nodes set to AVAILABLE\n");
+//    rblog("All nodes set to AVAILABLE\n");
 }
 
 // Find a node which has almost no danger!
