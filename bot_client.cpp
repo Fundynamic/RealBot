@@ -471,7 +471,10 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
                                                                              pBot->getPathIndex());
 
                         // remove connection?
+
+                        pBot->rprint_trace("BotClient_Valve_Damage", "Removing connection!!");
                         NodeMachine.removeConnection(iNode, iNodeTo);
+                        pBot->rprint_trace("BotClient_Valve_Damage", "Removing connection - finished!!");
                     }
                 }
             }
