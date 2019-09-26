@@ -526,22 +526,28 @@ void UTIL_LogPrintf(char *fmt, ...) {
 
 void UTIL_BotPressKey(cBot *pBot, int type) {
     if (type == IN_JUMP || type == IN_DUCK) {
-        if (pBot->isFreezeTime()) return;                // do nothing when in freezetime
+        if (pBot->isFreezeTime())  {
+            pBot->rprint_trace("UTIL_BotPressKey", "IN_JUMP or IN_DUCK press requested, but in freezetime - IGNORING");
+            return;                // do nothing when in freezetime
+        }
     }
 
     if (type == IN_JUMP) {
         if (pBot->f_may_jump_time > gpGlobals->time || // do nothing when we may not jump
             pBot->f_camp_time > gpGlobals->time || // when camping do not jump
             FUNC_IsOnLadder(pBot->pEdict)    // don't jump from ladder
-            )
+            ) {
+            pBot->rprint_trace("UTIL_BotPressKey",
+                               "IN_JUMP requested, but either camping, still jumping or on ladder - IGNORING");
             return;
+        }
     }
 
     // KEY: Reload
     if (type == IN_RELOAD)       // when reloading, there is NO zooming (when holding a zoomable weapon or a sniper gun)
     {
-        if (FUNC_BotHoldsZoomWeapon(pBot)
-            || UTIL_GiveWeaponType(pBot->current_weapon.iId) == SNIPER)
+        pBot->rprint_trace("UTIL_BotPressKey", "IN_RELOAD");
+        if (FUNC_BotHoldsZoomWeapon(pBot) || UTIL_GiveWeaponType(pBot->current_weapon.iId) == SNIPER)
             //pBot->zoomed = ZOOM_NONE; // not zoomed anymore
 
             // FIX: Do not let bots do anything with this weapon for 0.7 second. So the engine can
@@ -550,15 +556,33 @@ void UTIL_BotPressKey(cBot *pBot, int type) {
     }
     // KEY: End
 
-    pBot->pEdict->v.button |= type;
-
-    if (type == IN_JUMP) {
-        // also hold duck , so we duck jump
-        if (pBot->f_hold_duck < gpGlobals->time)
-            pBot->f_hold_duck = gpGlobals->time + 0.35;
-
-        pBot->f_may_jump_time = gpGlobals->time + 0.3;
+    switch (type) {
+        case IN_DUCK:
+            pBot->rprint_trace("UTIL_BotPressKey", "IN_DUCK");
+            break;
+        case IN_JUMP:
+            pBot->rprint_trace("UTIL_BotPressKey", "IN_JUMP");
+            break;
+        case IN_USE:
+            pBot->rprint_trace("UTIL_BotPressKey", "IN_USE");
+            break;
+        case IN_RELOAD:
+            pBot->rprint_trace("UTIL_BotPressKey", "IN_RELOAD");
+            break;
+        case IN_ATTACK:
+            pBot->rprint_trace("UTIL_BotPressKey", "IN_ATTACK");
+            break;
+        case IN_RUN:
+            pBot->rprint_trace("UTIL_BotPressKey", "IN_RUN");
+            break;
+        default:
+            char msg[255];
+            sprintf(msg, "unknown key to print [%d]", type);
+            pBot->rprint_trace("UTIL_BotPressKey", msg);
+            break;
     }
+
+    pBot->pEdict->v.button |= type;
 }
 
 int UTIL_GiveWeaponType(int weapon_id) {
