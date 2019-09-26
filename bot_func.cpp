@@ -781,51 +781,48 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
         return;                   // enemy, do not check
     }
 
-    edict_t *pHostage = NULL;
+    if (pBot->isTerrorist()) {
+        // terrorists do not rescue hostages
+        return;
+    }
 
-    if (pBot->hasHostageToRescue()) {
-//        pBot->rprint("Has hostage to rescue");
-        pHostage = pBot->getHostageToRescue();
-    } else {
-//        pBot->rprint("No hostage to rescue, finding one");
+    edict_t *pHostage = pBot->getHostageToRescue();
+
+    if (pHostage == NULL) {
         pHostage = pBot->findHostageToRescue();
     }
 
+    // still NULL
     if (pHostage == NULL) {
         // Note: this means a hostage that is near and visible and rescueable etc.
         return; // nothing to do yet
     }
 
-    // Whenever we have a hostage to go after
+    // Whenever we have a hostage to go after, verify it is still rescueable
     bool isRescueable = isHostageRescueable(pBot, pHostage);
 
     if (!isRescueable) {
-        pBot->rprint("Hostage found, but not rescueable, forgetting...");
+        pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "Hostage found, but not rescueable, forgetting...");
         pBot->forgetHostage(pHostage);
         return;
     } else {
-        pBot->rprint("Remembering hostage (target) to rescue");
+        pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "Remembering hostage (target) to rescue");
         pBot->rememberWhichHostageToRescue(pHostage);
     }
 
     // Prevent bots getting to close here
     float distanceToHostage = func_distance(pBot->pEdict->v.origin, pHostage->v.origin);
 
-    if (distanceToHostage < 80) {
-        pBot->rprint("Getting really close to hostage now");
-        pBot->f_move_speed = pBot->f_max_speed * 0.1;      // do not get to close ;)
-    }
-
     // From here, we should get the hostage when still visible
     if (pBot->canSeeEntity(pHostage)) {
-        pBot->rprint("Can see hostage!");
+        pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "I can see the hostage to rescue!");
         // set body to hostage!
         pBot->vBody = pBot->vHead = pHostage->v.origin + Vector(0, 0, 36);
         // by default run
         pBot->f_move_speed = pBot->f_max_speed;
 
         if (distanceToHostage <= 80) {
-            pBot->rprint("Can see hostage AND really close!");
+            pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "I can see hostage AND really close!");
             pBot->f_move_speed = 0.0; // too close, do not move
 
             // only use hostage when facing

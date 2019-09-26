@@ -634,7 +634,8 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     // Parsing name into bot identity
     INI_PARSE_BOTS(botName, pBot);
 
-    pBot->findHostageToRescue();
+    pBot->clearHostages();
+    pBot->clearHostageToRescueTarget();
 
     // return success
     return GAME_MSG_SUCCESS;

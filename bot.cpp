@@ -140,6 +140,7 @@ void cBot::SpawnInit() {
     f_shoot_wait_time = gpGlobals->time;
     f_goback_time = gpGlobals->time;
     f_may_jump_time = gpGlobals->time;
+    fCheckHostageStatusTimer = gpGlobals->time;
     f_defuse = gpGlobals->time;
     f_allow_keypress = gpGlobals->time;
     f_use_timer = gpGlobals->time;
@@ -303,6 +304,7 @@ void cBot::NewRound() {
     // ------------------------
     // TIMERS
     // ------------------------
+    fCheckHostageStatusTimer = gpGlobals->time;
     fButtonTime = gpGlobals->time;
     fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5, 5);
     fMemoryTime = gpGlobals->time;
@@ -475,8 +477,9 @@ void cBot::NewRound() {
         }
     }
 
-    // find a hostage to rescue and set global hostageRescue flag
-    findHostageToRescue();
+    clearHostages();
+    clearHostageToRescueTarget();
+
     rprint("NewRound", "Initialization new round finished");
 }
 
@@ -2971,16 +2974,19 @@ edict_t * cBot::getHostageToRescue() {
 }
 
 edict_t * cBot::findHostageToRescue() {
-    edict_t *pHostage = NULL;
+    edict_t *pent = NULL;
 
     // Search for all hostages in the game
-    while ((pHostage = UTIL_FindEntityByClassname(pHostage, "hostage_entity")) != NULL) {
-        if (!isHostageRescueable(this, pHostage)) continue;
-        if (!canSeeEntity(pHostage)) continue;
-        if (getDistanceTo(pHostage->v.origin) > (NODE_ZONE*1.5)) continue; // skip too far hostages
+    while ((pent = UTIL_FindEntityByClassname(pent, "hostage_entity")) != NULL) {
+        if (!isHostageRescueable(this, pent)) continue;
+        if (!canSeeEntity(pent)) continue;
+        // skip too far hostages, leave it up to the goal picking to get closer
+        if (getDistanceTo(pent->v.origin) > (NODE_ZONE * 2.5)) continue;
 
-        this->rprint("HostageNear()", "I have found a new hostage target");
-        return pHostage;
+        char msg[255];
+        sprintf(msg, "Found hostage to rescue at %f,%f,%f", pent->v.origin.x, pent->v.origin.y, pent->v.origin.z);
+        this->rprint_trace("findHostageToRescue()", msg);
+        return pent;
     }
 
     return NULL;
@@ -3410,40 +3416,40 @@ bool cBot::isEscortingHostages() {
 }
 
 void cBot::checkOfHostagesStillFollowMe() {
-//    this->rprint("checkOfHostagesStillFollowMe - START");
-    if (hostage1) {
-        if (!isHostageRescued(this, hostage1) && FUNC_EdictIsAlive(hostage1) && !canSeeEntity(hostage1)) {
-            rprint("lost track of hostage1");
-            forgetHostage(hostage1);
-        }
-    }
-    if (hostage2) {
-        if (!isHostageRescued(this, hostage2) && FUNC_EdictIsAlive(hostage2) && !canSeeEntity(hostage2)) {
-            rprint("lost track of hostage2");
-            forgetHostage(hostage2);
-        }
-    }
-    if (hostage3) {
-        if (!isHostageRescued(this, hostage3) && FUNC_EdictIsAlive(hostage3) && !canSeeEntity(hostage3)) {
-            rprint("lost track of hostage3");
-            forgetHostage(hostage3);
-        }
-    }
-    if (isHostageRescueable(this, hostage4) && hostage4) {
-        if (!isHostageRescued(this, hostage4) && FUNC_EdictIsAlive(hostage4) && !canSeeEntity(hostage4)) {
-            rprint("lost track of hostage4");
-            forgetHostage(hostage4);
-        }
-    }
+    if (fCheckHostageStatusTimer > gpGlobals->time) return;
+    fCheckHostageStatusTimer = gpGlobals->time + 5;
+
+////    this->rprint("checkOfHostagesStillFollowMe - START");
+//    if (hostage1) {
+//        if (!isHostageRescued(this, hostage1) && FUNC_EdictIsAlive(hostage1) && !canSeeEntity(hostage1) && getDistanceTo(hostage1->v.origin) > NODE_ZONE*2.5) {
+//            rprint_trace("checkOfHostagesStillFollowMe", "lost track of hostage1");
+//            forgetHostage(hostage1);
+//        }
+//    }
+//    if (hostage2) {
+//        if (!isHostageRescued(this, hostage2) && FUNC_EdictIsAlive(hostage2) && !canSeeEntity(hostage2) && getDistanceTo(hostage2->v.origin) > NODE_ZONE*2.5) {
+//            rprint_trace("checkOfHostagesStillFollowMe", "lost track of hostage2");
+//            forgetHostage(hostage2);
+//        }
+//    }
+//    if (hostage3) {
+//        if (!isHostageRescued(this, hostage3) && FUNC_EdictIsAlive(hostage3) && !canSeeEntity(hostage3) && getDistanceTo(hostage3->v.origin) > NODE_ZONE*2.5) {
+//            rprint_trace("checkOfHostagesStillFollowMe", "lost track of hostage3");
+//            forgetHostage(hostage3);
+//        }
+//    }
+//
+//    if (hostage4) {
+//        if (!isHostageRescued(this, hostage4) && FUNC_EdictIsAlive(hostage4) && !canSeeEntity(hostage4) && getDistanceTo(hostage4->v.origin) > NODE_ZONE*2.5) {
+//            rprint_trace("checkOfHostagesStillFollowMe", "lost track of hostage4");
+//            forgetHostage(hostage4);
+//        }
+//    }
 //    rprint("checkOfHostagesStillFollowMe - END");
 }
 
 void cBot::clearHostages() {
-//    rprint("clearHostages");
-//    forgetHostage(hostage1);
-//    forgetHostage(hostage2);
-//    forgetHostage(hostage3);
-//    forgetHostage(hostage4);
+    rprint_trace("clearHostages");
     hostage1 = NULL;
     hostage2 = NULL;
     hostage3 = NULL;
@@ -3832,6 +3838,8 @@ float cBot::getDistanceTo(Vector vDest) {
 }
 
 bool cBot::isUsingHostage(edict_t *pHostage) {
+    if (pHostage == NULL) return false;
+
     // checks if the current pEdict is already 'in use'
     // note: time check only when we have an hostage pointer assigned
     if (hostage1 == pHostage) {
@@ -4008,18 +4016,26 @@ bool cBot::canSeeHostageToRescue() {
 }
 
 void cBot::clearHostageToRescueTarget() {
+    rprint_trace("clearHostageToRescueTarget", "clearing pBotHostage pointer");
     this->pBotHostage = NULL;
 }
 
 // Finds a free hostage pointer and assigns it.
 void cBot::rememberHostageIsFollowingMe(edict_t *pHostage) {
+    if (pHostage == NULL) {
+        rprint_trace("rememberHostageIsFollowingMe", "ERROR assigning NULL pHostage pointer!?");
+    }
     if (hostage1 == NULL) {
+        rprint_trace("rememberHostageIsFollowingMe", "hostage1 slot is free.");
         hostage1 = pHostage;
     } else if (hostage2 == NULL) {
+        rprint_trace("rememberHostageIsFollowingMe", "hostage2 slot is free.");
         hostage2 = pHostage;
     } else if (hostage3 == NULL) {
+        rprint_trace("rememberHostageIsFollowingMe", "hostage3 slot is free.");
         hostage3 = pHostage;
     } else if (hostage4 == NULL) {
+        rprint_trace("rememberHostageIsFollowingMe", "hostage4 slot is free.");
         hostage4 = pHostage;
     }
 }

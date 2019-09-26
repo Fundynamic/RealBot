@@ -216,6 +216,7 @@ private:
     void initGoal(int g);
 
     bool isEntityDoor(const edict_t *pEntityHit) const;
+    bool isEntityHostage(const edict_t *pEntityHit) const;
 
     bool isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHit) const;
 

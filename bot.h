@@ -198,6 +198,7 @@ public:
     // ------------------------
     // TIMERS
     // ------------------------
+    float fCheckHostageStatusTimer;
     float fButtonTime;
     float fChatTime;
     float fMemoryTime;
