@@ -150,14 +150,14 @@ typedef struct {
     double danger;
     int parent;                  // Who opened this node?
 }
-        tNodestar;
+    tNodestar;
 
 // Additional Node Information
 typedef struct {
     float fDanger[2];            // Danger information (0.0 - no danger, 1.0 dangerous). Indexed per team (T/CT)
     float fContact[2];           // How many times have contact with enemy (0.0 none, 1.0 , a lot)
 }
-        tInfoNode;
+    tInfoNode;
 
 typedef struct {
     int iNodes[MAX_NODES_IN_MEREDIANS];
@@ -170,7 +170,7 @@ typedef struct {
     int iTo;                     // To NODE
     int iTries;                  // How many times we had trouble with this connection
 }
-        tTrouble;
+    tTrouble;
 
 // Node (stored in RBN file, do not change casually)
 typedef struct {
@@ -178,7 +178,7 @@ typedef struct {
     int iNeighbour[MAX_NEIGHBOURS];  // Reachable nodes for this node
     int iNodeBits;
 }
-        tNode;
+    tNode;
 
 // Goal Node information
 typedef struct {
