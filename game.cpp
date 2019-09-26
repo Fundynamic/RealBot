@@ -90,7 +90,7 @@ void cGame::Init() {
 
     // DEBUG RELATED
     bDoNotShoot = false;         // ... guess
-    bDebug = false;               // ... prints debug messages
+    bDebug = -2;               // ... prints debug messages (-2 is off, -1 == for everyone > -1 specific bot index)
     messageVerbosity = 0;         // normal verbosity
     bEngineDebug = false;        // ... prints engine debug messages (for figuring out engine interceptions)
     bPistols = false;            // pistols only mode
@@ -651,12 +651,13 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
     char team[9];
     char name[MAX_NAME_LENGTH];
     char mapName[32];
+    int botIndex = -1;
 
     memset(team, 0, sizeof(team));       // clear
     memset(name, 0, sizeof(name));       // clear
     memset(mapName, 0, sizeof(mapName));       // clear
 
-    strcpy(team, "TERROR");      // t
+    strcpy(team, "NONE");
     strcpy(name, "FUNCTION");
 
     if (gpGlobals->mapname) {
@@ -666,12 +667,15 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
     }
 
     if (pBot) {
+        botIndex = pBot->iBotIndex;
         memset(name, 0, sizeof(name));    // clear
         strcpy(name, pBot->name); // copy name
 
-        if (pBot->iTeam == 2) strcpy(team, "COUNTER");
-    } else {
-        strcpy(team, "NONE");
+        if (pBot->isCounterTerrorist()) {
+            strcpy(team, "COUNTER");
+        } else if (pBot->isTerrorist()) {
+            strcpy(team, "TERROR");
+        }
     }
 
     float roundElapsedTimeInSeconds = Game.getRoundTimeElapsed();
@@ -685,12 +689,15 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
     int minutesLeft = roundTimeRemaining / 60;
     int secondsLeft = (int)roundTimeRemaining % 60;
 
-    sprintf(cMessage, "[realbot] [%s] [%0d:%0d] - [%s '%s']-[Team %s] : %s\n", mapName, minutesLeft, secondsLeft, name, Function, team, msg);
+    sprintf(cMessage, "[rb] [%s] [%0d:%02d] - [%s|%d] [%s] [%s] : %s\n", mapName, minutesLeft, secondsLeft, name, botIndex, team, Function, msg);
 
     // print in console only when on debug print
-    if (Game.bDebug) {
-//        SERVER_PRINT(cMessage);
-        rblog(cMessage);
+    if (Game.bDebug > -2) {
+        if (Game.bDebug == -1) {
+            rblog(cMessage);
+        } else if (Game.bDebug == botIndex && botIndex > -1) {
+            rblog(cMessage);
+        }
     }
 }  // REALBOT_PRINT()
 

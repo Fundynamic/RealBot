@@ -1825,7 +1825,7 @@ void RealBot_ServerCommand(void) {
     else if (FStrEq(pcmd, "debug")) {
 
         // Arg 1 is command:
-        if (FStrEq(arg1, "dontshoot")) {
+        if (FStrEq(arg1, "dontshoot")) { // realbot debug dontshoot [1/0]
             // check for valid argument
             if ((arg2 != NULL) && (*arg2 != 0)) {
                 int temp = atoi(arg2);
@@ -1841,7 +1841,7 @@ void RealBot_ServerCommand(void) {
                 sprintf(cMessage, "RBDEBUG: Bots will shoot.");
         }
             // 17/07/04
-        else if (FStrEq(arg1, "pistols")) {
+        else if (FStrEq(arg1, "pistols")) { // realbot debug pistols [1/0]
             if ((arg2 != NULL) && (*arg2 != 0)) {
                 int temp = atoi(arg2);
                 if (temp)
@@ -1858,22 +1858,30 @@ void RealBot_ServerCommand(void) {
         {
             NodeMachine.dump_goals();
             strcpy(cMessage, "RBDEBUG: Dumping goals.");
-        } else if (FStrEq(arg1, "bots"))  // Print information about all current bots
+        } else if (FStrEq(arg1, "bots")) // realbot debug bots
+            // Print information about all current bots
         {
             int iBot;
             rblog("Dumping information about all bots:\n");
-            for (iBot = 0; (iBot < 32) && (bots[iBot].bIsUsed == true);
-                 iBot++)
+            for (iBot = 0; (iBot < 32) && (bots[iBot].bIsUsed == true); iBot++) {
                 bots[iBot].Dump();
+            }
+
             NodeMachine.dump_goals();
             strcpy(cMessage, "RBDEBUG: Dumping bots' information.");
-        } else if (FStrEq(arg1, "print")) { // realbot debug print
-            if (Game.bDebug) {
-                Game.bDebug = false;
+        } else if (FStrEq(arg1, "print")) { // realbot debug print (toggles, and last argument is bot index)
+            if (Game.bDebug > -2) {
+                Game.bDebug = -2;
                 sprintf(cMessage, "RBDEBUG: Debug messages off.");
             } else {
-                Game.bDebug = true;
-                sprintf(cMessage, "RBDEBUG: Debug messages on.");
+                if ((arg2 != NULL) && (*arg2 != 0)) {
+                    int temp = atoi(arg2);
+                    Game.bDebug = temp;
+                    sprintf(cMessage, "RBDEBUG: Debug messages on for bot [%d].", Game.bDebug);
+                } else {
+                    Game.bDebug = -1;
+                    sprintf(cMessage, "RBDEBUG: Debug messages on for all bots", Game.bDebug);
+                }
             }
         } else if (FStrEq(arg1, "verbosity")) { // realbot verbosity
             if (FStrEq(arg2, "low")) {
