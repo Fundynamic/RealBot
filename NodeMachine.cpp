@@ -1269,7 +1269,7 @@ void cNodeMachine::addNodesForPlayers() {
             int iPlayerIndex = index - 1;
 
             // within a certain distance no node found? add one
-            if (func_distance(pPlayer->v.origin, Players[iPlayerIndex].vPrevPos) > (NODE_ZONE * 1.25)) {
+            if (func_distance(pPlayer->v.origin, Players[iPlayerIndex].vPrevPos) > NODE_ZONE) {
                 Players[iPlayerIndex].vPrevPos = pPlayer->v.origin;
                 add2(pPlayer->v.origin, 0, pPlayer);
             }
