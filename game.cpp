@@ -79,11 +79,6 @@ void cGame::Init() {
     // May we walk with knife (when bots want to), default = yes (3600 seconds)
     fWalkWithKnife = 3600;
 
-    // Bomb planted
-    bBombPlanted = false;
-    vPlantedC4 = Vector(9999, 9999, 9999);
-    bHostageRescueMap = false;
-
     // Chat related
     iMaxSentences = 1;           // max sentences produced by chatengine per second (1=default)
     iProducedSentences = 0;      // currently produced sentences
@@ -113,8 +108,18 @@ void cGame::Init() {
     strcpy(cSpeechSentences[14], "attention, expect experimental armed hostile presence");
     strcpy(cSpeechSentences[15], "warning,medical attention required");
 
-    fUpdateGoalTimer = gpGlobals->time;
+    InitNewRound();
 }                               // Init()
+
+void cGame::InitNewRound() {
+    // Map goal flags
+    bBombPlanted = false;
+    vPlantedC4 = Vector(9999, 9999, 9999);
+    bHostageRescueMap = false;
+
+    // update map goal flags timer
+    fUpdateGoalTimer = gpGlobals->time;
+}
 
 /**
  * If the c4 is dropped (not planted), then return true.
@@ -218,6 +223,7 @@ void cGame::SetNewRound(bool bState) {
 bool cGame::NewRound() {
     return bNewRound;
 }
+
 
 // GAME: Set min and max playing rounds
 void cGame::SetPlayingRounds(int iMin, int iMax) {

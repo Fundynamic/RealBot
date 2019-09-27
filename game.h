@@ -67,6 +67,7 @@ void REALBOT_PRINT(const char *Function, const char *msg);
 class cGame {
 public:
    void Init();
+   void InitNewRound();
 
    // ---------------------
    void LoadNames();

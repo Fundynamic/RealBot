@@ -722,8 +722,7 @@ static Vector FloorBelow(Vector V) {
     // Bump V a little higher (to allow for a steep climb)
     UpALittle = V + Vector(0, 0, HullHeight);
     ReallyDown = V + Vector(0, 0, -500);
-    UTIL_TraceHull(UpALittle, ReallyDown, ignore_monsters, HullNumber, NULL,
-                   &tr);
+    UTIL_TraceHull(UpALittle, ReallyDown, ignore_monsters, HullNumber, NULL, &tr);
     //printf("      Floor %.0f -> %.0f, TraceHull fraction = %.2f, vecEndPos.z=%.0f %s %s\n",
     //UpALittle.z,ReallyDown.z,tr.flFraction,tr.vecEndPos.z,
     //(tr.fAllSolid) ? "AllSolid" : "",
@@ -731,8 +730,7 @@ static Vector FloorBelow(Vector V) {
     if (tr.fStartSolid) {        // Perhaps we where too high and hit the ceiling
         UpALittle = V + Vector(0, 0, 0);
         ReallyDown = V + Vector(0, 0, -500);
-        UTIL_TraceHull(UpALittle, ReallyDown, ignore_monsters, HullNumber,
-                       NULL, &tr);
+        UTIL_TraceHull(UpALittle, ReallyDown, ignore_monsters, HullNumber, NULL, &tr);
         //printf("      Floor without raising %.0f -> %.0f, TraceHull fraction = %.2f, vecEndPos.z=%.0f %s %s\n",
         //UpALittle.z,ReallyDown.z,tr.flFraction,tr.vecEndPos.z,
         //(tr.fAllSolid) ? "AllSolid" : "",
@@ -742,8 +740,7 @@ static Vector FloorBelow(Vector V) {
             HullHeight = 0;
             UpALittle = V + Vector(0, 0, STEP);
             ReallyDown = V + Vector(0, 0, -500);
-            UTIL_TraceHull(UpALittle, ReallyDown, ignore_monsters, HullNumber,
-                           NULL, &tr);
+            UTIL_TraceHull(UpALittle, ReallyDown, ignore_monsters, HullNumber, NULL, &tr);
             //printf("      Floor with point hull %.0f -> %.0f, TraceHull fraction = %.2f, vecEndPos.z=%.0f %s %s\n",
             //UpALittle.z,ReallyDown.z,tr.flFraction,tr.vecEndPos.z,
             //(tr.fAllSolid) ? "AllSolid" : "",
@@ -754,6 +751,7 @@ static Vector FloorBelow(Vector V) {
             }
         }
     }
+
     tr.vecEndPos.z -= HullHeight;        //Look at feet position (depends on used hull)
     return tr.vecEndPos;
 }
@@ -784,7 +782,7 @@ int cNodeMachine::Reachable(const int iStart, const int iEnd) {
         return false;
 
     // Quick & dirty check whether we can go through...
-    // This is simply to quickly decide whether the move is impossibe
+    // This is simply to quickly decide whether the move is impossible
     UTIL_TraceHull(Start, End, ignore_monsters, point_hull, NULL, &tr);
 #ifdef DEBUG_REACHABLE
 
@@ -796,11 +794,13 @@ int cNodeMachine::Reachable(const int iStart, const int iEnd) {
 
     // If either start/end is on ladder, assume we can fly without falling
     // but still check whether a human hull can go through
-    if ((Nodes[iStart].iNodeBits & BIT_LADDER)
-        || (Nodes[iEnd].iNodeBits & BIT_LADDER)) {
+    if ((Nodes[iStart].iNodeBits & BIT_LADDER) ||
+        (Nodes[iEnd].iNodeBits & BIT_LADDER))
+    {
         UTIL_TraceHull(Start, End, ignore_monsters, human_hull, NULL, &tr);
-        return (tr.flFraction >= 1.0);
+        return tr.flFraction >= 1.0;
     }
+
     // Heurestic for falling
     // TODO
 
@@ -888,9 +888,9 @@ int cNodeMachine::add2(Vector vOrigin, int iType, edict_t *pEntity) {
 
     int newNodeIndex = getFreeNodeIndex();
 
-    // failed too find a free slot to add a new node
-    if (newNodeIndex >= MAX_NODES)
+    if (newNodeIndex >= MAX_NODES || newNodeIndex < 0) {
         return -1;
+    }
 
     Nodes[newNodeIndex].origin = vOrigin;
     if (newNodeIndex > iMaxUsedNodes)
@@ -1981,6 +1981,7 @@ int cNodeMachine::getGoalIndexFromNode(int iNode) {
 }
 
 void cNodeMachine::updateGoals() {
+    rblog("cNodeMachine::updateGoals - START\n");
     // init hostage goals
     for (int i = 0; i < MAX_GOALS; i++) {
         tGoal *goal = getGoal(i);
@@ -2023,6 +2024,7 @@ void cNodeMachine::updateGoals() {
             addGoal(pPlayer, GOAL_VIP, pPlayer->v.origin + Vector(0,0,32));
         }
     }
+    rblog("cNodeMachine::updateGoals - FINISHED\n");
 }
 
 /**

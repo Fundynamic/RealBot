@@ -737,7 +737,7 @@ void StartFrame(void) {
 
     // Fix kill all with new round
     if (Game.NewRound()) {
-        rblog("NEW ROUND because game.NewRound() is true\n");
+        rblog("dll.cpp:740, Game.NewRound\n");
         // Send a message to clients about RealBot every round
         if (Game.iVersionBroadcasting == BROADCAST_ROUND) {
             welcome_sent = false;
@@ -748,10 +748,7 @@ void StartFrame(void) {
         NodeMachine.save();    // save information
         NodeMachine.experience_save();
         NodeMachine.setUpInitialGoals();
-
-        Game.bBombPlanted = false;
-        Game.bHostageRescueMap = false;
-        Game.vDroppedC4 = Vector(9999, 9999, 9999);
+        Game.InitNewRound();
 
         end_round = false;
     } // new round - before any bots realized yet
@@ -833,6 +830,7 @@ void StartFrame(void) {
             }
         }
     }
+
     if (internet_addbot) {
         // When timer is set, create a new bot.
         if (add_timer > gpGlobals->time && internet_addbot) {
@@ -912,6 +910,7 @@ void StartFrame(void) {
 
     // Counter-Strike - A new round has started
     if (Game.NewRound()) {
+        rblog("dll.cpp:912, Game.NewRound\n");
         NodeMachine.scale_danger();    // Scale danger
         NodeMachine.scale_contact();   // same for contact
         rblog("StartFrame: Game new round\n");

@@ -3219,6 +3219,7 @@ void cBot::Think() {
 
     // NEW ROUND
     if (Game.NewRound()) {
+        rblog("bot.cpp:3222, Game.NewRound\n");
         NewRound();
         Game.iProducedSentences = RANDOM_LONG(0, Game.iMaxSentences);
         ChatEngine.fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0, 0.5);
