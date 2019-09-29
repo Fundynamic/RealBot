@@ -835,7 +835,7 @@ bool cBot::ownsFavoriteSecondaryWeapon() {
 }
 
 /**
- * Returns true if bot has weapon (id) in posession
+ * Returns true if bot has weapon (id) in possession
  * @param weaponId
  * @return
  */
@@ -1070,7 +1070,7 @@ void cBot::FireWeapon() {
     else if (CarryWeaponType() == GRENADE) {
         if (f_gren_time > gpGlobals->time) {
             UTIL_BotPressKey(this, IN_ATTACK);     // Hold fire
-            f_move_speed = f_max_speed / 2;
+            setMoveSpeed(f_max_speed / 2);
 
             // Set new goal when holding flashbang!
             if (current_weapon.iId == CS_WEAPON_FLASHBANG) {
@@ -1085,11 +1085,11 @@ void cBot::FireWeapon() {
         }
     }                            // GRENADE
     else if (CarryWeaponType() == KNIFE) {
-        f_move_speed = f_max_speed;
+        setMoveSpeed(f_max_speed);
         UTIL_BotPressKey(this, IN_ATTACK);        // Hold fire
     }                            // KNIFE
     else if (CarryWeaponType() == SNIPER) {
-        f_move_speed = f_max_speed / 2;
+        setMoveSpeed(f_max_speed / 2);
         UTIL_BotPressKey(this, IN_ATTACK);        // Hold fire
         f_shoot_time = gpGlobals->time + 1.0;
     }                            // SNIPER
@@ -1841,13 +1841,14 @@ bool cBot::Defuse() {
         // Defusion timer is set and c4 is within vision
         if (f_defuse > gpGlobals->time && angle_to_c4 < 35) {
             this->rprint("Defuse()", "I'm defusing the bomb");
-            f_move_speed = 0.0;
+            setMoveSpeed(0.0);
             f_c4_time = gpGlobals->time + 6;
             UTIL_BotPressKey(this, IN_DUCK);
 
             if (func_distance(pEdict->v.origin, vC4) > 50
-                && f_allow_keypress + 0.5 > gpGlobals->time)
-                f_move_speed = f_max_speed / 2;
+                && f_allow_keypress + 0.5 > gpGlobals->time) {
+                setMoveSpeed(f_max_speed / 2);
+            }
         }
 
         if (f_allow_keypress < gpGlobals->time && f_defuse > gpGlobals->time) {
@@ -1876,7 +1877,7 @@ bool cBot::Defuse() {
         } else {
             rprint_normal("Defuse()", "C4 is somewhere without a close node.");
         }
-        f_move_speed = f_max_speed;
+        setMoveSpeed(f_max_speed);
     }                      // distance < ...
 
     // we can see the bomb, and we act upon it
@@ -1903,7 +1904,7 @@ void cBot::Act() {
         // todo, camping can be done standing too, but this does not look 'cool' atm.
         UTIL_BotPressKey(this, IN_DUCK);
 
-        f_move_speed = 0.0;       // do not move
+        setMoveSpeed(0.0);       // do not move
         PickBestWeapon();         // pick weapon, do not stare with knife
 
         // when dropped C4 and CT we look at C4
@@ -1941,8 +1942,8 @@ void cBot::Act() {
         // terrorist
         if (isTerrorist()) {
             // When still having the C4
-            f_move_speed = 0.0;
-            f_strafe_speed = 0.0;
+            setMoveSpeed(0.0f);
+//            f_strafe_speed = 0.0;
 
             // When no C4 selected yet, select it
             if (!isHoldingWeapon(CS_WEAPON_C4)) {
@@ -1965,8 +1966,9 @@ void cBot::Act() {
         }
     }
 
-    if (f_strafe_time < gpGlobals->time)
+    if (f_strafe_time < gpGlobals->time) {
         f_strafe_speed = 0;
+    }
 
     // walk only when NOT holding duck (is same as walking, combination makes bot super slow)
     if (f_walk_time > gpGlobals->time && !(pEdict->v.button & IN_DUCK)) {
@@ -1974,7 +1976,8 @@ void cBot::Act() {
         //OLD: f_move_speed = f_max_speed / 2.0; // this is not correct
 
         pEdict->v.button &= (~IN_RUN);    // release IN_RUN
-        f_move_speed = (float) (((int) f_max_speed) / 2 + ((int) f_max_speed) / 50);      // new move speed
+        rprint("Act", "Walk time > gpGlobals->time");
+        setMoveSpeed((float) (((int) f_max_speed) / 2 + ((int) f_max_speed) / 50));
     }
 
     // When we are at max speed, press IN_RUN to get a running animation
@@ -1982,13 +1985,19 @@ void cBot::Act() {
         UTIL_BotPressKey(this, IN_RUN);
     }
 
-    // FIXME: This should not be here! (REMOVEME)
-    if (f_c4_time > gpGlobals->time)
-        f_move_speed = 0.0;
+    if (!keyPressed(IN_MOVELEFT) || keyPressed(IN_MOVERIGHT)) {
+        if (f_strafe_speed > 0.0f) {
+            UTIL_BotPressKey(this, IN_MOVERIGHT);
+        }
+        else if (f_strafe_speed < 0.0f) {
+            UTIL_BotPressKey(this, IN_MOVELEFT);
+        }
+    }
 
     // When we should go back, we go back
-    if (f_goback_time > gpGlobals->time)
-        f_move_speed = -f_max_speed;
+    if (f_goback_time > gpGlobals->time) {
+        setMoveSpeed(-f_max_speed);
+    }
 
     // When holding duck, we hold duck
     if (f_hold_duck > gpGlobals->time)
@@ -1997,8 +2006,10 @@ void cBot::Act() {
     // When we wait, we have no move speed
     // notice: 'wait' is not 'stuck' nor 'camping'. Wait should only be used to have a bot
     // 'do nothing' for a short period of time.
-    if (f_wait_time > gpGlobals->time)
-        f_move_speed = 0.0;
+    if (f_wait_time > gpGlobals->time) {
+        rprint("Act", "f_wait_time > gpGlobals->time");
+        setMoveSpeed(0.0);
+    }
 
     // Button usage, change vBody to a 'trigger multiple' because we have to touch these
     if (pButtonEdict) {
@@ -2045,6 +2056,7 @@ void cBot::Act() {
     // Paulo-La-Frite - START bot aiming bug fix
     if (pEdict->v.v_angle.x > 180)
         pEdict->v.v_angle.x -= 360;
+
     Vector v_shouldbe = pEdict->v.angles;
 
     // Vector how it should be, however, we don't allow such a fast turn!
@@ -2053,10 +2065,8 @@ void cBot::Act() {
     v_shouldbe.z = 0;
 
     // set the body angles to point the gun correctly
-    pEdict->v.angles.x =
-            ReturnTurnedAngle(ipTurnSpeed, pEdict->v.angles.x, v_shouldbe.x);
-    pEdict->v.angles.y =
-            ReturnTurnedAngle(ipTurnSpeed, pEdict->v.angles.y, v_shouldbe.y);
+    pEdict->v.angles.x = ReturnTurnedAngle(ipTurnSpeed, pEdict->v.angles.x, v_shouldbe.x);
+    pEdict->v.angles.y = ReturnTurnedAngle(ipTurnSpeed, pEdict->v.angles.y, v_shouldbe.y);
     pEdict->v.angles.z = 0;
 
     // adjust the view angle pitch to aim correctly (MUST be after body v.angles stuff)
@@ -2065,6 +2075,7 @@ void cBot::Act() {
     // Paulo-La-Frite - END
     pEdict->v.ideal_yaw = pEdict->v.v_angle.y;
     pEdict->v.idealpitch = pEdict->v.v_angle.x;
+
     botFixIdealYaw(pEdict);
     botFixIdealPitch(pEdict);
 }
@@ -2080,7 +2091,7 @@ bool cBot::isOnLadder() {
 
 // BOT: Check around body and avoid obstacles
 void cBot::CheckAround() {
-
+    rprint_trace("CheckAround", "Start");
     // Do not act when on ladder
     if (isOnLadder())
         return;
@@ -2093,65 +2104,75 @@ void cBot::CheckAround() {
     // Note: we use TRACEHULL instead of TRACELINE, because TRACEHULL detects
     // the famous 'undetectable' func_walls.
     TraceResult tr;
-    Vector v_scan, v_source, v_left, v_right, v_center;
+    Vector v_source, v_left, v_right, v_forward, v_forwardleft, v_forwardright;
 
-    // convert current view angle to vectors for TraceLine math...
-    v_scan = pEdict->v.v_angle;
-    v_scan.x = 0;                // reset pitch to 0 (level horizontally)
-    v_scan.z = 0;                // reset roll to 0 (straight up and down)
-    UTIL_MakeVectors(v_scan);
-
-    // Source is pEdict->v.origin
-    v_source = pEdict->v.origin;
+    v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT + (MAX_JUMPHEIGHT + 1));
 
     // Go forward first
-    v_center = v_source + gpGlobals->v_forward * (37);
-    v_right = v_source + gpGlobals->v_forward * (37);
-    v_left = v_source + gpGlobals->v_forward * (37);
+    float distance = 40;
+    v_forward = v_source + gpGlobals->v_forward * distance;
 
     // now really go left/right
-    v_right = v_right + gpGlobals->v_right * (25);
-    v_left = v_left + gpGlobals->v_right * -(25);
-    bool bHitLeft, bHitRight, bHitCenter;
-    bHitLeft = bHitRight = bHitCenter = false;
+    v_right = v_source + gpGlobals->v_right * distance;
+    v_left = v_source + gpGlobals->v_right * -distance;
 
-    // TRACELINE: Center
-    UTIL_TraceHull(v_source, v_center, dont_ignore_monsters, point_hull,
-                   pEdict->v.pContainingEntity, &tr);
+    // now really go left/right
+    v_forwardright = v_right + gpGlobals->v_forward * distance;
+    v_forwardleft = v_left + gpGlobals->v_forward * -distance;
 
-    // Result
-    if (tr.flFraction < 1.0)
-        bHitCenter = true;
+    // TRACELINE: forward
+    UTIL_TraceHull(v_source, v_forward, dont_ignore_monsters, point_hull,  pEdict->v.pContainingEntity, &tr);
+    bool bHitForward = tr.flFraction < 1.0;
 
     // TRACELINE: Left
-    UTIL_TraceHull(v_source, v_left, dont_ignore_monsters, point_hull,
-                   pEdict->v.pContainingEntity, &tr);
-
-    // Result
-    if (tr.flFraction < 1.0)
-        bHitLeft = true;
+    UTIL_TraceHull(v_source, v_left, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
+    bool bHitLeft = tr.flFraction < 1.0;
 
     // TRACELINE: Right
-    UTIL_TraceHull(v_source, v_right, dont_ignore_monsters, point_hull,
-                   pEdict->v.pContainingEntity, &tr);
+    UTIL_TraceHull(v_source, v_right, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
+    bool bHitRight = tr.flFraction < 1.0;
 
-    // Result
-    if (tr.flFraction < 1.0)
-        bHitRight = true;
+    // TRACELINE: Forward left
+    UTIL_TraceHull(v_source, v_forwardleft, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
+    bool bHitForwardLeft = tr.flFraction < 1.0;
+
+    // TRACELINE: Forward right
+    UTIL_TraceHull(v_source, v_forwardright, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
+    bool bHitForwardRight = tr.flFraction < 1.0;
+
+
+    char msg[255];
+    sprintf(msg, "HIT results: forward: %d, left: %d, right: %d, forward left: %d, forward right: %d", bHitForward, bHitLeft, bHitRight, bHitForwardLeft, bHitForwardRight);
+    rprint_trace("CheckAround", msg);
 
     // Set 'act' properties
 
-    // When center hits something, we slow down
-    if (bHitCenter && bHitLeft && bHitRight) {
-        f_move_speed = -(f_max_speed);
-    } else if (bHitCenter && (bHitRight == false || bHitLeft == false)) {}
-    if (bHitLeft && bHitRight == false) {
-        f_strafe_speed = (f_max_speed);
-        f_strafe_time = gpGlobals->time + 0.1;
-    } else if (bHitRight && bHitLeft == false) {
-        f_strafe_speed = -(f_max_speed);
-        f_strafe_time = gpGlobals->time + 0.1;
+    // we are surrounded, so move backwards
+    if (bHitForward) {
+        rprint_trace("CheckAround", "Something in front of me blocks, so move back.");
+//        f_move_speed = -(f_max_speed);
+    } else {
+        rprint_trace("CheckAround", "Nothing in front of me");
     }
+
+    if (!bHitForwardLeft && bHitForwardRight) {
+//        strafeLeft(0.1);
+        rprint_trace("CheckAround", "Can strafe left (forward left)");
+    } else if (bHitForwardLeft && !bHitForwardRight) {
+//        strafeRight(0.1);
+        rprint_trace("CheckAround", "Can strafe right (forward right)");
+    }
+
+    if (bHitLeft && bHitRight) {
+        rprint_trace("CheckAround", "Can't strafe left or right");
+    } else if (!bHitLeft && bHitRight) {
+        strafeLeft(0.1);
+        rprint_trace("CheckAround", "Can strafe left");
+    } else if (bHitLeft && !bHitRight) {
+        strafeRight(0.1);
+        rprint_trace("CheckAround", "Can strafe right");
+    }
+
     // -------------------------------------------------------------
     // When checking around a bot also handles breakable stuff.
     // -------------------------------------------------------------
@@ -2274,7 +2295,30 @@ bool cBot::shouldBeWandering() {
 }
 
 void cBot::setMoveSpeed(float value) {
+    char msg[255];
+    sprintf(msg, "value %f", value);
+    rprint_trace("setMoveSpeed", msg);
     this->f_move_speed = value;
+}
+
+void cBot::setStrafeSpeed(float value, float time) {
+    char msg[255];
+    sprintf(msg, "%f for %f seconds.", value, time);
+    rprint_trace("setStrafeSpeed", msg);
+//    if (f_strafe_time > gpGlobals->time) {
+//
+//    } else {
+    f_strafe_speed = value;
+    f_strafe_time = gpGlobals->time + time;
+//    }
+}
+
+void cBot::strafeLeft(float time) {
+    setStrafeSpeed(-f_max_speed, time);
+}
+
+void cBot::strafeRight(float time) {
+    setStrafeSpeed(f_max_speed, time);
 }
 
 void cBot::startWandering(float time) {
@@ -3396,9 +3440,6 @@ void cBot::Think() {
     // WALK()
     NodeMachine.path_think(this, distanceMoved);
 
-    // CHECKAROUND()
-    CheckAround();
-
     // SITUATION: Passed Freezetime
 
 } // THINK()
@@ -3513,14 +3554,17 @@ void cBot::UpdateStatus() {
     // adjust the millisecond delay based on the frame rate interval...
     if (msecdel <= gpGlobals->time) {
         msecdel = gpGlobals->time + 0.5;
-        if (msecnum > 0)
+        if (msecnum > 0) {
             msecval = (450.0 / msecnum);
+        }
         msecnum = 0;
-    } else
+    } else {
         msecnum++;
+    }
 
     if (msecval < 1)             // don't allow msec to be less than 1...
         msecval = 1;
+
     if (msecval > 100)           // ...or greater than 100
         msecval = 100;
 
@@ -3528,11 +3572,15 @@ void cBot::UpdateStatus() {
 
     // Reset stuff
     pEdict->v.button = 0;
-    f_move_speed = f_max_speed; // by default run
+    setMoveSpeed(f_max_speed); // by default run
 
     // When its not time to strafe, don't.
-    if (f_strafe_time < gpGlobals->time)
-        f_strafe_speed = 0.0;
+    if (f_strafe_time < gpGlobals->time) {
+        if (f_strafe_speed != 0.0f) {
+            rprint_trace("UpdateStatus", "Strafe speed set to 0!");
+            f_strafe_speed = 0.0f;
+        }
+    }
 
     // Update team state when started
     if (hasJoinedTeam) {
@@ -3945,7 +3993,6 @@ bool cBot::hasShieldDrawn() {
  int Think() and everything else (when all is set, how to 'do' it) in Act().
  */
 void BotThink(cBot *pBot) {
-
     // STEP 1: Update status
     pBot->UpdateStatus();
 
@@ -3956,9 +4003,17 @@ void BotThink(cBot *pBot) {
     pBot->Act();
 
     // PASS THROUGH ENGINE
-    g_engfuncs.pfnRunPlayerMove(pBot->pEdict, pBot->vecMoveAngles,
-                                pBot->f_move_speed, pBot->f_strafe_speed,
-                                0.0, pBot->pEdict->v.button, 0,
+    double upMove = 0.0;
+    char msg[255];
+    sprintf(msg, "moveSpeed %f, strafeSpeed %f, msecVal %f", pBot->f_move_speed, pBot->f_strafe_speed, pBot->msecval);
+    pBot->rprint_trace("BotThink/pfnRunPlayerMove", msg);
+    g_engfuncs.pfnRunPlayerMove(pBot->pEdict,
+                                pBot->vecMoveAngles,
+                                pBot->f_move_speed,
+                                pBot->f_strafe_speed,
+                                upMove,
+                                pBot->pEdict->v.button,
+                                0,
                                 pBot->msecval);
     return;
 }

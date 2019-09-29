@@ -2615,7 +2615,7 @@ int cNodeMachine::node_look_camp(Vector vOrigin, int iTeam,
             }
     }
     char msg[255];
-    sprintf(msg, "Found best note to camp at %d\n", iBestNode);
+    sprintf(msg, "Found best node to camp at %d\n", iBestNode);
     rblog(msg);
     return iBestNode;
 }
@@ -2640,6 +2640,10 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     if (!pBot->shouldBeAbleToMove()) {
         pBot->rprint("cNodeMachine::path_walk", "Finished - shouldBeAbleToMove is false");
         return;
+    }
+
+    if (pBot->f_strafe_time > gpGlobals->time) {
+        pBot->rprint_trace("cNodeMachine::path_walk", "Also strafing!");
     }
 
     // When longer not stuck for some time we clear stuff
@@ -2749,7 +2753,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         pBot->rprint("Bot is on ladder");
         // Set touch radius
         pBot->f_strafe_speed = 0.0;       // we may not strafe
-        pBot->f_move_speed = (pBot->f_max_speed / 2);     // move speed
+        pBot->setMoveSpeed(pBot->f_max_speed / 2);
         //pBot->pEdict->v.button |= IN_DUCK;                    // duck
 
         // Look at the waypoint we are heading to.
@@ -2889,15 +2893,22 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         if (isEntityDoor(pEntityHit)) {
             pBot->rprint_trace("cNodeMachine::path_walk", "Entity between me and next node is a door.");
             ExecuteDoorInteractionLogic(pBot, pEntityHit);
+            return;
         }
 
         // hit by a hostage?, hostage is blocking our path
         if (isEntityHostage(pEntityHit)) {
             pBot->rprint_trace("cNodeMachine::path_walk", "Entity between me and next node is a hostage.");
+            return;
         }
 
-        pBot->rprint_trace("cNodeMachine::path_walk", "Finished - entity hit logic executed");
-        return;
+        if (strcmp(STRING(pEntityHit->v.classname), "player") == 0) {
+            pBot->rprint_trace("cNodeMachine::path_walk", "Another player between me and next node.");
+            pBot->strafeRight(0.2);
+            return;
+        }
+
+        pBot->rprint_trace("cNodeMachine::path_walk", "Finished - entity hit end block");
     } // entity between me and node
 
     // When not moving (and we should move):
@@ -3093,7 +3104,9 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vec
     } else {
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "pBotStuck pointer available - stuck by 'world'");
 //                // we are stuck by 'world', we go back one step?
-        pBot->prevPathIndex();
+        pBot->CheckAround();
+//        pBot->prevPathIndex();
+
 //                pBot->f_stuck_time = gpGlobals->time + 0.2;
     }
 
@@ -3696,16 +3709,16 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     //////////////////////////////////////// GOAL PICKING FINISHED //////////////////////////////////////////
     //////////////////////////////////////// GOAL PICKING FINISHED //////////////////////////////////////////
 
-    pBot->rprint("path_think", "Determining if I should camp at this goal or not...");
-    // Set on camp mode
-    if (RANDOM_LONG(0, 100) < pBot->ipCampRate &&
-        pBot->f_camp_time + ((100 - pBot->ipCampRate) / 2) <
-        gpGlobals->time &&
-        !pBot->isEscortingHostages() &&
-        !pBot->vip) {
-        pBot->iPathFlags = PATH_CAMP;
-        pBot->rprint("path_think", "Set camp flag for path");
-    }
+//    pBot->rprint("path_think", "Determining if I should camp at this goal or not...");
+//    // Set on camp mode
+//    if (RANDOM_LONG(0, 100) < pBot->ipCampRate &&
+//        pBot->f_camp_time + ((100 - pBot->ipCampRate) / 2) <
+//        gpGlobals->time &&
+//        !pBot->isEscortingHostages() &&
+//        !pBot->vip) {
+//        pBot->iPathFlags = PATH_CAMP;
+//        pBot->rprint("path_think", "Set camp flag for path");
+//    }
 
     // create path
     bool success = createPath(iCurrentNode, pBot->getGoalNode(), thisBotIndex, pBot, pBot->iPathFlags);

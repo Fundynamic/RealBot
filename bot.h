@@ -152,6 +152,7 @@ typedef struct {
  Bot is a class now 
  */
 class cBot {
+
 private:
     int iGoalNode;               // Goal Node #
     int goalIndex;               // is a goal node is set, it might be related to a goal, if so it is set here
@@ -212,7 +213,7 @@ public:
 
     float f_max_speed;           // Max speed is the max speed it can get when holding that particular weapon
     float f_move_speed;          // The bots move speed
-    float f_strafe_speed;        // Strafe speed
+    float f_strafe_speed;        // Strafe speed (> 0 to the right < 0 to the left)
     float f_hold_duck;           // Hold duck
     float f_sec_weapon;          // secondary weapon time interval
     float f_prim_weapon;         // primary weapon time interval (for burst fire)
@@ -514,6 +515,9 @@ public:
 
 
     void setMoveSpeed(float value);
+    void setStrafeSpeed(float value, float time);
+    void strafeLeft(float time);
+    void strafeRight(float time);
     void startWandering(float time);
 
     // -------------------

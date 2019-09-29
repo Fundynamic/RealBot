@@ -575,6 +575,12 @@ void UTIL_BotPressKey(cBot *pBot, int type) {
         case IN_RUN:
             pBot->rprint_trace("UTIL_BotPressKey", "IN_RUN");
             break;
+        case IN_MOVELEFT:
+            pBot->rprint_trace("UTIL_BotPressKey", "IN_MOVELEFT");
+            break;
+        case IN_MOVERIGHT:
+            pBot->rprint_trace("UTIL_BotPressKey", "IN_MOVERIGHT");
+            break;
         default:
             char msg[255];
             sprintf(msg, "unknown key to print [%d]", type);

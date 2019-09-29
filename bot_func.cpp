@@ -832,11 +832,11 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
         // set body to hostage!
         pBot->vBody = pBot->vHead = pHostage->v.origin + Vector(0, 0, 36);
         // by default run
-        pBot->f_move_speed = pBot->f_max_speed;
+        pBot->setMoveSpeed(pBot->f_max_speed);
 
         if (distanceToHostage <= 80) {
             pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "I can see hostage AND really close!");
-            pBot->f_move_speed = 0.0; // too close, do not move
+            pBot->setMoveSpeed(0.0f); // too close, do not move
 
             // only use hostage when facing
             int angle_to_hostage = FUNC_InFieldOfView(pBot->pEdict, (pBot->vBody - pBot->pEdict->v.origin));
