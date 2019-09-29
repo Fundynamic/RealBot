@@ -132,6 +132,8 @@ void cBot::SpawnInit() {
     // ------------------------
     // TIMERS
     // ------------------------
+    fUpdateTime = gpGlobals->time;
+    fLastRunPlayerMoveTime = gpGlobals->time - 0.1f;
     fButtonTime = gpGlobals->time;
     fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5, 5);
     fMemoryTime = gpGlobals->time;
@@ -273,9 +275,6 @@ void cBot::SpawnInit() {
     // ------------------------
     f_strafe_speed = 0.0;
     f_max_speed = CVAR_GET_FLOAT("sv_maxspeed");
-    msecnum = 0;
-    msecdel = 0.0;
-    msecval = 0;
 
     // ------------------------
     // VECTORS
@@ -305,6 +304,8 @@ void cBot::NewRound() {
     // ------------------------
     // TIMERS
     // ------------------------
+    fUpdateTime = gpGlobals->time;
+    fLastRunPlayerMoveTime = gpGlobals->time;
     fCheckHostageStatusTimer = gpGlobals->time;
     fButtonTime = gpGlobals->time;
     fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5, 5);
@@ -427,13 +428,7 @@ void cBot::NewRound() {
     bFirstOutOfSight = false;
 
 
-    // ------------------------
-    // FLOATS
-    // ------------------------
     f_strafe_speed = 0.0;
-    msecnum = 0;
-    msecdel = 0.0;
-    msecval = 0;
 
     // ------------------------
     // VECTORS
@@ -2295,9 +2290,9 @@ bool cBot::shouldBeWandering() {
 }
 
 void cBot::setMoveSpeed(float value) {
-    char msg[255];
-    sprintf(msg, "value %f", value);
-    rprint_trace("setMoveSpeed", msg);
+//    char msg[255];
+//    sprintf(msg, "setting to value %f / maxSpeed %f - sv_maxspeed = %f", value, this->f_max_speed, CVAR_GET_FLOAT("sv_maxspeed"));
+//    rprint_trace("setMoveSpeed", msg);
     this->f_move_speed = value;
 }
 
@@ -3550,26 +3545,6 @@ void cBot::UpdateStatus() {
     // Set thirdpartybot flag
     pEdict->v.flags |= FL_THIRDPARTYBOT;
 
-    // TheFatal - START from Advanced Bot Framework (Thanks Rich!)
-    // adjust the millisecond delay based on the frame rate interval...
-    if (msecdel <= gpGlobals->time) {
-        msecdel = gpGlobals->time + 0.5;
-        if (msecnum > 0) {
-            msecval = (450.0 / msecnum);
-        }
-        msecnum = 0;
-    } else {
-        msecnum++;
-    }
-
-    if (msecval < 1)             // don't allow msec to be less than 1...
-        msecval = 1;
-
-    if (msecval > 100)           // ...or greater than 100
-        msecval = 100;
-
-    // TheFatal - END
-
     // Reset stuff
     pEdict->v.button = 0;
     setMoveSpeed(f_max_speed); // by default run
@@ -3596,6 +3571,9 @@ void cBot::UpdateStatus() {
     // Set max speed and such when CS 1.6
     if (counterstrike == 1) {
         f_max_speed = pEdict->v.maxspeed;
+        char msg[255];
+        sprintf(msg, "f_max_speed set to %f", f_max_speed);
+        rprint_trace("UpdateStatus", msg);
         bot_health = (int) pEdict->v.health;
         bot_armor = (int) pEdict->v.armorvalue;
     }
@@ -4003,9 +3981,14 @@ void BotThink(cBot *pBot) {
     pBot->Act();
 
     // PASS THROUGH ENGINE
+
+//    float frameInterval = m_lastCommandTime - gpGlobals->time;
+    float msecval = (gpGlobals->time - pBot->fLastRunPlayerMoveTime) * 1000.0f;
+    pBot->fLastRunPlayerMoveTime = gpGlobals->time;
+
     double upMove = 0.0;
     char msg[255];
-    sprintf(msg, "moveSpeed %f, strafeSpeed %f, msecVal %f", pBot->f_move_speed, pBot->f_strafe_speed, pBot->msecval);
+    sprintf(msg, "moveSpeed %f, strafeSpeed %f, msecVal %f", pBot->f_move_speed, pBot->f_strafe_speed, msecval);
     pBot->rprint_trace("BotThink/pfnRunPlayerMove", msg);
     g_engfuncs.pfnRunPlayerMove(pBot->pEdict,
                                 pBot->vecMoveAngles,
@@ -4014,8 +3997,10 @@ void BotThink(cBot *pBot) {
                                 upMove,
                                 pBot->pEdict->v.button,
                                 0,
-                                pBot->msecval);
-    return;
+                                msecval);
+
+    float fUpdateInterval = 1.0f / 60.0f; // update at 60 fps
+    pBot->fUpdateTime = gpGlobals->time + fUpdateInterval;
 }
 
 // 17/07/04

@@ -850,11 +850,15 @@ void StartFrame(void) {
     // GAME : Update game status first, before we go think about it
     // -------------------------------------------------------------
     Game.UpdateGameStatus();
+
     for (bot_index = 0; bot_index < gpGlobals->maxClients; bot_index++) {
-        if ((bots[bot_index].bIsUsed) &&       // is this slot used AND
-            (bots[bot_index].respawn_state == RESPAWN_IDLE))   // not respawning
+        cBot &bot = bots[bot_index];
+        if ((bot.bIsUsed) &&                        // is this slot used AND
+            (bot.respawn_state == RESPAWN_IDLE))    // not respawning
         {
-            BotThink(&bots[bot_index]);
+            if (bot.fUpdateTime < gpGlobals->time) {
+                BotThink(&bot);
+            }
             count++;
         }
     }                         // FOR

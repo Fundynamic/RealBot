@@ -1982,7 +1982,6 @@ int cNodeMachine::getGoalIndexFromNode(int iNode) {
 
 void cNodeMachine::updateGoals() {
     rblog("cNodeMachine::updateGoals - START\n");
-    // init hostage goals
     for (int i = 0; i < MAX_GOALS; i++) {
         tGoal *goal = getGoal(i);
         if (goal == NULL || goal->iNode < 0) continue;

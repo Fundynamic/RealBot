@@ -199,6 +199,9 @@ public:
     // ------------------------
     // TIMERS
     // ------------------------
+    float fUpdateTime;
+    float fLastRunPlayerMoveTime;
+
     float fCheckHostageStatusTimer;
     float fButtonTime;
     float fChatTime;
@@ -342,12 +345,6 @@ public:
 
     bool hasJoinedTeam;
     int start_action;
-
-    // TheFatal - START
-    int msecnum;
-    float msecdel;
-    int msecval;
-    // TheFatal - END
 
     int iPreviousGoalNode;        // Previous goal
     int iCloseNode;                // The closest node to this bot.
