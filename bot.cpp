@@ -2101,10 +2101,11 @@ void cBot::CheckAround() {
     TraceResult tr;
     Vector v_source, v_left, v_right, v_forward, v_forwardleft, v_forwardright;
 
-    v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT + (MAX_JUMPHEIGHT + 1));
+//    v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT + (MAX_JUMPHEIGHT + 1));
+    v_source = pEdict->v.origin + Vector(0, 0, ORIGIN_HEIGHT);
 
     // Go forward first
-    float distance = 40;
+    float distance = 90;
     v_forward = v_source + gpGlobals->v_forward * distance;
 
     // now really go left/right
@@ -2151,20 +2152,20 @@ void cBot::CheckAround() {
     }
 
     if (!bHitForwardLeft && bHitForwardRight) {
-//        strafeLeft(0.1);
+        strafeLeft(0.5);
         rprint_trace("CheckAround", "Can strafe left (forward left)");
     } else if (bHitForwardLeft && !bHitForwardRight) {
-//        strafeRight(0.1);
+        strafeRight(0.5);
         rprint_trace("CheckAround", "Can strafe right (forward right)");
     }
 
     if (bHitLeft && bHitRight) {
         rprint_trace("CheckAround", "Can't strafe left or right");
     } else if (!bHitLeft && bHitRight) {
-        strafeLeft(0.1);
+        strafeLeft(0.5);
         rprint_trace("CheckAround", "Can strafe left");
     } else if (bHitLeft && !bHitRight) {
-        strafeRight(0.1);
+        strafeRight(0.5);
         rprint_trace("CheckAround", "Can strafe right");
     }
 
@@ -3258,16 +3259,7 @@ void cBot::Think() {
 
     // NEW ROUND
     if (Game.NewRound()) {
-        rblog("bot.cpp:3222, Game.NewRound\n");
-        NewRound();
-        Game.iProducedSentences = RANDOM_LONG(0, Game.iMaxSentences);
-        ChatEngine.fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0, 0.5);
-
-        // clear all tasks of the bot
-
-        // New round started, broadcast EVENT on task stuff
-        // TODO TODO TODO
-        // Do memory stuff so we know what to do
+        rprint_trace("Think", "Game.NewRound");
     }
 
     // --------------------------------
@@ -3535,9 +3527,6 @@ void cBot::CheckGear() {
 
 // BOT: Update personal status
 void cBot::UpdateStatus() {
-    if (pEdict == NULL)
-        rblog("BOT: pEdict is NULL. Seriously something wrong?");
-
     // name filled in yet?
     if (name[0] == 0)
         strcpy(name, STRING(pEdict->v.netname));
@@ -3571,9 +3560,9 @@ void cBot::UpdateStatus() {
     // Set max speed and such when CS 1.6
     if (counterstrike == 1) {
         f_max_speed = pEdict->v.maxspeed;
-        char msg[255];
-        sprintf(msg, "f_max_speed set to %f", f_max_speed);
-        rprint_trace("UpdateStatus", msg);
+//        char msg[255];
+//        sprintf(msg, "f_max_speed set to %f", f_max_speed);
+//        rprint_trace("UpdateStatus", msg);
         bot_health = (int) pEdict->v.health;
         bot_armor = (int) pEdict->v.armorvalue;
     }
