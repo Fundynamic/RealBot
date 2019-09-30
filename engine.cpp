@@ -257,8 +257,9 @@ pfnMessageBegin(int msg_dest, int msg_type, const float *pOrigin, edict_t *edict
             botMsgIndex = -1;      // index of bot receiving message (none)
 
             if (mod_id == CSTRIKE_DLL) {
-                if (msg_type == GET_USER_MSG_ID(PLID, "HLTV", NULL))
+                if (msg_type == GET_USER_MSG_ID(PLID, "HLTV", NULL)) {
                     botMsgFunction = BotClient_CS_HLTV;
+                }
                 else if (msg_type == GET_USER_MSG_ID(PLID, "SayText", NULL))
                     botMsgFunction = BotClient_CS_SayText;
             }

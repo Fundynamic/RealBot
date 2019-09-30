@@ -914,10 +914,6 @@ void BotClient_CS_HLTV(void *p, int bot_index) {
             rblog("CS HLTV: Game new round\n");
             // New round started.
             Game.SetNewRound(true);
-            Game.resetRoundTime();
-            Game.DetermineMapGoal();
-            // re-initialize planted c4 vector
-            Game.vPlantedC4 = Vector(9999, 9999, 9999);
         }
         state = 0;
     }

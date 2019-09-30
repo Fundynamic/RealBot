@@ -36,10 +36,12 @@
 #include "bot.h"
 #include "game.h"
 #include "NodeMachine.h"
+#include "ChatEngine.h"
 #include "IniParser.h"
 #include "bot_func.h"
 
 extern cNodeMachine NodeMachine;
+extern cChatEngine ChatEngine;
 extern cGame Game;
 extern cBot bots[MAX_BOTS];
 
@@ -119,6 +121,20 @@ void cGame::InitNewRound() {
 
     // update map goal flags timer
     fUpdateGoalTimer = gpGlobals->time;
+
+    resetRoundTime();
+    DetermineMapGoal();
+
+    // initialize bots for new round
+    for (int i = 0; i < MAX_BOTS; i++) {
+        cBot &bot = bots[i];
+        if (bot.bIsUsed) {
+            bot.NewRound();
+        }
+    }
+
+    iProducedSentences = RANDOM_LONG(0, Game.iMaxSentences);
+    ChatEngine.fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0, 0.5);
 }
 
 /**

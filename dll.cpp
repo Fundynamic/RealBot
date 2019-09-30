@@ -748,8 +748,6 @@ void StartFrame(void) {
         NodeMachine.save();    // save information
         NodeMachine.experience_save();
         NodeMachine.setUpInitialGoals();
-        Game.InitNewRound();
-
         end_round = false;
     } // new round - before any bots realized yet
 
@@ -914,13 +912,12 @@ void StartFrame(void) {
 
     // Counter-Strike - A new round has started
     if (Game.NewRound()) {
-        rblog("dll.cpp:912, Game.NewRound\n");
+        rblog("dll.cpp:917, Game.NewRound\n");
         NodeMachine.scale_danger();    // Scale danger
         NodeMachine.scale_contact();   // same for contact
-        rblog("StartFrame: Game new round\n");
-        Game.resetRoundTime();
-        Game.DetermineMapGoal();
+        Game.InitNewRound();
         Game.SetNewRound(false);
+        rblog("dll.cpp:917, Game.NewRound - finished\n");
     }
 
     // are we currently respawning bots and is it time to spawn one yet?
