@@ -2631,9 +2631,9 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
     // Check if path is valid
     if (iPath[BotIndex][0] < 0) {
-        pBot->rprint("cNodeMachine::path_walk", "Finished - invalid path");
+        pBot->rprint("cNodeMachine::path_walk", "Bot has no path. ([0] path index < 0)");
         pBot->stopMoving();
-        return;                   // back out
+        return;
     }
 
     if (!pBot->shouldBeAbleToMove()) {
@@ -3004,11 +3004,13 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vec
     edict_t *playerNearbyInFOV = NULL;
     edict_t *hostageNearbyInFOV = NULL;
     if (entityNearbyInFOV) {
-        if (strcmp(STRING(entityNearbyInFOV->v.classname), "player")) {
+
+        if (strcmp(STRING(entityNearbyInFOV->v.classname), "player") == 0) {
             playerNearbyInFOV = entityNearbyInFOV;
             pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "A player is in front of me");
         }
-        if (strcmp(STRING(entityNearbyInFOV->v.classname), "hostage_entity")) {
+
+        if (strcmp(STRING(entityNearbyInFOV->v.classname), "hostage_entity") == 0) {
             hostageNearbyInFOV = entityNearbyInFOV;
             pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "A hostage is in front of me");
         }
