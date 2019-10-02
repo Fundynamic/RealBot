@@ -576,6 +576,7 @@ public:
 
     void doDuck();
     bool isDucking();
+    bool isWalking();
 
     bool isFreezeTime() const;
 

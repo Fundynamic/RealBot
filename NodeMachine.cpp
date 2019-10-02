@@ -2903,8 +2903,13 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
         if (strcmp(STRING(pEntityHit->v.classname), "player") == 0) {
             pBot->rprint_trace("cNodeMachine::path_walk", "Another player between me and next node.");
-            pBot->strafeRight(0.2);
-            return;
+            if (pBot->hasTimeToMoveToNode()) {
+                pBot->strafeRight(0.2);
+                pBot->rprint_trace("cNodeMachine::path_walk", "Time left to move to node, so lets try strafing to unstuck.");
+                return;
+            } else {
+                pBot->rprint_trace("cNodeMachine::path_walk", "No time left to move to node, so we continue and let stuck logic kick in");
+            }
         }
 
         pBot->rprint_trace("cNodeMachine::path_walk", "Finished - entity hit end block");
@@ -2922,6 +2927,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     double speedInOneTenthOfASecond = (pBot->f_move_speed * timeEvaluatingMoveSpeed) * fraction;
     double expectedMoveDistance = speedInOneTenthOfASecond;
     if (pBot->isFreezeTime()) expectedMoveDistance = 0;
+    if (pBot->isWalking()) expectedMoveDistance = speedInOneTenthOfASecond / 3.0;
     if (pBot->isDucking()) expectedMoveDistance = speedInOneTenthOfASecond / 3.0;
     if (pBot->isJumping()) expectedMoveDistance = speedInOneTenthOfASecond / 3.0;
     // no need for 'is walking' because walking time influence `f_move_speed` hence it is already taken care of

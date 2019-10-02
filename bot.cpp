@@ -4278,6 +4278,14 @@ bool cBot::isDucking() {
     return b;
 }
 
+bool cBot::isWalking() {
+    bool b = !keyPressed(IN_RUN) || this->f_walk_time > gpGlobals->time;
+    if (b) {
+        rprint_trace("isWalking", "Yes I am walking");
+    }
+    return b;
+}
+
 void cBot::doJump(Vector &vector) {
     rprint_trace("doJump", "With vector");
     // stay focussed with body and head to this vector
