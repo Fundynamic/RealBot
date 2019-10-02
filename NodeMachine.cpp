@@ -2441,10 +2441,10 @@ void cNodeMachine::openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighbou
         float cost = gCost + hCost;
 
         if (botTeam > -1) {
-//            double dangerCost = InfoNodes[neighbourNode].fDanger[botTeam] * cost;
+            double dangerCost = InfoNodes[neighbourNode].fDanger[botTeam] * cost;
 //            double contactCost = InfoNodes[neighbourNode].fContact[botTeam] * cost;
 
-//            cost += dangerCost;
+            cost += dangerCost;
 //            cost += contactCost;
         }
 
