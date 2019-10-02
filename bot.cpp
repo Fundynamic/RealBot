@@ -3693,12 +3693,14 @@ bool BotRadioAction() {
                     }
                     // Enemy Down!
                     if (strstr(message, "#Enemy_down") != NULL) {
+                        BotPointer->rprint_trace("BotRadioAction", "Understood Enemy down - no logic");
 
                         unstood = true;
                         can_do_negative = false;
                     }
                     // Stick together team!
                     if (strstr(message, "#Stick_together_team") != NULL) {
+                        BotPointer->rprint_trace("BotRadioAction", "Understood Stick together team - no logic");
                         unstood = true;
                         // TODO: Find someone to follow. (to stick with)
                     }
@@ -3706,6 +3708,7 @@ bool BotRadioAction() {
 
                     // Need backup / taking fire...
                     if (strstr(message, "#Need_backup") != NULL || strstr(message, "#Taking_fire") != NULL) {
+                        BotPointer->rprint_trace("BotRadioAction", "Understood Need backup or Taking fire");
 
                         unstood = true;
 
@@ -3713,7 +3716,7 @@ bool BotRadioAction() {
                         int iBackupNode = NodeMachine.getClosestNode(plr->v.origin, NODE_ZONE, plr);
 
                         if (iBackupNode > -1) {
-                            BotPointer->rprint("Setting goal for backup");
+                            BotPointer->rprint_trace("BotRadioAction", "Found node nearby player who requested backup/reported taking fire.");
                             BotPointer->setGoalNode(iBackupNode);
                             BotPointer->forgetPath();
                             BotPointer->f_camp_time = gpGlobals->time - 1;
@@ -3727,11 +3730,15 @@ bool BotRadioAction() {
                         // unstood = true;
                     }
                     // Team fall back!
-                    if (strstr(message, "#Team_fall_back") != NULL) {}
+                    if (strstr(message, "#Team_fall_back") != NULL) {
+
+                    }
                     // Go GO Go, stop camping, stop following, get the heck out of there!
                     if (strstr(message, "#Go_go_go") != NULL) {
+                        BotPointer->rprint_trace("BotRadioAction", "Understood Go Go Go");
                         unstood = true;
                         BotPointer->f_camp_time = gpGlobals->time - 30;
+                        BotPointer->f_walk_time = gpGlobals->time;
                         BotPointer->f_cover_time = gpGlobals->time - 10;
                         BotPointer->f_hold_duck = gpGlobals->time - 10;
                         BotPointer->f_jump_time = gpGlobals->time - 10;
@@ -3740,8 +3747,9 @@ bool BotRadioAction() {
                     }
 
                     if ((FUNC_DoRadio(BotPointer)) && (unstood)) {
-                        if (BotPointer->console_nr == 0
-                            && radios < (gpGlobals->maxClients / 4)) {
+                        int maxAllowedRadios = gpGlobals->maxClients / 4;
+                        if (BotPointer->console_nr == 0 && radios < maxAllowedRadios) {
+
                             if (!report_back) {
                                 UTIL_BotRadioMessage(BotPointer, 3, "1", "");   // Roger that!
                             } else {

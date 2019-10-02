@@ -565,14 +565,19 @@ bool BotShouldDuck(cBot *pBot) {
     return true;
 }
 
+/**
+ * Returns if a bot can and wants to do radio. Wanting is based on personality flag.
+ * @param pBot
+ * @return
+ */
 bool FUNC_DoRadio(cBot *pBot) {
 
-    if (pBot->fDoRadio > gpGlobals->time)
+    if (pBot->fDoRadio > gpGlobals->time) // allowed?
         return false;
 
     int iRadio = pBot->ipCreateRadio;
 
-    return RANDOM_LONG(0, 100) < iRadio;
+    return RANDOM_LONG(0, 100) < iRadio; // want?
 }
 
 // DECIDE: Take cover or not

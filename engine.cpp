@@ -386,13 +386,11 @@ void pfnWriteCoord(float flValue) {
 }
 
 void pfnWriteString(const char *sz) {
-
     if (Game.bEngineDebug) {
         char msg[256];
         sprintf(msg, "ENGINE: pfnWriteByte() - '%s'\n", sz);
         rblog(msg);
     }
-
 
     if (gpGlobals->deathmatch) {
         // Ditlew's Radio
@@ -508,8 +506,9 @@ void pfnWriteString(const char *sz) {
             strcpy(message, sz);   // copy message and handle at bot.cpp radio routine.
             radio_message = true;
             radio_message_from = false;
-        } else if (strcmp(sz, "#Game_radio") == 0)
+        } else if (strcmp(sz, "#Game_radio") == 0) {
             radio_message_start = true;
+        }
 
         // End Ditlew's Radio
 
@@ -519,8 +518,9 @@ void pfnWriteString(const char *sz) {
 
 
         // if this message is for a bot, call the client message function...
-        if (botMsgFunction)
+        if (botMsgFunction) {
             (*botMsgFunction)((void *) sz, botMsgIndex);
+        }
     }
 
     RETURN_META(MRES_IGNORED);
