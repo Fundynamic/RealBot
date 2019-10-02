@@ -2441,10 +2441,10 @@ void cNodeMachine::openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighbou
         float cost = gCost + hCost;
 
         if (botTeam > -1) {
-            double dangerCost = InfoNodes[neighbourNode].fDanger[botTeam] * cost;
+//            double dangerCost = InfoNodes[neighbourNode].fDanger[botTeam] * cost;
 //            double contactCost = InfoNodes[neighbourNode].fContact[botTeam] * cost;
 
-            cost += dangerCost;
+//            cost += dangerCost;
 //            cost += contactCost;
         }
 
@@ -3573,10 +3573,11 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
                 if (pBot->vip) {
                     score = 0; // do not chase yourself
                 } else {
-                    // if distance is too big, go to it. (guard the VIP)
-                    int maxDistanceWeKeepToVIP = 500;
-                    float goalScore = maxDistanceWeKeepToVIP / fDistanceToGoal;
-                    score = (score + goalScore) / 2.0;
+                    score = 0; // don't care about VIP
+//                    // if distance is too big, go to it. (guard the VIP)
+//                    int maxDistanceWeKeepToVIP = 500;
+//                    float goalScore = maxDistanceWeKeepToVIP / fDistanceToGoal;
+//                    score = (score + goalScore) / 2.0;
                 }
             }
         }
