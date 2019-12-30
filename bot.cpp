@@ -2951,9 +2951,8 @@ int cBot::CarryWeaponType() {
 
     // Check 3, is it a secondary gun?
     if (weapon_id == CS_WEAPON_P228 || weapon_id == CS_WEAPON_ELITE
-        || weapon_id == CS_WEAPON_UMP45 || weapon_id == CS_WEAPON_USP
-        || weapon_id == CS_WEAPON_GLOCK18 || weapon_id == CS_WEAPON_DEAGLE
-        || weapon_id == CS_WEAPON_FIVESEVEN)
+        || weapon_id == CS_WEAPON_USP || weapon_id == CS_WEAPON_GLOCK18
+		|| weapon_id == CS_WEAPON_DEAGLE || weapon_id == CS_WEAPON_FIVESEVEN)
         kind = SECONDARY;
 
     // Check 4, is it a sniper gun?
@@ -3507,13 +3506,13 @@ void cBot::CheckGear() {
     if (isOwningWeapon(UTIL_GiveWeaponId("weapon_scout"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_scout");
     if (isOwningWeapon(UTIL_GiveWeaponId("weapon_mac10"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_mac10");
     if (isOwningWeapon(UTIL_GiveWeaponId("weapon_g3sg1"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_g3sg1");
+	if (isOwningWeapon(UTIL_GiveWeaponId("weapon_ump45"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_ump45");
 
     // Counter-Strike 1.6 weapon FAMAS/GALIL
     if (isOwningWeapon(UTIL_GiveWeaponId("weapon_famas"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_famas");
     if (isOwningWeapon(UTIL_GiveWeaponId("weapon_galil"))) iPrimaryWeapon = UTIL_GiveWeaponId("weapon_galil");
 
     // SECONDARY
-    if (isOwningWeapon(UTIL_GiveWeaponId("weapon_ump45"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_ump45");
     if (isOwningWeapon(UTIL_GiveWeaponId("weapon_elite"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_elite");
     if (isOwningWeapon(UTIL_GiveWeaponId("weapon_fiveseven"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_fiveseven");
     if (isOwningWeapon(UTIL_GiveWeaponId("weapon_p228"))) iSecondaryWeapon = UTIL_GiveWeaponId("weapon_p228");
