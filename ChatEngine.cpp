@@ -28,8 +28,8 @@
   **/
 
 // Chatting Engine
-#include <string.h>
-#include <ctype.h>
+#include <cstring>
+#include <cctype>
 // Some tests by EVYNCKE
 #include <string>
 #include <algorithm>
@@ -97,8 +97,7 @@ void cChatEngine::think() {
     // 29/08/2019 Stefan: by using string compare on the name of the sender (ie sender[] is the name) we retrieve
     // the edict pointer
     edict_t *pSender = NULL;
-    int i;
-    for (i = 1; i <= gpGlobals->maxClients; i++) {
+    for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
 
         if (pPlayer && (!pPlayer->free)) {
@@ -126,7 +125,7 @@ void cChatEngine::think() {
     int c = 0;
     int wc = 0;
 
-    int sentenceLength = strlen(sentence);
+    const int sentenceLength = strlen(sentence);
 
     // When length is not valid, get out.
     // 29/08/2019: Stefan, so let me get this. We declare the sentence to be max 128 chars, but then we still could end up with a longer one?
@@ -244,13 +243,8 @@ void cChatEngine::think() {
 
             // skip invalid players and skip self (i.e. this bot)
             if ((pPlayer) && (!pPlayer->free) && pSender != pPlayer) {
-
-                // only reply to the living when alive, and otherwise
-                bool bSenderAlive = false;
-                bool bPlayerAlive = false;
-
-                bSenderAlive = IsAlive(pSender);      // CRASH : it sometimes crashes here
-                bPlayerAlive = IsAlive(pPlayer);
+	            bool bSenderAlive = IsAlive(pSender);      // CRASH : it sometimes crashes here
+                bool bPlayerAlive = IsAlive(pPlayer);
 
                 if (bSenderAlive != bPlayerAlive)
                     continue;
@@ -315,20 +309,16 @@ void cChatEngine::think() {
                                     // copy senders name to chSentence
                                     strcat(temp, sender);
 
-                                    // From here us 'tc' to keep track of chSentence and use
-                                    // nC to keep reading from ReplyBlock
-                                    int tc = nC;
-
                                     // Skip %n part in ReplyBlock
                                     nC = name_offset + 3;
 
                                     // we just copied a name to chSentence
                                     // set our cursor after the name now (name length + 1)
-                                    tc = strlen(temp);
+                                    int tc = strlen(temp);
 
                                     // now finish the sentence
                                     // get entire length of ReplyBlock and go until we reach the end
-                                    int length =
+                                    const int length =
                                             strlen(ReplyBlock[iTheBlock].
                                                     sentence[the_c]);
 

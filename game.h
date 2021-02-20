@@ -71,36 +71,36 @@ public:
 
    // ---------------------
    void LoadNames();
-   void LoadCFG();
-   void LoadBuyTable();
+   static void LoadCFG();
+   static void LoadBuyTable();
 
    // ---------------------
-   void SelectName(char *name);
-   bool NamesAvailable();
+   void SelectName(char *name) const;
+   bool NamesAvailable() const;
    void SetPlayingRounds(int iMin, int iMax);
    void SetNewRound(bool bState);
    void resetRoundTime();
    void SetRoundTime(float fTime);
-   void DetermineMapGoal();
+   void DetermineMapGoal() const;
 
    // ---------------------
    char *RandomSentence();
 
    // ---------------------
-   int GetMinPlayRounds();
-   int GetMaxPlayRounds();
+   int GetMinPlayRounds() const;
+   int GetMaxPlayRounds() const;
 
-   bool NewRound();             // New round?
-   float getRoundStartedTime();           // When did the round start? (time)
-   float getRoundTimeElapsed();           // difference between now and round started time
+   bool NewRound() const;             // New round?
+   float getRoundStartedTime() const;           // When did the round start? (time)
+   float getRoundTimeElapsed() const;           // difference between now and round started time
 
    int createBot(edict_t * pPlayer, const char *teamArg, const char *skillArg,
-                 const char *modelArg, const char *nameArg);
+                 const char *modelArg, const char *nameArg) const;
 
    // ---------------------
    void UpdateGameStatus();     // Updates global game variables
-   bool isC4Dropped();
-   bool isPlantedC4Discovered();
+   bool isC4Dropped() const;
+   bool isPlantedC4Discovered() const;
 
    // ---------------------
    // public variables

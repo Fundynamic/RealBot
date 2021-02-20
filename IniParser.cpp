@@ -32,7 +32,7 @@
   * COPYRIGHTED BY STEFAN HENDRIKS (C) 2003-2004
   **/
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -46,7 +46,7 @@
 #include "NodeMachine.h"
 #include "ChatEngine.h"
 
-#include <ctype.h>
+#include <cctype>
 
 extern int mod_id;
 extern edict_t *pHostEdict;
@@ -61,9 +61,7 @@ extern cChatEngine ChatEngine;
 // with the chars in between. So : [MAP] -> section = 'MAP'. Use function INI_SectionType(..)
 // to get the correct ID for that.
 void INI_Section(char input[80], char section[30]) {
-
-   int pos = 0;
-   int end_pos = -1;
+	int end_pos = -1;
 
    // clear out entire string
    for (int i = 0; i < 30; i++)
@@ -71,7 +69,7 @@ void INI_Section(char input[80], char section[30]) {
 
    // check if the first character is a '['
    if (input[0] == '[') {
-      pos = 1;                  // Begin at character 1
+      int pos = 1;                  // Begin at character 1
 
       while (pos < 79) {
          if (input[pos] == ']') {
@@ -120,7 +118,7 @@ void INI_Word(char input[80], char word[25]) {
 
 // Reads out word[], does a string compare and returns type id
 int INI_WordType(char word[25], int section) {
-   if (strlen(word) > 0) {
+   if (word[0] != '\0') {
 
       if (strcmp(word, "Word") == 0)
          return WORD_WORD;
@@ -550,7 +548,6 @@ void INI_PARSE_CHATFILE() {
 
    FILE *stream;
    int section = INI_NONE;
-   int wordtype = WORD_NONE;
 
 
    // Set Directory name + file
@@ -583,8 +580,6 @@ void INI_PARSE_CHATFILE() {
                (linefeed[0] == '/' && linefeed[1] == '/') ||
                linefeed[0] == '\n' || linefeed[0] == '\0')
             continue;           // Skip
-
-         wordtype = WORD_NONE;
 
          // Every line is checked for a new section.
          INI_Section(linefeed, linesection);
@@ -620,7 +615,7 @@ void INI_PARSE_CHATFILE() {
 
          if (iBlockId > -1) {
             INI_Word(linefeed, lineword);
-            wordtype = INI_WordType(lineword, section);
+            int wordtype = INI_WordType(lineword, section);
 
             // We load in words
             if (wordtype == WORD_WORD) {
@@ -685,7 +680,6 @@ void INI_PARSE_IAD() {
 
    FILE *stream;
    int section = INI_NONE;
-   int wordtype = WORD_NONE;
 
    // Set Directory name
    strcpy(dirname, "data/cstrike/ini/");
@@ -699,8 +693,8 @@ void INI_PARSE_IAD() {
    SERVER_PRINT(filename);
    SERVER_PRINT("\n");
 
-   float AreaX, AreaY, AreaZ;
-   AreaX = AreaY = AreaZ = 9999;
+   float AreaY, AreaZ;
+   float AreaX = AreaY = AreaZ = 9999;
 
    if ((stream = fopen(filename, "r+t")) != NULL) {
       char linefeed[80];
@@ -718,8 +712,6 @@ void INI_PARSE_IAD() {
                linefeed[0] == '\n' || linefeed[0] == '\0')
             continue;           // Skip
 
-         wordtype = WORD_NONE;
-
          // Every line is checked for a new section.
          INI_Section(linefeed, linesection);
 
@@ -731,7 +723,7 @@ void INI_PARSE_IAD() {
          // Check word only when in a section
          if (section != INI_NONE) {
             INI_Word(linefeed, lineword);
-            wordtype = INI_WordType(lineword, section);
+            int wordtype = INI_WordType(lineword, section);
 
             if (section == INI_AREA) {
                if (wordtype == WORD_AREAX)
@@ -770,7 +762,6 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
 
    FILE *stream;
    int section = INI_NONE;
-   int wordtype = WORD_NONE;
 
    char dirname[256];
    char filename[256];
@@ -804,8 +795,6 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
                linefeed[0] == '\n' || linefeed[0] == '\0')
             continue;           // Skip
 
-         wordtype = WORD_NONE;
-
          // Every line is checked for a new section.
          INI_Section(linefeed, linesection);
 
@@ -816,7 +805,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
          // Check word only when in a section
          if (section != INI_NONE) {
             INI_Word(linefeed, lineword);
-            wordtype = INI_WordType(lineword, section);
+            int wordtype = INI_WordType(lineword, section);
 
             // WEAPON
             if (section == INI_WEAPON) {
@@ -937,7 +926,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       // Skill, everything but botskill can change.
 
       // Determine reaction time based upon botskill here
-      float fMinReact = 0.0, fMaxReact;
+      float fMinReact = 0.0;
       if (pBot->bot_skill == 0)
          fMinReact = 0.0;
       else
@@ -947,7 +936,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
             RANDOM_FLOAT((pBot->bot_skill / 20) + 0.05,
                          (pBot->bot_skill / 5) + 0.05);
 
-      fMaxReact = fMinReact + RANDOM_FLOAT(0.05, 0.2);
+      float fMaxReact = fMinReact + RANDOM_FLOAT(0.05, 0.2);
 
       // SET them
       pBot->fpMinReactTime = fMinReact;
@@ -956,8 +945,8 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       // Set Offsets (note, they are extra upon current aiming code)
       // 30.8.04 redefined by frashman
       // float fOffset = RANDOM_FLOAT ((pBot->bot_skill / 5), (pBot->bot_skill / 2));
-      float fOffset = RANDOM_FLOAT((pBot->bot_skill / 5) + 0.05,
-                                   (pBot->bot_skill / 2) + 0.05);
+      const float fOffset = RANDOM_FLOAT((pBot->bot_skill / 5) + 0.05,
+                                         (pBot->bot_skill / 2) + 0.05);
 
       // SET
       pBot->fpXOffset = pBot->fpYOffset = pBot->fpZOffset = fOffset;
@@ -995,10 +984,8 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       // writes whole path into "filename", Linux compatible
       UTIL_BuildFileNameRB(dirname, filename);
 
-      FILE *rbl;
-
       // Only save if lock type is < 1
-      rbl = fopen(filename, "w+t");
+      FILE* rbl = fopen(filename, "w+t");
 
       // Created file
       if (rbl != NULL) {
@@ -1076,7 +1063,6 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
 void INI_PARSE_BUYTABLE() {
    FILE *stream;
    int section = INI_NONE;
-   int wordtype = WORD_NONE;
    int prev_section = section;
    int weapon_id = -1;
 
@@ -1117,8 +1103,6 @@ void INI_PARSE_BUYTABLE() {
                linefeed[0] == '\n' || linefeed[0] == '\0')
             continue;           // Skip
 
-         wordtype = WORD_NONE;
-
          // Every line is checked for a new section.
          INI_Section(linefeed, linesection);
 
@@ -1145,7 +1129,7 @@ void INI_PARSE_BUYTABLE() {
          // Check word only when in a section
          if (section != INI_NONE) {
             INI_Word(linefeed, lineword);
-            wordtype = INI_WordType(lineword, section);
+            int wordtype = INI_WordType(lineword, section);
             if (wordtype != WORD_NONE) {
                if (wordtype == WORD_PRICE) {
                   //BotDebug("Loading price\n");

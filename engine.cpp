@@ -27,7 +27,7 @@
   *
   **/
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -150,15 +150,13 @@ pfnMessageBegin(int msg_dest, int msg_type, const float *pOrigin, edict_t *edict
     }
 
     if (gpGlobals->deathmatch) {
-        int index = -1;
-
-        // Fix this up for CS 1.6 weaponlists
+	    // Fix this up for CS 1.6 weaponlists
         // 01/07/04 - Stefan - Thanks to Whistler for pointing this out!
         if (msg_type == GET_USER_MSG_ID(PLID, "WeaponList", NULL))
             botMsgFunction = BotClient_CS_WeaponList;
 
         if (edict) {
-            index = UTIL_GetBotIndex(edict);
+            int index = UTIL_GetBotIndex(edict);
 
             // is this message for a bot?
             if (index != -1) {
@@ -271,7 +269,7 @@ pfnMessageBegin(int msg_dest, int msg_type, const float *pOrigin, edict_t *edict
     RETURN_META(MRES_IGNORED);
 }
 
-void pfnMessageEnd(void) {
+void pfnMessageEnd() {
     if (gpGlobals->deathmatch) {
         if (botMsgEndFunction)
             (*botMsgEndFunction)(NULL, botMsgIndex);      // NULL indicated msg end
@@ -399,7 +397,7 @@ void pfnWriteString(const char *sz) {
             radio_message = true;  // we found a radio message
 
             // Thank god Ditlew you already coded this...
-            int length = strlen(sz) - strlen(strstr(sz, " (RADIO)"));
+            const int length = strlen(sz) - strlen(strstr(sz, " (RADIO)"));
             strncpy(radio_messenger, sz, length);
 
             // Now search for any compatible radio command (old string).
@@ -543,7 +541,7 @@ void pfnClientPrintf(edict_t *pEdict, PRINT_TYPE ptype, const char *szMsg) {
     RETURN_META(MRES_IGNORED);
 }
 
-const char *pfnCmd_Args(void) {
+const char *pfnCmd_Args() {
     if (isFakeClientCommand)
         RETURN_META_VALUE(MRES_SUPERCEDE, &g_argv[0]);
     RETURN_META_VALUE(MRES_IGNORED, NULL);
@@ -566,7 +564,7 @@ const char *pfnCmd_Argv(int argc) {
     RETURN_META_VALUE(MRES_IGNORED, NULL);
 }
 
-int pfnCmd_Argc(void) {
+int pfnCmd_Argc() {
     if (isFakeClientCommand)
         RETURN_META_VALUE(MRES_SUPERCEDE, fake_arg_count);
     RETURN_META_VALUE(MRES_IGNORED, 0);

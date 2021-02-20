@@ -72,7 +72,7 @@ bool CBaseBot::IsShootableThruObstacle(Vector vecDest)
 
 */
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -138,7 +138,7 @@ void cBot::SpawnInit() {
     fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5, 5);
     fMemoryTime = gpGlobals->time;
     fDoRadio = gpGlobals->time;
-    float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
+    const float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
     fNotStuckTime = gpGlobals->time + freezeTimeCVAR + 0.5f;
     f_shoot_wait_time = gpGlobals->time;
     f_goback_time = gpGlobals->time;
@@ -311,7 +311,7 @@ void cBot::NewRound() {
     fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5, 5);
     fMemoryTime = gpGlobals->time;
     fDoRadio = gpGlobals->time;
-    float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
+    const float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
     fNotStuckTime = gpGlobals->time + freezeTimeCVAR + 0.5f;
     f_shoot_wait_time = gpGlobals->time;
     f_goback_time = gpGlobals->time;
@@ -462,7 +462,7 @@ void cBot::NewRound() {
                     iMax++;
             }
 
-            int the_c = RANDOM_LONG(0, iMax);
+            const int the_c = RANDOM_LONG(0, iMax);
 
             if (the_c > -1 && iMax > -1) {
                 char chSentence[80];
@@ -496,7 +496,7 @@ void cBot::PrepareChat(char sentence[128]) {
  Function purpose: Return reaction time based upon skill
  ******************************************************************************/
 float cBot::ReactionTime(int iSkill) {
-    float time = RANDOM_FLOAT(fpMinReactTime, fpMaxReactTime);
+	const float time = RANDOM_FLOAT(fpMinReactTime, fpMaxReactTime);
     if (Game.messageVerbosity > 1) {
         char msg[255];
         sprintf(msg, "minReactTime %f, maxReactTime %f, skill %d, results into %f", fpMinReactTime, fpMaxReactTime, iSkill, time);
@@ -534,13 +534,13 @@ int cBot::FindEnemy() {
 
             // if bot can see the player...
             if (FInViewCone(&vVecEnd, pEdict) && FVisible(vVecEnd, pEdict)) {
-                int player_team = UTIL_GetTeam(pPlayer);
-                int bot_team = UTIL_GetTeam(pEdict);
+	            const int player_team = UTIL_GetTeam(pPlayer);
+	            const int bot_team = UTIL_GetTeam(pEdict);
                 if (player_team == bot_team)
                     continue;        // do not target teammates
 
                 // Its not a friend, track enemy
-                float fDistance =
+	            const float fDistance =
                         (pPlayer->v.origin - pEdict->v.origin).Length();
                 bool bCanSee = true;
 
@@ -560,7 +560,7 @@ int cBot::FindEnemy() {
 
     // We found a new enemy & the new enemy is different then previous pointer
     if (pNewEnemy && pNewEnemy != pEnemyEdict) {
-        int iCurrentNode = determineCurrentNode();
+	    const int iCurrentNode = determineCurrentNode();
 
         // Add 'contact' data
         if (iCurrentNode > -1) {
@@ -601,15 +601,16 @@ void cBot::rememberEnemyFound() {
 /******************************************************************************
  Function purpose: Sets vHead to aim at vector
  ******************************************************************************/
-void cBot::setHeadAiming(Vector vTarget) {
+void cBot::setHeadAiming(const Vector vTarget) {
     vHead = vTarget;
 }
 
 /**
- * Returns true / false wether enemy is alive.
+ * Returns true / false whether enemy is alive.
  * @return
  */
-bool cBot::isEnemyAlive() {
+bool cBot::isEnemyAlive() const
+{
     return IsAlive(pEnemyEdict);
 }
 
@@ -626,8 +627,8 @@ bool cBot::isSeeingEnemy() {
     Vector vBody = pEnemyEdict->v.origin;
     Vector vHead = pEnemyEdict->v.origin + pEnemyEdict->v.view_ofs;
 
-    bool bodyInFOV = FInViewCone(&vBody, pEdict) && FVisible(vBody, pEdict);
-    bool headInFOV = FInViewCone(&vHead, pEdict) && FVisible(vHead, pEdict);
+    const bool bodyInFOV = FInViewCone(&vBody, pEdict) && FVisible(vBody, pEdict);
+    const bool headInFOV = FInViewCone(&vHead, pEdict) && FVisible(vHead, pEdict);
     if (bodyInFOV || headInFOV) {
         return true;
     }
@@ -647,14 +648,11 @@ void cBot::AimAtEnemy() {
         return;
     }
 
-    // ------------------------ we can see enemy -------------------------
-    float fDistance;
-
     // Distance to enemy
-    fDistance = (pEnemyEdict->v.origin - pEdict->v.origin).Length() + 1; // +1 to make sure we never divide by zero
+    float fDistance = (pEnemyEdict->v.origin - pEdict->v.origin).Length() + 1; // +1 to make sure we never divide by zero
 
     // factor in distance, the further away the more deviation - which is based on skill
-    int skillReversed = (10 - bot_skill) + 1;
+    const int skillReversed = (10 - bot_skill) + 1;
     float fScale = 0.5 + (fDistance / (64 *
                                        skillReversed)); // a good skilled bot is less impacted by distance than a bad skilled bot
 
@@ -671,8 +669,8 @@ void cBot::AimAtEnemy() {
         vTarget = pEnemyEdict->v.origin; // aim for body
 
     // Based upon how far, we make this fuzzy
-    float fDx, fDy, fDz;
-    fDx = fDy = fDz = ((bot_skill + 1) * fScale);
+    float fDy, fDz;
+    float fDx = fDy = fDz = ((bot_skill + 1) * fScale);
 
     // Example 1:
     // Super skilled bot (bot_skill 1), with enemy of 2048 units away. Results into:
@@ -797,7 +795,7 @@ void cBot::FightEnemy() {
             if (!bFirstOutOfSight) {
                 rprint_trace("FightEnemy()", "Enemy out of sight, calculating path towards it.");
                 // Only change path when we update our information here
-                int iGoal = NodeMachine.getClosestNode(lastSeenEnemyVector, NODE_ZONE, pEdict);
+                const int iGoal = NodeMachine.getClosestNode(lastSeenEnemyVector, NODE_ZONE, pEdict);
                 if (iGoal > -1) {
                     setGoalNode(iGoal);
                     forgetPath();
@@ -821,11 +819,13 @@ void cBot::pickWeapon(int weaponId) {
     f_update_weapon_time = gpGlobals->time + 0.7;
 }
 
-bool cBot::ownsFavoritePrimaryWeapon() {
+bool cBot::ownsFavoritePrimaryWeapon() const
+{
     return hasFavoritePrimaryWeaponPreference() && isOwningWeapon(ipFavoPriWeapon);
 }
 
-bool cBot::ownsFavoriteSecondaryWeapon() {
+bool cBot::ownsFavoriteSecondaryWeapon() const
+{
     return hasFavoriteSecondaryWeaponPreference() && isOwningWeapon(ipFavoSecWeapon);
 }
 
@@ -834,7 +834,8 @@ bool cBot::ownsFavoriteSecondaryWeapon() {
  * @param weaponId
  * @return
  */
-bool cBot::isOwningWeapon(int weaponId) {
+bool cBot::isOwningWeapon(int weaponId) const
+{
     return bot_weapons & (1 << weaponId);
 }
 
@@ -843,19 +844,23 @@ bool cBot::isOwningWeapon(int weaponId) {
  * @param weaponId
  * @return
  */
-bool cBot::isHoldingWeapon(int weaponId) {
+bool cBot::isHoldingWeapon(int weaponId) const
+{
     return (current_weapon.iId == weaponId);
 }
 
-bool cBot::hasFavoritePrimaryWeaponPreference() {
+bool cBot::hasFavoritePrimaryWeaponPreference() const
+{
     return ipFavoPriWeapon > -1;
 }
 
-bool cBot::hasFavoriteSecondaryWeaponPreference() {
+bool cBot::hasFavoriteSecondaryWeaponPreference() const
+{
     return ipFavoSecWeapon > -1;
 }
 
-bool cBot::canAfford(int price) {
+bool cBot::canAfford(int price) const
+{
     return this->bot_money > price;
 }
 
@@ -868,9 +873,9 @@ void cBot::PickBestWeapon() {
         return;
 
     // Distance to enemy
-    float fDistance = func_distance(pEdict->v.origin, lastSeenEnemyVector);
+    const float fDistance = func_distance(pEdict->v.origin, lastSeenEnemyVector);
 
-    float knifeDistance = 300;
+    const float knifeDistance = 300;
 
     // ----------------------------
     // In this function all we do is decide what weapon to pick
@@ -932,8 +937,8 @@ void cBot::PickBestWeapon() {
     // ----------------------------------------
     // More complex bad things that can happen:
     // ----------------------------------------
-    int iTotalAmmo = current_weapon.iAmmo1;
-    int iCurrentAmmo = current_weapon.iClip;
+    const int iTotalAmmo = current_weapon.iAmmo1;
+    const int iCurrentAmmo = current_weapon.iClip;
 
     //char msg[80];
     //sprintf(msg, "BOT: ICLIP %d, TOTALAMMO %d\n", iCurrentAmmo, iTotalAmmo);
@@ -1024,8 +1029,7 @@ void cBot::FireWeapon() {
                 if ((CarryWeapon(CS_WEAPON_AK47)
                      || CarryWeapon(CS_WEAPON_M4A1)
                      || CarryWeapon(CS_WEAPON_AUG)) && (bot_skill < 3)) {
-                    float f_burst = 0.1;
-                    f_burst = (2048 / fDistance) + 0.1;
+	                float f_burst = (2048 / fDistance) + 0.1;
                     if (f_burst < 0.1)
                         f_burst = 0.1;
                     if (f_burst > 0.4)
@@ -1149,9 +1153,9 @@ void cBot::Combat() {
             if (Game.iDeathsBroadcasting != BROADCAST_DEATHS_NONE) {
                 // This is a human, we will tell this human he has been killed
                 // by a bot.
-                int r = RANDOM_LONG(150, 255);
-                int g = RANDOM_LONG(30, 155);
-                int b = RANDOM_LONG(30, 155);
+                const int r = RANDOM_LONG(150, 255);
+                const int g = RANDOM_LONG(30, 155);
+                const int b = RANDOM_LONG(30, 155);
                 char msg[128];
                 if (Game.iDeathsBroadcasting == BROADCAST_DEATHS_FULL) {
                     sprintf(msg, "A RealBot has killed you!\n\nName:%s\nSkill:%d\n", name, bot_skill);
@@ -1209,20 +1213,16 @@ void cBot::Combat() {
  ******************************************************************************/
 void cBot::FindCover() {
     TraceResult tr;
-    Vector dest = lastSeenEnemyVector;
+    const Vector dest = lastSeenEnemyVector;
     //  Vector start = pEdict->v.origin;
     //  Vector end;
     Vector cover_vect = Vector(9999, 9999, 9999);
 
-    // When vector is visible, then look from that vector to the threat, if then NOT
-    // Visible, then its cover.
-    Vector v_src, v_right, v_left;
-
     // TraceLines in 2 directions to find which way to go...
     UTIL_MakeVectors(pEdict->v.v_angle);
-    v_src = pEdict->v.origin + pEdict->v.view_ofs;
-    v_right = v_src + gpGlobals->v_right * 90;
-    v_left = v_src + gpGlobals->v_right * -90;
+    Vector v_src = pEdict->v.origin + pEdict->v.view_ofs;
+    Vector v_right = v_src + gpGlobals->v_right * 90;
+    Vector v_left = v_src + gpGlobals->v_right * -90;
 
     // We have now our first 'left' and 'right'
 
@@ -1304,13 +1304,13 @@ void cBot::FindCover() {
         }
     }
 
-    int iNodeEnemy = NodeMachine.getClosestNode(pEnemyEdict->v.origin, 60, pEnemyEdict);
-    int iNodeFrom = NodeMachine.getClosestNode(pEdict->v.origin, NODE_ZONE, pEdict);
+    const int iNodeEnemy = NodeMachine.getClosestNode(pEnemyEdict->v.origin, 60, pEnemyEdict);
+    const int iNodeFrom = NodeMachine.getClosestNode(pEdict->v.origin, NODE_ZONE, pEdict);
 
     // --------------
     // TEST TEST TEST
     // --------------
-    int iCoverNode = NodeMachine.node_cover(iNodeFrom, iNodeEnemy, pEdict);
+    const int iCoverNode = NodeMachine.node_cover(iNodeFrom, iNodeEnemy, pEdict);
     bool bTakenCover = false;
 
     if (iCoverNode > -1) {
@@ -1329,7 +1329,7 @@ void cBot::FindCover() {
         // --------------------------------------------------
         if (cover_vect != Vector(9999, 9999, 9999)) {
             rprint("FindCover()", "cover node found (cover_vect based)");
-            int iNodeCover = NodeMachine.getClosestNode(cover_vect, 60, pEdict);
+            const int iNodeCover = NodeMachine.getClosestNode(cover_vect, 60, pEdict);
             if (iNodeCover > -1) {
                 setGoalNode(iNodeCover);
                 forgetPath();
@@ -1430,7 +1430,7 @@ void cBot::InteractWithPlayers() {
     // friends are important, we are a team dudes!
     InteractWithFriends();
 
-    int result = FindEnemy();
+    const int result = FindEnemy();
 
     // -------------------------------
     // RESULT < 0; NO ENEMY FOUND
@@ -1544,7 +1544,7 @@ void cBot::InteractWithPlayers() {
         }
 
         // INITIALIZATION:
-        int iGoal = NodeMachine.getClosestNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
+        const int iGoal = NodeMachine.getClosestNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
         if (iGoal > -1) {
             rprint_trace("InteractWithPlayers()", "Found a new enemy, setting goal and forgetting path");
             setGoalNode(iGoal);
@@ -1590,7 +1590,7 @@ void cBot::InteractWithPlayers() {
         //
 
         // INITIALIZATION:
-        int iGoal = NodeMachine.getClosestNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
+        const int iGoal = NodeMachine.getClosestNode(pEnemyEdict->v.origin, NODE_ZONE, pEnemyEdict);
 
         if (iGoal > -1) {
             rprint_trace("InteractWithPlayers()", "Found a *newer* enemy, so picking goal node to that");
@@ -1704,13 +1704,12 @@ int cBot::ReturnTurnedAngle(float speed, float current, float ideal) {
     // how? we save the values here, andc alculate the new value.
     // this part is copied from botchangeyaw/pitch so it SHOULD work :)
     float current_180;           // current +/- 180 degrees
-    float diff;
 
     // turn from the current v_angle pitch to the idealpitch by selecting
     // the quickest way to turn to face that direction
 
     // find the difference in the current and ideal angle
-    diff = fabs(current - ideal);
+    float diff = fabs(current - ideal);
 
     // check if the bot is already facing the idealpitch direction...
     if (diff <= 1.0)
@@ -1796,11 +1795,11 @@ bool cBot::Defuse() {
     // Remember, pent=c4 now!
 
     // Calculate the distance between our position to the c4
-    Vector vC4 = pent->v.origin;
-    float distance = func_distance(pEdict->v.origin, vC4);
+    const Vector vC4 = pent->v.origin;
+    const float distance = func_distance(pEdict->v.origin, vC4);
 
     // can see C4
-    bool canSeeC4 = canSeeVector(vC4);
+    const bool canSeeC4 = canSeeVector(vC4);
 
     if (!canSeeC4) {
         rprint_trace("Defuse()", "Cannot see planted C4 - bailing");
@@ -1816,13 +1815,13 @@ bool cBot::Defuse() {
     // We can do 2 things now
     // - If we are not close, we check if we can walk to it, and if so we face to the c4
     // - If we are close, we face it and (begin) defuse the bomb.
-    int distanceForC4ToBeInReach = 70;
+    const int distanceForC4ToBeInReach = 70;
     if (distance < distanceForC4ToBeInReach) {
         vHead = vC4;
         vBody = vC4;
 
         setTimeToMoveToNode(3); // we are going to do non-path-follow stuff, so keep timer updated
-        int angle_to_c4 = FUNC_InFieldOfView(pEdict, (vC4 - pEdict->v.origin));
+        const int angle_to_c4 = FUNC_InFieldOfView(pEdict, (vC4 - pEdict->v.origin));
 
         // if defusion timer has not been set (ie, the bot is not yet going to defuse the bomb)
         if (f_defuse < gpGlobals->time && angle_to_c4 < 35) {
@@ -1852,7 +1851,7 @@ bool cBot::Defuse() {
 
     } else {
         rprint_trace("Defuse()", "I can see C4, but it is out of reach.");
-        int iGoalNode = NodeMachine.getClosestNode(vC4, distanceForC4ToBeInReach, NULL);
+        const int iGoalNode = NodeMachine.getClosestNode(vC4, distanceForC4ToBeInReach, NULL);
         if (iGoalNode < 0) {
             rprint_normal("Defuse()", "No node close, so just look at it/body face at it and move towards it.");
             vHead = vC4;
@@ -2080,7 +2079,8 @@ bool cBot::shouldActWithC4() const {
 }
 
 // BOT: On ladder?
-bool cBot::isOnLadder() {
+bool cBot::isOnLadder() const
+{
     return FUNC_IsOnLadder(pEdict);
 }
 
@@ -2099,42 +2099,41 @@ void cBot::CheckAround() {
     // Note: we use TRACEHULL instead of TRACELINE, because TRACEHULL detects
     // the famous 'undetectable' func_walls.
     TraceResult tr;
-    Vector v_source, v_left, v_right, v_forward, v_forwardleft, v_forwardright;
 
-//    v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT + (MAX_JUMPHEIGHT + 1));
-    v_source = pEdict->v.origin + Vector(0, 0, ORIGIN_HEIGHT);
+    //    v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT + (MAX_JUMPHEIGHT + 1));
+    Vector v_source = pEdict->v.origin + Vector(0, 0, ORIGIN_HEIGHT);
 
     // Go forward first
-    float distance = 90;
-    v_forward = v_source + gpGlobals->v_forward * distance;
+    const float distance = 90;
+    Vector v_forward = v_source + gpGlobals->v_forward * distance;
 
     // now really go left/right
-    v_right = v_source + gpGlobals->v_right * distance;
-    v_left = v_source + gpGlobals->v_right * -distance;
+    Vector v_right = v_source + gpGlobals->v_right * distance;
+    Vector v_left = v_source + gpGlobals->v_right * -distance;
 
     // now really go left/right
-    v_forwardright = v_right + gpGlobals->v_forward * distance;
-    v_forwardleft = v_left + gpGlobals->v_forward * -distance;
+    Vector v_forwardright = v_right + gpGlobals->v_forward * distance;
+    Vector v_forwardleft = v_left + gpGlobals->v_forward * -distance;
 
     // TRACELINE: forward
     UTIL_TraceHull(v_source, v_forward, dont_ignore_monsters, point_hull,  pEdict->v.pContainingEntity, &tr);
-    bool bHitForward = tr.flFraction < 1.0;
+    const bool bHitForward = tr.flFraction < 1.0;
 
     // TRACELINE: Left
     UTIL_TraceHull(v_source, v_left, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
-    bool bHitLeft = tr.flFraction < 1.0;
+    const bool bHitLeft = tr.flFraction < 1.0;
 
     // TRACELINE: Right
     UTIL_TraceHull(v_source, v_right, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
-    bool bHitRight = tr.flFraction < 1.0;
+    const bool bHitRight = tr.flFraction < 1.0;
 
     // TRACELINE: Forward left
     UTIL_TraceHull(v_source, v_forwardleft, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
-    bool bHitForwardLeft = tr.flFraction < 1.0;
+    const bool bHitForwardLeft = tr.flFraction < 1.0;
 
     // TRACELINE: Forward right
     UTIL_TraceHull(v_source, v_forwardright, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
-    bool bHitForwardRight = tr.flFraction < 1.0;
+    const bool bHitForwardRight = tr.flFraction < 1.0;
 
 
     char msg[255];
@@ -2181,7 +2180,7 @@ void cBot::CheckAround() {
         if (strcmp("func_breakable", item_name) == 0) {
 
             // Found a func_breakable
-            Vector vBreakableOrigin = VecBModelOrigin(pent);
+            const Vector vBreakableOrigin = VecBModelOrigin(pent);
 
             // Shoot
             if ((pent->v.flags & FL_WORLDBRUSH) == 0)      // can it be broken?
@@ -2205,7 +2204,8 @@ void cBot::CheckAround() {
 }
 
 // BOT: Should be taking cover?
-bool cBot::TakeCover() {
+bool cBot::TakeCover() const
+{
 
     // Its time based.
     if (f_cover_time < gpGlobals->time)
@@ -2234,17 +2234,20 @@ void cBot::prevPathIndex() {
 }
 
 // Returns true if bot has a path to follow
-bool cBot::isWalkingPath() {
+bool cBot::isWalkingPath() const
+{
     return this->pathIndex > -1;
 }
 
 // Returns true if bot has goal node
-bool cBot::hasGoal() {
+bool cBot::hasGoal() const
+{
     return this->iGoalNode > -1;
 }
 
 // Returns true if bot has goal node index (ie referring to Goals[])
-bool cBot::hasGoalIndex() {
+bool cBot::hasGoalIndex() const
+{
     return this->goalIndex > -1;
 }
 
@@ -2252,7 +2255,8 @@ bool cBot::hasGoalIndex() {
  * Returns goal data , if goal data exists
  * @return
  */
-tGoal *cBot::getGoalData() {
+tGoal *cBot::getGoalData() const
+{
     if (!hasGoalIndex()) return NULL;
     tGoal *ptr = NodeMachine.getGoal(this->goalIndex);
     if (ptr == NULL) return NULL;
@@ -2265,7 +2269,8 @@ tGoal *cBot::getGoalData() {
 }
 
 // Returns true if bot has an enemy edict
-bool cBot::hasEnemy() {
+bool cBot::hasEnemy() const
+{
     return this->pEnemyEdict != NULL;
 }
 
@@ -2274,7 +2279,8 @@ bool cBot::hasEnemy() {
  * @param pEdict
  * @return
  */
-bool cBot::hasEnemy(edict_t * pEdict) {
+bool cBot::hasEnemy(edict_t * pEdict) const
+{
     return this->pEnemyEdict == pEdict;
 }
 
@@ -2336,11 +2342,13 @@ void cBot::forgetGoal() {
     this->goalIndex = -1;
 }
 
-int cBot::getPathIndex() {
+int cBot::getPathIndex() const
+{
     return this->pathIndex;
 }
 
-int cBot::getPreviousPathIndex() {
+int cBot::getPreviousPathIndex() const
+{
     return this->pathIndex - 1;
 }
 
@@ -2354,11 +2362,13 @@ void cBot::forgetEnemy() {
     this->pEnemyEdict = NULL;
 }
 
-edict_t * cBot::getEnemyEdict() {
+edict_t * cBot::getEnemyEdict() const
+{
     return this->pEnemyEdict;
 }
 
-int cBot::getGoalNode() {
+int cBot::getGoalNode() const
+{
     return this->iGoalNode;
 }
 
@@ -2440,27 +2450,33 @@ void cBot::rprint_trace(const char *msg) {
     rprint_trace("rprint()", msg);
 }
 
-bool cBot::hasBomb() {
+bool cBot::hasBomb() const
+{
     return isOwningWeapon(CS_WEAPON_C4);
 }
 
-bool cBot::isCounterTerrorist() {
+bool cBot::isCounterTerrorist() const
+{
     return iTeam == 2;
 }
 
-bool cBot::isTerrorist() {
+bool cBot::isTerrorist() const
+{
     return iTeam == 1;
 }
 
-bool cBot::hasPrimaryWeaponEquiped() {
+bool cBot::hasPrimaryWeaponEquiped() const
+{
     return iPrimaryWeapon > -1;
 }
 
-bool cBot::hasSecondaryWeaponEquiped() {
+bool cBot::hasSecondaryWeaponEquiped() const
+{
     return iSecondaryWeapon > -1;
 }
 
-bool cBot::hasSecondaryWeapon(int weaponId) {
+bool cBot::hasSecondaryWeapon(int weaponId) const
+{
     return isOwningWeapon(weaponId);
 }
 
@@ -2745,7 +2761,7 @@ void cBot::Memory() {
                 // check if its running
                 if (FUNC_PlayerRuns(FUNC_PlayerSpeed(pPlayer))) {
                     // check distance
-                    float fDistance =
+                    const float fDistance =
                             (pPlayer->v.origin - pEdict->v.origin).Length();
 
                     // estimated distance we can hear somebody
@@ -2774,7 +2790,7 @@ void cBot::Memory() {
                         && FUNC_EdictHoldsWeapon(pEdict) !=
                            CS_WEAPON_SMOKEGRENADE)) {
                     // check distance
-                    float fDistance =
+                    const float fDistance =
                             (pPlayer->v.origin - pEdict->v.origin).Length();
 
                     // estimated distance we can hear somebody
@@ -2798,7 +2814,7 @@ void cBot::Memory() {
                 // zooming of a sniper rifle
                 if (pPlayer->v.button & IN_ATTACK2) {
                     // check distance
-                    float fDistance =
+                    const float fDistance =
                             (pPlayer->v.origin - pEdict->v.origin).Length();
 
                     // estimated distance we can hear somebody
@@ -2856,7 +2872,7 @@ void cBot::Memory() {
                 }
                 // we go to the destination
 
-                float fTime = 5 + (ipFearRate / 7);
+                const float fTime = 5 + (ipFearRate / 7);
 
                 if (RANDOM_LONG(0, 100) < ipFearRate
                     && f_walk_time + 5 < gpGlobals->time) // last 5 seconds did not walk
@@ -2929,16 +2945,18 @@ void cBot::Memory() {
 
 
 // BOT: Do i carry weapon # now?
-bool cBot::CarryWeapon(int iType) {
+bool cBot::CarryWeapon(int iType) const
+{
     if (current_weapon.iId == iType)
         return true;
     return false;
 }
 
 // BOT: Do i carry weapon TYPE # now?
-int cBot::CarryWeaponType() {
+int cBot::CarryWeaponType() const
+{
     int kind = PRIMARY;
-    int weapon_id = current_weapon.iId;
+    const int weapon_id = current_weapon.iId;
 
     // Check 1. Is it a knife?
     if (weapon_id == CS_WEAPON_KNIFE)
@@ -3011,7 +3029,8 @@ void cBot::rememberWhichHostageToRescue(edict_t *pHostage) {
     this->pBotHostage = pHostage;
 }
 
-edict_t * cBot::getHostageToRescue() {
+edict_t * cBot::getHostageToRescue() const
+{
     return pBotHostage;
 }
 
@@ -3034,11 +3053,13 @@ edict_t * cBot::findHostageToRescue() {
     return NULL;
 }
 
-bool cBot::isDefusing() {
+bool cBot::isDefusing() const
+{
     return f_defuse > gpGlobals->time;
 }
 
-bool cBot::hasTimeToMoveToNode() {
+bool cBot::hasTimeToMoveToNode() const
+{
     return fMoveToNodeTime > -1 && getMoveToNodeTimeRemaining() > 0;
 }
 /**
@@ -3065,7 +3086,8 @@ int cBot::determineCurrentNodeWithTwoAttempts() {
 /**
 Find node close to bot, given range. Does not cache result.
 **/
-int cBot::determineCurrentNode(float range) {
+int cBot::determineCurrentNode(float range) const
+{
     return NodeMachine.getClosestNode(pEdict->v.origin, range, pEdict);
 }
 
@@ -3085,7 +3107,8 @@ int cBot::getCurrentNode() {
 /**
  * Aka, the node we are heading for.
  */
-int cBot::getCurrentPathNodeToHeadFor() {
+int cBot::getCurrentPathNodeToHeadFor() const
+{
     return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, pathIndex);
 }
 
@@ -3093,23 +3116,27 @@ int cBot::getCurrentPathNodeToHeadFor() {
  * Aka, the node we were coming from. In case the index is < 0 (ie, there is no previous node yet), this will
  * return -1;
  */
-int cBot::getPreviousPathNodeToHeadFor() {
+int cBot::getPreviousPathNodeToHeadFor() const
+{
     return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, getPreviousPathIndex());
 }
 
-bool cBot::isHeadingForGoalNode() {
+bool cBot::isHeadingForGoalNode() const
+{
     return getCurrentPathNodeToHeadFor() == getGoalNode();
 }
 
 /**
  * Aka, the next node after we have arrived at the current path node.
  */
-int cBot::getNextPathNode() {
+int cBot::getNextPathNode() const
+{
     return NodeMachine.getNodeIndexFromBotForPath(iBotIndex, pathIndex + 1);
 }
 
 // Is this bot dead?
-bool cBot::isDead() {
+bool cBot::isDead() const
+{
     return (pEdict->v.health < 1) || (pEdict->v.deadflag != DEAD_NO);
 }
 
@@ -3147,9 +3174,9 @@ void cBot::Think() {
                 && killer_edict != NULL) {
                 // This is a human, we will tell this human he has been killed
                 // by a bot.
-                int r = RANDOM_LONG(150, 255);
-                int g = RANDOM_LONG(30, 155);
-                int b = RANDOM_LONG(30, 155);
+                const int r = RANDOM_LONG(150, 255);
+                const int g = RANDOM_LONG(30, 155);
+                const int b = RANDOM_LONG(30, 155);
                 char msg[128];
                 if (Game.iDeathsBroadcasting == BROADCAST_DEATHS_FULL)
                     sprintf(msg,
@@ -3191,7 +3218,7 @@ void cBot::Think() {
                             if (ChatEngine.ReplyBlock[99].sentence[tc][0] != '\0') iMax++;
                         }
 
-                        int the_c = RANDOM_LONG(0, iMax);
+                        const int the_c = RANDOM_LONG(0, iMax);
 
                         if (the_c > -1 && iMax > -1) {
                             char chSentence[80];
@@ -3241,9 +3268,9 @@ void cBot::Think() {
     // Move speed... moved_distance.
     if (distanceMovedTimer <= gpGlobals->time) {
         // see how far bot has moved since the previous position...
-        Vector v_diff = prevOrigin - pEdict->v.origin;
+        const Vector v_diff = prevOrigin - pEdict->v.origin;
         // make distanceMoved an average of this moment and the previous one.
-        float movedTwoTimes = distanceMoved + v_diff.Length();
+        const float movedTwoTimes = distanceMoved + v_diff.Length();
 
         // prevent division by zero
         if (movedTwoTimes > 0.0f) {
@@ -3270,7 +3297,7 @@ void cBot::Think() {
     // --------------------------------
     // IMPORTANT THINKING GOING ON HERE
     // --------------------------------
-    int healthChange = prev_health - bot_health;
+    const int healthChange = prev_health - bot_health;
 
     // handle damage taken
     if (prev_health > bot_health
@@ -3308,8 +3335,8 @@ void cBot::Think() {
 
 
     // NEW: When round time is over and still busy playing, kill bots
-    float roundTimeInSeconds = CVAR_GET_FLOAT("mp_roundtime") * 60;
-    float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
+    const float roundTimeInSeconds = CVAR_GET_FLOAT("mp_roundtime") * 60;
+    const float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
     if (Game.getRoundStartedTime() + 10.0 + roundTimeInSeconds + freezeTimeCVAR < gpGlobals->time) {
         end_round = true;
         // round is ended
@@ -3439,7 +3466,7 @@ bool cBot::isFreezeTime() const {
 Return true if one of the pointers is not NULL
 **/
 bool cBot::isEscortingHostages() {
-    bool result = getAmountOfHostagesBeingRescued() > 0;
+	const bool result = getAmountOfHostagesBeingRescued() > 0;
     if (result) {
         rprint("I am escorting hostages!");
     }
@@ -3618,10 +3645,9 @@ bool BotRadioAction() {
                 if (BotPointer == NULL)
                     continue;        // somehow this fucked up, bail out
 
-                bool want_to_answer = false;        // want to answer radio call
-                bool report_back = false;   // for reporting in
-                float distance = func_distance(plr->v.origin,
-                                               BotPointer->pEdict->v.origin);        // distance between the 2
+                const bool report_back = false;   // for reporting in
+                const float distance = func_distance(plr->v.origin,
+                                                     BotPointer->pEdict->v.origin);        // distance between the 2
 
                 // Same team, randomly, do we even listen to the radio?
                 // the more further away, the more chance it will not listen
@@ -3634,7 +3660,7 @@ bool BotRadioAction() {
                 // Hearrate (personality setting)
                 if (RANDOM_LONG(0, 100) < BotPointer->ipHearRate &&
                     bWantToListen)
-                    want_to_answer = true;
+                    bool want_to_answer = true;
 
                 bool can_do_negative = true;        // On some radio commands we can't say negative, thats stupid
 
@@ -3676,7 +3702,7 @@ bool BotRadioAction() {
                         can_do_negative = false;
 
                         // Find player who issues this message and go to it
-                        int iBackupNode =
+                        const int iBackupNode =
                                 NodeMachine.getClosestNode(plr->v.origin, NODE_ZONE, plr);
 
                         // Help this player
@@ -3713,7 +3739,7 @@ bool BotRadioAction() {
                         unstood = true;
 
                         // get source of backup
-                        int iBackupNode = NodeMachine.getClosestNode(plr->v.origin, NODE_ZONE, plr);
+                        const int iBackupNode = NodeMachine.getClosestNode(plr->v.origin, NODE_ZONE, plr);
 
                         if (iBackupNode > -1) {
                             BotPointer->rprint_trace("BotRadioAction", "Found node nearby player who requested backup/reported taking fire.");
@@ -3747,7 +3773,7 @@ bool BotRadioAction() {
                     }
 
                     if ((FUNC_DoRadio(BotPointer)) && (unstood)) {
-                        int maxAllowedRadios = gpGlobals->maxClients / 4;
+	                    const int maxAllowedRadios = gpGlobals->maxClients / 4;
                         if (BotPointer->console_nr == 0 && radios < maxAllowedRadios) {
 
                             if (!report_back) {
@@ -3802,7 +3828,7 @@ bool BotRadioAction() {
 }
 
 // Is entity visible? (from Entity view)
-bool EntityIsVisible(edict_t *pEntity, Vector dest) {
+bool EntityIsVisible(edict_t *pEntity, const Vector dest) {
 
     //DebugOut("bot: EntityIsVisible()\n");
     TraceResult tr;
@@ -3820,12 +3846,13 @@ bool EntityIsVisible(edict_t *pEntity, Vector dest) {
 }
 
 // Can see Edict?
-bool cBot::canSeeEntity(edict_t *pEntity) {
+bool cBot::canSeeEntity(edict_t *pEntity) const
+{
     if (pEntity == NULL) return false;
 
     TraceResult tr;
-    Vector start = pEdict->v.origin + pEdict->v.view_ofs;
-    Vector vDest = pEntity->v.origin;
+    const Vector start = pEdict->v.origin + pEdict->v.view_ofs;
+    const Vector vDest = pEntity->v.origin;
 
     // trace a line from bot's eyes to destination...
     UTIL_TraceLine(start, vDest, ignore_monsters, pEdict->v.pContainingEntity, &tr);
@@ -3859,7 +3886,8 @@ float cBot::getDistanceTo(int nodeIndex) {
  * @param vDest
  * @return
  */
-float cBot::getDistanceTo(Vector vDest) {
+float cBot::getDistanceTo(const Vector vDest) const
+{
     return func_distance(pEdict->v.origin, vDest);
 }
 
@@ -3917,7 +3945,8 @@ void cBot::forgetHostage(edict_t *pHostage) {
     }
 }
 
-int cBot::getAmountOfHostagesBeingRescued() {
+int cBot::getAmountOfHostagesBeingRescued() const
+{
     int count = 0;
 
     if (hostage1 != NULL) count++;
@@ -3931,9 +3960,10 @@ int cBot::getAmountOfHostagesBeingRescued() {
 // Will return true when the vector is visible.
 // TODO: Make this function more flexible, ie able to hit an entity that it searches
 // and return true on that as well.  (mix it with the above function)
-bool cBot::canSeeVector(Vector vDest) {
+bool cBot::canSeeVector(const Vector vDest) const
+{
     TraceResult tr;
-    Vector start = pEdict->v.origin + pEdict->v.view_ofs;
+    const Vector start = pEdict->v.origin + pEdict->v.view_ofs;
 
     // trace a line from bot's eyes to destination...
     UTIL_TraceLine(start, vDest, ignore_monsters, pEdict->v.pContainingEntity, &tr);
@@ -3947,12 +3977,14 @@ bool cBot::canSeeVector(Vector vDest) {
 // The coming 2 shield functions where originaly created by Whistler;
 // i got them from the JoeBot source though. But... in the end, thank you
 // Whistler!
-bool cBot::hasShield() {
+bool cBot::hasShield() const
+{
     // Adapted from Wei Mingzhi's YAPB
     return (strncmp(STRING(pEdict->v.viewmodel), "models/shield/v_shield_", 23) == 0);
 }
 
-bool cBot::hasShieldDrawn() {
+bool cBot::hasShieldDrawn() const
+{
     // Adapted from Wei Mingzhi's YAPB
     if (!hasShield())
         return false;
@@ -3980,10 +4012,10 @@ void BotThink(cBot *pBot) {
     // PASS THROUGH ENGINE
 
 //    float frameInterval = m_lastCommandTime - gpGlobals->time;
-    float msecval = (gpGlobals->time - pBot->fLastRunPlayerMoveTime) * 1000.0f;
+    const float msecval = (gpGlobals->time - pBot->fLastRunPlayerMoveTime) * 1000.0f;
     pBot->fLastRunPlayerMoveTime = gpGlobals->time;
 
-    double upMove = 0.0;
+    const double upMove = 0.0;
     char msg[255];
     sprintf(msg, "moveSpeed %f, strafeSpeed %f, msecVal %f", pBot->f_move_speed, pBot->f_strafe_speed, msecval);
     pBot->rprint_trace("BotThink/pfnRunPlayerMove", msg);
@@ -3996,7 +4028,7 @@ void BotThink(cBot *pBot) {
                                 0,
                                 msecval);
 
-    float fUpdateInterval = 1.0f / 60.0f; // update at 60 fps
+    const float fUpdateInterval = 1.0f / 60.0f; // update at 60 fps
     pBot->fUpdateTime = gpGlobals->time + fUpdateInterval;
 }
 
@@ -4004,9 +4036,9 @@ void BotThink(cBot *pBot) {
 // log important variables of the bot (it will be called from dll.cpp once per active bot)
 // they are logged into reallog.txt file
 
-void cBot::Dump(void) {
+void cBot::Dump() {
     char buffer[181];
-    int iCurrentNode =
+    const int iCurrentNode =
             NodeMachine.getClosestNode(pEdict->v.origin, (NODE_ZONE * 2), pEdict);
 
     _snprintf(buffer, 180,
@@ -4047,11 +4079,13 @@ void cBot::beginWalkingPath() {
     this->pathIndex = 0;
 }
 
-bool cBot::hasHostageToRescue() {
+bool cBot::hasHostageToRescue() const
+{
     return pBotHostage != NULL;
 }
 
-bool cBot::canSeeHostageToRescue() {
+bool cBot::canSeeHostageToRescue() const
+{
     return canSeeEntity(pBotHostage);
 }
 
@@ -4087,12 +4121,14 @@ void cBot::checkIfHostagesAreRescued() {
     if (isHostageRescued(this, hostage4))  forgetHostage(hostage4);
 }
 
-bool cBot::isOnSameTeamAs(cBot *pBot) {
+bool cBot::isOnSameTeamAs(cBot *pBot) const
+{
     if (pBot == NULL) return false;
     return pBot->iTeam == this->iTeam;
 }
 
-bool cBot::wantsToBuyStuff() {
+bool cBot::wantsToBuyStuff() const
+{
     return buy_secondary == true ||
            buy_primary == true ||
            buy_ammo_primary == true ||
@@ -4103,11 +4139,13 @@ bool cBot::wantsToBuyStuff() {
            buy_flashbang > 0;
 }
 
-bool cBot::isUsingConsole() {
+bool cBot::isUsingConsole() const
+{
     return console_nr > 0;
 }
 
-bool cBot::shouldBeAbleToMove() {
+bool cBot::shouldBeAbleToMove() const
+{
     return  !isDead() &&
             !isFreezeTime() &&
             !shouldCamp() &&
@@ -4117,9 +4155,10 @@ bool cBot::shouldBeAbleToMove() {
 //            !isJumping();
 }
 
-edict_t *cBot::getEntityBetweenMeAndCurrentPathNodeToHeadFor() {
+edict_t *cBot::getEntityBetweenMeAndCurrentPathNodeToHeadFor() const
+{
     TraceResult tr;
-    Vector vOrigin = pEdict->v.origin;
+    const Vector vOrigin = pEdict->v.origin;
 
     tNode *node = NodeMachine.getNode(getCurrentPathNodeToHeadFor());
 
@@ -4143,7 +4182,8 @@ edict_t *cBot::getEntityBetweenMeAndCurrentPathNodeToHeadFor() {
  * Get distance to the next node we're heading for
  * @return
  */
-float cBot::getDistanceToNextNode() {
+float cBot::getDistanceToNextNode() const
+{
     tNode *node = NodeMachine.getNode(getCurrentPathNodeToHeadFor());
     if (node) {
         return getDistanceTo(node->origin);
@@ -4172,7 +4212,7 @@ void cBot::lookAtNode(int nodeIndex) {
  */
 void cBot::setTimeToMoveToNode(float timeInSeconds) {
     char msg[255];
-    float endTime = gpGlobals->time + timeInSeconds;
+    const float endTime = gpGlobals->time + timeInSeconds;
     sprintf(msg, "Set to %f so results into end time of %f", timeInSeconds, endTime);
     rprint_trace("setTimeToMoveToNode", msg);
 
@@ -4188,7 +4228,7 @@ void cBot::increaseTimeToMoveToNode(float timeInSeconds) {
     if (nodeTimeIncreasedAmount < 2) {
         nodeTimeIncreasedAmount++;
         this->fMoveToNodeTime += timeInSeconds;
-        float timeToMoveToNodeRemaining = getMoveToNodeTimeRemaining();
+        const float timeToMoveToNodeRemaining = getMoveToNodeTimeRemaining();
         char msg[255];
         memset(msg, 0, sizeof(msg));
         sprintf(msg, "increaseTimeToMoveToNode with %f for the %d time, making time to move to node remaining %f.", timeInSeconds, nodeTimeIncreasedAmount, timeToMoveToNodeRemaining);
@@ -4198,15 +4238,18 @@ void cBot::increaseTimeToMoveToNode(float timeInSeconds) {
     }
 }
 
-float cBot::getMoveToNodeTimeRemaining() {
+float cBot::getMoveToNodeTimeRemaining() const
+{
     return fMoveToNodeTime - gpGlobals->time;
 }
 
-bool cBot::shouldCamp() {
+bool cBot::shouldCamp() const
+{
     return f_camp_time > gpGlobals->time;
 }
 
-bool cBot::shouldWait() {
+bool cBot::shouldWait() const
+{
     return f_wait_time > gpGlobals->time;
 }
 
@@ -4214,15 +4257,18 @@ void cBot::setTimeToWait(float timeInSeconds) {
     this->f_wait_time = gpGlobals->time + timeInSeconds;
 }
 
-bool cBot::shouldBeAbleToInteractWithButton() {
+bool cBot::shouldBeAbleToInteractWithButton() const
+{
     return fButtonTime < gpGlobals->time;
 }
 
-bool cBot::hasButtonToInteractWith() {
+bool cBot::hasButtonToInteractWith() const
+{
     return pButtonEdict != NULL;
 }
 
-bool cBot::hasCurrentNode() {
+bool cBot::hasCurrentNode() const
+{
     return iCloseNode > -1;
 }
 
@@ -4247,7 +4293,7 @@ bool cBot::createPath(int destinationNode, int flags) {
         return false;
     }
 
-    int currentNode = getCurrentNode();
+    const int currentNode = getCurrentNode();
     if (currentNode < 0) {
         rprint("createPath()", "Unable to create path to destination because I am not close to a start node");
         return false;
@@ -4271,7 +4317,7 @@ void cBot::doDuck() {
 }
 
 bool cBot::isDucking() {
-    bool b = keyPressed(IN_DUCK) || this->f_hold_duck > gpGlobals->time;
+	const bool b = keyPressed(IN_DUCK) || this->f_hold_duck > gpGlobals->time;
     if (b) {
         rprint_trace("isDucking", "Yes I am ducking");
     }
@@ -4279,7 +4325,7 @@ bool cBot::isDucking() {
 }
 
 bool cBot::isWalking() {
-    bool b = !keyPressed(IN_RUN) || this->f_walk_time > gpGlobals->time;
+	const bool b = !keyPressed(IN_RUN) || this->f_walk_time > gpGlobals->time;
     if (b) {
         rprint_trace("isWalking", "Yes I am walking");
     }
@@ -4308,7 +4354,7 @@ void cBot::doJump() {
 }
 
 bool cBot::isJumping() {
-    bool b = keyPressed(IN_JUMP) || f_jump_time > gpGlobals->time;
+	const bool b = keyPressed(IN_JUMP) || f_jump_time > gpGlobals->time;
     if (b) {
         rprint_trace("isJumping", "Yes I am jumping");
     }

@@ -27,7 +27,7 @@
   *
   **/
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -186,8 +186,8 @@ void BotDecideWhatToBuy(cBot *pBot) {
      * In other words, it needs refactoring...
      *
      */
-    int money = pBot->bot_money; // Money
-    int team = pBot->iTeam;      // Team
+    const int money = pBot->bot_money; // Money
+    const int team = pBot->iTeam;      // Team
 
     int buy_weapon = -1;
 
@@ -279,7 +279,7 @@ void BotDecideWhatToBuy(cBot *pBot) {
             pBot->rprint("BotDecideWhatToBuy()", "Found a primary weapon to buy");
 
             // depending on amount of money we have left buy *also* secondary weapon
-            int iMoneyLeft = money - PriceWeapon(buy_weapon);
+            const int iMoneyLeft = money - PriceWeapon(buy_weapon);
 
             // TODO: this should be dependant on something else... not only money
             // 01.09.04 Frashman if buyed a Shield, try to buy a good Pistol
@@ -341,7 +341,7 @@ void BotDecideWhatToBuy(cBot *pBot) {
 
                 if (weapons_table[i].price <= money) {
                     if (pBot->iSecondaryWeapon > -1) {
-                        int index =
+	                    const int index =
                                 weapons_table[pBot->iSecondaryWeapon].iIdIndex;
                         // 31.08.04 Frashman > corrected to >= ,
                         // else the bot will buy another weapon with the same priority
@@ -442,7 +442,7 @@ void ConsoleThink(cBot *pBot) {
 
     // buy time is in minutes, we need
     // gpGlobals->time is in seconds, so we need to translate the minutes into seconds
-    float buyTime = CVAR_GET_FLOAT("mp_buytime") * 60;
+    const float buyTime = CVAR_GET_FLOAT("mp_buytime") * 60;
     if (Game.getRoundStartedTime() + buyTime > gpGlobals->time &&
         pBot->wantsToBuyStuff()) {
         BotDecideWhatToBuy(pBot);
