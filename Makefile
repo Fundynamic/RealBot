@@ -1,5 +1,4 @@
-CPP = g++
-
+CPP = g++-4.8
 ARCHFLAG = -m32
 
 META_DIR = ./dependencies/metamod-hl1/metamod
