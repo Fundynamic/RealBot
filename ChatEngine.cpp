@@ -184,7 +184,7 @@ void cChatEngine::think() {
 
                             // 03/07/04
                             // add score to matching word (evy: ignoring case)
-                            if (strcmpi(ReplyBlock[iB].word[iBw], word) == 0)
+                            if (strcmp(ReplyBlock[iB].word[iBw], word) == 0)
                                 WordBlockScore[iB]++;
                         }       // all words in this block
                     }          // any used block

@@ -1901,7 +1901,7 @@ void cNodeMachine::addGoal(edict_t *pEdict, int goalType, const Vector vVec) {
     goal->index = index;
     goal->pGoalEdict = pEdict;
     goal->iType = goalType;
-    strcpy(goal->name, getGoalTypeAsText(*goal));
+    //strcpy(goal->name, getGoalTypeAsText(*goal)); //That appears to trigger crash [APG]RoboCop[CL]
 
     char msg[255];
     memset(msg, 0, sizeof(msg));

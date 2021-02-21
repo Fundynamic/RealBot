@@ -66,7 +66,8 @@ cxx.defines += [
 if cxx.like('gcc'):
   cxx.cflags += [
     '-Wall',
-    '-Werror',
+    #'-Werror',
+	'-Wno-write-strings',
     '-Wno-error=unused-result',
     '-Wno-error=unused-variable',
     '-Wno-unused-value',
@@ -136,9 +137,9 @@ cxx.includes += [
 ]
 
 
-#name = 'realbot_mm'
-#if builder.target_platform == 'linux':
-#  name += '_i386'
+name = 'realbot_mm'
+if builder.target_platform == 'linux':
+  name += ''
 
 binary = cxx.Library(name)
 binary.sources += [
