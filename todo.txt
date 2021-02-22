@@ -7,4 +7,4 @@
 - Allow bots to duck jump for vaulting upon crates or ledges, cs_italy and de_inferno are good examples
 - Improve the way bots walk path and decide it is a bad connection
 - improve 'unstucking'... when not stuck by other players.
-  
+- Allow bots to autovacate for human players
