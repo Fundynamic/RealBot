@@ -8,3 +8,4 @@
 - Improve the way bots walk path and decide it is a bad connection
 - improve 'unstucking'... when not stuck by other players.
 - Allow bots to autovacate for human players
+- Prevent bots from Team Killing when a player switches sides
