@@ -28,7 +28,7 @@
   **/
 
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -232,7 +232,6 @@ void BotClient_Valve_AmmoX(void *p, int bot_index) {
     static int state = 0;        // current state machine state
     static int index;
     static int ammount;
-    int ammo_index;
 
     if (state == 0) {
         state++;
@@ -244,7 +243,7 @@ void BotClient_Valve_AmmoX(void *p, int bot_index) {
 
         bots[bot_index].m_rgAmmo[index] = ammount;        // store it away
 
-        ammo_index = bots[bot_index].current_weapon.iId;
+        int ammo_index = bots[bot_index].current_weapon.iId;
 
         // update the ammo counts for this weapon...
         bots[bot_index].current_weapon.iAmmo1 =
@@ -283,7 +282,6 @@ void BotClient_Valve_AmmoPickup(void *p, int bot_index) {
     static int state = 0;        // current state machine state
     static int index;
     static int ammount;
-    int ammo_index;
 
     if (state == 0) {
         state++;
@@ -295,7 +293,7 @@ void BotClient_Valve_AmmoPickup(void *p, int bot_index) {
 
         bots[bot_index].m_rgAmmo[index] = ammount;
 
-        ammo_index = bots[bot_index].current_weapon.iId;
+        int ammo_index = bots[bot_index].current_weapon.iId;
 
         // update the ammo counts for this weapon...
         bots[bot_index].current_weapon.iAmmo1 =
@@ -325,10 +323,7 @@ void BotClient_FLF_AmmoPickup(void *p, int bot_index) {
 
 // This message gets sent when the bot picks up a weapon.
 void BotClient_Valve_WeaponPickup(void *p, int bot_index) {
-    //DebugOut("bot_client: BotClient_Valve_WeaponPickup()\n");
-    int index;
-
-    index = *(int *) p;
+	int index = *(int*)p;
 
     // set this weapon bit to indicate that we are carrying this weapon
     bots[bot_index].bot_weapons |= (1 << index);
@@ -462,13 +457,13 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
             if (damage_bits & (DMG_FALL | DMG_CRUSH)) {
                 pBot->rprint_trace("BotClient_Valve_Damage", "Taken fall damage!");
                 if (pBot->getPathIndex() > 0) { // was one node further, so we can use previous node!
-                    int iNode = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex, pBot->getPreviousPathIndex());
+	                const int iNode = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex, pBot->getPreviousPathIndex());
 
-                    float fDist = fabs(damage_origin.z - NodeMachine.node_vector(iNode).z);
+	                const float fDist = fabs(damage_origin.z - NodeMachine.node_vector(iNode).z);
                     if (fDist > 90) {
                         // we know where we came from, and we know where we went to
-                        int iNodeTo = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex,
-                                                                             pBot->getPathIndex());
+                        const int iNodeTo = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex,
+                                                                                   pBot->getPathIndex());
 
                         // remove connection?
 
@@ -587,9 +582,9 @@ void BotClient_CS_SayText(void *p, int bot_index) {
                 if (strstr(sentence, " : "))
                     length = strlen(sentence) - strlen(strstr(sentence, " : "));
 
-                int tc = 0, c;
+                int tc = 0;
 
-                for (c = length; c < MAX_SENTENCE_LENGTH; c++) {
+                for (int c = length; c < MAX_SENTENCE_LENGTH; c++) {
                     chSentence[tc] = sentence[c];
                     tc++;
                 }
@@ -814,7 +809,6 @@ void BotClient_Valve_ScreenFade(void *p, int bot_index) {
     static int duration;
     static int hold_time;
     static int fade_flags;
-    float length;
 
     if (state == 0) {
         state++;
@@ -828,7 +822,7 @@ void BotClient_Valve_ScreenFade(void *p, int bot_index) {
     } else if (state == 6) {
         state = 0;
 
-        length = (duration + hold_time) / 4096.0;
+        float length = (duration + hold_time) / 4096.0;
         int iDevide = bots[bot_index].bot_skill;
         if (iDevide < 1)
             iDevide = 1;
@@ -837,12 +831,10 @@ void BotClient_Valve_ScreenFade(void *p, int bot_index) {
 
         bots[bot_index].fBlindedTime = gpGlobals->time + length;
 
-        // Get pointer and do some radio stuff here - Added by Stefan
-        cBot *pBot;
-        pBot = &bots[bot_index];
+        cBot* pBot = &bots[bot_index];
 
-        int iCurrentNode = NodeMachine.getClosestNode(pBot->pEdict->v.origin, NODE_ZONE, pBot->pEdict);
-        int iCoverNode = NodeMachine.node_cover(iCurrentNode, iCurrentNode, pBot->pEdict);
+        const int iCurrentNode = NodeMachine.getClosestNode(pBot->pEdict->v.origin, NODE_ZONE, pBot->pEdict);
+        const int iCoverNode = NodeMachine.node_cover(iCurrentNode, iCurrentNode, pBot->pEdict);
 
         if (iCoverNode > -1) {
 //         pBot->forgetPath();

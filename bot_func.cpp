@@ -28,7 +28,7 @@
   **/
 
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -55,10 +55,10 @@ extern cNodeMachine NodeMachine;
 #define TOTAL_SCORE 16300       // 16000 money + 100 health + 100 fear + 100 camp desire
 
 bool
-VectorIsVisibleWithEdict(edict_t *pEdict, Vector dest, char *checkname) {
+VectorIsVisibleWithEdict(edict_t *pEdict, const Vector dest, char *checkname) {
     TraceResult tr;
 
-    Vector start = pEdict->v.origin + pEdict->v.view_ofs;
+    const Vector start = pEdict->v.origin + pEdict->v.view_ofs;
 
     // trace a line from bot's eyes to destination...
     UTIL_TraceLine(start, dest, ignore_monsters,
@@ -89,7 +89,7 @@ VectorIsVisibleWithEdict(edict_t *pEdict, Vector dest, char *checkname) {
 
 }
 
-bool VectorIsVisible(Vector start, Vector dest, char *checkname) {
+bool VectorIsVisible(const Vector start, const Vector dest, char *checkname) {
     TraceResult tr;
 
     // trace a line from bot's eyes to destination...
@@ -135,7 +135,7 @@ float func_distance(Vector v1, Vector v2) {
  * @param dest
  * @return
  */
-int FUNC_InFieldOfView(edict_t *pEntity, Vector dest) {
+int FUNC_InFieldOfView(edict_t *pEntity, const Vector dest) {
     // NOTE: Copy from Botman's BotInFieldOfView() routine.
     // find angles from source to destination...
     Vector entity_angles = UTIL_VecToAngles(dest);
@@ -171,7 +171,7 @@ int FUNC_InFieldOfView(edict_t *pEntity, Vector dest) {
  * @param start
  * @param end
  */
-void DrawBeam(edict_t *visibleForWho, Vector start, Vector end) {
+void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end) {
     DrawBeam(visibleForWho, start, end, 25, 1, 255, 255, 255, 255, 1);
 }
 
@@ -180,8 +180,11 @@ void DrawBeam(edict_t *visibleForWho, Vector start, Vector end) {
  * @param visibleForWho
  * @param start
  * @param end
+ * @param r
+ * @param g
+ * @param b
  */
-void DrawBeam(edict_t *visibleForWho, Vector start, Vector end, int r, int g, int b) {
+void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end, int r, int g, int b) {
     DrawBeam(visibleForWho, start, end, 25, 1, r, g, b, 255, 1);
 }
 
@@ -198,7 +201,7 @@ void DrawBeam(edict_t *visibleForWho, Vector start, Vector end, int r, int g, in
  * @param brightness
  * @param speed
  */
-void DrawBeam(edict_t *visibleForWho, Vector start, Vector end, int width,
+void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end, int width,
               int noise, int red, int green, int blue, int brightness,
               int speed) {
     MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, NULL, visibleForWho);
@@ -265,7 +268,7 @@ cBot *getCloseFellowBot(cBot *pBot) {
  */
 edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
     edict_t *pEdict = pBot->pEdict;
-    int FOV = 90; // TODO: use server var "default_fov" ?
+    const int FOV = 90; // TODO: use server var "default_fov" ?
 
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
@@ -281,9 +284,9 @@ edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
                   || (pPlayer->v.flags & FL_CLIENT)))
                 continue;
 
-            int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
+            const int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
 
-            int distance = NODE_ZONE;
+            const int distance = NODE_ZONE;
             if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance && angleToPlayer < FOV) {
                 return pPlayer;
             }
@@ -337,7 +340,7 @@ bool isAnyPlayerNearbyBot(cBot *pBot) {
 
             int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
 
-            int distance = NODE_ZONE;
+            const int distance = NODE_ZONE;
             if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance) {
                 return true;
             }
@@ -367,7 +370,7 @@ bool BotShouldJumpIfStuck(cBot *pBot) {
         return false;
     }
 
-    bool result = BotShouldJump(pBot);
+    const bool result = BotShouldJump(pBot);
     if (result) {
         pBot->rprint_trace("BotShouldJumpIfStuck", "BotShouldJump returns true, so returning that");
         return true;
@@ -406,12 +409,11 @@ bool BotShouldJump(cBot *pBot) {
     if (pBot->isJumping()) return false; // already jumping
 
     TraceResult tr;
-    Vector v_jump, v_source, v_dest;
     edict_t *pEdict = pBot->pEdict;
 
     // convert current view angle to vectors for TraceLine math...
 
-    v_jump = FUNC_CalculateAngles(pBot);
+    Vector v_jump = FUNC_CalculateAngles(pBot);
     v_jump.x = 0;                // reset pitch to 0 (level horizontally)
     v_jump.z = 0;                // reset roll to 0 (straight up and down)
 
@@ -419,8 +421,8 @@ bool BotShouldJump(cBot *pBot) {
 
     // Check if we can jump onto something with maximum jump height:
     // maximum jump height, so check one unit above that (MAX_JUMPHEIGHT)
-    v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT + (MAX_JUMPHEIGHT + 1));
-    v_dest = v_source + gpGlobals->v_forward * 90;
+    Vector v_source = pEdict->v.origin + Vector(0, 0, -CROUCHED_HEIGHT + (MAX_JUMPHEIGHT + 1));
+    Vector v_dest = v_source + gpGlobals->v_forward * 90;
 
     // trace a line forward at maximum jump height...
     UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
@@ -493,7 +495,7 @@ bool BotShouldJump(cBot *pBot) {
 // FUNCTION: Calculates angles as pEdict->v.v_angle should be when checking for body
 Vector FUNC_CalculateAngles(cBot *pBot) {
     // aim for the head and/or body
-    Vector v_target = pBot->vBody - pBot->pEdict->v.origin;
+    const Vector v_target = pBot->vBody - pBot->pEdict->v.origin;
     Vector v_body = UTIL_VecToAngles(v_target);
 
     if (v_body.y > 180)
@@ -575,7 +577,7 @@ bool FUNC_DoRadio(cBot *pBot) {
     if (pBot->fDoRadio > gpGlobals->time) // allowed?
         return false;
 
-    int iRadio = pBot->ipCreateRadio;
+    const int iRadio = pBot->ipCreateRadio;
 
     return RANDOM_LONG(0, 100) < iRadio; // want?
 }
@@ -593,13 +595,13 @@ bool FUNC_ShouldTakeCover(cBot *pBot) {
     pBot->f_cover_time = gpGlobals->time;
 
     // MONEY: The less we have, the more we want to take cover
-    int vMoney = 16000 - pBot->bot_money;
+    const int vMoney = 16000 - pBot->bot_money;
 
     // HEALTH: The less we have, the more we want to take cover
-    int vHealth = 100 - pBot->bot_health;
+    const int vHealth = 100 - pBot->bot_health;
 
     // CAMP: The more we want, the more we want to take cover
-    int vCamp = pBot->ipCampRate;
+    const int vCamp = pBot->ipCampRate;
 
     return RANDOM_LONG(0, TOTAL_SCORE) < (vMoney + vHealth + vCamp);
 }
@@ -674,7 +676,7 @@ void FUNC_HearingTodo(cBot *pBot) {
 
     // I HEAR SOMETHING
     // More chance on getting to true
-    int health = pBot->bot_health;
+    const int health = pBot->bot_health;
 
     int action = 0;
     int etime = 0;
@@ -817,7 +819,7 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
     }
 
     // Whenever we have a hostage to go after, verify it is still rescueable
-    bool isRescueable = isHostageRescueable(pBot, pHostage);
+    const bool isRescueable = isHostageRescueable(pBot, pHostage);
 
     if (!isRescueable) {
         pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "Hostage found, but not rescueable, forgetting...");
@@ -829,7 +831,7 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
     }
 
     // Prevent bots getting to close here
-    float distanceToHostage = func_distance(pBot->pEdict->v.origin, pHostage->v.origin);
+    const float distanceToHostage = func_distance(pBot->pEdict->v.origin, pHostage->v.origin);
 
     // From here, we should get the hostage when still visible
     if (pBot->canSeeEntity(pHostage)) {
@@ -844,7 +846,7 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
             pBot->setMoveSpeed(0.0f); // too close, do not move
 
             // only use hostage when facing
-            int angle_to_hostage = FUNC_InFieldOfView(pBot->pEdict, (pBot->vBody - pBot->pEdict->v.origin));
+            const int angle_to_hostage = FUNC_InFieldOfView(pBot->pEdict, (pBot->vBody - pBot->pEdict->v.origin));
 
             if (angle_to_hostage <= 30
                 && (pBot->f_use_timer < gpGlobals->time)) {

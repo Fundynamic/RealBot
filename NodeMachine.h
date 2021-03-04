@@ -45,13 +45,13 @@ public:
     // -----------------
     int addNode(Vector vOrigin, edict_t *pEntity);
 
-    int Reachable(const int iStart, const int iEnd);
+    int Reachable(const int iStart, const int iEnd) const;
 
     int add2(Vector vOrigin, int iType, edict_t *pEntity);
 
     int getClosestNode(Vector vOrigin, float fDist, edict_t *pEdict);    // returns a close node
     int getFurthestNode(Vector vOrigin, float fDist, edict_t *pEdict);    // returns a node within dist, but most far away
-    int getFreeNodeIndex();
+    int getFreeNodeIndex() const;
 
     // -----------------
     bool add_neighbour_node(int iNode, int iToNode);
@@ -60,21 +60,21 @@ public:
 
     bool remove_neighbour_nodes(int iNode);
 
-    int freeNeighbourNodeIndex(tNode *Node);
+    static int freeNeighbourNodeIndex(tNode *Node);
 
     int is_neighbour_node(tNode node, int iNode);
 
     // -----------------
     void init();                 // Init (info)nodes
-    void save();                 // Save nodes on disk
+    void save() const;                 // Save nodes on disk
     void load();                 // Load nodes on disk
-    void save_important();
+    void save_important() const;
 
     // -----------------
-    Vector node_vector(int iNode);
+    Vector node_vector(int iNode) const;
 
     // -----------------
-    int GetTroubleIndexForConnection(int iFrom, int iTo);
+    int GetTroubleIndexForConnection(int iFrom, int iTo) const;
 
     int AddTroubledConnection(int iFrom, int iTo);
 
@@ -90,20 +90,20 @@ public:
     void setUpInitialGoals();                // find new goals and attach them to the nodes
     void updateGoals();          // update moving goals (ie hostages)
 
-    int getGoalIndexFromNode(int iNode);
+    int getGoalIndexFromNode(int iNode) const;
 
     void resetCheckedValuesForGoals();
 
     void ClearImportantGoals();
 
-    bool hasGoalWithEdict(edict_t *pEdict);
+    bool hasGoalWithEdict(edict_t *pEdict) const;
 
     void addGoal(edict_t *pEdict, int goalType, Vector vVec);
 
     tGoal * getRandomGoalByType(int goalType);    // return a node close to a iType goal (random)
-    bool node_float(Vector vOrigin, edict_t *pEdict);
+    static bool node_float(Vector vOrigin, edict_t *pEdict);
 
-    bool node_on_crate(Vector vOrigin, edict_t *pEdict);
+    static bool node_on_crate(Vector vOrigin, edict_t *pEdict);
 
     int node_dangerous(int iTeam, Vector vOrigin, float fMaxDistance);
 
@@ -143,7 +143,7 @@ public:
     int getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex);
 
     // -----------------
-    void VectorToMeredian(Vector vOrigin, int *iX, int *iY);     // Input: origin, output X and Y Meredians
+    static void VectorToMeredian(Vector vOrigin, int *iX, int *iY);     // Input: origin, output X and Y Meredians
     void AddToMeredian(int iX, int iY, int iNode);
 
     // -----------------
@@ -158,18 +158,18 @@ public:
     // -------------------
     // From cheesemonster:
     int GetVisibilityFromTo(int iFrom, int iTo); // BERKED
-    void ClearVisibilityTable(void);
+    void ClearVisibilityTable() const;
 
     void SetVisibilityFromTo(int iFrom, int iTo, bool bVisible);
 
-    void FreeVisibilityTable(void);
+    void FreeVisibilityTable() const;
 
     // Some debugging by EVY
-    void dump_goals(void);
+    void dump_goals() const;
 
     void dump_path(int iBot, int ThisNode);
 
-    void Draw(void);
+    void Draw();
 
     tNode *getNode(int index);
 
@@ -190,24 +190,24 @@ private:
     unsigned char *cVisTable;
     tTrouble Troubles[MAX_TROUBLE];
 
-    void FindMinMax(void);
+    void FindMinMax() const;
 
-    void MarkAxis(void);
+    static void MarkAxis();
 
-    void MarkMeredians(void);
+    static void MarkMeredians();
 
     void PlotNodes(int NeighbourColor, int NodeColor);
 
     void PlotPaths(int Tcolor, int CTcolor);
 
-    void PlotGoals(int GoalColor);
+    void PlotGoals(int GoalColor) const;
 
-    void makeAllWaypointsAvailable() const;
+    static void makeAllWaypointsAvailable();
 
-    void closeNode(int nodeIndex, int parent, float cost);
+    static void closeNode(int nodeIndex, int parent, float cost);
     void openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighboursFrom, int destinationNodeIndex, int botTeam);
 
-    char *getGoalTypeAsText(const tGoal &goal) const;
+    static char *getGoalTypeAsText(const tGoal &goal);
 
     int getFreeGoalIndex() const;
 
@@ -215,11 +215,11 @@ private:
 
     void initGoal(int g);
 
-    bool isEntityDoor(const edict_t *pEntityHit) const;
-    bool isEntityHostage(const edict_t *pEntityHit) const;
-    bool isEntityWorldspawn(const edict_t *pEntityHit) const;
+    static bool isEntityDoor(const edict_t *pEntityHit);
+    static bool isEntityHostage(const edict_t *pEntityHit);
+    static bool isEntityWorldspawn(const edict_t *pEntityHit);
 
-    bool isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHit) const;
+    static bool isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHit);
 
     void ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vector &vector);
 

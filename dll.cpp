@@ -27,7 +27,7 @@
   *
   **/
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -102,7 +102,7 @@ int counterstrike = 0;          // Default 1.5
 void UpdateClientData(const struct edict_s *ent, int sendweapons,
                       struct clientdata_s *cd);
 
-void ProcessBotCfgFile(void);
+void ProcessBotCfgFile();
 
 // External added variables
 bool end_round = false;
@@ -119,7 +119,7 @@ bool internet_addbot = false;   // Add a bot?
 float add_timer = -1;           // Timer for adding bots
 bool internet_play = false;
 
-void RealBot_ServerCommand(void);
+void RealBot_ServerCommand();
 
 // START of Metamod stuff
 enginefuncs_t meta_engfuncs;
@@ -271,10 +271,8 @@ GiveFnptrsToDll(enginefuncs_t *pengfuncsFromEngine,
     // @PMB -> Yes so far it does ;) working on this MOD-GAME independent structure... grmbl
 }
 
-void GameDLLInit(void) {
-    // clear log.txt
-    FILE *fplog;
-    fplog = fopen("reallog.txt", "wt");
+void GameDLLInit() {
+	FILE* fplog = fopen("reallog.txt", "wt");
 
     if (fplog) {
         fprintf(fplog, "Realbot Logbook\n");
@@ -297,9 +295,8 @@ void GameDLLInit(void) {
 
     rblog("Verifying realbot is installed correctly..");
 
-    FILE *fp;
-    bool bInstalledCorrectly = false;
-    fp = fopen("realbot/dll/realbot_mm.dll", "rb");
+	bool bInstalledCorrectly = false;
+    FILE* fp = fopen("realbot/dll/realbot_mm.dll", "rb");
     if (fp != NULL) {
         bInstalledCorrectly = true;
         fclose(fp);
@@ -465,9 +462,7 @@ ClientConnect(edict_t *pEntity, const char *pszName,
 void ClientDisconnect(edict_t *pEntity) {
 
     if (gpGlobals->deathmatch) {
-        int i;
-
-        i = 0;
+	    int i = 0;
         while ((i < 32) && (clients[i] != pEntity))
             i++;
 
@@ -529,7 +524,7 @@ void ClientCommand(edict_t *pEntity) {
 
 
 // TODO: Revise this method
-void StartFrame(void) {
+void StartFrame() {
     if (!gpGlobals->deathmatch) return; // bots only work in 'deathmatch mode'
 //    REALBOT_PRINT("StartFrame", "BEGIN");
 
@@ -1047,12 +1042,10 @@ void FakeClientCommand(edict_t *pBot, char *arg1, char *arg2, char *arg3) {
     isFakeClientCommand = FALSE;
 }
 
-void ProcessBotCfgFile(void) {
-    int ch;
-    char cmd_line[256];
-    int cmd_index;
-    static char server_cmd[80];
-    char *cmd, *arg1, *arg2, *arg3, *arg4;
+void ProcessBotCfgFile() {
+	char cmd_line[256];
+	static char server_cmd[80];
+    char *arg2, *arg3, *arg4;
     char msg[80];
 
     if (bot_cfg_pause_time > gpGlobals->time)
@@ -1061,10 +1054,10 @@ void ProcessBotCfgFile(void) {
     if (bot_cfg_fp == NULL)
         return;
 
-    cmd_index = 0;
+    int cmd_index = 0;
     cmd_line[cmd_index] = 0;
 
-    ch = fgetc(bot_cfg_fp);
+    int ch = fgetc(bot_cfg_fp);
 
     // skip any leading blanks
     while (ch == ' ')
@@ -1105,8 +1098,8 @@ void ProcessBotCfgFile(void) {
     strcat(server_cmd, "\n");
 
     cmd_index = 0;
-    cmd = cmd_line;
-    arg1 = arg2 = arg3 = arg4 = NULL;
+    char* cmd = cmd_line;
+    char* arg1 = arg2 = arg3 = arg4 = NULL;
 
     // skip to blank or end of string...
     while ((cmd_line[cmd_index] != ' ') && (cmd_line[cmd_index] != 0))
@@ -1168,7 +1161,7 @@ void ProcessBotCfgFile(void) {
 
 // REALBOT COMMAND
 // SERVER Command: RealBot
-void RealBot_ServerCommand(void) {
+void RealBot_ServerCommand() {
     const char *pcmd = CMD_ARGV(1);
     const char *arg1 = CMD_ARGV(2);
     const char *arg2 = CMD_ARGV(3);
@@ -1177,7 +1170,6 @@ void RealBot_ServerCommand(void) {
 
     char cMessage[256];
     bool bSendMessage = true;
-    bool bValidCommand = true;
 
     // When we need an edict to send messages to, we do that to the pHostEdict
     edict_t *pEntity = pHostEdict;
@@ -1218,7 +1210,7 @@ void RealBot_ServerCommand(void) {
         EMIT_SOUND_DYN2(pEntity, CHAN_VOICE, "misc/imgood12.wav", 1.0,
                         ATTN_NORM, 0, 100);
     } else if (FStrEq(pcmd, "add")) {
-        int iStatus = Game.createBot(pEntity, arg1, arg2, arg3, arg4);
+	    const int iStatus = Game.createBot(pEntity, arg1, arg2, arg3, arg4);
         bot_check_time = gpGlobals->time + 5.0;
         if (iStatus == GAME_MSG_SUCCESS)
             sprintf(cMessage, "REALBOT: Successfully created bot.");
@@ -1231,7 +1223,7 @@ void RealBot_ServerCommand(void) {
                     "REALBOT: Failed creating bot, server is full.");
     } else if (FStrEq(pcmd, "walkwithknife")) {
         if ((arg1 != NULL) && (*arg1 != 0)) {
-            float fVar = atof(arg1);
+	        const float fVar = atof(arg1);
 
             // Only set when valid
             if (fVar < 0)
@@ -1293,7 +1285,7 @@ void RealBot_ServerCommand(void) {
         end_round = true;
     } else if (FStrEq(pcmd, "csversion")) {
         if ((arg1 != NULL) && (*arg1 != 0)) {
-            int temp = atoi(arg1);
+	        const int temp = atoi(arg1);
             if (temp <= 0)
                 counterstrike = 0;  // cs 1.5
             else
@@ -1318,7 +1310,7 @@ void RealBot_ServerCommand(void) {
         if ((arg1 != NULL) && (*arg1 != 0)) {
 
             // switch on/off internet mode
-            int temp = atoi(arg1);
+            const int temp = atoi(arg1);
             if (temp == 0)
                 internet_play = false;
 
@@ -1365,7 +1357,7 @@ void RealBot_ServerCommand(void) {
         if ((arg1 != NULL) && (*arg1 != 0)) {
 
             // get amount
-            int temp = atoi(arg1);
+            const int temp = atoi(arg1);
             kick_amount_bots = temp;
             if (kick_amount_bots > 31)
                 kick_amount_bots = 31;
@@ -1377,7 +1369,7 @@ void RealBot_ServerCommand(void) {
 
             // get team
             int team = 0;
-            int temp = atoi(arg2);
+            const int temp = atoi(arg2);
             if (temp == 1)
                 team = 1;
             if (temp == 2)
@@ -1456,7 +1448,7 @@ void RealBot_ServerCommand(void) {
         }
     } else if (FStrEq(pcmd, "autoskill")) {
         if ((arg1 != NULL) && (*arg1 != 0)) {
-            int temp = atoi(arg1);
+	        const int temp = atoi(arg1);
             if (temp == 1)
                 autoskill = true;
 
@@ -1470,7 +1462,7 @@ void RealBot_ServerCommand(void) {
             sprintf(cMessage, "REALBOT: Auto adjust skill - disabled.");
     } else if (FStrEq(pcmd, "override_skill")) {
         if ((arg1 != NULL) && (*arg1 != 0)) {
-            int temp = atoi(arg1);
+	        const int temp = atoi(arg1);
             if (temp == 1)
                 Game.iOverrideBotSkill = GAME_YES;
 
@@ -1486,7 +1478,7 @@ void RealBot_ServerCommand(void) {
                     "REALBOT: Using default bot skill at all times.");
     } else if (FStrEq(pcmd, "skill")) {
         if ((arg1 != NULL) && (*arg1 != 0)) {
-            int temp = atoi(arg1);
+	        const int temp = atoi(arg1);
             if ((temp < -1) || (temp > 10)) {
                 sprintf(cMessage,
                         "REALBOT: Invalid argument given - default skill = %d.",
@@ -1648,11 +1640,11 @@ void RealBot_ServerCommand(void) {
 
                 // check for valid argument
                 if ((arg2 != NULL) && (*arg2 != 0)) {
-                    int iTo = atoi(arg2);    // add connection TO
+	                const int iTo = atoi(arg2);    // add connection TO
 
                     // Add this connection
                     if (iTo > -1) {
-                        bool bSuccess =
+	                    const bool bSuccess =
                                 NodeMachine.add_neighbour_node(iOnNode, iTo);
 
                         if (bSuccess)
@@ -1676,11 +1668,11 @@ void RealBot_ServerCommand(void) {
 
                 // check for valid argument
                 if ((arg2 != NULL) && (*arg2 != 0)) {
-                    int iTo = atoi(arg2);    // remove connection TO
+	                const int iTo = atoi(arg2);    // remove connection TO
 
                     // remove this connection
                     if (iTo > -1) {
-                        bool bSuccess =
+	                    const bool bSuccess =
                                 NodeMachine.removeConnection(iOnNode, iTo);
 
                         if (bSuccess)
@@ -1700,7 +1692,7 @@ void RealBot_ServerCommand(void) {
                             "NODES EDITOR: Give argument to which node this connection is valid!");
 
             } else if (FStrEq(arg1, "removeall")) {
-                bool bSuccess = NodeMachine.remove_neighbour_nodes(iOnNode);
+	            const bool bSuccess = NodeMachine.remove_neighbour_nodes(iOnNode);
 
                 if (bSuccess)
                     sprintf(cMessage,
@@ -1787,8 +1779,8 @@ void RealBot_ServerCommand(void) {
             // check for valid argument
             if ((arg2 != NULL) && (*arg2 != 0) && (arg3 != NULL)
                 && (*arg3 != 0)) {
-                int Node1 = atoi(arg2);     // add connection TO
-                int Node2 = atoi(arg3);     // add connection TO
+	            const int Node1 = atoi(arg2);     // add connection TO
+	            const int Node2 = atoi(arg3);     // add connection TO
                 if ((Node1 >= 0) && (Node2 >= 0)
                     && NodeMachine.add_neighbour_node(Node1, Node2))
                     sprintf(cMessage,
@@ -1804,8 +1796,8 @@ void RealBot_ServerCommand(void) {
             // check for valid argument
             if ((arg2 != NULL) && (*arg2 != 0) && (arg3 != NULL)
                 && (*arg3 != 0)) {
-                int Node1 = atoi(arg2);
-                int Node2 = atoi(arg3);
+	            const int Node1 = atoi(arg2);
+	            const int Node2 = atoi(arg3);
                 if ((Node1 >= 0) && (Node2 >= 0)
                     && NodeMachine.removeConnection(Node1, Node2))
                     sprintf(cMessage,
@@ -1828,7 +1820,7 @@ void RealBot_ServerCommand(void) {
         if (FStrEq(arg1, "dontshoot")) { // realbot debug dontshoot [1/0]
             // check for valid argument
             if ((arg2 != NULL) && (*arg2 != 0)) {
-                int temp = atoi(arg2);
+	            const int temp = atoi(arg2);
                 if (temp)
                     Game.bDoNotShoot = true;
                 else
@@ -1843,7 +1835,7 @@ void RealBot_ServerCommand(void) {
             // 17/07/04
         else if (FStrEq(arg1, "pistols")) { // realbot debug pistols [1/0]
             if ((arg2 != NULL) && (*arg2 != 0)) {
-                int temp = atoi(arg2);
+	            const int temp = atoi(arg2);
                 if (temp)
                     Game.bPistols = true;
                 else
@@ -1861,9 +1853,8 @@ void RealBot_ServerCommand(void) {
         } else if (FStrEq(arg1, "bots")) // realbot debug bots
             // Print information about all current bots
         {
-            int iBot;
-            rblog("Dumping information about all bots:\n");
-            for (iBot = 0; (iBot < 32) && (bots[iBot].bIsUsed == true); iBot++) {
+	        rblog("Dumping information about all bots:\n");
+            for (int iBot = 0; (iBot < 32) && (bots[iBot].bIsUsed == true); iBot++) {
                 bots[iBot].Dump();
             }
 
@@ -1875,7 +1866,7 @@ void RealBot_ServerCommand(void) {
                 sprintf(cMessage, "RBDEBUG: Debug messages off.");
             } else {
                 if ((arg2 != NULL) && (*arg2 != 0)) {
-                    int temp = atoi(arg2);
+	                const int temp = atoi(arg2);
                     Game.bDebug = temp;
                     sprintf(cMessage, "RBDEBUG: Debug messages on for bot [%d].", Game.bDebug);
                 } else {
@@ -1968,7 +1959,7 @@ void RealBot_ServerCommand(void) {
         // Not a valid command
         sprintf(cMessage,
                 "REALBOT: Unknown command.\nValid commands are:\nhelp, add, remove, skill, max, debug, server");
-        bValidCommand = false;
+        bool bValidCommand = false;
     }
 
     // Send message

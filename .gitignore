@@ -216,3 +216,4 @@ CMakeLists.txt
 cmake-build-debug/
 
 *.o
+realbot_mm.so

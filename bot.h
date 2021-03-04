@@ -187,14 +187,14 @@ public:
     void rememberHostageIsFollowingMe(edict_t *pHostage);
     void rememberWhichHostageToRescue(edict_t *pHostage);
     void clearHostageToRescueTarget();
-    int getAmountOfHostagesBeingRescued();
+    int getAmountOfHostagesBeingRescued() const;
     edict_t * findHostageToRescue();         // finds a hostage to rescue
-    edict_t * getHostageToRescue();          // returns hostage state pointer
+    edict_t * getHostageToRescue() const;          // returns hostage state pointer
     bool isEscortingHostages();            // Does the bot has used any hostages yet?
     void checkOfHostagesStillFollowMe();
 
-    bool hasTimeToMoveToNode();
-    bool isDefusing();
+    bool hasTimeToMoveToNode() const;
+    bool isDefusing() const;
 
     // ------------------------
     // TIMERS
@@ -394,11 +394,11 @@ public:
     void CheckGear();
 
     void ThinkAboutGoals();      // Think about goals
-    bool TakeCover();
+    bool TakeCover() const;
 
-    bool CarryWeapon(int iType);
+    bool CarryWeapon(int iType) const;
 
-    int CarryWeaponType();
+    int CarryWeaponType() const;
 
     void setHeadAiming(Vector vTarget);    // Aim at vector
     void AimAtEnemy();
@@ -407,16 +407,16 @@ public:
 
     void FireWeapon();
 
-    int ReturnTurnedAngle(float speed, float current, float ideal);
+    static int ReturnTurnedAngle(float speed, float current, float ideal);
 
     int FindEnemy();
 
     float ReactionTime(int iSkill);      // Reaction time based upon skill
     void FindCover();
 
-    bool canSeeVector(Vector vDest);
+    bool canSeeVector(Vector vDest) const;
 
-    bool canSeeEntity(edict_t *pEntity);
+    bool canSeeEntity(edict_t *pEntity) const;
 
     void InteractWithFriends();
 
@@ -427,40 +427,40 @@ public:
     // Set methods
     int determineCurrentNode();
     int determineCurrentNodeWithTwoAttempts();
-    int determineCurrentNode(float range);
+    int determineCurrentNode(float range) const;
 
     // Get methods
     float getDistanceTo(int nodeIndex);
-    float getDistanceTo(Vector vDest);
+    float getDistanceTo(Vector vDest) const;
 
     // "is" Methods (booleans, statements, etc)
-    bool isDead();
-    bool isHeadingForGoalNode();
-    bool isEnemyAlive();         // If enemy set, is it alive? (else returns false)
-    bool isOnLadder();             // Bot on ladder or not?
+    bool isDead() const;
+    bool isHeadingForGoalNode() const;
+    bool isEnemyAlive() const;         // If enemy set, is it alive? (else returns false)
+    bool isOnLadder() const;             // Bot on ladder or not?
     bool isSeeingEnemy();          // If enemy set, can we see it? (takes blinded by flashbang into account)
-    bool isCounterTerrorist();
-    bool isTerrorist();
+    bool isCounterTerrorist() const;
+    bool isTerrorist() const;
 
     // "is" methods, related to weapons
-    bool wantsToBuyStuff();
-    bool isUsingConsole();
-    bool isOwningWeapon(int weaponId);
-    bool isHoldingWeapon(int weaponId);
-    bool ownsFavoritePrimaryWeapon();
-    bool ownsFavoriteSecondaryWeapon();
-    bool hasFavoritePrimaryWeaponPreference();
-    bool hasFavoriteSecondaryWeaponPreference();
-    bool hasPrimaryWeaponEquiped();
-    bool hasSecondaryWeaponEquiped();
+    bool wantsToBuyStuff() const;
+    bool isUsingConsole() const;
+    bool isOwningWeapon(int weaponId) const;
+    bool isHoldingWeapon(int weaponId) const;
+    bool ownsFavoritePrimaryWeapon() const;
+    bool ownsFavoriteSecondaryWeapon() const;
+    bool hasFavoritePrimaryWeaponPreference() const;
+    bool hasFavoriteSecondaryWeaponPreference() const;
+    bool hasPrimaryWeaponEquiped() const;
+    bool hasSecondaryWeaponEquiped() const;
     bool hasPrimaryWeapon(int weaponId);
-    bool hasSecondaryWeapon(int weaponId);
-    bool canAfford(int weaponId);
+    bool hasSecondaryWeapon(int weaponId) const;
+    bool canAfford(int weaponId) const;
 
     // -------------------
     // 20/06/04 - CS 1.6 shield functions
-    bool hasShield();
-    bool hasShieldDrawn();
+    bool hasShield() const;
+    bool hasShieldDrawn() const;
 
     bool isHoldingGrenadeOrFlashbang() const;
     bool isBlindedByFlashbang() const;
@@ -476,18 +476,18 @@ public:
     // -------------------
 
     //
-    bool hasEnemy();
-    bool hasEnemy(edict_t * pEdict);
-    edict_t * getEnemyEdict();
+    bool hasEnemy() const;
+    bool hasEnemy(edict_t * pEdict) const;
+    edict_t * getEnemyEdict() const;
 
-    bool hasGoal();
-    bool hasGoalIndex();
-    tGoal *getGoalData();
+    bool hasGoal() const;
+    bool hasGoalIndex() const;
+    tGoal *getGoalData() const;
     bool shouldBeWandering();
-    bool hasBomb();
+    bool hasBomb() const;
 
     // ------------
-    bool isWalkingPath();
+    bool isWalkingPath() const;
 
     void beginWalkingPath();
     void nextPathIndex();       // increases index so we know which node to walk on path
@@ -501,13 +501,13 @@ public:
     void setGoalNode(int nodeIndex, int iGoalIndex);
 
     int getCurrentNode();                      // the current (closest) node we are at
-    int getCurrentPathNodeToHeadFor();         // get Node from path
-    int getPreviousPathNodeToHeadFor();        // get previous Node from path
-    int getNextPathNode();                     // get next Node from path
-    int getPathIndex();
-    int getPreviousPathIndex();
+    int getCurrentPathNodeToHeadFor() const;         // get Node from path
+    int getPreviousPathNodeToHeadFor() const;        // get previous Node from path
+    int getNextPathNode() const;                     // get next Node from path
+    int getPathIndex() const;
+    int getPreviousPathIndex() const;
 
-    int getGoalNode();
+    int getGoalNode() const;
 
 
 
@@ -531,19 +531,19 @@ public:
     void rprint_trace(const char *msg);
     void Dump();
 
-    bool hasHostageToRescue();
+    bool hasHostageToRescue() const;
 
-    bool canSeeHostageToRescue();
+    bool canSeeHostageToRescue() const;
 
     void checkIfHostagesAreRescued();
 
-    bool isOnSameTeamAs(cBot *pBot);
+    bool isOnSameTeamAs(cBot *pBot) const;
 
-    bool shouldBeAbleToMove();
+    bool shouldBeAbleToMove() const;
 
-    edict_t *getEntityBetweenMeAndCurrentPathNodeToHeadFor();
+    edict_t *getEntityBetweenMeAndCurrentPathNodeToHeadFor() const;
 
-    float getDistanceToNextNode();
+    float getDistanceToNextNode() const;
 
     void setBodyToNode(int nodeIndex);
 
@@ -552,20 +552,20 @@ public:
     void setTimeToMoveToNode(float timeInSeconds);
     void increaseTimeToMoveToNode(float timeInSeconds);
 
-    float getMoveToNodeTimeRemaining();
+    float getMoveToNodeTimeRemaining() const;
 
     bool shouldActWithC4() const;
 
     int keyPressed(int key) const;
 
-    bool shouldCamp();
-    bool shouldWait();
+    bool shouldCamp() const;
+    bool shouldWait() const;
     void setTimeToWait(float timeInSeconds);
 
-    bool shouldBeAbleToInteractWithButton();
+    bool shouldBeAbleToInteractWithButton() const;
 
-    bool hasButtonToInteractWith();
-    bool hasCurrentNode();
+    bool hasButtonToInteractWith() const;
+    bool hasCurrentNode() const;
 
     bool createPath(int destinationNode, int flags);
     bool createPath(int destinationNode);

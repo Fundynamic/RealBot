@@ -27,7 +27,7 @@
   *
   **/
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -141,7 +141,8 @@ void cGame::InitNewRound() {
  * If the c4 is dropped (not planted), then return true.
  * @return
  */
-bool cGame::isC4Dropped() {
+bool cGame::isC4Dropped() const
+{
     return vDroppedC4 != Vector(9999, 9999, 9999);
 }
 
@@ -149,7 +150,8 @@ bool cGame::isC4Dropped() {
  * Is the C4 - when planted - discovered?
  * @return
  */
-bool cGame::isPlantedC4Discovered() {
+bool cGame::isPlantedC4Discovered() const
+{
     return vPlantedC4 != Vector(9999, 9999, 9999);
 }
 
@@ -158,7 +160,8 @@ char *cGame::RandomSentence() {
     return cSpeechSentences[RANDOM_LONG(0, 15)];
 }
 
-void cGame::DetermineMapGoal() {
+void cGame::DetermineMapGoal() const
+{
     rblog("DetermineMapGoal called\n");
     edict_t *pEnt = NULL;
 
@@ -218,11 +221,13 @@ void cGame::SetRoundTime(float fTime) {
 
 // GAME: Get round time
 // NOTE: This is the time when a round has just started!
-float cGame::getRoundStartedTime() {
+float cGame::getRoundStartedTime() const
+{
     return fRoundTime;
 }
 
-float cGame::getRoundTimeElapsed() {
+float cGame::getRoundTimeElapsed() const
+{
     if (getRoundStartedTime() > -1) {
         return gpGlobals->time - getRoundStartedTime();
     } else {
@@ -236,7 +241,8 @@ void cGame::SetNewRound(bool bState) {
 }
 
 // GAME: Get new round status
-bool cGame::NewRound() {
+bool cGame::NewRound() const
+{
     return bNewRound;
 }
 
@@ -261,12 +267,14 @@ void cGame::SetPlayingRounds(int iMin, int iMax) {
 }                               // SetPlayingRounds()
 
 // GAME: GET Max playing rounds
-int cGame::GetMaxPlayRounds() {
+int cGame::GetMaxPlayRounds() const
+{
     return iMaxPlayRounds;
 }
 
 // GAME: GET Min playing rounds
-int cGame::GetMinPlayRounds() {
+int cGame::GetMinPlayRounds() const
+{
     return iMinPlayRounds;
 }
 
@@ -280,27 +288,24 @@ void cGame::LoadCFG() {
 // NOTE: This function is just a copy/paste stuff from Botmans template, nothing more, nothing less
 // TODO: Rewrite this, can be done much cleaner.
 void cGame::LoadNames() {
-    FILE *bot_name_fp;
-    int str_index;
-    char name_buffer[80];
-    int length, index;
-    char filename[256];
+	char name_buffer[80];
+	char filename[256];
     UTIL_BuildFileNameRB("rb_names.txt", filename);
-    bot_name_fp = fopen(filename, "r");
+    FILE* bot_name_fp = fopen(filename, "r");
     if (bot_name_fp != NULL) {
         while ((iAmountNames < MAX_BOT_NAMES) &&
                (fgets(name_buffer, 80, bot_name_fp) != NULL)) {
-            length = strlen(name_buffer);
+            int length = strlen(name_buffer);
             if (name_buffer[length - 1] == '\n') {
                 name_buffer[length - 1] = 0;        // remove '\n'
                 length--;
             }
-            str_index = 0;
+            int str_index = 0;
             while (str_index < length) {
                 if ((name_buffer[str_index] < ' ')
                     || (name_buffer[str_index] > '~')
                     || (name_buffer[str_index] == '"'))
-                    for (index = str_index; index < length; index++)
+                    for (int index = str_index; index < length; index++)
                         name_buffer[index] = name_buffer[index + 1];
                 str_index++;
             }
@@ -315,7 +320,8 @@ void cGame::LoadNames() {
 }                               // LoadNames()
 
 // Any names available?
-bool cGame::NamesAvailable() {
+bool cGame::NamesAvailable() const
+{
     if (iAmountNames > 0)
         return true;
 
@@ -325,11 +331,9 @@ bool cGame::NamesAvailable() {
 
 // Picks a random name
 // rewritten on april 10th 2004
-void cGame::SelectName(char *name) {
-    int iNameIndex, iIndex;
-    bool bUsed;
-    edict_t *pPlayer;
-    iNameIndex = 0;              // zero based (RANDOM_LONG (0, iAmountNames-1))
+void cGame::SelectName(char *name) const
+{
+	int iNameIndex = 0;              // zero based (RANDOM_LONG (0, iAmountNames-1))
 
     bool iNameUsed[MAX_BOT_NAMES];
     for (int i = 0; i < MAX_BOT_NAMES; i++) {
@@ -337,10 +341,10 @@ void cGame::SelectName(char *name) {
     }
 
     // check make sure this name isn't used
-    bUsed = true;
+    bool bUsed = true;
     while (bUsed) {
         iNameIndex = RANDOM_LONG(0, iAmountNames - 1);    // pick random one
-        int iLimit = iNameIndex;  // remember this.
+        const int iLimit = iNameIndex;  // remember this.
 
         // make sure it is not checked yet
         while (iNameUsed[iNameIndex]) {
@@ -366,8 +370,8 @@ void cGame::SelectName(char *name) {
         bUsed = false;
 
         // check if this name is used
-        for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
-            pPlayer = INDEXENT(iIndex);
+        for (int iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
+            edict_t* pPlayer = INDEXENT(iIndex);
             if (pPlayer && !pPlayer->free) {
                 if (strcmp(cBotNames[iNameIndex], STRING(pPlayer->v.netname))
                     == 0) {
@@ -394,9 +398,7 @@ void cGame::LoadBuyTable() {
 
 // GAME: Update global vars (called by StartFrame)
 void cGame::UpdateGameStatus() {
-    // Used variables
-    edict_t *pEnt;
-    pEnt = NULL;
+	edict_t* pEnt = NULL;
 
     // ------------------
     // Update: Dropped C4
@@ -432,9 +434,7 @@ void cGame::UpdateGameStatus() {
     if (bPlanted && // found a planted bomb
         bPlanted != bBombPlanted // and previously we didn't know that
             ) {
-
-        int i;
-        for (i = 1; i <= gpGlobals->maxClients; i++) {
+	    for (int i = 1; i <= gpGlobals->maxClients; i++) {
             edict_t *pPlayer = INDEXENT(i);
             cBot *bot = UTIL_GetBotPointer(pPlayer);
 
@@ -474,7 +474,8 @@ void cGame::UpdateGameStatus() {
  * @param nameArg
  * @return
  */
-int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg, const char *modelArg, const char *nameArg) {
+int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg, const char *modelArg, const char *nameArg) const
+{
 
     // NAME
     char botName[BOT_NAME_LEN + 1];
@@ -494,12 +495,10 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     // length of name
     int lengthOfBotName = strlen(botName);
 
-    // remove any illegal characters from name...
-    int i, j;
-    for (i = 0; i < lengthOfBotName; i++) {
+    for (int i = 0; i < lengthOfBotName; i++) {
         if ((botName[i] <= ' ') || (botName[i] > '~') || (botName[i] == '"')) {
             // move chars to the left (and null)
-            for (j = i; j < lengthOfBotName; j++) {
+            for (int j = i; j < lengthOfBotName; j++) {
                 botName[j] = botName[j + 1];
             }
             lengthOfBotName--;
@@ -532,12 +531,8 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
 
 
     char ptr[128];            // allocate space for message from ClientConnect
-    char *infobuffer;
-    int clientIndex;
 
-    // find empty bot index
-    int freeBotIndex;
-    freeBotIndex = 0;
+    int freeBotIndex = 0;
     while ((bots[freeBotIndex].bIsUsed) && (freeBotIndex < MAX_BOTS))
         freeBotIndex++;
 
@@ -557,8 +552,8 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
 
     // END OF FIX: --- score resetted
     CALL_GAME_ENTITY(PLID, "player", VARS(pBotEdict));
-    infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pBotEdict);
-    clientIndex = ENTINDEX(pBotEdict);
+    char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pBotEdict);
+    int clientIndex = ENTINDEX(pBotEdict);
 
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "model", "");
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "rate", "3500.000000");
@@ -707,10 +702,10 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
     float roundTimeInMinutes = CVAR_GET_FLOAT("mp_roundtime");
     if (roundTimeInMinutes < 0) roundTimeInMinutes = 4; // sensible default
 
-    float roundTimeInSeconds = roundTimeInMinutes * 60;
-    float roundTimeRemaining = roundTimeInSeconds - roundElapsedTimeInSeconds;
-    int minutesLeft = roundTimeRemaining / 60;
-    int secondsLeft = (int)roundTimeRemaining % 60;
+    const float roundTimeInSeconds = roundTimeInMinutes * 60;
+    const float roundTimeRemaining = roundTimeInSeconds - roundElapsedTimeInSeconds;
+    const int minutesLeft = roundTimeRemaining / 60;
+    const int secondsLeft = (int)roundTimeRemaining % 60;
 
     sprintf(cMessage, "[rb] [%s] [%0d:%02d] - [%s|%d] [%s] [%s] : %s\n", mapName, minutesLeft, secondsLeft, name, botIndex, team, Function, msg);
 

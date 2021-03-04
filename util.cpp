@@ -42,7 +42,7 @@
   *
   **/
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -54,7 +54,7 @@
 #include "game.h"
 #include "ChatEngine.h"
 
-#include <ctype.h>
+#include <cctype>
 
 #ifndef _WIN32
 #define _snprintf snprintf
@@ -107,9 +107,7 @@ void UTIL_MakeVectors(const Vector &vecAngles) {
 
 edict_t *UTIL_FindEntityInSphere(edict_t *pentStart,
                                  const Vector &vecCenter, float flRadius) {
-    edict_t *pentEntity;
-
-    pentEntity = FIND_ENTITY_IN_SPHERE(pentStart, vecCenter, flRadius);
+	edict_t* pentEntity = FIND_ENTITY_IN_SPHERE(pentStart, vecCenter, flRadius);
 
     if (!FNullEnt(pentEntity))
         return pentEntity;
@@ -120,9 +118,7 @@ edict_t *UTIL_FindEntityInSphere(edict_t *pentStart,
 edict_t *UTIL_FindEntityByString(edict_t *pentStart,
                                  const char *szKeyword,
                                  const char *szValue) {
-    edict_t *pentEntity;
-
-    pentEntity = FIND_ENTITY_BY_STRING(pentStart, szKeyword, szValue);
+	edict_t* pentEntity = FIND_ENTITY_BY_STRING(pentStart, szKeyword, szValue);
 
     if (!FNullEnt(pentEntity))
         return pentEntity;
@@ -200,13 +196,10 @@ void UTIL_SayText(const char *pText, edict_t *pEdict) {
 }
 
 void UTIL_HostSay(edict_t *pEntity, int teamonly, char *message) {
-    int j;
-    char text[128];
+	char text[128];
     char *pc;
-    int sender_team, player_team;
-    edict_t *client;
 
-    // make sure the text has content
+	// make sure the text has content
     for (pc = message; pc != NULL && *pc != 0; pc++) {
         if (isprint(*pc) && !isspace(*pc)) {
             pc = NULL;             // we've found an alphanumeric character,  so text is valid
@@ -223,7 +216,7 @@ void UTIL_HostSay(edict_t *pEntity, int teamonly, char *message) {
     else
         sprintf(text, "%c%s: ", 2, STRING(pEntity->v.netname));
 
-    j = sizeof(text) - 2 - strlen(text); // -2 for /n and null terminator
+    int j = sizeof(text) - 2 - strlen(text); // -2 for /n and null terminator
     if ((int) strlen(message) > j)
         message[j] = 0;
 
@@ -238,15 +231,15 @@ void UTIL_HostSay(edict_t *pEntity, int teamonly, char *message) {
     if (gmsgSayText == 0)
         gmsgSayText = REG_USER_MSG("SayText", -1);
 
-    sender_team = UTIL_GetTeam(pEntity);
+    int sender_team = UTIL_GetTeam(pEntity);
 
-    client = NULL;
+    edict_t* client = NULL;
     while (((client = UTIL_FindEntityByClassname(client, "player")) != NULL)
            && (!FNullEnt(client))) {
         if (client == pEntity)    // skip sender of message
             continue;
 
-        player_team = UTIL_GetTeam(client);
+        int player_team = UTIL_GetTeam(client);
 
         if (teamonly && (sender_team != player_team))
             continue;
@@ -291,10 +284,9 @@ bool UTIL_IsVip(edict_t *pEntity) {
     if (mod_id != CSTRIKE_DLL)
         return false;
     else {
-        char *infobuffer;
-        char model_name[32];
+	    char model_name[32];
 
-        infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
+        char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
         strcpy(model_name, (g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
 
         if (strcmp(model_name, "vip") == 0)       // VIP
@@ -307,10 +299,9 @@ bool UTIL_IsVip(edict_t *pEntity) {
 // return team number 0 through 3 based what MOD uses for team numbers
 int UTIL_GetTeam(edict_t *pEntity) {
     if (mod_id == CSTRIKE_DLL) {
-        char *infobuffer;
-        char model_name[32];
+	    char model_name[32];
 
-        infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
+        char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
         strcpy(model_name,
                (g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
 
@@ -340,19 +331,16 @@ int UTIL_GetTeam(edict_t *pEntity) {
 
 // return class number 0 through N
 int UTIL_GetClass(edict_t *pEntity) {
-    char *infobuffer;
-    char model_name[32];
+	char model_name[32];
 
-    infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
+    char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
     strcpy(model_name, (g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
 
     return 0;
 }
 
 int UTIL_GetBotIndex(edict_t *pEdict) {
-    int index;
-
-    for (index = 0; index < 32; index++) {
+	for (int index = 0; index < 32; index++) {
         if (bots[index].pEdict == pEdict) {
             return index;
         }
@@ -367,9 +355,7 @@ int UTIL_GetBotIndex(edict_t *pEdict) {
  * @return
  */
 cBot *UTIL_GetBotPointer(edict_t *pEdict) {
-    int index;
-
-    for (index = 0; index < 32; index++) {
+	for (int index = 0; index < 32; index++) {
         if (bots[index].pEdict == pEdict) {
             return (&bots[index]);
         }
@@ -388,15 +374,12 @@ bool IsAlive(edict_t *pEdict) {
 }
 
 bool FInViewCone(Vector *pOrigin, edict_t *pEdict) {
-    Vector2D vec2LOS;
-    float flDot;
+	UTIL_MakeVectors(pEdict->v.angles);
 
-    UTIL_MakeVectors(pEdict->v.angles);
-
-    vec2LOS = (*pOrigin - pEdict->v.origin).Make2D();
+    Vector2D vec2LOS = (*pOrigin - pEdict->v.origin).Make2D();
     vec2LOS = vec2LOS.Normalize();
 
-    flDot = DotProduct(vec2LOS, gpGlobals->v_forward.Make2D());
+    float flDot = DotProduct(vec2LOS, gpGlobals->v_forward.Make2D());
 
     if (flDot > 0.50)            // 60 degree field of view
     {
@@ -409,13 +392,12 @@ bool FInViewCone(Vector *pOrigin, edict_t *pEdict) {
 // FVisible()
 bool FVisible(const Vector &vecOrigin, edict_t *pEdict) {
     TraceResult tr;
-    Vector vecLookerOrigin;
 
     // look through caller's eyes
-    vecLookerOrigin = pEdict->v.origin + pEdict->v.view_ofs;
+    Vector vecLookerOrigin = pEdict->v.origin + pEdict->v.view_ofs;
 
-    int bInWater = (UTIL_PointContents(vecOrigin) == CONTENTS_WATER);
-    int bLookerInWater =
+    const int bInWater = (UTIL_PointContents(vecOrigin) == CONTENTS_WATER);
+    const int bLookerInWater =
             (UTIL_PointContents(vecLookerOrigin) == CONTENTS_WATER);
 
     // don't look through water
@@ -498,7 +480,7 @@ void UTIL_BuildFileNameRB(char *subdir, char *filename) {
     strcpy(filename, "realbot/");
     strcat(filename, subdir);
     while (*filename) {
-        if ((*filename == '/') && (*filename == '\\'))
+        if ((*filename == '/') || (*filename == '\\'))
             *filename = S;
         filename++;
     }
@@ -799,16 +781,14 @@ char *UTIL_GiveWeaponName(int id) {
 
 // Thanks Botman for this code (from forum).
 void UTIL_BotSprayLogo(edict_t *pEntity, char *logo_name) {
-    int index;
-    TraceResult pTrace;
-    Vector v_src, v_dest;
-    UTIL_MakeVectors(pEntity->v.v_angle);
-    v_src = pEntity->v.origin + pEntity->v.view_ofs;
-    v_dest = v_src + gpGlobals->v_forward * 80;
+	TraceResult pTrace;
+	UTIL_MakeVectors(pEntity->v.v_angle);
+    Vector v_src = pEntity->v.origin + pEntity->v.view_ofs;
+    Vector v_dest = v_src + gpGlobals->v_forward * 80;
     UTIL_TraceLine(v_src, v_dest, ignore_monsters,
                    pEntity->v.pContainingEntity, &pTrace);
 
-    index = DECAL_INDEX(logo_name);
+    int index = DECAL_INDEX(logo_name);
 
     if (index < 0)
         return;
@@ -899,9 +879,7 @@ int UTIL_GetGrenadeType(edict_t *pEntity) {
 
 // 2 functions from podbot source
 unsigned short FixedUnsigned16(float value, float scale) {
-    int output;
-
-    output = (int) value * scale;
+	int output = (int)value * scale;
     if (output < 0)
         output = 0;
     if (output > 0xFFFF)
@@ -911,9 +889,7 @@ unsigned short FixedUnsigned16(float value, float scale) {
 }
 
 short FixedSigned16(float value, float scale) {
-    int output;
-
-    output = (int) value * scale;
+	int output = (int)value * scale;
 
     if (output > 32767)
         output = 32767;
@@ -979,7 +955,7 @@ void UTIL_SayTextBot(const char *pText, cBot *pBot) {
     // init
     szTemp[0] = 2;
 
-    int entind = ENTINDEX(pBot->pEdict);
+    const int entind = ENTINDEX(pBot->pEdict);
 
     if (IsAlive(pBot->pEdict)) {
         strcpy(szName, pBot->name);
