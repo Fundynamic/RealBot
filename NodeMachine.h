@@ -45,7 +45,7 @@ public:
     // -----------------
     int addNode(Vector vOrigin, edict_t *pEntity);
 
-    int Reachable(const int iStart, const int iEnd) const;
+    int Reachable(int iStart, int iEnd) const;
 
     int add2(Vector vOrigin, int iType, edict_t *pEntity);
 

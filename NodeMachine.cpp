@@ -4405,7 +4405,7 @@ void cNodeMachine::FindMinMax() const
 // Palette is defined such that increasing the palette index
 // Makes a slightly darker dark
 
-void cNodeMachine::MarkAxis(void) {
+void cNodeMachine::MarkAxis() {
 	int x0 = (int)((0 - minx) / scale);
     int y0 = (int)((0 - miny) / scale);
 

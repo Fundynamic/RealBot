@@ -94,7 +94,7 @@ void cChatEngine::set_sentence(char csender[30], char csentence[128])
 // From bot.cpp
 
 // Can see Edict?
-bool cBot::canSeeEntity (edict_t * pEntity)
+bool cBot::canSeeEntity (edict_t * pEntity) const
 {
   TraceResult tr;
   Vector start = pEdict->v.origin + pEdict->v.view_ofs;
