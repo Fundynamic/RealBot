@@ -163,10 +163,10 @@ char *cGame::RandomSentence() {
 void cGame::DetermineMapGoal() const
 {
     rblog("DetermineMapGoal called\n");
-    edict_t *pEnt = NULL;
+    edict_t *pEnt = nullptr;
 
     int hostagesFound = 0;
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "hostage_entity")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "hostage_entity")) != nullptr) {
         hostagesFound++;
     }
 
@@ -178,12 +178,12 @@ void cGame::DetermineMapGoal() const
 
     int rescueZonesFound = 0;
     // GOAL #3 - Hostage rescue zone
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "func_hostage_rescue")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "func_hostage_rescue")) != nullptr) {
         rescueZonesFound++;
     }
 
     // rescue zone can also be an entity of info_hostage_rescue
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "info_hostage_rescue")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "info_hostage_rescue")) != nullptr) {
         rescueZonesFound++;
     }
 
@@ -196,11 +196,11 @@ void cGame::DetermineMapGoal() const
     int bombSpots = 0;
     // GOAL #4 - Bombspot zone
     // Bomb spot
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "func_bomb_target")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "func_bomb_target")) != nullptr) {
         bombSpots++;
     }
 
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "info_bomb_target")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "info_bomb_target")) != nullptr) {
         bombSpots++;
     }
     memset(msg, 0, sizeof(msg));
@@ -288,13 +288,13 @@ void cGame::LoadCFG() {
 // NOTE: This function is just a copy/paste stuff from Botmans template, nothing more, nothing less
 // TODO: Rewrite this, can be done much cleaner.
 void cGame::LoadNames() {
-	char name_buffer[80];
 	char filename[256];
     UTIL_BuildFileNameRB("rb_names.txt", filename);
     FILE* bot_name_fp = fopen(filename, "r");
-    if (bot_name_fp != NULL) {
-        while ((iAmountNames < MAX_BOT_NAMES) &&
-               (fgets(name_buffer, 80, bot_name_fp) != NULL)) {
+    if (bot_name_fp != nullptr) {
+	    char name_buffer[80];
+	    while ((iAmountNames < MAX_BOT_NAMES) &&
+               (fgets(name_buffer, 80, bot_name_fp) != nullptr)) {
             int length = strlen(name_buffer);
             if (name_buffer[length - 1] == '\n') {
                 name_buffer[length - 1] = 0;        // remove '\n'
@@ -398,7 +398,7 @@ void cGame::LoadBuyTable() {
 
 // GAME: Update global vars (called by StartFrame)
 void cGame::UpdateGameStatus() {
-	edict_t* pEnt = NULL;
+	edict_t* pEnt = nullptr;
 
     // ------------------
     // Update: Dropped C4
@@ -407,7 +407,7 @@ void cGame::UpdateGameStatus() {
     vDroppedC4 = Vector(9999, 9999, 9999);
 
     // Find the dropped bomb
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "weaponbox")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "weaponbox")) != nullptr) {
         // when DROPPED C4
         if ((FStrEq(STRING(pEnt->v.model), "models/w_backpack.mdl"))) {
             vDroppedC4 = pEnt->v.origin;   // this is the origin.
@@ -419,10 +419,10 @@ void cGame::UpdateGameStatus() {
     // Update: Is the bomb planted?
     // ------------------
     // Same as dropped c4, its NOT, unless stated otherwise.
-    pEnt = NULL;
+    pEnt = nullptr;
     bool bPlanted = bBombPlanted;
 
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "grenade")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "grenade")) != nullptr) {
         if (UTIL_GetGrenadeType(pEnt) == 4) {
             bPlanted = true;         // Found planted bomb!
             break;
@@ -481,7 +481,7 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     char botName[BOT_NAME_LEN + 1];
     memset(botName, 0, sizeof(botName));
     // if name given, use that
-    if ((nameArg != NULL) && (*nameArg != 0)) {
+    if ((nameArg != nullptr) && (*nameArg != 0)) {
         strncpy(botName, nameArg, BOT_NAME_LEN - 1);
         botName[BOT_NAME_LEN] = 0; // make sure botName is null terminated
     } else { // else pick random one or fallback to default "RealBot"
@@ -508,7 +508,7 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     int botSkill = -2; // -2, not valid
 
     // Skill argument provided
-    if ((skillArg != NULL) && (*skillArg != 0)) {
+    if ((skillArg != nullptr) && (*skillArg != 0)) {
         botSkill = atoi(skillArg);       // set to given skill
     }
 
@@ -525,7 +525,7 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     // CREATE fake client!
     edict_t *pBotEdict = (*g_engfuncs.pfnCreateFakeClient)(botName);
     if (FNullEnt(pBotEdict)) {
-        REALBOT_PRINT(NULL, "cGame::CreateBot", "Cannot create bot, server is full");
+        REALBOT_PRINT(nullptr, "cGame::CreateBot", "Cannot create bot, server is full");
         return GAME_MSG_FAIL_SERVERFULL;  // failed
     }
 
@@ -544,16 +544,16 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     // (from LINK_ENTITY_TO_CLASS for player object)
 
     // FIX: Free data for bot, so we can fill in new
-    if (pBotEdict->pvPrivateData != NULL)
+    if (pBotEdict->pvPrivateData != nullptr)
         FREE_PRIVATE(pBotEdict);
 
-    pBotEdict->pvPrivateData = NULL;
+    pBotEdict->pvPrivateData = nullptr;
     pBotEdict->v.frags = 0;
 
     // END OF FIX: --- score resetted
     CALL_GAME_ENTITY(PLID, "player", VARS(pBotEdict));
     char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pBotEdict);
-    int clientIndex = ENTINDEX(pBotEdict);
+    const int clientIndex = ENTINDEX(pBotEdict);
 
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "model", "");
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "rate", "3500.000000");
@@ -639,11 +639,11 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     pBot->ipBuyArmour = 0;
 
     // here we set team
-    if ((teamArg != NULL) && (teamArg[0] != 0)) {
+    if ((teamArg != nullptr) && (teamArg[0] != 0)) {
         pBot->iTeam = atoi(teamArg);
 
         // and class
-        if ((modelArg != NULL) && (modelArg[0] != 0)) {
+        if ((modelArg != nullptr) && (modelArg[0] != 0)) {
             pBot->bot_class = atoi(modelArg);
         }
     }
@@ -660,7 +660,7 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
 
 // Debug message (without BOT)
 void REALBOT_PRINT(const char *Function, const char *msg) {
-    REALBOT_PRINT(NULL, Function, msg);
+    REALBOT_PRINT(nullptr, Function, msg);
 }
 
 // Debug message
@@ -705,7 +705,7 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
     const float roundTimeInSeconds = roundTimeInMinutes * 60;
     const float roundTimeRemaining = roundTimeInSeconds - roundElapsedTimeInSeconds;
     const int minutesLeft = roundTimeRemaining / 60;
-    const int secondsLeft = (int)roundTimeRemaining % 60;
+    const int secondsLeft = static_cast<int>(roundTimeRemaining) % 60;
 
     sprintf(cMessage, "[rb] [%s] [%0d:%02d] - [%s|%d] [%s] [%s] : %s\n", mapName, minutesLeft, secondsLeft, name, botIndex, team, Function, msg);
 

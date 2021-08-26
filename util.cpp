@@ -112,7 +112,7 @@ edict_t *UTIL_FindEntityInSphere(edict_t *pentStart,
     if (!FNullEnt(pentEntity))
         return pentEntity;
 
-    return NULL;
+    return nullptr;
 }
 
 edict_t *UTIL_FindEntityByString(edict_t *pentStart,
@@ -122,7 +122,7 @@ edict_t *UTIL_FindEntityByString(edict_t *pentStart,
 
     if (!FNullEnt(pentEntity))
         return pentEntity;
-    return NULL;
+    return nullptr;
 }
 
 edict_t *UTIL_FindEntityByClassname(edict_t *pentStart,
@@ -153,7 +153,7 @@ void ClientPrint(edict_t *pEntity, int msg_dest, const char *msg_name) {
     if (gmsgTextMsg == 0)
         gmsgTextMsg = REG_USER_MSG("TextMsg", -1);
 
-    MESSAGE_BEGIN(MSG_ONE, gmsgTextMsg, NULL, pEntity);
+    MESSAGE_BEGIN(MSG_ONE, gmsgTextMsg, nullptr, pEntity);
 
     WRITE_BYTE(msg_dest);
     WRITE_STRING(msg_name);
@@ -187,7 +187,7 @@ void UTIL_SayText(const char *pText, edict_t *pEdict) {
     if (gmsgSayText == 0)
         gmsgSayText = REG_USER_MSG("SayText", -1);
 
-    MESSAGE_BEGIN(MSG_ONE, gmsgSayText, NULL, pEdict);
+    MESSAGE_BEGIN(MSG_ONE, gmsgSayText, nullptr, pEdict);
     WRITE_BYTE(ENTINDEX(pEdict));
     //if (mod_id == FRONTLINE_DLL)
     //   WRITE_SHORT(0);
@@ -200,14 +200,14 @@ void UTIL_HostSay(edict_t *pEntity, int teamonly, char *message) {
     char *pc;
 
 	// make sure the text has content
-    for (pc = message; pc != NULL && *pc != 0; pc++) {
+    for (pc = message; pc != nullptr && *pc != 0; pc++) {
         if (isprint(*pc) && !isspace(*pc)) {
-            pc = NULL;             // we've found an alphanumeric character,  so text is valid
+            pc = nullptr;             // we've found an alphanumeric character,  so text is valid
             break;
         }
     }
 
-    if (pc != NULL)
+    if (pc != nullptr)
         return;                   // no character found, so say nothing
 
     // turn on color set 2  (color on,  no sound)
@@ -216,8 +216,8 @@ void UTIL_HostSay(edict_t *pEntity, int teamonly, char *message) {
     else
         sprintf(text, "%c%s: ", 2, STRING(pEntity->v.netname));
 
-    int j = sizeof(text) - 2 - strlen(text); // -2 for /n and null terminator
-    if ((int) strlen(message) > j)
+	const int j = sizeof(text) - 2 - strlen(text); // -2 for /n and null terminator
+    if (static_cast<int>(strlen(message)) > j)
         message[j] = 0;
 
     strcat(text, message);
@@ -231,20 +231,20 @@ void UTIL_HostSay(edict_t *pEntity, int teamonly, char *message) {
     if (gmsgSayText == 0)
         gmsgSayText = REG_USER_MSG("SayText", -1);
 
-    int sender_team = UTIL_GetTeam(pEntity);
+	const int sender_team = UTIL_GetTeam(pEntity);
 
-    edict_t* client = NULL;
-    while (((client = UTIL_FindEntityByClassname(client, "player")) != NULL)
+    edict_t* client = nullptr;
+    while (((client = UTIL_FindEntityByClassname(client, "player")) != nullptr)
            && (!FNullEnt(client))) {
         if (client == pEntity)    // skip sender of message
             continue;
 
-        int player_team = UTIL_GetTeam(client);
+        const int player_team = UTIL_GetTeam(client);
 
         if (teamonly && (sender_team != player_team))
             continue;
 
-        MESSAGE_BEGIN(MSG_ONE, gmsgSayText, NULL, client);
+        MESSAGE_BEGIN(MSG_ONE, gmsgSayText, nullptr, client);
         WRITE_BYTE(ENTINDEX(pEntity));
         //if (mod_id == FRONTLINE_DLL)
         //   WRITE_SHORT(0);
@@ -253,7 +253,7 @@ void UTIL_HostSay(edict_t *pEntity, int teamonly, char *message) {
     }
 
     // print to the sending client
-    MESSAGE_BEGIN(MSG_ONE, gmsgSayText, NULL, pEntity);
+    MESSAGE_BEGIN(MSG_ONE, gmsgSayText, nullptr, pEntity);
     WRITE_BYTE(ENTINDEX(pEntity));
     //if (mod_id == FRONTLINE_DLL)
     //   WRITE_SHORT(0);
@@ -361,12 +361,12 @@ cBot *UTIL_GetBotPointer(edict_t *pEdict) {
         }
     }
 
-    return NULL;                 // return NULL if edict is not a bot
+    return nullptr;                 // return NULL if edict is not a bot
 }
 
 bool IsAlive(edict_t *pEdict) {
     // FIX: Make sure the edict is valid and such, else return false:
-    return ((pEdict != NULL) &&  // VALID
+    return ((pEdict != nullptr) &&  // VALID
             (pEdict->v.deadflag == DEAD_NO) &&   // NOT DEAD
             (pEdict->v.health > 0) &&    // ENOUGHT HEALTH
             !(pEdict->v.flags & FL_NOTARGET) &&  // ?
@@ -379,7 +379,7 @@ bool FInViewCone(Vector *pOrigin, edict_t *pEdict) {
     Vector2D vec2LOS = (*pOrigin - pEdict->v.origin).Make2D();
     vec2LOS = vec2LOS.Normalize();
 
-    float flDot = DotProduct(vec2LOS, gpGlobals->v_forward.Make2D());
+	const float flDot = DotProduct(vec2LOS, gpGlobals->v_forward.Make2D());
 
     if (flDot > 0.50)            // 60 degree field of view
     {
@@ -394,7 +394,7 @@ bool FVisible(const Vector &vecOrigin, edict_t *pEdict) {
     TraceResult tr;
 
     // look through caller's eyes
-    Vector vecLookerOrigin = pEdict->v.origin + pEdict->v.view_ofs;
+    const Vector vecLookerOrigin = pEdict->v.origin + pEdict->v.view_ofs;
 
     const int bInWater = (UTIL_PointContents(vecOrigin) == CONTENTS_WATER);
     const int bLookerInWater =
@@ -420,7 +420,7 @@ Vector GetGunPosition(edict_t *pEdict) {
 
 void UTIL_SelectItem(edict_t *pEdict, char *item_name) {
     /*BotDebug( item_name); */
-    FakeClientCommand(pEdict, item_name, NULL, NULL);
+    FakeClientCommand(pEdict, item_name, nullptr, nullptr);
 }
 
 Vector VecBModelOrigin(edict_t *pEdict) {
@@ -433,7 +433,7 @@ UTIL_ShowMenu(edict_t *pEdict, int slots, int displaytime, bool needmore,
     if (gmsgShowMenu == 0)
         gmsgShowMenu = REG_USER_MSG("ShowMenu", -1);
 
-    MESSAGE_BEGIN(MSG_ONE, gmsgShowMenu, NULL, pEdict);
+    MESSAGE_BEGIN(MSG_ONE, gmsgShowMenu, nullptr, pEdict);
 
     WRITE_SHORT(slots);
     WRITE_CHAR(displaytime);
@@ -783,8 +783,8 @@ char *UTIL_GiveWeaponName(int id) {
 void UTIL_BotSprayLogo(edict_t *pEntity, char *logo_name) {
 	TraceResult pTrace;
 	UTIL_MakeVectors(pEntity->v.v_angle);
-    Vector v_src = pEntity->v.origin + pEntity->v.view_ofs;
-    Vector v_dest = v_src + gpGlobals->v_forward * 80;
+	const Vector v_src = pEntity->v.origin + pEntity->v.view_ofs;
+	const Vector v_dest = v_src + gpGlobals->v_forward * 80;
     UTIL_TraceLine(v_src, v_dest, ignore_monsters,
                    pEntity->v.pContainingEntity, &pTrace);
 
@@ -879,17 +879,17 @@ int UTIL_GetGrenadeType(edict_t *pEntity) {
 
 // 2 functions from podbot source
 unsigned short FixedUnsigned16(float value, float scale) {
-	int output = (int)value * scale;
+	int output = static_cast<int>(value) * scale;
     if (output < 0)
         output = 0;
     if (output > 0xFFFF)
         output = 0xFFFF;
 
-    return (unsigned short) output;
+    return static_cast<unsigned short>(output);
 }
 
 short FixedSigned16(float value, float scale) {
-	int output = (int)value * scale;
+	int output = static_cast<int>(value) * scale;
 
     if (output > 32767)
         output = 32767;
@@ -897,14 +897,14 @@ short FixedSigned16(float value, float scale) {
     if (output < -32768)
         output = -32768;
 
-    return (short) output;
+    return static_cast<short>(output);
 }
 
 // Using POD/SDK source to print nice messages on the client machine
 void HUD_DrawString(int r, int g, int b, char *msg, edict_t *edict) {
     // FROM PODBOT SOURCE
     // Hacked together Version of HUD_DrawString
-    MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, NULL, edict);
+    MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, nullptr, edict);
     WRITE_BYTE(TE_TEXTMESSAGE);
     WRITE_BYTE(1);
     WRITE_SHORT(FixedSigned16(-1, 1 << 13));
@@ -922,7 +922,7 @@ void HUD_DrawString(int r, int g, int b, char *msg, edict_t *edict) {
     WRITE_SHORT(FixedUnsigned16(2, 1 << 8));
     WRITE_SHORT(FixedUnsigned16(6, 1 << 8));
     WRITE_SHORT(FixedUnsigned16(0.1, 1 << 8));
-    WRITE_STRING((const char *) &msg[0]);
+    WRITE_STRING(static_cast<const char*>(&msg[0]));
     MESSAGE_END();
 }
 
@@ -966,7 +966,7 @@ void UTIL_SayTextBot(const char *pText, cBot *pBot) {
             if (pPlayer)
                 if (IsAlive(pPlayer))       // alive
                 {
-                    MESSAGE_BEGIN(MSG_ONE, gmsgSayText, NULL, pPlayer);
+                    MESSAGE_BEGIN(MSG_ONE, gmsgSayText, nullptr, pPlayer);
                     WRITE_BYTE(entind);
                     sprintf(&szTemp[1], "%s :   %s", szName, pText);
                     WRITE_STRING(&szTemp[0]);
@@ -979,7 +979,7 @@ void UTIL_SayTextBot(const char *pText, cBot *pBot) {
             edict_t *pPlayer = INDEXENT(i);
             if (pPlayer)
                 if (!IsAlive(pPlayer)) {
-                    MESSAGE_BEGIN(MSG_ONE, gmsgSayText, NULL, pPlayer);
+                    MESSAGE_BEGIN(MSG_ONE, gmsgSayText, nullptr, pPlayer);
                     WRITE_BYTE(entind);
                     sprintf(&szTemp[1], "*DEAD*%s :   %s", szName, pText);
                     WRITE_STRING(&szTemp[0]);

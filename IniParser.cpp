@@ -557,21 +557,20 @@ void INI_PARSE_CHATFILE() {
    UTIL_BuildFileNameRB(dirname, filename);
 
    // make sure the engine knows...
-   REALBOT_PRINT(NULL, "INI_PARSE_CHATFILE", "Loading CHAT.INI\n");
+   REALBOT_PRINT(nullptr, "INI_PARSE_CHATFILE", "Loading CHAT.INI\n");
 
    int iBlockId = -1;
    int iBlockWord = -1;
    int iBlockSentence = -1;
 
    // load it
-   if ((stream = fopen(filename, "r+t")) != NULL) {
-      char linefeed[80];
-      char lineword[25];
-      char linesection[30];
+   if ((stream = fopen(filename, "r+t")) != nullptr) {
 
-      // infinite loop baby
-      while (!feof(stream)) {
-         INI_Sentence(stream, linefeed);
+   		// infinite loop baby
+   		while (!feof(stream)) {
+	      char linesection[30];
+	      char linefeed[80];
+	      INI_Sentence(stream, linefeed);
 
          // Linefeed contains a string of 1 sentence. Whenever the first character is a commentary
          // character (which is "//", ";" or "#"), or an empty line, then skip it
@@ -614,8 +613,9 @@ void INI_PARSE_CHATFILE() {
          }
 
          if (iBlockId > -1) {
-            INI_Word(linefeed, lineword);
-            int wordtype = INI_WordType(lineword, section);
+	         char lineword[25];
+	         INI_Word(linefeed, lineword);
+            const int wordtype = INI_WordType(lineword, section);
 
             // We load in words
             if (wordtype == WORD_WORD) {
@@ -696,13 +696,12 @@ void INI_PARSE_IAD() {
    float AreaY, AreaZ;
    float AreaX = AreaY = AreaZ = 9999;
 
-   if ((stream = fopen(filename, "r+t")) != NULL) {
-      char linefeed[80];
-      char lineword[25];
-      char linesection[30];
+   if ((stream = fopen(filename, "r+t")) != nullptr) {
 
-      while (!feof(stream)) {
-         INI_Sentence(stream, linefeed);
+	   while (!feof(stream)) {
+		   char linesection[30];
+		   char linefeed[80];
+	      INI_Sentence(stream, linefeed);
 
          // Linefeed contains a string of 1 sentence. Whenever the first character is a commentary
          // character (which is "//", ";" or "#"), or an empty line, then skip it
@@ -722,8 +721,9 @@ void INI_PARSE_IAD() {
 
          // Check word only when in a section
          if (section != INI_NONE) {
-            INI_Word(linefeed, lineword);
-            int wordtype = INI_WordType(lineword, section);
+	         char lineword[25];
+	         INI_Word(linefeed, lineword);
+            const int wordtype = INI_WordType(lineword, section);
 
             if (section == INI_AREA) {
                if (wordtype == WORD_AREAX)
@@ -737,7 +737,7 @@ void INI_PARSE_IAD() {
                if (AreaX != 9999 && AreaY != 9999 && AreaZ != 9999) {
                   // add this to goal
                   rblog("IAD: Adding an important area/goal\n");
-                   NodeMachine.addGoal(NULL, GOAL_IMPORTANT, Vector(AreaX, AreaY, AreaZ));
+                   NodeMachine.addGoal(nullptr, GOAL_IMPORTANT, Vector(AreaX, AreaY, AreaZ));
 
                   AreaX = AreaY = AreaZ = 9999;
                }
@@ -778,14 +778,13 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
    UTIL_BuildFileNameRB(dirname, filename);
 
    // we open the file here!
-   if ((stream = fopen(filename, "r+t")) != NULL) {
-      char linefeed[80];
-      char lineword[25];
-      char linesection[30];
+   if ((stream = fopen(filename, "r+t")) != nullptr) {
 
-      // infinite loop baby
+	   // infinite loop baby
       while (!feof(stream)) {
-         INI_Sentence(stream, linefeed);
+	      char linesection[30];
+	      char linefeed[80];
+	      INI_Sentence(stream, linefeed);
 
          // Linefeed contains a string of 1 sentence. Whenever the first character is a commentary
          // character (which is "//", ";" or "#"), or an empty line, then skip it
@@ -804,8 +803,9 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
          }
          // Check word only when in a section
          if (section != INI_NONE) {
-            INI_Word(linefeed, lineword);
-            int wordtype = INI_WordType(lineword, section);
+	         char lineword[25];
+	         INI_Word(linefeed, lineword);
+            const int wordtype = INI_WordType(lineword, section);
 
             // WEAPON
             if (section == INI_WEAPON) {
@@ -936,7 +936,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
             RANDOM_FLOAT((pBot->bot_skill / 20) + 0.05,
                          (pBot->bot_skill / 5) + 0.05);
 
-      float fMaxReact = fMinReact + RANDOM_FLOAT(0.05, 0.2);
+      const float fMaxReact = fMinReact + RANDOM_FLOAT(0.05, 0.2);
 
       // SET them
       pBot->fpMinReactTime = fMinReact;
@@ -988,7 +988,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       FILE* rbl = fopen(filename, "w+t");
 
       // Created file
-      if (rbl != NULL) {
+      if (rbl != nullptr) {
          fprintf(rbl, "; RealBot\n");
          fprintf(rbl, "; \n");
          fprintf(rbl,
@@ -1087,13 +1087,11 @@ void INI_PARSE_BUYTABLE() {
       weapons_table[cl].iIdIndex = -1;
    }
 
-   if ((stream = fopen(filename, "r+t")) != NULL) {
-      char linefeed[80];
-      char lineword[25];
-      char linesection[30];
-
-      while (!feof(stream)) {
-         INI_Sentence(stream, linefeed);
+   if ((stream = fopen(filename, "r+t")) != nullptr) {
+	   while (!feof(stream)) {
+		   char linesection[30];
+		   char linefeed[80];
+	      INI_Sentence(stream, linefeed);
 
          // Linefeed contains a string of 1 sentence. Whenever the first character is a commentary
          // character (which is "//", ";" or "#"), or an empty line, then skip it
@@ -1128,8 +1126,9 @@ void INI_PARSE_BUYTABLE() {
 
          // Check word only when in a section
          if (section != INI_NONE) {
-            INI_Word(linefeed, lineword);
-            int wordtype = INI_WordType(lineword, section);
+	         char lineword[25];
+	         INI_Word(linefeed, lineword);
+            const int wordtype = INI_WordType(lineword, section);
             if (wordtype != WORD_NONE) {
                if (wordtype == WORD_PRICE) {
                   //BotDebug("Loading price\n");

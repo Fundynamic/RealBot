@@ -77,7 +77,7 @@ bool BotCanJumpUp(cBot * pBot) {
    // that the bot can not get onto.
 
    TraceResult tr;
-   edict_t *pEdict = pBot->pEdict;
+   const edict_t *pEdict = pBot->pEdict;
 
    // convert current view angle to vectors for TraceLine math...
 
@@ -196,7 +196,7 @@ bool BotCanDuckUnder(cBot * pBot) {
    // we can duck under it.
 
    TraceResult tr;
-   edict_t *pEdict = pBot->pEdict;
+   const edict_t *pEdict = pBot->pEdict;
 
    // convert current view angle to vectors for TraceLine math...
 

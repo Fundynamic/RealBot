@@ -68,7 +68,7 @@ VectorIsVisibleWithEdict(edict_t *pEdict, const Vector dest, char *checkname) {
     if (strcmp("none", checkname) != 0 && tr.flFraction < 1.0) {
         // Check if the blocking entity is same as checkname..
         char entity_blocker[128];
-        edict_t *pent = tr.pHit;  // Ok now retrieve the entity
+        const edict_t *pent = tr.pHit;  // Ok now retrieve the entity
         strcpy(entity_blocker, STRING(pent->v.classname));        // the classname
 
         if (strcmp(entity_blocker, checkname) == 0)
@@ -93,13 +93,13 @@ bool VectorIsVisible(const Vector start, const Vector dest, char *checkname) {
     TraceResult tr;
 
     // trace a line from bot's eyes to destination...
-    UTIL_TraceLine(start, dest, dont_ignore_monsters, NULL, &tr);
+    UTIL_TraceLine(start, dest, dont_ignore_monsters, nullptr, &tr);
 
     // Als we geblokt worden EN we checken voor een naam
     if (strcmp("none", checkname) != 0 && tr.flFraction < 1.0) {
         // Check if the blocking entity is same as checkname..
         char entity_blocker[128];
-        edict_t *pent = tr.pHit;  // Ok now retrieve the entity
+        const edict_t *pent = tr.pHit;  // Ok now retrieve the entity
         strcpy(entity_blocker, STRING(pent->v.classname));        // the classname
 
         if (strcmp(entity_blocker, checkname) == 0)
@@ -156,7 +156,7 @@ int FUNC_InFieldOfView(edict_t *pEntity, const Vector dest) {
     // 45 degrees to the right is the limit of the normal view angle
 
     // rsm - START angle bug fix
-    int angle = abs((int) view_angle - (int) entity_angles.y);
+    int angle = abs(static_cast<int>(view_angle) - static_cast<int>(entity_angles.y));
 
     if (angle > 180)
         angle = 360 - angle;
@@ -204,7 +204,7 @@ void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end, int 
 void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end, int width,
               int noise, int red, int green, int blue, int brightness,
               int speed) {
-    MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, NULL, visibleForWho);
+    MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, nullptr, visibleForWho);
     WRITE_BYTE(TE_BEAMPOINTS);
     WRITE_COORD(start.x);
     WRITE_COORD(start.y);
@@ -235,7 +235,7 @@ void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end, int 
  */
 cBot *getCloseFellowBot(cBot *pBot) {
     edict_t *pEdict = pBot->pEdict;
-    cBot *closestBot = NULL;
+    cBot *closestBot = nullptr;
 
     // Loop through all clients
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
@@ -249,7 +249,7 @@ cBot *getCloseFellowBot(cBot *pBot) {
 
             cBot *pBotPointer = UTIL_GetBotPointer(pPlayer);
             // skip anything that is not a RealBot
-            if (pBotPointer == NULL)       // not using FL_FAKECLIENT here so it is multi-bot compatible
+            if (pBotPointer == nullptr)       // not using FL_FAKECLIENT here so it is multi-bot compatible
                 continue;
 
             if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < NODE_ZONE) {
@@ -268,14 +268,14 @@ cBot *getCloseFellowBot(cBot *pBot) {
  */
 edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
     edict_t *pEdict = pBot->pEdict;
-    const int FOV = 90; // TODO: use server var "default_fov" ?
 
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
 
         // skip invalid players and skip self (i.e. this bot)
         if ((pPlayer) && (!pPlayer->free) && (pPlayer != pEdict)) {
-            // skip this player if not alive (i.e. dead or dying)
+	        constexpr int FOV = 90;// TODO: use server var "default_fov" ?
+	        // skip this player if not alive (i.e. dead or dying)
             if (!IsAlive(pPlayer))
                 continue;
 
@@ -286,14 +286,14 @@ edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
 
             const int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
 
-            const int distance = NODE_ZONE;
+            constexpr int distance = NODE_ZONE;
             if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance && angleToPlayer < FOV) {
                 return pPlayer;
             }
 
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -304,15 +304,15 @@ edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
 edict_t * getEntityNearbyBotInFOV(cBot *pBot) {
     edict_t *pEdict = pBot->pEdict;
 
-    edict_t *pent = NULL;
-    while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 45)) != NULL) {
+    edict_t *pent = nullptr;
+    while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 45)) != nullptr) {
         if (pent == pEdict) continue; // skip self
 
         if (FInViewCone(&pent->v.origin, pEdict)) {
             return pent; // yes it is the case
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -340,7 +340,7 @@ bool isAnyPlayerNearbyBot(cBot *pBot) {
 
             int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
 
-            const int distance = NODE_ZONE;
+            constexpr int distance = NODE_ZONE;
             if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance) {
                 return true;
             }
@@ -409,7 +409,7 @@ bool BotShouldJump(cBot *pBot) {
     if (pBot->isJumping()) return false; // already jumping
 
     TraceResult tr;
-    edict_t *pEdict = pBot->pEdict;
+    const edict_t *pEdict = pBot->pEdict;
 
     // convert current view angle to vectors for TraceLine math...
 
@@ -615,8 +615,8 @@ int FUNC_BotEstimateHearVector(cBot *pBot, Vector v_sound) {
 // Added Stefan
 // 7 November 2001
 int FUNC_PlayerSpeed(edict_t *edict) {
-    if (edict != NULL)
-        return (int) edict->v.velocity.Length2D();      // Return speed of any edict given
+    if (edict != nullptr)
+        return static_cast<int>(edict->v.velocity.Length2D());      // Return speed of any edict given
 
     return 0;
 }
@@ -743,7 +743,7 @@ void FUNC_ClearEnemyPointer(edict_t *pPtr) {
 
 // Returns true/false if an entity is on a ladder
 bool FUNC_IsOnLadder(edict_t *pEntity) {
-    if (pEntity == NULL)
+    if (pEntity == nullptr)
         return false;
 
     if (pEntity->v.movetype == MOVETYPE_FLY)
@@ -760,8 +760,8 @@ bool FUNC_IsOnLadder(edict_t *pEntity) {
  * @return
  */
 bool isHostageFree(cBot *pBotWhoIsAsking, edict_t *pHostage) {
-    if (pHostage == NULL) return false;
-    if (pBotWhoIsAsking == NULL) return false;
+    if (pHostage == nullptr) return false;
+    if (pBotWhoIsAsking == nullptr) return false;
 
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
@@ -808,12 +808,12 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
 
     edict_t *pHostage = pBot->getHostageToRescue();
 
-    if (pHostage == NULL) {
+    if (pHostage == nullptr) {
         pHostage = pBot->findHostageToRescue();
     }
 
     // still NULL
-    if (pHostage == NULL) {
+    if (pHostage == nullptr) {
         // Note: this means a hostage that is near and visible and rescueable etc.
         return; // nothing to do yet
     }
@@ -870,7 +870,7 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
 }
 
 bool isHostageRescued(cBot *pBot, edict_t *pHostage) {
-    if (pHostage == NULL) return false;
+    if (pHostage == nullptr) return false;
 
     if (FBitSet(pHostage->v.effects, EF_NODRAW)) {
 //        pBot->rprint("isHostageRescued()", "Hostage is rescued");
@@ -881,7 +881,7 @@ bool isHostageRescued(cBot *pBot, edict_t *pHostage) {
 }
 
 bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {
-    if (pHostage == NULL) return false;
+    if (pHostage == nullptr) return false;
 //    pBot->rprint("isHostageRescueable");
 
     // Already rescued?
@@ -900,7 +900,7 @@ bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {
     }
     // Already used by bot?
 
-    if (pBot != NULL) {
+    if (pBot != nullptr) {
 //        rblog("isHostageRescueable - pBot is != NULL\n");
         if (pBot->isUsingHostage(pHostage)) return false;
         // Is the hostage not used by *any other* bot?
@@ -915,7 +915,7 @@ bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {
 }
 
 bool FUNC_EdictIsAlive(edict_t *pEdict) {
-    if (pEdict == NULL) return false;
+    if (pEdict == nullptr) return false;
     return pEdict->v.health > 0;
 }
 

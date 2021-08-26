@@ -74,7 +74,7 @@ void BotPrepareConsoleCommandsToBuyWeapon(cBot *pBot, const char *arg1, const ch
         strcpy(pBot->arg2, arg1);
 
         // add argument
-        if (arg2 != NULL)
+        if (arg2 != nullptr)
             strcpy(pBot->arg3, arg2);
 
         pBot->console_nr = 1;     // start console command sequence
@@ -371,14 +371,14 @@ void BotDecideWhatToBuy(cBot *pBot) {
     } else if (pBot->buy_ammo_primary == true) {
         pBot->rprint("BotDecideWhatToBuy()", "buy_ammo_primary");
         // Buy primary ammo
-        BotPrepareConsoleCommandsToBuyWeapon(pBot, "6", NULL);
+        BotPrepareConsoleCommandsToBuyWeapon(pBot, "6", nullptr);
         pBot->buy_ammo_primary = false;
         return;
 
     } else if (pBot->buy_ammo_secondary == true) {
         pBot->rprint("BotDecideWhatToBuy()", "buy_ammo_secondary");
         // Buy secondary ammo
-        BotPrepareConsoleCommandsToBuyWeapon(pBot, "7", NULL);
+        BotPrepareConsoleCommandsToBuyWeapon(pBot, "7", nullptr);
         pBot->buy_ammo_secondary = false;
         return;
     } else if (pBot->buy_defusekit) {
@@ -472,18 +472,18 @@ void BotConsole(cBot *pBot) {
 
         // issue command (buy/radio)
         if (pBot->console_nr == 1)
-            FakeClientCommand(pBot->pEdict, pBot->arg1, NULL, NULL);
+            FakeClientCommand(pBot->pEdict, pBot->arg1, nullptr, nullptr);
 
         // do menuselect
         if (pBot->console_nr == 2)
-            FakeClientCommand(pBot->pEdict, "menuselect", pBot->arg2, NULL);
+            FakeClientCommand(pBot->pEdict, "menuselect", pBot->arg2, nullptr);
 
         // do menuselect
         if (pBot->console_nr == 3) {
             // When the last parameter is not null, we will perform that action.
             if (pBot->arg3[0] != 0)
                 FakeClientCommand(pBot->pEdict, "menuselect", pBot->arg3,
-                                  NULL);
+                nullptr);
 
             // reset
             pBot->console_nr = -1;

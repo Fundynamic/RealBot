@@ -96,7 +96,7 @@ void cChatEngine::think() {
 
     // 29/08/2019 Stefan: by using string compare on the name of the sender (ie sender[] is the name) we retrieve
     // the edict pointer
-    edict_t *pSender = NULL;
+    edict_t *pSender = nullptr;
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
 
@@ -243,15 +243,15 @@ void cChatEngine::think() {
 
             // skip invalid players and skip self (i.e. this bot)
             if ((pPlayer) && (!pPlayer->free) && pSender != pPlayer) {
-	            bool bSenderAlive = IsAlive(pSender);      // CRASH : it sometimes crashes here
-                bool bPlayerAlive = IsAlive(pPlayer);
+	            const bool bSenderAlive = IsAlive(pSender);      // CRASH : it sometimes crashes here
+	            const bool bPlayerAlive = IsAlive(pPlayer);
 
                 if (bSenderAlive != bPlayerAlive)
                     continue;
 
                 cBot *pBotPointer = UTIL_GetBotPointer(pPlayer);
 
-                if (pBotPointer != NULL)
+                if (pBotPointer != nullptr)
                     if (RANDOM_LONG(0, 100) <
                         (pBotPointer->ipChatRate + 25)) {
                         // When we have at least 1 sentence...
@@ -288,7 +288,7 @@ void cChatEngine::think() {
                                                 sentence[the_c], "%n");
 
                                 // when name_pos var is found, fill it in.
-                                if (name_pos != NULL) {
+                                if (name_pos != nullptr) {
                                     // when name is in this one:
                                     int name_offset =
                                             name_pos -
