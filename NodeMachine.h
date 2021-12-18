@@ -43,14 +43,14 @@
 class cNodeMachine {
 public:
     // -----------------
-    int addNode(Vector vOrigin, edict_t *pEntity);
+    int addNode(const Vector& vOrigin, edict_t *pEntity);
 
     int Reachable(int iStart, int iEnd) const;
 
-    int add2(Vector vOrigin, int iType, edict_t *pEntity);
+    int add2(const Vector& vOrigin, int iType, edict_t *pEntity);
 
-    int getClosestNode(Vector vOrigin, float fDist, edict_t *pEdict);    // returns a close node
-    int getFurthestNode(Vector vOrigin, float fDist, edict_t *pEdict);    // returns a node within dist, but most far away
+    int getClosestNode(const Vector& vOrigin, float fDist, edict_t *pEdict);    // returns a close node
+    int getFurthestNode(const Vector& vOrigin, float fDist, edict_t *pEdict);    // returns a node within dist, but most far away
     int getFreeNodeIndex() const;
 
     // -----------------
@@ -98,16 +98,16 @@ public:
 
     bool hasGoalWithEdict(edict_t *pEdict) const;
 
-    void addGoal(edict_t *pEdict, int goalType, Vector vVec);
+    void addGoal(edict_t *pEdict, int goalType, const Vector& vVec);
 
     tGoal * getRandomGoalByType(int goalType);    // return a node close to a iType goal (random)
-    static bool node_float(Vector vOrigin, edict_t *pEdict);
+    static bool node_float(const Vector& vOrigin, edict_t *pEdict);
 
-    static bool node_on_crate(Vector vOrigin, edict_t *pEdict);
+    static bool node_on_crate(const Vector& vOrigin, edict_t *pEdict);
 
     int node_dangerous(int iTeam, Vector vOrigin, float fMaxDistance);
 
-    int node_look_camp(Vector vOrigin, int iTeam, edict_t *pEdict);
+    int node_look_camp(const Vector& vOrigin, int iTeam, edict_t *pEdict);
 
     // -----------------
     void danger(int iNode, int iTeam);   // Make spot dangerous
@@ -127,7 +127,7 @@ public:
 
     int node_look_at_hear(int iFrom, int iTo, edict_t *pEdict);
 
-    int node_camp(Vector vOrigin, int iTeam);
+    int node_camp(const Vector& vOrigin, int iTeam);
 
     void vis_calculate(int iFrom);
 
@@ -143,7 +143,7 @@ public:
     int getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex);
 
     // -----------------
-    static void VectorToMeredian(Vector vOrigin, int *iX, int *iY);     // Input: origin, output X and Y Meredians
+    static void VectorToMeredian(const Vector& vOrigin, int *iX, int *iY);     // Input: origin, output X and Y Meredians
     void AddToMeredian(int iX, int iY, int iNode);
 
     // -----------------

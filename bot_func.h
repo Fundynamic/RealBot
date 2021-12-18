@@ -38,15 +38,15 @@ void botFixIdealYaw(edict_t * pEdict);
 bool BotCanJumpUp(cBot * pBot);
 bool BotCanDuckUnder(cBot * pBot);
 
-bool EntityIsVisible(edict_t * pEntity, Vector dest);
+bool EntityIsVisible(edict_t * pEntity, const Vector& dest);
 
 // bot_func.cpp
-bool VectorIsVisible(Vector start, Vector dest, char *checkname);
+bool VectorIsVisible(const Vector& start, const Vector& dest, char *checkname);
 float func_distance(Vector v1, Vector v2);
 
-void DrawBeam(edict_t * visibleForWho, Vector start, Vector end);
-void DrawBeam(edict_t * visibleForWho, Vector start, Vector end, int red, int green, int blue);
-void DrawBeam(edict_t * visibleForWho, Vector start, Vector end,
+void DrawBeam(edict_t * visibleForWho, const Vector& start, const Vector& end);
+void DrawBeam(edict_t * visibleForWho, const Vector& start, const Vector& end, int red, int green, int blue);
+void DrawBeam(edict_t * visibleForWho, const Vector& start, const Vector& end,
               int width, int noise, int red, int green, int blue,
               int brightness, int speed);
 
@@ -86,15 +86,15 @@ bool isHostageRescueable(cBot *pBot, edict_t *pHostage);
 bool isHostageRescued(cBot *pBot, edict_t *pHostage);
 bool isHostageFree(cBot * pBotWhoIsAsking, edict_t * pHostage);   // is this hostage not used by any other bot?
 
-int FUNC_BotEstimateHearVector(cBot * pBot, Vector v_sound);
+int FUNC_BotEstimateHearVector(cBot * pBot, const Vector& v_sound);
 
 bool FUNC_EdictIsAlive(edict_t *pEdict);
 
 bool FUNC_BotHoldsZoomWeapon(cBot * pBot);
 
-int FUNC_InFieldOfView(edict_t * pEntity, Vector dest);
+int FUNC_InFieldOfView(edict_t * pEntity, const Vector& dest);
 
-bool VectorIsVisibleWithEdict(edict_t * pEdict, Vector dest,
+bool VectorIsVisibleWithEdict(edict_t * pEdict, const Vector& dest,
                               char *checkname);
 
 bool BOT_DecideTakeCover(cBot * pBot);

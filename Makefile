@@ -6,7 +6,8 @@ HLSDK_DIR = ./dependencies/hlsdk
 
 BASEFLAGS = -Dstricmp=strcasecmp -Dstrcmpi=strcasecmp -Dlinux=1
 CPPFLAGS = ${BASEFLAGS} ${ARCHFLAG} -O2 -mtune=generic -march=i686 -mmmx -msse -msse2 -O2 -mfpmath=sse -s -pipe \
-        -Wno-write-strings -I"${META_DIR}" -I"${HLSDK_DIR}/common" -I"${HLSDK_DIR}/dlls" \
+        -Wno-write-strings -Wno-attributes -std=gnu++14 -static-libstdc++ -shared-libgcc \
+        -I"${META_DIR}" -I"${HLSDK_DIR}/common" -I"${HLSDK_DIR}/dlls" \
         -I"${HLSDK_DIR}/engine" -I"${HLSDK_DIR}/pm_shared" -I"${HLSDK_DIR}/public"
 
 OBJ = NodeMachine.o \

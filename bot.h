@@ -400,7 +400,7 @@ public:
 
     int CarryWeaponType() const;
 
-    void setHeadAiming(Vector vTarget);    // Aim at vector
+    void setHeadAiming(const Vector& vTarget);    // Aim at vector
     void AimAtEnemy();
 
     void PickBestWeapon();
@@ -414,7 +414,7 @@ public:
     float ReactionTime(int iSkill);      // Reaction time based upon skill
     void FindCover();
 
-    bool canSeeVector(Vector vDest) const;
+    bool canSeeVector(const Vector& vDest) const;
 
     bool canSeeEntity(edict_t *pEntity) const;
 
@@ -431,7 +431,7 @@ public:
 
     // Get methods
     float getDistanceTo(int nodeIndex);
-    float getDistanceTo(Vector vDest) const;
+    float getDistanceTo(const Vector& vDest) const;
 
     // "is" Methods (booleans, statements, etc)
     bool isDead() const;

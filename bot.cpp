@@ -601,7 +601,7 @@ void cBot::rememberEnemyFound() {
 /******************************************************************************
  Function purpose: Sets vHead to aim at vector
  ******************************************************************************/
-void cBot::setHeadAiming(const Vector vTarget) {
+void cBot::setHeadAiming(const Vector& vTarget) {
     vHead = vTarget;
 }
 
@@ -3827,7 +3827,7 @@ bool BotRadioAction() {
 }
 
 // Is entity visible? (from Entity view)
-bool EntityIsVisible(edict_t *pEntity, const Vector dest) {
+bool EntityIsVisible(edict_t *pEntity, const Vector& dest) {
 
     //DebugOut("bot: EntityIsVisible()\n");
     TraceResult tr;
@@ -3885,7 +3885,7 @@ float cBot::getDistanceTo(int nodeIndex) {
  * @param vDest
  * @return
  */
-float cBot::getDistanceTo(const Vector vDest) const
+float cBot::getDistanceTo(const Vector& vDest) const
 {
     return func_distance(pEdict->v.origin, vDest);
 }
@@ -3959,7 +3959,7 @@ int cBot::getAmountOfHostagesBeingRescued() const
 // Will return true when the vector is visible.
 // TODO: Make this function more flexible, ie able to hit an entity that it searches
 // and return true on that as well.  (mix it with the above function)
-bool cBot::canSeeVector(const Vector vDest) const
+bool cBot::canSeeVector(const Vector& vDest) const
 {
     TraceResult tr;
     const Vector start = pEdict->v.origin + pEdict->v.view_ofs;

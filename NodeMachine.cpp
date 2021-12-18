@@ -375,7 +375,7 @@ Vector cNodeMachine::node_vector(int iNode) const
 }
 
 // Input: Vector, Output X and Y Meredians
-void cNodeMachine::VectorToMeredian(const Vector vOrigin, int *iX, int *iY) {
+void cNodeMachine::VectorToMeredian(const Vector& vOrigin, int *iX, int *iY) {
     // Called for lookupt and for storing
     float iCoordX = vOrigin.x + 8192.0;  // map height (converts from - to +)
     float iCoordY = vOrigin.y + 8192.0;  // map width (converts from - to +)
@@ -403,7 +403,7 @@ void cNodeMachine::AddToMeredian(int iX, int iY, int iNode) {
 }
 
 // Does the node float?
-bool cNodeMachine::node_float(const Vector vOrigin, edict_t *pEdict) {
+bool cNodeMachine::node_float(const Vector& vOrigin, edict_t *pEdict) {
     TraceResult tr;
     const Vector tr_end = vOrigin - Vector(0, 0, (ORIGIN_HEIGHT * 1.2));
 
@@ -435,7 +435,7 @@ bool cNodeMachine::node_float(const Vector vOrigin, edict_t *pEdict) {
 }
 
 // Does the node stand on a crate? or a steep slope?
-bool cNodeMachine::node_on_crate(const Vector vOrigin, edict_t *pEdict) {
+bool cNodeMachine::node_on_crate(const Vector& vOrigin, edict_t *pEdict) {
     TraceResult tr;
     const Vector tr_end = vOrigin - Vector(0, 0, (ORIGIN_HEIGHT * 1.2));
 
@@ -472,7 +472,7 @@ bool cNodeMachine::node_on_crate(const Vector vOrigin, edict_t *pEdict) {
  * @param pEdict
  * @return
  */
-int cNodeMachine::getClosestNode(const Vector vOrigin, float fDist, edict_t *pEdict) {
+int cNodeMachine::getClosestNode(const Vector& vOrigin, float fDist, edict_t *pEdict) {
     // REDO: Need faster method to find a node
     // TOADD: For secure results all nodes should be checked to figure out the real
     //        'closest' node.
@@ -542,7 +542,7 @@ int cNodeMachine::getClosestNode(const Vector vOrigin, float fDist, edict_t *pEd
  * @param pEdict
  * @return
  */
-int cNodeMachine::getFurthestNode(const Vector vOrigin, float fDist, edict_t *pEdict) {
+int cNodeMachine::getFurthestNode(const Vector& vOrigin, float fDist, edict_t *pEdict) {
     // Use Meredians to search for nodes
     // TODO: we should take care in the situation where we're at the 'edge' of such a meridian (subspace). So we should
     // basicly take edging meridians as well when too close to the edge.
@@ -700,7 +700,7 @@ int cNodeMachine::getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex) {
 }
 
 // Compute the horizontal distance between A and B (ignoring z coordinate)
-static float horizontal_distance(const Vector a, const Vector b) {
+static float horizontal_distance(const Vector& a, const Vector& b) {
     return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
@@ -708,7 +708,7 @@ static float horizontal_distance(const Vector a, const Vector b) {
 
 // Return the floor below V
 // TO BE IMPROVED use pEntityCOntaining
-static Vector FloorBelow(const Vector V) {
+static Vector FloorBelow(const Vector& V) {
     static TraceResult tr;       // Keep it available even outside of the call
 
     // First use this hull
@@ -878,7 +878,7 @@ int cNodeMachine::Reachable(const int iStart, const int iEnd) const
 }
 
 // Adding a node: another way...
-int cNodeMachine::add2(const Vector vOrigin, int iType, edict_t *pEntity) {
+int cNodeMachine::add2(const Vector& vOrigin, int iType, edict_t *pEntity) {
     // Do not add a node when there is already one close
     if (getClosestNode(vOrigin, NODE_ZONE, pEntity) > -1)
         return -1;
@@ -978,7 +978,7 @@ int cNodeMachine::getFreeNodeIndex() const
 }
 
 // Adding a node
-int cNodeMachine::addNode(const Vector vOrigin, edict_t *pEntity) {
+int cNodeMachine::addNode(const Vector& vOrigin, edict_t *pEntity) {
 
     // Do not add a node when there is already one close
     if (getClosestNode(vOrigin, NODE_ZONE, pEntity) > -1)
@@ -1853,7 +1853,7 @@ void cNodeMachine::danger(int iNode, int iTeam) {
 }
 
 // Adds a new goal to the array
-void cNodeMachine::addGoal(edict_t *pEdict, int goalType, const Vector vVec) {
+void cNodeMachine::addGoal(edict_t *pEdict, int goalType, const Vector& vVec) {
     //
     // 14/06/04
     // Be carefull with adding SERVER_PRINT messages here
@@ -2481,7 +2481,7 @@ void cNodeMachine::makeAllWaypointsAvailable()
 }
 
 // Find a node which has almost no danger!
-int cNodeMachine::node_camp(const Vector vOrigin, int iTeam) {
+int cNodeMachine::node_camp(const Vector& vOrigin, int iTeam) {
     // Use Meredians to search for nodes
     int iX, iY;
     VectorToMeredian(vOrigin, &iX, &iY);
@@ -2560,7 +2560,7 @@ void cNodeMachine::vis_calculate(int iFrom) {
 }
 
 // Find a node to look at when camping
-int cNodeMachine::node_look_camp(const Vector vOrigin, int iTeam,
+int cNodeMachine::node_look_camp(const Vector& vOrigin, int iTeam,
                                  edict_t *pEdict) {
 
     rblog("node_look_camp - start\n");
@@ -4069,7 +4069,7 @@ static void InitDebugBitmap() {
 }
 
 // Draw a small cross
-static void DrawPoint(const Vector v, unsigned char color) {
+static void DrawPoint(const Vector& v, unsigned char color) {
 	if (bmp_buffer == nullptr) {
         fprintf(stderr,
                 "DrawLineInDebugBitmap(): function called with NULL BMP buffer!\n");
@@ -4100,7 +4100,7 @@ static void DrawPoint(const Vector v, unsigned char color) {
 
 // From PMB and Botman's code
 
-static void DrawLineInDebugBitmap(const Vector v_from, const Vector v_to, unsigned char color) {
+static void DrawLineInDebugBitmap(const Vector& v_from, const Vector& v_to, unsigned char color) {
     // blind copy of botman's Bresenham(). This function prints a vector line into a bitmap dot
     // matrix. The dot matrix (bmp_buffer) is a global array. The size of the bitmap is always
     // assumed to be DEBUG_BMP_WIDTH * DEBUG_BMP_HEIGHT pixels (currently 2000 * 2000 to fit with

@@ -55,7 +55,7 @@ extern cNodeMachine NodeMachine;
 #define TOTAL_SCORE 16300       // 16000 money + 100 health + 100 fear + 100 camp desire
 
 bool
-VectorIsVisibleWithEdict(edict_t *pEdict, const Vector dest, char *checkname) {
+VectorIsVisibleWithEdict(edict_t *pEdict, const Vector& dest, char *checkname) {
     TraceResult tr;
 
     const Vector start = pEdict->v.origin + pEdict->v.view_ofs;
@@ -89,7 +89,7 @@ VectorIsVisibleWithEdict(edict_t *pEdict, const Vector dest, char *checkname) {
 
 }
 
-bool VectorIsVisible(const Vector start, const Vector dest, char *checkname) {
+bool VectorIsVisible(const Vector& start, const Vector& dest, char *checkname) {
     TraceResult tr;
 
     // trace a line from bot's eyes to destination...
@@ -135,7 +135,7 @@ float func_distance(Vector v1, Vector v2) {
  * @param dest
  * @return
  */
-int FUNC_InFieldOfView(edict_t *pEntity, const Vector dest) {
+int FUNC_InFieldOfView(edict_t *pEntity, const Vector& dest) {
     // NOTE: Copy from Botman's BotInFieldOfView() routine.
     // find angles from source to destination...
     Vector entity_angles = UTIL_VecToAngles(dest);
@@ -171,7 +171,7 @@ int FUNC_InFieldOfView(edict_t *pEntity, const Vector dest) {
  * @param start
  * @param end
  */
-void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end) {
+void DrawBeam(edict_t *visibleForWho, const Vector& start, const Vector& end) {
     DrawBeam(visibleForWho, start, end, 25, 1, 255, 255, 255, 255, 1);
 }
 
@@ -184,7 +184,7 @@ void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end) {
  * @param g
  * @param b
  */
-void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end, int r, int g, int b) {
+void DrawBeam(edict_t *visibleForWho, const Vector& start, const Vector& end, int r, int g, int b) {
     DrawBeam(visibleForWho, start, end, 25, 1, r, g, b, 255, 1);
 }
 
@@ -201,7 +201,7 @@ void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end, int 
  * @param brightness
  * @param speed
  */
-void DrawBeam(edict_t *visibleForWho, const Vector start, const Vector end, int width,
+void DrawBeam(edict_t *visibleForWho, const Vector& start, const Vector& end, int width,
               int noise, int red, int green, int blue, int brightness,
               int speed) {
     MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, nullptr, visibleForWho);
@@ -606,7 +606,7 @@ bool FUNC_ShouldTakeCover(cBot *pBot) {
     return RANDOM_LONG(0, TOTAL_SCORE) < (vMoney + vHealth + vCamp);
 }
 
-int FUNC_BotEstimateHearVector(cBot *pBot, Vector v_sound) {
+int FUNC_BotEstimateHearVector(cBot *pBot, const Vector& v_sound) {
     // here we normally figure out where to look at when we hear an enemy, RealBot AI PR 2 lagged a lot on this so we need another approach
 
     return -1;
