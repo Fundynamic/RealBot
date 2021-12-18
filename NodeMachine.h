@@ -176,19 +176,19 @@ public:
     tGoal *getGoal(int index);
 
 private:
-    tNode Nodes[MAX_NODES];                              // Nodes
-    tInfoNode InfoNodes[MAX_NODES];                      // Info for Nodes (metadata)
-    tPlayer Players[32];                                 // Players to keep track of, for node plotting
-    tGoal Goals[MAX_GOALS];                              // Goals to pursue in the game
-    tMeredian Meredians[MAX_MEREDIANS][MAX_MEREDIANS];   // Meredian lookup search for Nodes, squared
+    tNode Nodes[MAX_NODES] = {};                              // Nodes
+    tInfoNode InfoNodes[MAX_NODES] = {};                      // Info for Nodes (metadata)
+    tPlayer Players[32] = {};                                 // Players to keep track of, for node plotting
+    tGoal Goals[MAX_GOALS] = {};                              // Goals to pursue in the game
+    tMeredian Meredians[MAX_MEREDIANS][MAX_MEREDIANS] = {};   // Meredian lookup search for Nodes, squared
 
-    int iPath[MAX_BOTS][MAX_PATH_NODES];                 // 32 bots, with max waypoints paths (TODO: move to bot class?)
+    int iPath[MAX_BOTS][MAX_PATH_NODES] = {};                 // 32 bots, with max waypoints paths (TODO: move to bot class?)
 
-    int iMaxUsedNodes;
+    int iMaxUsedNodes = 0;
 
-    byte iVisChecked[MAX_NODES];
-    unsigned char *cVisTable;
-    tTrouble Troubles[MAX_TROUBLE];
+    byte iVisChecked[MAX_NODES] = {};
+    unsigned char * cVisTable = nullptr;
+    tTrouble Troubles[MAX_TROUBLE] = {};
 
     void FindMinMax() const;
 

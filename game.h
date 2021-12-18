@@ -139,13 +139,13 @@ public:
 private:
    // ---------------------
    // private variables
-   char cSpeechSentences[16][80];
-   int iAmountNames;
-   char cBotNames[MAX_BOT_NAMES][BOT_NAME_LEN + 1];
-   int iMinPlayRounds, iMaxPlayRounds;  // Min/Max playable rounds
-   bool bNewRound;              // New round triggered?
-   float fRoundTime;            // Round time
-   float fUpdateGoalTimer;
+   char cSpeechSentences[16][80] = {};
+   int iAmountNames = 0;
+   char cBotNames[MAX_BOT_NAMES][BOT_NAME_LEN + 1] = {};
+   int iMinPlayRounds = 0, iMaxPlayRounds = 0;  // Min/Max playable rounds
+   bool bNewRound = false;              // New round triggered?
+   float fRoundTime = 0;            // Round time
+   float fUpdateGoalTimer = 0;
 };
 
 #endif // GAME_H

@@ -2237,7 +2237,7 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
 
     bool pathFound = false;           // is it still valid to loop through the lists for pathfinding?
 
-    int nodesEvaluated = 0;
+    int nodesEvaluated = 0; //Not used? [APG]RoboCop[CL]
     // INIT: End
     // PATHFINDER: Start
     while (!pathFound) {
@@ -2745,7 +2745,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     }
 
     // Near Node
-    bool bNearNode = false;
+    bool bNearNode = false; //Variable Reassigned [APG]RoboCop[CL]
     if (pBot->isOnLadder()) {
         pBot->rprint("Bot is on ladder");
         // Set touch radius
