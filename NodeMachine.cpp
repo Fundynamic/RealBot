@@ -3375,12 +3375,12 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     // (current score + gained score) / 2.0;
     // Since both scores can be max 1.0, meaning we keep it between 0.0 and 1.0
     // A score of 1.0 is max.
-    const int maxCheckedScore = 5;
 
     pBot->rprint_normal("cNodeMachine::path_think", "going to choose goal");
     for (int goalIndex = 0; goalIndex < MAX_GOALS; goalIndex++) {
+	    const int maxCheckedScore = 5;
 
-        // Make sure this goal is valid
+	    // Make sure this goal is valid
         if (Goals[goalIndex].iNode < 0) {
             continue;
         }

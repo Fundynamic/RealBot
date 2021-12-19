@@ -40,7 +40,7 @@
 //#include "engine.h"
 #include "game.h"
 
-extern enginefuncs_t g_engfuncs;
+extern enginefuncs_t g_engfuncs; //Redundant? [APG]RoboCop[CL]
 
 extern cBot bots[32];
 extern cGame Game;
