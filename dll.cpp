@@ -1155,7 +1155,7 @@ void ProcessBotCfgFile() {
     ALERT(at_console, msg);
 
     if (IS_DEDICATED_SERVER())
-        printf(msg);
+        printf("%s", msg);
 
     SERVER_COMMAND(server_cmd);
 }
