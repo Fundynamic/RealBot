@@ -65,7 +65,7 @@ VectorIsVisibleWithEdict(edict_t *pEdict, const Vector& dest, char *checkname) {
                    pEdict->v.pContainingEntity, &tr);
 
     // When our check string is not "none" and the traceline has a hit...
-    if (strcmp("none", checkname) != 0 && tr.flFraction < 1.0) {
+    if (strcmp("none", checkname) != 0 && tr.flFraction < 1.0f) {
         // Check if the blocking entity is same as checkname..
         char entity_blocker[128];
         const edict_t *pent = tr.pHit;  // Ok now retrieve the entity
@@ -79,7 +79,7 @@ VectorIsVisibleWithEdict(edict_t *pEdict, const Vector& dest, char *checkname) {
 
     } else {
         // check if line of sight to object is not blocked (i.e. visible)
-        if (tr.flFraction >= 1.0)
+        if (tr.flFraction >= 1.0f)
             return true;
         else
             return false;
@@ -96,7 +96,7 @@ bool VectorIsVisible(const Vector& start, const Vector& dest, char *checkname) {
     UTIL_TraceLine(start, dest, dont_ignore_monsters, nullptr, &tr);
 
     // Als we geblokt worden EN we checken voor een naam
-    if (strcmp("none", checkname) != 0 && tr.flFraction < 1.0) {
+    if (strcmp("none", checkname) != 0 && tr.flFraction < 1.0f) {
         // Check if the blocking entity is same as checkname..
         char entity_blocker[128];
         const edict_t *pent = tr.pHit;  // Ok now retrieve the entity
@@ -110,7 +110,7 @@ bool VectorIsVisible(const Vector& start, const Vector& dest, char *checkname) {
     } else {
         // check if line of sight to object is not blocked (i.e. visible)
         // Als er NONE wordt opgegeven dan checken we gewoon of we worden geblokt
-        if (tr.flFraction >= 1.0)
+        if (tr.flFraction >= 1.0f)
             return TRUE;
         else
             return FALSE;
@@ -428,7 +428,7 @@ bool BotShouldJump(cBot *pBot) {
     UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
 
     // if trace hit something, return FALSE
-    if (tr.flFraction < 1.0) {
+    if (tr.flFraction < 1.0f) {
         pBot->rprint_trace("BotShouldJump", "I cannot jump because something is blocking the max jump height");
         return false;
     } else {
@@ -442,7 +442,7 @@ bool BotShouldJump(cBot *pBot) {
     // trace a line forward at maximum jump height...
     UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
 
-    if (tr.flFraction < 1.0) {
+    if (tr.flFraction < 1.0f) {
         pBot->rprint_trace("BotShouldJump", "cannot jump because body is blocked");
         return false;
     } else {
@@ -474,7 +474,7 @@ bool BotShouldJump(cBot *pBot) {
 
     UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
 
-    if (tr.flFraction < 1.0) {
+    if (tr.flFraction < 1.0f) {
         pBot->rprint_trace("BotShouldJump", "Yes should jump, kneecaps hit something, so it is jumpable");
         return true;
     }
@@ -551,7 +551,7 @@ bool BotShouldDuck(cBot *pBot) {
     UTIL_TraceLine(v_source, v_dest, dont_ignore_monsters,
                    pEdict->v.pContainingEntity, &tr);
 
-    if (tr.flFraction >= 1.0)
+    if (tr.flFraction >= 1.0f)
         return false;
 
     v_source = pEdict->v.origin;
@@ -561,7 +561,7 @@ bool BotShouldDuck(cBot *pBot) {
     UTIL_TraceLine(v_source, v_dest, dont_ignore_monsters,
                    pEdict->v.pContainingEntity, &tr);
 
-    if (tr.flFraction < 1.0)
+    if (tr.flFraction < 1.0f)
         return false;
 
     return true;
@@ -678,8 +678,8 @@ void FUNC_HearingTodo(cBot *pBot) {
     // More chance on getting to true
     const int health = pBot->bot_health;
 
-    int action = 0;
-    int etime = 0;
+    int action;
+    int etime;
 
     if (health < 25)
         action = 2;

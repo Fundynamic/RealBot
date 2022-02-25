@@ -933,10 +933,10 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
          //30.8.04 redefined by frashman
          // fMinReact = RANDOM_FLOAT (0.05, (pBot->bot_skill / 10));
          fMinReact =
-            RANDOM_FLOAT((pBot->bot_skill / 20) + 0.05,
-                         (pBot->bot_skill / 5) + 0.05);
+            RANDOM_FLOAT((pBot->bot_skill / 20) + 0.05f,
+                         (pBot->bot_skill / 5) + 0.05f);
 
-      const float fMaxReact = fMinReact + RANDOM_FLOAT(0.05, 0.2);
+      const float fMaxReact = fMinReact + RANDOM_FLOAT(0.05f, 0.2f);
 
       // SET them
       pBot->fpMinReactTime = fMinReact;
@@ -945,8 +945,8 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       // Set Offsets (note, they are extra upon current aiming code)
       // 30.8.04 redefined by frashman
       // float fOffset = RANDOM_FLOAT ((pBot->bot_skill / 5), (pBot->bot_skill / 2));
-      const float fOffset = RANDOM_FLOAT((pBot->bot_skill / 5) + 0.05,
-                                         (pBot->bot_skill / 2) + 0.05);
+      const float fOffset = RANDOM_FLOAT((pBot->bot_skill / 5) + 0.05f,
+                                         (pBot->bot_skill / 2) + 0.05f);
 
       // SET
       pBot->fpXOffset = pBot->fpYOffset = pBot->fpZOffset = fOffset;

@@ -388,11 +388,11 @@ int Spawn(edict_t *pent) {
 
             g_GameRules = TRUE;
             //bot_cfg_pause_time = 0.0;
-            respawn_time = 0.0;
+            respawn_time = 0.0f;
             spawn_time_reset = FALSE;
             prev_num_bots = num_bots;
             num_bots = 0;
-            bot_check_time = gpGlobals->time + 30.0;
+            bot_check_time = gpGlobals->time + 30.0f;
             rblog("SPAWN : f_load_time is set\n");
             f_load_time = gpGlobals->time + 6;
 
@@ -433,7 +433,7 @@ ClientConnect(edict_t *pEntity, const char *pszName,
 	        int i;
 
 	        // don't try to add bots for 60 seconds, give client time to get added
-            bot_check_time = gpGlobals->time + 60.0;
+            bot_check_time = gpGlobals->time + 60.0f;
 
             for (i = 0; i < 32; i++) {
                 if (bots[i].bIsUsed)        // count the number of bots in use
@@ -586,11 +586,11 @@ void StartFrame() {
     // which is determined by comparing the previously recorded time (at the end of this function)
     // with the current time. If the current time somehow was less (before) the previous time, then we
     // assume a reset/restart/reload of a map.
-    if ((gpGlobals->time + 0.1) < previous_time) {
+    if ((gpGlobals->time + 0.1f) < previous_time) {
 	    static int index;
-	    static float check_server_cmd = 0.0;
+	    static float check_server_cmd = 0.0f;
 	    rblog("NEW MAP because time is reset #1\n");
-        check_server_cmd = 0.0;        // reset at start of map
+        check_server_cmd = 0.0f;        // reset at start of map
 
         count = 0;
 
@@ -600,7 +600,7 @@ void StartFrame() {
             if (count >= prev_num_bots) {
                 pBot->bIsUsed = false;
                 pBot->respawn_state = RESPAWN_NONE;
-                pBot->fKickTime = 0.0;
+                pBot->fKickTime = 0.0f;
             }
 
             if (pBot->bIsUsed)    // is this slot used?
@@ -610,18 +610,18 @@ void StartFrame() {
             }
 
             // check for any bots that were very recently kicked...
-            if ((pBot->fKickTime + 5.0) > previous_time) {
+            if ((pBot->fKickTime + 5.0f) > previous_time) {
                 pBot->respawn_state = RESPAWN_NEED_TO_RESPAWN;
                 count++;
             } else {
-                pBot->fKickTime = 0.0;     // reset to prevent false spawns later
+                pBot->fKickTime = 0.0f;     // reset to prevent false spawns later
             }
 
             // set the respawn time
             if (IS_DEDICATED_SERVER()) {
-                respawn_time = gpGlobals->time + 5.0;
+                respawn_time = gpGlobals->time + 5.0f;
             } else {
-                respawn_time = gpGlobals->time + 20.0;
+                respawn_time = gpGlobals->time + 20.0f;
             }
 
             // Send welcome message
@@ -635,9 +635,9 @@ void StartFrame() {
         NodeMachine.resetCheckedValuesForGoals();
 
         //ChatEngine.fThinkTimer = gpGlobals->time;
-        client_update_time = gpGlobals->time + 10.0;   // start updating client data again
+        client_update_time = gpGlobals->time + 10.0f;   // start updating client data again
 
-        bot_check_time = gpGlobals->time + 30.0;
+        bot_check_time = gpGlobals->time + 30.0f;
     } // New map/reload/restart
 
     //
@@ -645,7 +645,7 @@ void StartFrame() {
     //
     if (!welcome_sent) {
         int iIndex = 0;
-        if (welcome_time == 0.0) {
+        if (welcome_time == 0.0f) {
 
             // go through all clients (except bots)
             for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
@@ -653,13 +653,13 @@ void StartFrame() {
                 // skip invalid players
                 if ((pPlayer) && (!pPlayer->free)) {
                     // we found a player which is alive. w00t
-                    welcome_time = gpGlobals->time + 10.0;
+                    welcome_time = gpGlobals->time + 10.0f;
                     break;
                 }
             }
         }
 
-        if ((welcome_time > 0.0) && (welcome_time < gpGlobals->time)) {
+        if ((welcome_time > 0.0f) && (welcome_time < gpGlobals->time)) {
             // let's send a welcome message to this client...
             char total_welcome[256];
             sprintf(total_welcome, "RealBot - Version %s\nBy Stefan Hendriks\n", rb_version_nr);
@@ -705,7 +705,7 @@ void StartFrame() {
     }
 
     if (client_update_time <= gpGlobals->time) {
-        client_update_time = gpGlobals->time + 1.0;
+        client_update_time = gpGlobals->time + 1.0f;
 
         for (i = 0; i < 32; i++) {
             if (bots[i].bIsUsed) {
@@ -722,8 +722,8 @@ void StartFrame() {
     }
 
     // a few seconds after map load we assign goals
-    if (f_load_time < gpGlobals->time && f_load_time != 0.0) {
-        f_load_time = 0.0;     // do not load again
+    if (f_load_time < gpGlobals->time && f_load_time != 0.0f) {
+        f_load_time = 0.0f;     // do not load again
         rblog("NEW MAP because time is reset #2\n");
         Game.DetermineMapGoal();
         Game.resetRoundTime();
@@ -791,11 +791,11 @@ void StartFrame() {
             }
         }
         // 2 seconds thinking
-        f_minplayers_think = gpGlobals->time + 2;
+        f_minplayers_think = gpGlobals->time + 2.0f;
     }
     // INTERNET MODE:
     if (internet_play == false)
-        add_timer = gpGlobals->time + 2.0;
+        add_timer = gpGlobals->time + 2.0f;
     else                      // ------------ INTERNET MODE IS ON ------------
     {
         bool max_serverbots = true;    // Reached MAX bots?
@@ -829,7 +829,7 @@ void StartFrame() {
         if (add_timer > gpGlobals->time && internet_addbot) {
             internet_addbot = false;
             Game.createBot(nullptr, nullptr, nullptr, nullptr, nullptr);
-            bot_check_time = gpGlobals->time + 5.0;
+            bot_check_time = gpGlobals->time + 5.0f;
         }
 
     }
@@ -916,7 +916,7 @@ void StartFrame() {
     }
 
     // are we currently respawning bots and is it time to spawn one yet?
-    if ((respawn_time > 1.0) && (respawn_time <= gpGlobals->time)) {
+    if ((respawn_time > 1.0f) && (respawn_time <= gpGlobals->time)) {
         int index = 0;
         // find bot needing to be respawned...
         while ((index < 32)
@@ -944,10 +944,10 @@ void StartFrame() {
             // 01/07/04 - Stefan - make 100% sure we do not crash on this part with the auto-add function
             f_minplayers_think = gpGlobals->time + 15;  // do not check this for 15 seconds from now
 
-            respawn_time = gpGlobals->time + 2.0;       // set next respawn time
-            bot_check_time = gpGlobals->time + 5.0;
+            respawn_time = gpGlobals->time + 3.0f;       // set next respawn time
+            bot_check_time = gpGlobals->time + 5.0f;
         } else {
-            respawn_time = 0.0;
+            respawn_time = 0.0f;
         }
     }
 
@@ -970,9 +970,9 @@ void StartFrame() {
                 ALERT(at_console, "bot.cfg file not found\n");
 
             if (IS_DEDICATED_SERVER())
-                bot_cfg_pause_time = gpGlobals->time + 5.0;
+                bot_cfg_pause_time = gpGlobals->time + 5.0f;
             else
-                bot_cfg_pause_time = gpGlobals->time + 20.0;
+                bot_cfg_pause_time = gpGlobals->time + 20.0f;
         }
 
         if (!IS_DEDICATED_SERVER() && !spawn_time_reset) {
@@ -980,18 +980,18 @@ void StartFrame() {
                 if (IsAlive(pHostEdict)) {
                     spawn_time_reset = TRUE;
 
-                    if (respawn_time >= 1.0)
-                        respawn_time = min(respawn_time, gpGlobals->time + (float) 1.0);
+                    if (respawn_time >= 1.0f)
+                        respawn_time = min(respawn_time, gpGlobals->time + (float) 1.0f);
 
-                    if (bot_cfg_pause_time >= 1.0)
+                    if (bot_cfg_pause_time >= 1.0f)
                         bot_cfg_pause_time =
                                 min(bot_cfg_pause_time,
-                                    gpGlobals->time + (float) 1.0);
+                                    gpGlobals->time + (float) 1.0f);
                 }
             }
         }
         // DO BOT.CFG crap here
-        if ((bot_cfg_fp) && (bot_cfg_pause_time >= 1.0)
+        if ((bot_cfg_fp) && (bot_cfg_pause_time >= 1.0f)
             && (bot_cfg_pause_time <= gpGlobals->time)) {
             // process bot.cfg file options...
             ProcessBotCfgFile();
@@ -1208,11 +1208,11 @@ void RealBot_ServerCommand() {
 
         }
     } else if (FStrEq(pcmd, "sound")) {
-        EMIT_SOUND_DYN2(pEntity, CHAN_VOICE, "misc/imgood12.wav", 1.0,
+        EMIT_SOUND_DYN2(pEntity, CHAN_VOICE, "misc/imgood12.wav", 1.0f,
                         ATTN_NORM, 0, 100);
     } else if (FStrEq(pcmd, "add")) {
 	    const int iStatus = Game.createBot(pEntity, arg1, arg2, arg3, arg4);
-        bot_check_time = gpGlobals->time + 5.0;
+        bot_check_time = gpGlobals->time + 5.0f;
         if (iStatus == GAME_MSG_SUCCESS)
             sprintf(cMessage, "REALBOT: Successfully created bot.");
 
@@ -1872,7 +1872,7 @@ void RealBot_ServerCommand() {
                     sprintf(cMessage, "RBDEBUG: Debug messages on for bot [%d].", Game.bDebug);
                 } else {
                     Game.bDebug = -1;
-                    sprintf(cMessage, "RBDEBUG: Debug messages on for all bots", Game.bDebug);
+                    sprintf(cMessage, "RBDEBUG: Debug messages on for all bots"/*, Game.bDebug*/);
                 }
             }
         } else if (FStrEq(arg1, "verbosity")) { // realbot verbosity

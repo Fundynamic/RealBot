@@ -27,7 +27,7 @@
   *
   **/
 
-
+#include <cmath>
 #include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
@@ -459,7 +459,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
                 if (pBot->getPathIndex() > 0) { // was one node further, so we can use previous node!
 	                const int iNode = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex, pBot->getPreviousPathIndex());
 
-	                const float fDist = fabs(damage_origin.z - NodeMachine.node_vector(iNode).z);
+	                const float fDist = std::fabs(damage_origin.z - NodeMachine.node_vector(iNode).z);
                     if (fDist > 90) {
                         // we know where we came from, and we know where we went to
                         const int iNodeTo = NodeMachine.getNodeIndexFromBotForPath(pBot->iBotIndex,
@@ -822,12 +822,12 @@ void BotClient_Valve_ScreenFade(void *p, int bot_index) {
     } else if (state == 6) {
         state = 0;
 
-        float length = (duration + hold_time) / 4096.0;
+        float length = (duration + hold_time) / 4096.0f;
         int iDevide = bots[bot_index].bot_skill;
         if (iDevide < 1)
             iDevide = 1;
 
-        length -= ((10 / iDevide) * 0.5);
+        length -= ((10 / iDevide) * 0.5f);
 
         bots[bot_index].fBlindedTime = gpGlobals->time + length;
 

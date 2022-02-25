@@ -98,7 +98,7 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    // now check same height to one side of the bot...
@@ -113,7 +113,7 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    // now check same height on the other side of the bot...
@@ -128,7 +128,7 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    // now trace from head level downward to check for obstructions...
@@ -150,7 +150,7 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    // now check same height to one side of the bot...
@@ -165,7 +165,7 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    // now check same height on the other side of the bot...
@@ -180,7 +180,7 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    return TRUE;
@@ -217,7 +217,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return false;
 
    // now check same height to one side of the bot...
@@ -230,7 +230,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return false;
 
    // now check same height on the other side of the bot...
@@ -244,7 +244,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return false;
 
    // now trace from the ground up to check for object to duck under...
@@ -261,7 +261,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace didn't hit something, return FALSE
-   if (tr.flFraction >= 1.0)
+   if (tr.flFraction >= 1.0f)
       return false;
 
    // now check same height to one side of the bot...
@@ -276,7 +276,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace didn't hit something, return FALSE
-   if (tr.flFraction >= 1.0)
+   if (tr.flFraction >= 1.0f)
       return false;
 
    // now check same height on the other side of the bot...
@@ -291,7 +291,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace didn't hit something, return FALSE
-   if (tr.flFraction >= 1.0)
+   if (tr.flFraction >= 1.0f)
       return false;
 
    return true;

@@ -487,7 +487,7 @@ void BotConsole(cBot *pBot) {
 
             // reset
             pBot->console_nr = -1;
-            pBot->f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.2, 0.5);
+            pBot->f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.2f, 0.5f);
         }
 
         if (pBot->console_nr > 0)

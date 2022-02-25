@@ -381,7 +381,7 @@ bool FInViewCone(Vector *pOrigin, edict_t *pEdict) {
 
 	const float flDot = DotProduct(vec2LOS, gpGlobals->v_forward.Make2D());
 
-    if (flDot > 0.50)            // 60 degree field of view
+    if (flDot > 0.50f)            // 60 degree field of view
     {
         return TRUE;
     } else {
@@ -407,7 +407,7 @@ bool FVisible(const Vector &vecOrigin, edict_t *pEdict) {
     UTIL_TraceLine(vecLookerOrigin, vecOrigin, ignore_monsters,
                    ignore_glass, pEdict, &tr);
 
-    if (tr.flFraction != 1.0) {
+    if (tr.flFraction != 1.0f) {
         return FALSE;             // Line of sight is not established
     } else {
         return TRUE;              // line of sight is valid.
@@ -534,7 +534,7 @@ void UTIL_BotPressKey(cBot *pBot, int type) {
 
             // FIX: Do not let bots do anything with this weapon for 0.7 second. So the engine can
             // update the information.
-            pBot->f_update_weapon_time = gpGlobals->time + 0.7;
+            pBot->f_update_weapon_time = gpGlobals->time + 0.7f;
     }
     // KEY: End
 
@@ -793,7 +793,7 @@ void UTIL_BotSprayLogo(edict_t *pEntity, char *logo_name) {
     if (index < 0)
         return;
 
-    if ((pTrace.pHit) && (pTrace.flFraction < 1.0)) {
+    if ((pTrace.pHit) && (pTrace.flFraction < 1.0f)) {
         if (pTrace.pHit->v.solid != SOLID_BSP)
             return;
 
@@ -921,23 +921,23 @@ void HUD_DrawString(int r, int g, int b, char *msg, edict_t *edict) {
     WRITE_SHORT(FixedUnsigned16(0.0078125, 1 << 8));
     WRITE_SHORT(FixedUnsigned16(2, 1 << 8));
     WRITE_SHORT(FixedUnsigned16(6, 1 << 8));
-    WRITE_SHORT(FixedUnsigned16(0.1, 1 << 8));
+    WRITE_SHORT(FixedUnsigned16(0.1f, 1 << 8));
     WRITE_STRING(static_cast<const char*>(&msg[0]));
     MESSAGE_END();
 }
 
 
 void UTIL_FixAngles(Vector *Angles) {
-    if (Angles->x > 180.0)
-        Angles->x -= 360.0;
-    if (Angles->x < -180.0)
-        Angles->x += 360.0;
-    if (Angles->y > 180.0)
-        Angles->y -= 360.0;
-    if (Angles->y < -180.0)
-        Angles->y += 360.0;
+    if (Angles->x > 180.0f)
+        Angles->x -= 360.0f;
+    if (Angles->x < -180.0f)
+        Angles->x += 360.0f;
+    if (Angles->y > 180.0f)
+        Angles->y -= 360.0f;
+    if (Angles->y < -180.0f)
+        Angles->y += 360.0f;
 
-    Angles->z = 0.0;
+    Angles->z = 0.0f;
 }
 
 void UTIL_SayTextBot(const char *pText, cBot *pBot) {

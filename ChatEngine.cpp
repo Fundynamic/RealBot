@@ -84,7 +84,7 @@ void cChatEngine::initAndload() {
 
 // think
 void cChatEngine::think() {
-    if (fThinkTimer + 1.0 > gpGlobals->time) return; // not time yet to think
+    if (fThinkTimer + 1.0f > gpGlobals->time) return; // not time yet to think
 
     // decrease over time to avoid flooding
     if (Game.iProducedSentences > 1) {

@@ -119,8 +119,8 @@ void FakeClientCommand(edict_t *pBot, char *arg1, char *arg2, char *arg3);
 #define WANDER_LEFT  1
 #define WANDER_RIGHT 2
 
-#define BOT_PITCH_SPEED 20
-#define BOT_YAW_SPEED 20
+#define BOT_PITCH_SPEED 30
+#define BOT_YAW_SPEED 30
 
 #define RESPAWN_NONE             0      // Added by Stefan
 #define RESPAWN_IDLE             1

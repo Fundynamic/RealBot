@@ -32,6 +32,7 @@
   * COPYRIGHTED BY STEFAN HENDRIKS (C) 2003-2004
   **/
 
+#include <cmath>
 #include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
@@ -377,8 +378,8 @@ Vector cNodeMachine::node_vector(int iNode) const
 // Input: Vector, Output X and Y Meredians
 void cNodeMachine::VectorToMeredian(const Vector& vOrigin, int *iX, int *iY) {
     // Called for lookupt and for storing
-    float iCoordX = vOrigin.x + 8192.0;  // map height (converts from - to +)
-    float iCoordY = vOrigin.y + 8192.0;  // map width (converts from - to +)
+    float iCoordX = vOrigin.x + 8192.0f;  // map height (converts from - to +)
+    float iCoordY = vOrigin.y + 8192.0f;  // map width (converts from - to +)
 
     // Meredian:
     iCoordX = iCoordX / SIZE_MEREDIAN;
@@ -405,7 +406,7 @@ void cNodeMachine::AddToMeredian(int iX, int iY, int iNode) {
 // Does the node float?
 bool cNodeMachine::node_float(const Vector& vOrigin, edict_t *pEdict) {
     TraceResult tr;
-    const Vector tr_end = vOrigin - Vector(0, 0, (ORIGIN_HEIGHT * 1.2));
+    const Vector tr_end = vOrigin - Vector(0, 0, (ORIGIN_HEIGHT * 1.2f));
 
     //Using TraceHull to detect de_aztec bridge and other entities. (skill self)
     //UTIL_TraceHull(vOrigin, tr_end, ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
@@ -417,11 +418,11 @@ bool cNodeMachine::node_float(const Vector& vOrigin, edict_t *pEdict) {
                        &tr);
 
     // if nothing hit: floating too high, return false
-    if (tr.flFraction >= 1.0)
+    if (tr.flFraction >= 1.0f)
         return true;              // floating
 
     // *NOTE*: Actually this check should not be nescesary!
-    if (tr.flFraction < 1.0)
+    if (tr.flFraction < 1.0f)
         if (tr.pHit == pEdict)
             return true;
 
@@ -437,7 +438,7 @@ bool cNodeMachine::node_float(const Vector& vOrigin, edict_t *pEdict) {
 // Does the node stand on a crate? or a steep slope?
 bool cNodeMachine::node_on_crate(const Vector& vOrigin, edict_t *pEdict) {
     TraceResult tr;
-    const Vector tr_end = vOrigin - Vector(0, 0, (ORIGIN_HEIGHT * 1.2));
+    const Vector tr_end = vOrigin - Vector(0, 0, (ORIGIN_HEIGHT * 1.2f));
 
     //Using TraceHull to detect de_aztec bridge and other entities. (skill self)
     if (pEdict)
@@ -448,15 +449,15 @@ bool cNodeMachine::node_on_crate(const Vector& vOrigin, edict_t *pEdict) {
                        &tr);
 
     // if nothing hit: floating too high, return false
-    if (tr.flFraction >= 1.0)
+    if (tr.flFraction >= 1.0f)
         return false;
 
     // hit something
-    if (tr.flFraction < 1.0) {
+    if (tr.flFraction < 1.0f) {
         // thanks a million to PMB , so i know what the difference
         // is between something straight (crate) and steep... although i have
         // no clue yet how to compute these values myself.
-        if ( /*tr.vecPlaneNormal.z >= 0.7 && */ tr.vecPlaneNormal.z == 1.0) {
+        if ( /*tr.vecPlaneNormal.z >= 0.7 && */ tr.vecPlaneNormal.z == 1.0f) {
             return true;
         }
     }
@@ -520,7 +521,7 @@ int cNodeMachine::getClosestNode(const Vector& vOrigin, float fDist, edict_t *pE
             }
 
             // if nothing hit:
-            if (tr.flFraction >= 1.0) {
+            if (tr.flFraction >= 1.0f) {
                 if (pEdict != nullptr) {
                     if (FInViewCone(&nodeVector, pEdict) // in FOV
                         && FVisible(nodeVector, pEdict)) {
@@ -587,7 +588,7 @@ int cNodeMachine::getFurthestNode(const Vector& vOrigin, float fDist, edict_t *p
             }
 
             // if nothing hit:
-            if (tr.flFraction >= 1.0) {
+            if (tr.flFraction >= 1.0f) {
                 if (pEdict != nullptr) {
                     if (FInViewCone(&nodeVector, pEdict) // in FOV
                         && FVisible(nodeVector, pEdict)) {
@@ -786,7 +787,7 @@ int cNodeMachine::Reachable(const int iStart, const int iEnd) const
     printf("TraceHull --> tr.flFraction = %.2f\n", tr.flFraction);
 #endif
 
-    if (tr.flFraction < 1.0)
+    if (tr.flFraction < 1.0f)
         return false;
 
     // If either start/end is on ladder, assume we can fly without falling
@@ -795,7 +796,7 @@ int cNodeMachine::Reachable(const int iStart, const int iEnd) const
         (Nodes[iEnd].iNodeBits & BIT_LADDER))
     {
         UTIL_TraceHull(Start, End, ignore_monsters, human_hull, nullptr, &tr);
-        return tr.flFraction >= 1.0;
+        return tr.flFraction >= 1.0f;
     }
 
     // Heurestic for falling
@@ -995,8 +996,8 @@ int cNodeMachine::addNode(const Vector& vOrigin, edict_t *pEntity) {
 
     // SET BITS:
     bool bIsInWater = false;
-    bool indexNodeFloats = false;
-    bool bIndexOnCrate = false;
+    bool indexNodeFloats;
+    bool bIndexOnCrate;
 
     if (pEntity) {
         // Does this thing float?
@@ -1118,7 +1119,7 @@ int cNodeMachine::addNode(const Vector& vOrigin, edict_t *pEntity) {
             if (indexNodeFloats == false &&   // we stand on something
                 nodeIsHigherThanOrigin &&       // we MUST jump (not fall)
                 bNeighbourWater == false &&
-                fabs(slopeDistance) > MAX_JUMPHEIGHT)      // and cannot jump to it
+                std::fabs(slopeDistance) > MAX_JUMPHEIGHT)      // and cannot jump to it
             {
                 //                        SERVER_PRINT("Cannot jump to it");
                 continue;           // next neighbour
@@ -1128,7 +1129,7 @@ int cNodeMachine::addNode(const Vector& vOrigin, edict_t *pEntity) {
             if (indexNodeFloats == false &&   // we stand on something
                 nodeIsHigherThanOrigin &&       // we MUST jump (not fall)
                 bNeighbourWater == false &&
-                fabs(slopeDistance) > MAX_FALLHEIGHT)      // and cannot jump to it
+                std::fabs(slopeDistance) > MAX_FALLHEIGHT)      // and cannot jump to it
             {
                 //                        SERVER_PRINT("Insanity jump not possible either!\n");
                 continue;           // next neighbour
@@ -1164,7 +1165,7 @@ int cNodeMachine::addNode(const Vector& vOrigin, edict_t *pEntity) {
                        hull_type, pEntity->v.pContainingEntity, &tr);
 
         // if nothing hit:
-        if (tr.flFraction >= 1.0) {
+        if (tr.flFraction >= 1.0f) {
             // Add this to the neighbouring list
             Nodes[currentIndex].iNeighbour[neighbourId] = nodeIndex;
 
@@ -1190,7 +1191,7 @@ int cNodeMachine::addNode(const Vector& vOrigin, edict_t *pEntity) {
             if (bNeighbourFloats == false &&       // we stand on something
                 Nodes[currentIndex].origin.z > Nodes[nodeIndex].origin.z &&       // we MUST jump (not fall)
                 bIsInWater == false &&
-                fabs(fallDistance) > MAX_JUMPHEIGHT)   // and cannot jump to it
+                std::fabs(fallDistance) > MAX_JUMPHEIGHT)   // and cannot jump to it
                 bCanConnect = false;        // cannot connect
 
             // All water stuff can connect to each other
@@ -1804,7 +1805,7 @@ void cNodeMachine::contact(int iNode, int iTeam) {
                                ignore_monsters, point_hull, nullptr, &tr);
 
                 // within distance and 'reachable'
-                if (tr.flFraction >= 1.0) {
+                if (tr.flFraction >= 1.0f) {
 	                const double costIncrease = (fDist / NODE_CONTACT_DIST) * NODE_CONTACT_STEP;
                     InfoNodes[i].fContact[iTeam] += costIncrease;
                 }
@@ -1843,7 +1844,7 @@ void cNodeMachine::danger(int iNode, int iTeam) {
                                ignore_monsters, point_hull, nullptr, &tr);
 
                 // within distance and reachable
-                if (tr.flFraction >= 1.0) {
+                if (tr.flFraction >= 1.0f) {
 	                const double costIncrease = (fDist / NODE_DANGER_DIST) * NODE_DANGER_STEP;
                     InfoNodes[i].fDanger[iTeam] += costIncrease;
                 }
@@ -1878,7 +1879,7 @@ void cNodeMachine::addGoal(edict_t *pEdict, int goalType, const Vector& vVec) {
         goalType == GOAL_VIPSAFETY ||
         goalType == GOAL_RESCUEZONE ||
         goalType == GOAL_BOMBSPOT) {
-        distance = NODE_ZONE * 0.8;
+        distance = NODE_ZONE * 0.8f;
     }
 
     int nNode = getClosestNode(vVec, distance, pEdict);
@@ -2136,22 +2137,22 @@ void cNodeMachine::scale_contact() {
     // rescale all other values to stay correct.
     int iTeam = 0;
     while (iTeam < 2) {
-        float fHighest = 0.0;
-        int i = 0;                // <-- ADDED BY PMB ELSE LINUX COMPILER ISNT HAPPY
+        float fHighest = 0.0f;
+        int i;                // <-- ADDED BY PMB ELSE LINUX COMPILER ISNT HAPPY
         for (i = 0; i < MAX_NODES; i++)
             if (InfoNodes[i].fContact[iTeam] > fHighest)
                 fHighest = InfoNodes[i].fContact[iTeam];
 
-        if (fHighest < 1.0) {
+        if (fHighest < 1.0f) {
             iTeam++;
             continue;              // no need to rescale
         }
         // Check how much we passed the limit
-        const float fLimit = 1.0 / fHighest;
+        const float fLimit = 1.0f / fHighest;
 
         // Now rescale all
         for (i = 0; i < MAX_NODES; i++)
-            if (InfoNodes[i].fContact[iTeam] > 0.0)
+            if (InfoNodes[i].fContact[iTeam] > 0.0f)
                 InfoNodes[i].fContact[iTeam] *= fLimit;     // rescale
 
         iTeam++;
@@ -2166,22 +2167,22 @@ void cNodeMachine::scale_danger() {
     // rescale all other danger values to stay correct.
     int iTeam = 0;
     while (iTeam < 2) {
-        float fHighest = 0.0;
-        int i = 0;                // ADDED BY PMB FOR COMPILING UNDER LINUX
+        float fHighest = 0.0f;
+        int i;                // ADDED BY PMB FOR COMPILING UNDER LINUX
         for (i = 0; i < MAX_NODES; i++)
             if (InfoNodes[i].fDanger[iTeam] > fHighest)
                 fHighest = InfoNodes[i].fDanger[iTeam];
 
-        if (fHighest < 0.8) {
+        if (fHighest < 0.8f) {
             iTeam++;
             continue;              // no need to rescale
         }
         // Check how much we passed the limit
-        const float fLimit = 0.7 / fHighest;
+        const float fLimit = 0.7f / fHighest;
 
         // Now rescale all
         for (i = 0; i < MAX_NODES; i++)
-            if (InfoNodes[i].fDanger[iTeam] > 0.0)
+            if (InfoNodes[i].fDanger[iTeam] > 0.0f)
                 InfoNodes[i].fDanger[iTeam] *= fLimit;      // rescale
 
         iTeam++;
@@ -2547,7 +2548,7 @@ void cNodeMachine::vis_calculate(int iFrom) {
                 {
                     UTIL_TraceHull(Nodes[iFrom].origin, Nodes[i].origin, ignore_monsters, point_hull, nullptr, &tr);
 
-                    if (tr.flFraction < 1.0) {
+                    if (tr.flFraction < 1.0f) {
                         SetVisibilityFromTo(iFrom, i, false);
                         SetVisibilityFromTo(i, iFrom, false);
                     } else {
@@ -2564,7 +2565,7 @@ int cNodeMachine::node_look_camp(const Vector& vOrigin, int iTeam,
                                  edict_t *pEdict) {
 
     rblog("node_look_camp - start\n");
-    float fDanger = -0.1;
+    float fDanger = -0.1f;
     float fDistance = 0;
     int iBestNode = -2;
 
@@ -2584,7 +2585,7 @@ int cNodeMachine::node_look_camp(const Vector& vOrigin, int iTeam,
                     UTIL_TraceLine(Nodes[iFrom].origin, Nodes[iNode].origin,
                                    ignore_monsters, ignore_glass, pEdict, &tr);
                     //UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "NODE, MEREDIAN: VISIBILITY NOT KNOWN \n");
-                    if (tr.flFraction < 1.0) {
+                    if (tr.flFraction < 1.0f) {
                         bVisible = false;
                         // Set to false
                         SetVisibilityFromTo(iFrom, iNode, false);
@@ -2693,7 +2694,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
             bool isGood = false;
 
             // if nothing hit:
-            if (trb.flFraction >= 1.0)
+            if (trb.flFraction >= 1.0f)
                 isGood = true;
             else {
                 // we hit this button we check for
@@ -2715,8 +2716,8 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                 pBot->rprint_trace("cNodeMachine::path_walk", "This is the button I was looking for, it is close and I can use it");
 
                 // wait a little
-                pBot->setTimeToWait(0.5);
-                pBot->fButtonTime = gpGlobals->time + 5.0;
+                pBot->setTimeToWait(0.5f);
+                pBot->fButtonTime = gpGlobals->time + 5.0f;
                 pBot->setTimeToMoveToNode(3);
                 pBot->forgetPath();
                 return;
@@ -2762,7 +2763,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
         if (BotShouldDuck(pBot)) {
             UTIL_BotPressKey(pBot, IN_DUCK);
-            pBot->f_hold_duck = gpGlobals->time + 0.2;
+            pBot->f_hold_duck = gpGlobals->time + 0.2f;
         }
 
         bNearNode = pBot->getDistanceToNextNode() < 25;
@@ -2797,7 +2798,9 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         }
 
         char msg[255];
-        sprintf(msg, "Heading for node %d, required distance is %f, actual distance is %f, time remaining %f", pBot->getCurrentPathNodeToHeadFor(), requiredDistance, pBot->getDistanceToNextNode(), pBot->getMoveToNodeTimeRemaining());
+        sprintf(msg, "Heading for node %d, required distance is %f, actual distance is %f, time remaining %f",
+                pBot->getCurrentPathNodeToHeadFor(), requiredDistance, pBot->getDistanceToNextNode(),
+                pBot->getMoveToNodeTimeRemaining());
         pBot->rprint_trace("cNodeMachine::path_walk (bNear)", msg);
 
         bNearNode = pBot->getDistanceToNextNode() < requiredDistance;
@@ -2805,7 +2808,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         // If we should duck, duck.
         if (BotShouldDuck(pBot)) {
             UTIL_BotPressKey(pBot, IN_DUCK);
-            pBot->f_hold_duck = gpGlobals->time + 0.2;
+            pBot->f_hold_duck = gpGlobals->time + 0.2f;
         }
     }
 
@@ -2902,7 +2905,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         if (strcmp(STRING(pEntityHit->v.classname), "player") == 0) {
             pBot->rprint_trace("cNodeMachine::path_walk", "Another player between me and next node.");
             if (pBot->hasTimeToMoveToNode()) {
-                pBot->strafeRight(0.2);
+                pBot->strafeRight(0.2f);
                 pBot->rprint_trace("cNodeMachine::path_walk", "Time left to move to node, so lets try strafing to unstuck.");
                 return;
             } else {
@@ -2918,10 +2921,12 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     // - unstuck
     // - go back in path...
 
-    constexpr float timeEvaluatingMoveSpeed = 0.1;
+    constexpr float timeEvaluatingMoveSpeed = 0.1f;
     const bool notStuckForAWhile = (pBot->fNotStuckTime + timeEvaluatingMoveSpeed) < gpGlobals->time;
 
-    constexpr double fraction = 0.7; // 0.7 is an arbitrary number based on several tests to consider stuck at a more sane moment. Else it would trigger stuck logic too soon, too often.
+    constexpr double fraction = 0.7;    // 0.7 is an arbitrary number based on several tests to consider stuck at a more sane moment.
+										// Else it would trigger stuck logic too soon, too often.
+
     const double speedInOneTenthOfASecond = (pBot->f_move_speed * timeEvaluatingMoveSpeed) * fraction;
     double expectedMoveDistance = speedInOneTenthOfASecond;
     if (pBot->isFreezeTime()) expectedMoveDistance = 0;
@@ -2932,7 +2937,8 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
     char msg[255];
     memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Distance moved %f, expected %f, should be able to move yes, notStuck for a while %d", distanceMoved, expectedMoveDistance, notStuckForAWhile);
+    sprintf(msg, "Distance moved %f, expected %f, should be able to move yes, notStuck for a while %d", distanceMoved,
+            expectedMoveDistance, notStuckForAWhile);
     pBot->rprint_trace("cNodeMachine::path_walk", msg);
 
     const bool isStuck = distanceMoved < expectedMoveDistance && pBot->shouldBeAbleToMove() && notStuckForAWhile; // also did not evaluate this logic for 0.5 second
@@ -2963,7 +2969,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
 void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vector &vector) {
     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "START");
-    pBot->fNotStuckTime = gpGlobals->time + 0.25; // give some time to unstuck
+    pBot->fNotStuckTime = gpGlobals->time + 0.25f; // give some time to unstuck
 
     const int iFrom = pBot->getPreviousPathNodeToHeadFor();
     const int iTo = currentNodeToHeadFor;
@@ -3021,7 +3027,8 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vec
     }
 
     memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Player in FOV? %d, hostage in FOV? %d bot close ? %d, time remaining? %f", playerNearbyInFOV != nullptr, hostageNearbyInFOV != nullptr, pBotStuck != nullptr, timeRemaining);
+    sprintf(msg, "Player in FOV? %d, hostage in FOV? %d bot close ? %d, time remaining? %f",
+            playerNearbyInFOV != nullptr, hostageNearbyInFOV != nullptr, pBotStuck != nullptr, timeRemaining);
     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", msg);
 
     if (playerNearbyInFOV) {
@@ -3091,7 +3098,7 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vec
                     // make sure we head to the current node
                     pBot->vBody = currentNode.origin;
                     pBot->vHead = currentNode.origin;
-                    pBot->fNotStuckTime = gpGlobals->time + 0.5; // give a bit more time
+                    pBot->fNotStuckTime = gpGlobals->time + 0.5f; // give a bit more time
                 } else {
                     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "I can no longer see the current node to head for");
                     IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(iFrom, iTo);
@@ -3367,8 +3374,8 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     int iFinalGoalNode = -1;
     int iFinalGoalIndex = -1;
 
-    constexpr float MAX_DISTANCE = 16384.0; // theoretical max distance
-    constexpr float MAX_GOAL_DISTANCE = MAX_DISTANCE / 2.0;
+    constexpr float MAX_DISTANCE = 16384.0f; // theoretical max distance
+    constexpr float MAX_GOAL_DISTANCE = MAX_DISTANCE / 2.0f;
 
     // 01-07-2008; Instead of using 'scores', use a normalized score.
     // We do:
@@ -3405,14 +3412,14 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         score += weight;
 
         // Take into consideration how many times this goal has been selected
-        score = (score + (1.0f - (Goals[goalIndex].iChecked / maxCheckedScore))) / 2.0f;
+        score = (score + (1.0f - (Goals[goalIndex].iChecked / static_cast<float>(maxCheckedScore)))) / 2.0f;
 
         // Danger (is important)
-        score = (score + InfoNodes[Goals[goalIndex].iNode].fDanger[UTIL_GetTeam(pBot->pEdict)]) / 1.5;
+        score = (score + InfoNodes[Goals[goalIndex].iNode].fDanger[UTIL_GetTeam(pBot->pEdict)]) / 1.5f;
 
         // How many bots have already taken this goal?
-        float goalAlreadyUsedScore = 0.0;
-        float teamMembers = 1.0; // count self by default
+        float goalAlreadyUsedScore = 0.0f;
+        float teamMembers = 1.0f; // count self by default
 
         for (int botIndex = 0; botIndex < MAX_BOTS; botIndex++) {
             // not a bot
@@ -3433,14 +3440,14 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         }
 
         // add favoriteness
-        score = (score + (1.0 - (goalAlreadyUsedScore / teamMembers))) / 2.0;
+        score = (score + (1.0f - (goalAlreadyUsedScore / teamMembers))) / 2.0f;
 
         // Goals regardless of map/game type
         const int goalType = Goals[goalIndex].iType;
 
         if (goalType == GOAL_SPAWNCT || goalType == GOAL_SPAWNT) {
 	        const float goalscore = fDistanceToGoal / MAX_GOAL_DISTANCE;
-            score = (score + goalscore) / 2.0;
+            score = (score + goalscore) / 2.0f;
         }
 
         if (Game.bHostageRescueMap) {
@@ -3472,35 +3479,35 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
                 } else {
                     // Terrorist pick randomly this location
                     if (RANDOM_LONG(0, 100) < 25) {
-                        goalscore = RANDOM_FLOAT(0.1, 0.6);
+                        goalscore = RANDOM_FLOAT(0.1f, 0.6f);
                     }
                 }
 
-                score = (score + goalscore) / 2.0;
+                score = (score + goalscore) / 2.0f;
             } else if (goalType == GOAL_RESCUEZONE) {
                 if (pBot->isCounterTerrorist()) {
                     if (pBot->isEscortingHostages()) {
                         pBot->rprint("I am escorting hostages - prioritizing for rescue zone");
                         // highest priority
-                        score = 2.0;
+                        score = 2.0f;
                     } else {
-                        score = 0.2;
+                        score = 0.2f;
                     }
                 } else if (pBot->isTerrorist()) {
                     // TODO: when hostages are being rescued, go to a rescue zone to catch CT's and
                     // prevent rescue
-                    score = 0.2;
+                    score = 0.2f;
                 }
             }
         } else { // it is a DE_ map
             if (goalType == GOAL_BOMBSPOT) {
-                float goalscore = 0.0;
+                float goalscore = 0.0f;
                 if (pBot->isTerrorist()) {
                     if (pBot->hasBomb()) {
-                        goalscore = 2.0; // plant it!
+                        goalscore = 2.0f; // plant it!
                     } else {
 	                    const float mul = fDistanceToGoal / MAX_GOAL_DISTANCE;
-                        goalscore = (0.7 * mul);
+                        goalscore = (0.7f * mul);
                     }
 
                 } else if (pBot->isCounterTerrorist()) {
@@ -3528,7 +3535,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
                                 );
 
                                 const float score = distanceToC4FromCloseNode / distanceToC4FromThisGoalNode;
-                                goalscore = 1.5 + score;
+                                goalscore = 1.5f + score;
                                 memset(msg, 0, sizeof(msg));
                                 sprintf(msg, "Distance from C4 to closest node is %f, distance from evaluating node to C4 is %f, resulting into score of %f",
                                         distanceToC4FromCloseNode,
@@ -3547,11 +3554,11 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
                     } else {
                         pBot->rprint_trace("path_think/determine goal", "Bomb is not planted");
                         const float mul = fDistanceToGoal / MAX_GOAL_DISTANCE;
-                        goalscore = (0.7 * mul);
+                        goalscore = (0.7f * mul);
                     }
                 }
                 // this is weird? what?
-                score = (score + goalscore) / 2.0;
+                score = (score + goalscore) / 2.0f;
             } // GOAL is a bombspot
         } // bomb plant map
 
@@ -3568,7 +3575,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
                 }
             } else {
                 // terrorists pick random
-                score = (score + RANDOM_FLOAT(0.0, 1.0)) / 2.0;
+                score = (score + RANDOM_FLOAT(0.0f, 1.0f)) / 2.0f;
             }
         }
 
@@ -3609,7 +3616,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
 
         // was previous goal as well, don't go there
         if (pBot->iPreviousGoalNode == goalIndex) {
-            score *= 0.2; // low chance
+            score *= 0.2f; // low chance
         }
 
 
@@ -3847,7 +3854,7 @@ int cNodeMachine::node_cover(int iFrom, int iTo, edict_t *pEdict) {
                     UTIL_TraceLine(Nodes[iFrom].origin, Nodes[i].origin,
                                    ignore_monsters, ignore_glass, pEdict, &tr);
 
-                    if (tr.flFraction < 1.0)
+                    if (tr.flFraction < 1.0f)
                         bVisible = false;
                 } else {
                     if (GetVisibilityFromTo(iFrom, i) == VIS_BLOCKED)        // BERKED
@@ -3915,7 +3922,7 @@ int cNodeMachine::node_look_at_hear(int iFrom, int iOrigin,
                 UTIL_TraceLine(Nodes[iFrom].origin, Nodes[i].origin,
                                ignore_monsters, ignore_glass, pEdict, &tr);
 
-                if (tr.flFraction < 1.0) {
+                if (tr.flFraction < 1.0f) {
                     SetVisibilityFromTo(iFrom, i, false);
                     SetVisibilityFromTo(i, iFrom, false);
                 }
@@ -3926,7 +3933,7 @@ int cNodeMachine::node_look_at_hear(int iFrom, int iOrigin,
                 UTIL_TraceLine(Nodes[iOrigin].origin, Nodes[i].origin,
                                ignore_monsters, ignore_glass, pEdict, &tr);
 
-                if (tr.flFraction < 1.0) {
+                if (tr.flFraction < 1.0f) {
                     SetVisibilityFromTo(iOrigin, i, false);
                     SetVisibilityFromTo(i, iOrigin, false);
                 }
@@ -4430,8 +4437,8 @@ void cNodeMachine::MarkMeredians() {
     // Mark some meredians
     for (x = 0; x < DEBUG_BMP_WIDTH; x++) {
         Meredian =
-                static_cast<int>((float)x * scale + minx +
-	                8192.0) / static_cast<float>(SIZE_MEREDIAN);
+                static_cast<int>(static_cast<float>(x) * scale + minx +
+	                8192.0f) / static_cast<float>(SIZE_MEREDIAN);
         if (Meredian & 0x01) {
             for (y = 0; y < DEBUG_BMP_HEIGHT; y++)
                 bmp_buffer[y * DEBUG_BMP_WIDTH + x]++;
@@ -4441,8 +4448,8 @@ void cNodeMachine::MarkMeredians() {
     // Mark some meredians
     for (y = 0; y < DEBUG_BMP_HEIGHT; y++) {
         Meredian =
-                static_cast<int>((float)y * scale + miny +
-	                8192.0) / static_cast<float>(SIZE_MEREDIAN);
+                static_cast<int>(static_cast<float>(y) * scale + miny +
+	                8192.0f) / static_cast<float>(SIZE_MEREDIAN);
         if (Meredian & 0x01) {
             for (x = 0; x < DEBUG_BMP_HEIGHT; x++)
                 bmp_buffer[y * DEBUG_BMP_WIDTH + x]++;
@@ -4571,7 +4578,7 @@ void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) 
                                pBot->pEdict, &trb);
 
                 // if nothing hit:
-                if (trb.flFraction >= 1.0) {
+                if (trb.flFraction >= 1.0f) {
                     // Button found to head for!
                     pButtonEdict = pent;
                     break;
@@ -4609,7 +4616,7 @@ void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) 
                     bool isGood = false;
 
                     // if nothing hit:
-                    if (trb.flFraction >= 1.0) {
+                    if (trb.flFraction >= 1.0f) {
                         pButtonEdict = pent;
                         break;
                     } else {
@@ -4643,7 +4650,7 @@ void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) 
                                                pBot->pEdict, &trb);
 
                                 // if nothing hit:
-                                if (trb.flFraction >= 1.0) {
+                                if (trb.flFraction >= 1.0f) {
                                     pButtonEdict = pent;
                                     break;
                                 }
