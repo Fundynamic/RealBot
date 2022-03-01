@@ -43,7 +43,7 @@
 // this makes sure function `min` is available (instead of fmin).
 #include <algorithm>
 
-using namespace std;
+//using namespace std;
 
 DLL_FUNCTIONS gFunctionTable;
 DLL_FUNCTIONS gFunctionTable_post;
@@ -67,13 +67,13 @@ cNodeMachine NodeMachine;
 cChatEngine ChatEngine;
 FILE *fpRblog = nullptr;
 
-float f_load_time = 0.0;
-float f_minplayers_think = 0.0; // timer used to add realbots if internet play enabled
+float f_load_time = 0.0f;
+float f_minplayers_think = 0.0f; // timer used to add realbots if internet play enabled
 int mod_id = CSTRIKE_DLL;       // should be changed to 0 when we are going to do multi-mod stuff
 int m_spriteTexture = 0;
 bool isFakeClientCommand = FALSE;
 int fake_arg_count;
-float bot_check_time = 30.0;
+float bot_check_time = 30.0f;
 int min_bots = -1;
 int max_bots = -1;
 int min_players = -1;           // minimum amount of players that should be in the server all the time
@@ -82,13 +82,13 @@ int prev_num_bots = 0;
 bool g_GameRules = FALSE;
 edict_t *clients[32];
 edict_t *pHostEdict = nullptr;
-float welcome_time = 0.0;
+float welcome_time = 0.0f;
 bool welcome_sent = false;
 
 FILE *bot_cfg_fp = nullptr;
 bool need_to_open_cfg = TRUE;
-float bot_cfg_pause_time = 0.0;
-float respawn_time = 0.0;
+float bot_cfg_pause_time = 0.0f;
+float respawn_time = 0.0f;
 bool spawn_time_reset = FALSE;
 
 // Interval between joining bots.
