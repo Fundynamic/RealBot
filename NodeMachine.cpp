@@ -3406,7 +3406,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         }
 
         // A bit off randomness
-        float weight = 50 / pBot->ipRandom; // (yes, this will give us 1 or higher score)
+        float weight = static_cast<float>(50) / pBot->ipRandom; // (yes, this will give us 1 or higher score)
         weight *= score;
 
         score += weight;

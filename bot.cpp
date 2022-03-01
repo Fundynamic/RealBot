@@ -136,7 +136,7 @@ void cBot::SpawnInit() {
     fUpdateTime = gpGlobals->time;
     fLastRunPlayerMoveTime = gpGlobals->time - 0.1f;
     fButtonTime = gpGlobals->time;
-    fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5, 5);
+    fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5f, 5);
     fMemoryTime = gpGlobals->time;
     fDoRadio = gpGlobals->time;
     const float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
@@ -159,7 +159,7 @@ void cBot::SpawnInit() {
     f_c4_time = gpGlobals->time;
     f_update_weapon_time = gpGlobals->time;
     f_follow_time = gpGlobals->time;
-    f_jump_time = 0.0;
+    f_jump_time = 0.0f;
     f_hold_duck = gpGlobals->time;
     f_camp_time = gpGlobals->time;
     f_wait_time = gpGlobals->time;
@@ -176,11 +176,11 @@ void cBot::SpawnInit() {
     f_strafe_time = gpGlobals->time;
 
     // Personality Related (these gets changed when loading personality file)
-    fpXOffset = 0.0;
-    fpYOffset = 0.0;
-    fpZOffset = 0.0;
-    fpMinReactTime = 0.0;
-    fpMaxReactTime = 0.0;
+    fpXOffset = 0.0f;
+    fpYOffset = 0.0f;
+    fpZOffset = 0.0f;
+    fpMinReactTime = 0.0f;
+    fpMaxReactTime = 0.0f;
 
     // ------------------------
     // POINTERS
@@ -2874,7 +2874,7 @@ void cBot::Memory() {
                 }
                 // we go to the destination
 
-                const float fTime = 5 + (ipFearRate / 7);
+                const float fTime = 5 + (ipFearRate / static_cast<float>(7));
 
                 if (RANDOM_LONG(0, 100) < ipFearRate
                     && f_walk_time + 5 < gpGlobals->time) // last 5 seconds did not walk
@@ -4019,16 +4019,10 @@ void BotThink(cBot *pBot) {
     char msg[255];
     sprintf(msg, "moveSpeed %f, strafeSpeed %f, msecVal %f", pBot->f_move_speed, pBot->f_strafe_speed, msecval);
     pBot->rprint_trace("BotThink/pfnRunPlayerMove", msg);
-    g_engfuncs.pfnRunPlayerMove(pBot->pEdict,
-                                pBot->vecMoveAngles,
-                                pBot->f_move_speed,
-                                pBot->f_strafe_speed,
-                                upMove,
-                                pBot->pEdict->v.button,
-                                0,
-                                msecval);
+    g_engfuncs.pfnRunPlayerMove(pBot->pEdict, pBot->vecMoveAngles, pBot->f_move_speed, pBot->f_strafe_speed,
+                                upMove, pBot->pEdict->v.button, 0, msecval);
 
-    constexpr float fUpdateInterval = 1.0f / 60.0f; // update at 60 fps
+    const float fUpdateInterval = 1.0f / 60.0f; // update at 60 fps
     pBot->fUpdateTime = gpGlobals->time + fUpdateInterval;
 }
 
@@ -4044,8 +4038,7 @@ void cBot::Dump() {
     _snprintf(buffer, 180,
               "%s (#%d %s): timers, now= %.0f, c4_time=%.0f, camp_time=%.0f, wait_time=%.0f, cover_time=%.0f, wander=%.0f, MoveToNodeTime=%.0f\n",
               name, iBotIndex, (iTeam == 1) ? "T" : "CT", gpGlobals->time,
-              f_c4_time, f_camp_time, f_wait_time, f_cover_time, fWanderTime,
-              fMoveToNodeTime);
+              f_c4_time, f_camp_time, f_wait_time, f_cover_time, fWanderTime, fMoveToNodeTime);
     rblog(buffer);
     _snprintf(buffer, 180, "  GoalNode=%d, CurrentNode=%d, iPathFlags=",
               iGoalNode, iCurrentNode);
