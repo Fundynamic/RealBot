@@ -822,7 +822,7 @@ void BotClient_Valve_ScreenFade(void *p, int bot_index) {
     } else if (state == 6) {
         state = 0;
 
-        float length = (static_cast<float>duration + hold_time) / 4096.0f;
+        float length = (static_cast<float>(duration + hold_time)) / 4096.0f;
         int iDevide = bots[bot_index].bot_skill;
         if (iDevide < 1)
             iDevide = 1;

@@ -99,8 +99,8 @@ int internet_min_interval = 10;
 // Counter-Strike 1.6 or 1.5
 int counterstrike = 0;          // Default 1.5
 
-void UpdateClientData(const struct edict_s *ent, int sendweapons,
-                      struct clientdata_s *cd);
+void UpdateClientData(const edict_s *ent, int sendweapons,
+                      clientdata_s *cd);
 
 void ProcessBotCfgFile();
 
@@ -1042,6 +1042,67 @@ void FakeClientCommand(edict_t *pBot, char *arg1, char *arg2, char *arg3) {
 
     isFakeClientCommand = FALSE;
 }
+
+/*void UpdateClientData(const edict_s* ent, int sendweapons, clientdata_s* cd) // KWo 02.03.2010 - thanks to MeRcyLeZZ
+{
+    static int sending;
+    static int bot_index;
+    static edict_t* pPlayer;
+
+    if (g_i_cv_latencybot != 2)
+        RETURN_META(MRES_IGNORED);
+
+    sending = 0;
+
+    // Scoreboard key being pressed?
+    if (!FNullEnt(ent) && ent->v.flags & FL_CLIENT
+        && (ent->v.button & IN_SCORE || ent->v.oldbuttons & IN_SCORE))
+    {
+        pPlayer = INDEXENT(ENTINDEX(ent));
+
+        for (bot_index = 0; bot_index < gpGlobals->maxClients; bot_index++)
+        {
+            if (bots[bot_index].is_used && !FNullEnt(bots[bot_index].pEdict))
+            {
+                // Send message with the weird arguments
+                switch (sending)
+                {
+                case 0:
+                {
+                    // Start a new message
+                    MESSAGE_BEGIN(MSG_ONE_UNRELIABLE, SVC_PINGS, NULL, pPlayer);
+                    WRITE_BYTE(bots[bot_index].iOffsetPing[0] * 64 + (1 + 2 * bot_index));
+                    WRITE_SHORT(bots[bot_index].iArgPing[0]);
+                    sending++;
+                }
+                case 1:
+                {
+                    // Append additional data
+                    WRITE_BYTE(bots[bot_index].iOffsetPing[1] * 128 + (2 + 4 * bot_index));
+                    WRITE_SHORT(bots[bot_index].iArgPing[1]);
+                    sending++;
+                }
+                case 2:
+                {
+                    // Append additional data and end message
+                    WRITE_BYTE(4 + 8 * bot_index);
+                    WRITE_SHORT(bots[bot_index].iArgPing[2]);
+                    WRITE_BYTE(0);
+                    MESSAGE_END();
+                    sending = 0;
+                }
+                }
+            }
+        }
+        // End message if not yet sent
+        if (sending)
+        {
+            WRITE_BYTE(0);
+            MESSAGE_END();
+        }
+    }
+    RETURN_META(MRES_IGNORED);
+}*/
 
 void ProcessBotCfgFile() {
 	char cmd_line[256];
