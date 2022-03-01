@@ -2276,9 +2276,6 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
         // a node that should be closed is an evaluated node and the most preferred one.
         // open up all neighbouring nodes, and close this one
         if (nodeToClose > -1) {
-//            char msg[255];
-//            sprintf(msg, "Found node to close [%d]\n", nodeToClose);
-//            rblog(msg);
             astar_list[nodeToClose].state = CLOSED;
             int botTeam = -1;
             if (pBot) {
@@ -2287,7 +2284,6 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
 
             openNeighbourNodes(nodeStartIndex, nodeToClose, nodeTargetIndex, botTeam);
         } else {
-//            rblog("Did not find any open waypoint\n");
             break;
         }
     }
@@ -2304,15 +2300,6 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
     for (nodeIndex = 0; nodeIndex < MAX_PATH_NODES; nodeIndex++) {
 	    const tNodestar &nodeStar = astar_list[nodeIndex];
         if (nodeStar.state == AVAILABLE) continue;
-
-//        char msg[255];
-//        memset(msg, 0, sizeof(msg));
-//        if (nodeStar.state == CLOSED) {
-//            sprintf(msg, "Node [%d] is CLOSED. Cost = %f. Parent = %d\n", nodeIndex, nodeStar.cost, nodeStar.parent);
-//        } else if (nodeStar.state == OPEN) {
-//            sprintf(msg, "Node [%d] is OPEN. Cost = %f. Parent = %d\n", nodeIndex, nodeStar.cost, nodeStar.parent);
-//        }
-//        rblog(msg);
     }
 
     // Build path (from goal to start, read out parent waypoint to backtrace)

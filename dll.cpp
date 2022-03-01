@@ -55,7 +55,7 @@ extern cBot bots[32];
 
 extern bool radio_message;
 
-extern char *rb_version_nr;
+extern const char *rb_version_nr;
 extern char *message;
 
 // DLL specific variables
@@ -99,8 +99,7 @@ int internet_min_interval = 10;
 // Counter-Strike 1.6 or 1.5
 int counterstrike = 0;          // Default 1.5
 
-void UpdateClientData(const edict_s *ent, int sendweapons,
-                      clientdata_s *cd);
+//void UpdateClientData(const edict_s *ent, int sendweapons, clientdata_s *cd); //Not used? [APG]RoboCop[CL]
 
 void ProcessBotCfgFile();
 
@@ -523,19 +522,24 @@ void ClientCommand(edict_t *pEntity) {
     RETURN_META(MRES_IGNORED);
 }
 
-
 // TODO: Revise this method
 void StartFrame() {
     if (!gpGlobals->deathmatch) return; // bots only work in 'deathmatch mode'
-//    REALBOT_PRINT("StartFrame", "BEGIN");
+	//REALBOT_PRINT("StartFrame", "BEGIN");
 
     edict_t *pPlayer;
     static int i, player_index, bot_index;
-    static float previous_time = -1.0;
-    static float client_update_time = 0.0;
+    static float previous_time = -1.0f;
+    static float client_update_time = 0.0f;
     clientdata_s cd;
     int count = 0;
     int waits = 0;            // How many bots had to wait.
+
+    // Experimental autovacate script from POD-Bot [APG]RoboCop[CL]
+    max_bots = max_bots > gpGlobals->maxClients ? gpGlobals->maxClients : max_bots < 0 ? 0 : max_bots;
+    min_bots = min_bots > gpGlobals->maxClients ? gpGlobals->maxClients : min_bots < 0 ? 0 : min_bots;
+    if (max_bots < min_bots)
+        min_bots = max_bots;
 
     // When a user - or anything else - specified a higher number of 0 to
     // kick bots, then we will do as told.
@@ -626,7 +630,7 @@ void StartFrame() {
 
             // Send welcome message
             welcome_sent = false;
-            welcome_time = 0.0;
+            welcome_time = 0.0f;
         }
 
         NodeMachine.init_players();
@@ -736,7 +740,7 @@ void StartFrame() {
         // Send a message to clients about RealBot every round
         if (Game.iVersionBroadcasting == BROADCAST_ROUND) {
             welcome_sent = false;
-            welcome_time = gpGlobals->time + 2;
+            welcome_time = gpGlobals->time + 2.0f;
         }
 
         NodeMachine.init_round();

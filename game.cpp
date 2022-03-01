@@ -328,7 +328,6 @@ bool cGame::NamesAvailable() const
     return false;
 }                               // NamesAvailable()
 
-
 // Picks a random name
 // rewritten on april 10th 2004
 void cGame::SelectName(char *name) const
@@ -529,7 +528,6 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
         return GAME_MSG_FAIL_SERVERFULL;  // failed
     }
 
-
     char ptr[128];            // allocate space for message from ClientConnect
 
     int freeBotIndex = 0;
@@ -589,7 +587,7 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     pBot->bIsUsed = true;
     pBot->respawn_state = RESPAWN_IDLE;
     pBot->fCreateTime = gpGlobals->time;
-    pBot->fKickTime = 0.0;
+    pBot->fKickTime = 0.0f;
     pBot->name[0] = 0;        // name not set by server yet
     pBot->bot_money = 0;
 

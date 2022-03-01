@@ -274,7 +274,7 @@ void cBot::SpawnInit() {
     // ------------------------
     // FLOATS
     // ------------------------
-    f_strafe_speed = 0.0;
+    f_strafe_speed = 0.0f;
     f_max_speed = CVAR_GET_FLOAT("sv_maxspeed");
 
     // ------------------------
@@ -309,7 +309,7 @@ void cBot::NewRound() {
     fLastRunPlayerMoveTime = gpGlobals->time;
     fCheckHostageStatusTimer = gpGlobals->time;
     fButtonTime = gpGlobals->time;
-    fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5, 5);
+    fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5f, 5.0f);
     fMemoryTime = gpGlobals->time;
     fDoRadio = gpGlobals->time;
     const float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
@@ -434,7 +434,7 @@ void cBot::NewRound() {
     // ------------------------
     // VECTORS
     // ------------------------
-    prevOrigin = Vector(9999.0, 9999.0, 9999.0);
+    prevOrigin = Vector(9999.0f, 9999.0f, 9999.0f);
     lastSeenEnemyVector = Vector(0, 0, 0);
     vEar = Vector(9999, 9999, 9999);
 
@@ -3236,7 +3236,7 @@ void cBot::Think() {
                     if (chChatSentence[0] == '\0')   // we did not want to say anything
                         if (RANDOM_LONG(0, 100) < ipChatRate) // rate
                             fChatTime = gpGlobals->time +
-                                        RANDOM_FLOAT(0.0f, ((Game.iProducedSentences + 1) / 2));      // wait
+                            RANDOM_FLOAT(0.0f, ((Game.iProducedSentences + static_cast<float>(1)) / 2));      // wait
 
             }
 
@@ -3646,8 +3646,8 @@ bool BotRadioAction() {
                 if (BotPointer == nullptr)
                     continue;        // somehow this fucked up, bail out
 
-                const float distance = func_distance(plr->v.origin,
-                                                     BotPointer->pEdict->v.origin);        // distance between the 2
+                const auto distance = func_distance(plr->v.origin,
+                                                    BotPointer->pEdict->v.origin);        // distance between the 2
 
                 // Same team, randomly, do we even listen to the radio?
                 // the more further away, the more chance it will not listen
