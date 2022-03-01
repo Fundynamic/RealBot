@@ -3,7 +3,6 @@
 - Bots should have better knowledge about goals (mainly for invesitigating which bomb site got the live C4 in)
 - Improve pathfinder
 - Chat rate should be lower @ default
-- Improve code in overall, ugly!
 - Allow bots to duck jump for vaulting upon crates or ledges, cs_italy and de_inferno are good examples
 - Improve the way bots walk path and decide it is a bad connection
 - improve 'unstucking'... when not stuck by other players.
