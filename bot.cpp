@@ -2699,9 +2699,9 @@ void cBot::performBuyActions(int weaponIdToBuy) {
             case CS_DEFUSEKIT:
                 performBuyWeapon("8", "6");
                 break;
-            default: //Just in case they use pistols but buy MP5 [APG]RoboCop[CL]
-                performBuyWeapon("3", "2");
-                break;
+            //default: //Just in case they use pistols but buy MP5 [APG]RoboCop[CL]
+            //    performBuyWeapon("3", "2");
+        	//   break;
         }
 
         // This differs per team
@@ -2880,7 +2880,7 @@ void cBot::Memory() {
                 }
                 // we go to the destination
 
-                const float fTime = 5 + (ipFearRate / static_cast<float>(7));
+                const float fTime = 5 + ipFearRate / static_cast<float>(7);
 
                 if (RANDOM_LONG(0, 100) < ipFearRate
                     && f_walk_time + 5 < gpGlobals->time) // last 5 seconds did not walk
@@ -3313,7 +3313,7 @@ void cBot::Think() {
 
         // need backup!
         if (FUNC_DoRadio(this)) {
-            UTIL_BotRadioMessage(this, 3, "3", "");
+            UTIL_BotRadioMessage(this, 3, "3", nullptr);
         }
 
         BOT_DecideTakeCover(this);
@@ -3783,9 +3783,9 @@ bool BotRadioAction() {
 	                        const bool report_back = false;
 
 	                        if (!report_back) {
-                                UTIL_BotRadioMessage(BotPointer, 3, "1", "");   // Roger that!
+                                UTIL_BotRadioMessage(BotPointer, 3, "1", nullptr);   // Roger that!
                             } else {
-                                UTIL_BotRadioMessage(BotPointer, 3, "6", "");   // Reporting in!
+                                UTIL_BotRadioMessage(BotPointer, 3, "6", nullptr);   // Reporting in!
                             }
 
                             BotPointer->f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.8f, 2.0f);
@@ -4021,7 +4021,7 @@ void BotThink(cBot *pBot) {
     const float msecval = (gpGlobals->time - pBot->fLastRunPlayerMoveTime) * 1000.0f;
     pBot->fLastRunPlayerMoveTime = gpGlobals->time;
 
-    constexpr double upMove = 0.0;
+    const double upMove = 0.0;
     char msg[255];
     sprintf(msg, "moveSpeed %f, strafeSpeed %f, msecVal %f", pBot->f_move_speed, pBot->f_strafe_speed, msecval);
     pBot->rprint_trace("BotThink/pfnRunPlayerMove", msg);

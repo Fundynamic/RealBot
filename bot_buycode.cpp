@@ -110,13 +110,16 @@ bool GoodWeaponForTeam(int weapon, int team) {
                 case CS_WEAPON_AK47:
                     return false;
                     break;
-                case CS_WEAPON_ELITE:
+                case CS_WEAPON_DEAGLE:
                     return false;
                     break;
-                case CS_WEAPON_MAC10:
+                case CS_WEAPON_MP5NAVY:
                     return false;
                     break;
                 case CS_WEAPON_GALIL:
+                    return false;
+                    break;
+                case CS_WEAPON_P90:
                     return false;
                     break;
                     // 30.8.04 added by frashman
@@ -129,19 +132,19 @@ bool GoodWeaponForTeam(int weapon, int team) {
                 case CS_WEAPON_AUG:
                     return false;
                     break;
-                case CS_WEAPON_FIVESEVEN:
+                case CS_WEAPON_DEAGLE:
                     return false;
                     break;
                 case CS_WEAPON_M4A1:
                     return false;
                     break;
-                case CS_WEAPON_TMP:
+                case CS_WEAPON_MP5NAVY:
                     return false;
                     break;
                 case CS_WEAPON_FAMAS:
                     return false;
                     break;
-                case CS_WEAPON_SHIELD:
+                case CS_WEAPON_P90:
                     return false;
                     break;
                     //30.8.04 added by Frashman
