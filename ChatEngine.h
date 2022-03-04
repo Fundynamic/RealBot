@@ -29,7 +29,7 @@
 
 // Chatting Engine
 #define MAX_BLOCKS	100
-#define BLOCK_DEATHS MAX_BLOCKS-1
+#define BLOCK_DEATHS (MAX_BLOCKS-1)
 
 static const int MAX_SENTENCE_LENGTH = 128;
 // Reply block

@@ -33,7 +33,7 @@
   **/
 
 // Sections
-#define INI_NONE       -1
+#define INI_NONE       (-1)
 #define INI_SKILL       0       // Bot skill
 #define INI_WEAPON      1       // Bot weapon preference
 #define INI_GAME        2       // Bot general game behaviour
@@ -50,7 +50,7 @@
 // NOTE: For weapon_buy_table.iId!
 
 // 'Words'
-#define WORD_NONE       -1
+#define WORD_NONE       (-1)
 #define WORD_WALK        0
 #define WORD_RUN         1
 #define WORD_SHOOT       2

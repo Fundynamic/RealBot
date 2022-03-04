@@ -654,7 +654,7 @@ void cBot::AimAtEnemy() {
 
     // factor in distance, the further away the more deviation - which is based on skill
     const int skillReversed = (10 - bot_skill) + 1;
-    float fScale = 0.5f + (fDistance / (64 *
+    float fScale = 0.5f + (fDistance / static_cast<float>(64 *
                                        skillReversed)); // a good skilled bot is less impacted by distance than a bad skilled bot
 
     if (CarryWeaponType() == SNIPER) fScale *= 0.80f; // sniping improves aiming
@@ -671,7 +671,7 @@ void cBot::AimAtEnemy() {
 
     // Based upon how far, we make this fuzzy
     float fDy, fDz;
-    float fDx = fDy = fDz = ((bot_skill + 1) * fScale);
+    float fDx = fDy = fDz = static_cast<float>(bot_skill + 1) * fScale;
 
     // Example 1:
     // Super skilled bot (bot_skill 1), with enemy of 2048 units away. Results into:
@@ -1972,7 +1972,7 @@ void cBot::Act() {
 
         pEdict->v.button &= (~IN_RUN);    // release IN_RUN
         rprint("Act", "Walk time > gpGlobals->time");
-        setMoveSpeed(static_cast<float>(int(f_max_speed) / 2 + int(f_max_speed) / 50));
+        setMoveSpeed(((f_max_speed) / 2 + (f_max_speed) / 50));
     }
 
     // When we are at max speed, press IN_RUN to get a running animation
@@ -2045,12 +2045,12 @@ void cBot::Act() {
     // -------------------------------------------
     vTarget = (vHead - pEdict->v.origin);
     pEdict->v.v_angle = UTIL_VecToAngles(vTarget);
-    if (pEdict->v.v_angle.y > 180)
-        pEdict->v.v_angle.y -= 360;
+    if (pEdict->v.v_angle.y > 180.0f)
+        pEdict->v.v_angle.y -= 360.0f;
 
     // Paulo-La-Frite - START bot aiming bug fix
-    if (pEdict->v.v_angle.x > 180)
-        pEdict->v.v_angle.x -= 360;
+    if (pEdict->v.v_angle.x > 180.0f)
+        pEdict->v.v_angle.x -= 360.0f;
 
     Vector v_shouldbe;
 
@@ -2603,7 +2603,7 @@ void cBot::performBuyActions(int weaponIdToBuy) {
     }
 
     // CS 1.6 only
-    if (counterstrike == 1) { // FRASHMAN 30/08/04: redone switch block, it was full of errors
+    else if (counterstrike == 1) { // FRASHMAN 30/08/04: redone switch block, it was full of errors
         switch (weaponIdToBuy) {
             //Pistols
             case CS_WEAPON_GLOCK18:
@@ -2618,9 +2618,12 @@ void cBot::performBuyActions(int weaponIdToBuy) {
             case CS_WEAPON_DEAGLE:
                 performBuyWeapon("1", "4");
                 break;
+			case CS_WEAPON_FIVESEVEN:
+                performBuyWeapon("1", "5");
+                break;              // CT Only
             case CS_WEAPON_ELITE:
                 performBuyWeapon("1", "5");
-                break;
+                break;              // T Only
                 //ShotGUNS
             case CS_WEAPON_M3:
                 performBuyWeapon("2", "1");
@@ -2631,10 +2634,10 @@ void cBot::performBuyActions(int weaponIdToBuy) {
                 //SMG
             case CS_WEAPON_MAC10:
                 performBuyWeapon("3", "1");
-                break;
+                break;               // T Only
             case CS_WEAPON_TMP:
                 performBuyWeapon("3", "1");
-                break;
+                break;              // CT Only
             case CS_WEAPON_MP5NAVY:
                 performBuyWeapon("3", "2");
                 break;
@@ -2647,16 +2650,16 @@ void cBot::performBuyActions(int weaponIdToBuy) {
                 //rifles
             case CS_WEAPON_GALIL:
                 performBuyWeapon("4", "1");
-                break;
+                break;              // T Only
             case CS_WEAPON_FAMAS:
                 performBuyWeapon("4", "1");
-                break;
+                break;              // CT Only
             case CS_WEAPON_AK47:
                 performBuyWeapon("4", "2");
-                break;
+                break;              // T Only
             case CS_WEAPON_M4A1:
                 performBuyWeapon("4", "3");
-                break;
+                break;              // CT Only
             case CS_WEAPON_SG552:
                 performBuyWeapon("4", "4");
                 break;
@@ -2665,10 +2668,10 @@ void cBot::performBuyActions(int weaponIdToBuy) {
                 break;
             case CS_WEAPON_SG550:
                 performBuyWeapon("4", "5");
-                break;
+                break;              // CT Only
             case CS_WEAPON_G3SG1:
                 performBuyWeapon("4", "6");
-                break;
+                break;              // T Only
                 //machinegun
             case CS_WEAPON_M249:
                 performBuyWeapon("5", "1");

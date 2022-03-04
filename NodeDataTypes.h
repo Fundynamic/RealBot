@@ -111,7 +111,7 @@
 // Meridian stuff
 #define SIZE_MEREDIAN    256
 #define MAP_MAX_SIZE     16384
-#define MAX_MEREDIANS    MAP_MAX_SIZE / SIZE_MEREDIAN   // Size of HL map divided by SIZE of a meridian to evenly spread
+#define MAX_MEREDIANS    (MAP_MAX_SIZE / SIZE_MEREDIAN)   // Size of HL map divided by SIZE of a meridian to evenly spread
 #define MAX_NODES_IN_MEREDIANS    120     // EVY: higher number, number of nodes per meredian
 //#define MAX_NODES_IN_MEREDIANS       80      // (size meredian / zone (~6) times 2 (surface) , rounded to 80
 
@@ -120,7 +120,7 @@
 #define CLOSED            2   // closed, do nothing with it
 #define AVAILABLE         3   // available, may open
 
-const unsigned long g_iMaxVisibilityByte = (MAX_NODES * MAX_NODES) / 8;
+const unsigned long g_iMaxVisibilityByte = MAX_NODES * MAX_NODES / 8;
 
 // doors (doors.cpp) HLSDK
 #define SF_DOOR_ROTATE_Y            0
