@@ -43,7 +43,7 @@ extern int mod_id;
 
 extern edict_t *pHostEdict;
 
-#define SCAN_RADIUS   45        // Radius to scan to prevent blocking with players
+#define SCAN_RADIUS   60        // Radius to scan to prevent blocking with players
 
 /**
  * Given an angle, makes sure it wraps around properly
@@ -51,8 +51,8 @@ extern edict_t *pHostEdict;
  * @return
  */
 float fixAngle(float angle) {
-    if (angle > 180) return (angle - 360);
-    if (angle < -180) return (angle + 360);
+    if (angle > 180.0f) return (angle - 360.0f);
+    if (angle < -180.0f) return (angle + 360.0f);
     return angle;
 }
 
