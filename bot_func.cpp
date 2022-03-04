@@ -85,7 +85,7 @@ VectorIsVisibleWithEdict(edict_t *pEdict, const Vector& dest, char *checkname) {
             return false;
     }
 
-    return false;
+    //return false;
 
 }
 
@@ -522,7 +522,7 @@ bool BotShouldDuck(cBot *pBot) {
         return false;
     }
 
-    return BotCanDuckUnder(pBot);
+    //return BotCanDuckUnder(pBot);  //Makes the code underneath unreachable? [APG]RoboCop[CL]
 
     // WHen a bot should jump, something is blocking his way.
     // Most of the time it is a fence, or a 'half wall' that reaches from body to feet
@@ -532,7 +532,7 @@ bool BotShouldDuck(cBot *pBot) {
     // When head blocked and waist is free, then we should duck...
 
     TraceResult tr;
-    Vector v_duck, v_source, v_dest;
+    Vector v_duck;
     edict_t *pEdict = pBot->pEdict;
 
     // convert current view angle to vectors for TraceLine math...
@@ -544,8 +544,8 @@ bool BotShouldDuck(cBot *pBot) {
     UTIL_MakeVectors(v_duck);
 
     // Check if head is blocked
-    v_source = pEdict->v.origin + Vector(0, 0, +37);
-    v_dest = v_source + gpGlobals->v_forward * 24;
+    Vector v_source = pEdict->v.origin + Vector(0, 0, +37);
+    Vector v_dest = v_source + gpGlobals->v_forward * 24;
 
     // trace a line forward at maximum jump height...
     UTIL_TraceLine(v_source, v_dest, dont_ignore_monsters,
@@ -679,7 +679,7 @@ void FUNC_HearingTodo(cBot *pBot) {
     const int health = pBot->bot_health;
 
     int action;
-    int etime;
+    float etime;
 
     if (health < 25)
         action = 2;

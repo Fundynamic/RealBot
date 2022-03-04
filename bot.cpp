@@ -3313,7 +3313,7 @@ void cBot::Think() {
 
         // need backup!
         if (FUNC_DoRadio(this)) {
-            UTIL_BotRadioMessage(this, 3, "3", nullptr);
+            UTIL_BotRadioMessage(this, 3, "3", "");
         }
 
         BOT_DecideTakeCover(this);
@@ -3783,9 +3783,9 @@ bool BotRadioAction() {
 	                        const bool report_back = false;
 
 	                        if (!report_back) {
-                                UTIL_BotRadioMessage(BotPointer, 3, "1", nullptr);   // Roger that!
+                                UTIL_BotRadioMessage(BotPointer, 3, "1", "");   // Roger that!
                             } else {
-                                UTIL_BotRadioMessage(BotPointer, 3, "6", nullptr);   // Reporting in!
+                                UTIL_BotRadioMessage(BotPointer, 3, "6", "");   // Reporting in!
                             }
 
                             BotPointer->f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.8f, 2.0f);

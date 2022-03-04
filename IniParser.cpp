@@ -926,9 +926,9 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       // Skill, everything but botskill can change.
 
       // Determine reaction time based upon botskill here
-      float fMinReact = 0.0;
+      float fMinReact = 0.0f;
       if (pBot->bot_skill == 0)
-         fMinReact = 0.0;
+         fMinReact = 0.0f;
       else
          //30.8.04 redefined by frashman
          // fMinReact = RANDOM_FLOAT (0.05, (pBot->bot_skill / 10));

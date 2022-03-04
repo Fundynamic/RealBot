@@ -1845,7 +1845,7 @@ void cNodeMachine::danger(int iNode, int iTeam) {
 
                 // within distance and reachable
                 if (tr.flFraction >= 1.0f) {
-	                const double costIncrease = (fDist / NODE_DANGER_DIST) * NODE_DANGER_STEP;
+	                const float costIncrease = (fDist / NODE_DANGER_DIST) * NODE_DANGER_STEP;
                     InfoNodes[i].fDanger[iTeam] += costIncrease;
                 }
             }
@@ -2425,7 +2425,7 @@ void cNodeMachine::openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighbou
         float cost = gCost + hCost;
 
         if (botTeam > -1) {
-	        const double dangerCost = InfoNodes[neighbourNode].fDanger[botTeam] * cost;
+	        const float dangerCost = InfoNodes[neighbourNode].fDanger[botTeam] * cost;
 //            double contactCost = InfoNodes[neighbourNode].fContact[botTeam] * cost;
 
             cost += dangerCost;
@@ -2799,18 +2799,17 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         }
     }
 
-    constexpr bool shouldDrawWaypointBeamsFromBot = false;
-    if (shouldDrawWaypointBeamsFromBot) {
-        tNode *nodeHeadingFor = this->getNode(currentNodeToHeadFor);
+    bool shouldDrawWaypointBeamsFromBot = false;
 
-        int player_index = 0;
-        for (player_index = 1; player_index <= gpGlobals->maxClients;
-             player_index++) {
+    if (shouldDrawWaypointBeamsFromBot) {
+	    const tNode *nodeHeadingFor = this->getNode(currentNodeToHeadFor);
+
+	    for (int player_index = 1; player_index <= gpGlobals->maxClients;
+	         player_index++) {
             edict_t *pPlayer = INDEXENT(player_index);
 
             if (pPlayer && !pPlayer->free) {
-                if (FBitSet(pPlayer->v.flags, FL_CLIENT) &&
-                    shouldDrawWaypointBeamsFromBot) { // do not draw for now
+                if (FBitSet(pPlayer->v.flags, FL_CLIENT)) { // do not draw for now
 
                     DrawBeam(
                             pPlayer, // player sees beam
@@ -2908,13 +2907,13 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     // - unstuck
     // - go back in path...
 
-    constexpr float timeEvaluatingMoveSpeed = 0.1f;
+    const float timeEvaluatingMoveSpeed = 0.1f;
     const bool notStuckForAWhile = (pBot->fNotStuckTime + timeEvaluatingMoveSpeed) < gpGlobals->time;
 
-    constexpr double fraction = 0.7;    // 0.7 is an arbitrary number based on several tests to consider stuck at a more sane moment.
+    const double fraction = 0.7;    // 0.7 is an arbitrary number based on several tests to consider stuck at a more sane moment.
 										// Else it would trigger stuck logic too soon, too often.
 
-    const double speedInOneTenthOfASecond = (pBot->f_move_speed * timeEvaluatingMoveSpeed) * fraction;
+    const double speedInOneTenthOfASecond = static_cast<double>(pBot->f_move_speed * timeEvaluatingMoveSpeed) * fraction;
     double expectedMoveDistance = speedInOneTenthOfASecond;
     if (pBot->isFreezeTime()) expectedMoveDistance = 0;
     if (pBot->isWalking()) expectedMoveDistance = speedInOneTenthOfASecond / 3.0;
@@ -3399,7 +3398,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         score += weight;
 
         // Take into consideration how many times this goal has been selected
-        score = (score + (1.0f - (Goals[goalIndex].iChecked / static_cast<float>(maxCheckedScore)))) / 2.0f;
+        score = (score + (1.0f - Goals[goalIndex].iChecked / static_cast<float>(maxCheckedScore))) / 2.0f;
 
         // Danger (is important)
         score = (score + InfoNodes[Goals[goalIndex].iNode].fDanger[UTIL_GetTeam(pBot->pEdict)]) / 1.5f;
@@ -4424,8 +4423,8 @@ void cNodeMachine::MarkMeredians() {
     // Mark some meredians
     for (x = 0; x < DEBUG_BMP_WIDTH; x++) {
         Meredian =
-                static_cast<int>(static_cast<float>(x) * scale + minx +
-	                8192.0f) / static_cast<float>(SIZE_MEREDIAN);
+                (x * scale + minx +
+	                8192.0f) / SIZE_MEREDIAN;
         if (Meredian & 0x01) {
             for (y = 0; y < DEBUG_BMP_HEIGHT; y++)
                 bmp_buffer[y * DEBUG_BMP_WIDTH + x]++;
@@ -4435,8 +4434,8 @@ void cNodeMachine::MarkMeredians() {
     // Mark some meredians
     for (y = 0; y < DEBUG_BMP_HEIGHT; y++) {
         Meredian =
-                static_cast<int>(static_cast<float>(y) * scale + miny +
-	                8192.0f) / static_cast<float>(SIZE_MEREDIAN);
+                (y * scale + miny +
+	                8192.0f) / SIZE_MEREDIAN;
         if (Meredian & 0x01) {
             for (x = 0; x < DEBUG_BMP_HEIGHT; x++)
                 bmp_buffer[y * DEBUG_BMP_WIDTH + x]++;

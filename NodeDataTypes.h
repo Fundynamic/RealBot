@@ -91,12 +91,12 @@
 
 // Node costs
 #define NODE_DANGER         8192   // Value
-#define NODE_DANGER_STEP 0.5    // Step to take to get dangerous
-#define NODE_DANGER_DIST 512.0  // Distance
+#define NODE_DANGER_STEP 0.5f    // Step to take to get dangerous
+#define NODE_DANGER_DIST 512.0f  // Distance
 
 // Node contact costs
 #define NODE_CONTACT      8192
-#define NODE_CONTACT_STEP 0.2
+#define NODE_CONTACT_STEP 0.2f
 #define NODE_CONTACT_DIST 128
 
 // Node boundries
@@ -147,7 +147,7 @@ typedef struct {
 typedef struct {
     int state;                   // OPEN/CLOSED
     int parent;                  // Who opened this node?
-    double cost;                 // Cost
+    float cost;                 // Cost
     double danger;
 }
     tNodestar;

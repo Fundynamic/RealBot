@@ -879,7 +879,7 @@ int UTIL_GetGrenadeType(edict_t *pEntity) {
 
 // 2 functions from podbot source
 unsigned short FixedUnsigned16(float value, float scale) {
-	int output = static_cast<int>(value) * scale;
+	int output = static_cast<int>(value * scale);
     if (output < 0)
         output = 0;
     if (output > 0xFFFF)
@@ -889,7 +889,7 @@ unsigned short FixedUnsigned16(float value, float scale) {
 }
 
 short FixedSigned16(float value, float scale) {
-	int output = static_cast<int>(value) * scale;
+	int output = static_cast<int>(value * scale);
 
     if (output > 32767)
         output = 32767;
@@ -946,7 +946,7 @@ void UTIL_SayTextBot(const char *pText, cBot *pBot) {
 
     char szTemp[160];
     char szName[BOT_NAME_LEN + 1];
-    int i = 0;
+    int i;
 
     // clear out
     memset(szTemp, 0, sizeof(szTemp));

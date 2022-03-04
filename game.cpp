@@ -702,7 +702,7 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
 
     const float roundTimeInSeconds = roundTimeInMinutes * 60;
     const float roundTimeRemaining = roundTimeInSeconds - roundElapsedTimeInSeconds;
-    const int minutesLeft = roundTimeRemaining / 60;
+    const int minutesLeft = static_cast<int>(roundTimeRemaining) / 60;
     const int secondsLeft = static_cast<int>(roundTimeRemaining) % 60;
 
     sprintf(cMessage, "[rb] [%s] [%0d:%02d] - [%s|%d] [%s] [%s] : %s\n", mapName, minutesLeft, secondsLeft, name, botIndex, team, Function, msg);

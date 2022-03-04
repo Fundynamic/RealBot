@@ -827,7 +827,7 @@ void BotClient_Valve_ScreenFade(void *p, int bot_index) {
         if (iDevide < 1)
             iDevide = 1;
 
-        length -= ((static_cast<float>(10) / iDevide) * 0.5f);
+        length -= (static_cast<float>(10) / static_cast<float>(iDevide) * 0.5f);
 
         bots[bot_index].fBlindedTime = gpGlobals->time + length;
 
