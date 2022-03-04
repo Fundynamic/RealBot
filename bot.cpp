@@ -2662,10 +2662,10 @@ void cBot::performBuyActions(int weaponIdToBuy) {
                 break;              // CT Only
             case CS_WEAPON_SG552:
                 performBuyWeapon("4", "4");
-                break;
+                break;              // T Only
             case CS_WEAPON_AUG:
                 performBuyWeapon("4", "4");
-                break;
+                break;              // CT Only
             case CS_WEAPON_SG550:
                 performBuyWeapon("4", "5");
                 break;              // CT Only
@@ -2698,6 +2698,9 @@ void cBot::performBuyActions(int weaponIdToBuy) {
 
             case CS_DEFUSEKIT:
                 performBuyWeapon("8", "6");
+                break;
+            default: //Just in case they use pistols but buy MP5 [APG]RoboCop[CL]
+                performBuyWeapon("3", "2");
                 break;
         }
 
