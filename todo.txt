@@ -1,6 +1,6 @@
 - Bots may not camp when last in team (or second last?)
 - Bots should know when others are near its waypoint, so it won't run into each other
-- Bots should have better knowledge about goals (mainly for invesitigating which bomb site got the live C4 in)
+- Bots should have better knowledge about goals (mainly for investigating which bomb site got the live C4 in)
 - Improve pathfinder
 - Chat rate should be lower @ default
 - Allow bots to duck jump for vaulting upon crates or ledges, cs_italy and de_inferno are good examples
