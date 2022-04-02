@@ -428,8 +428,8 @@ bool cNodeMachine::node_float(const Vector& vOrigin, edict_t *pEdict) {
 
     // if inside wall: return false
     if (tr.fStartSolid == 1) {
-        // todo: make sure the node does not start within this wall
-        return false;             // not floating
+		rblog("(node) node_float | node is inside wall!\n");
+		return false;
     }
 
     return false;                // not floating

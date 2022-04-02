@@ -1896,12 +1896,12 @@ void cBot::Act() {
     // camp
     if (f_camp_time > gpGlobals->time) {
         // When camping we duck and we don't move
-        // todo, camping can be done standing too, but this does not look 'cool' atm.
         UTIL_BotPressKey(this, IN_DUCK);
+		
 
         setMoveSpeed(0.0f);       // do not move
         PickBestWeapon();         // pick weapon, do not stare with knife
-
+		
         // when dropped C4 and CT we look at C4
         if (isCounterTerrorist() && Game.vDroppedC4 != Vector(9999, 9999, 9999)) {
             // look at dropped C4
@@ -1909,19 +1909,25 @@ void cBot::Act() {
                 vHead = Game.vDroppedC4;
             else {
                 if (iGoalNode > -1)
+                {
+					forgetPath();
+                	forgetGoal();
                     vHead = vBody = NodeMachine.node_vector(iGoalNode);
+				} 
                 else {
-                    // cannot find a node to the dropped C4, so where do we look at?
-                    // todo : find a node to look at, i.e. something dangerous
+					vHead = vBody = Game.vDroppedC4;
                 }
             }
         } else {
             // Look at iGoalNode
             if (iGoalNode > -1)
+            {
+                forgetPath();
+                forgetGoal();
                 vHead = vBody = NodeMachine.node_vector(iGoalNode);
+            }
             else {
-                // look where to look at?
-                // todo : find a node to look at, i.e. something dangerous
+				vHead = vBody = pEdict->v.origin;
             }
         }
     }
@@ -3670,7 +3676,7 @@ bool BotRadioAction() {
 
                 // If we want to listen to the radio... then handle it!
                 if (bWantToListen) {
-	                bool can_do_negative = true;
+	                bool can_do_negative = false;
 
 	                // Report in team!
                     if (strstr(message, "#Report_in_team") != nullptr) {
@@ -3733,7 +3739,7 @@ bool BotRadioAction() {
                     if (strstr(message, "#Stick_together_team") != nullptr) {
                         BotPointer->rprint_trace("BotRadioAction", "Understood Stick together team - no logic");
                         unstood = true;
-                        // TODO: Find someone to follow. (to stick with)
+						can_do_negative = false;                    	
                     }
                     // cover me|| strstr (message, "#Cover_me") != NULL
 
@@ -3757,8 +3763,21 @@ bool BotRadioAction() {
 
                     // Taking fire!
                     if (strstr(message, "#Taking_fire") != nullptr) {
-                        // todo todo todo backup our friend
+						BotPointer->rprint_trace("BotRadioAction", "Understood Taking fire");
                         unstood = true;
+						
+						// Find player who issued this message and go to it
+                        const int iBackupNode =
+                            NodeMachine.getClosestNode(plr->v.origin, NODE_ZONE, plr);
+						
+						if (iBackupNode > -1) {
+							BotPointer->rprint_trace("BotRadioAction", "Found node nearby player who requested backup/reported taking fire.");
+							BotPointer->setGoalNode(iBackupNode);
+							BotPointer->forgetPath();
+							BotPointer->f_camp_time = gpGlobals->time - 1;
+							BotPointer->f_walk_time = gpGlobals->time;
+							}
+						
                     }
                     // Team fall back!
                     if (strstr(message, "#Team_fall_back") != nullptr) {
