@@ -876,7 +876,7 @@ void cBot::PickBestWeapon() {
     // Distance to enemy
     const float fDistance = func_distance(pEdict->v.origin, lastSeenEnemyVector);
 
-    constexpr float knifeDistance = 300;
+    const float knifeDistance = 300;
 
     // ----------------------------
     // In this function all we do is decide what weapon to pick
@@ -1816,7 +1816,7 @@ bool cBot::Defuse() {
     // We can do 2 things now
     // - If we are not close, we check if we can walk to it, and if so we face to the c4
     // - If we are close, we face it and (begin) defuse the bomb.
-    constexpr int distanceForC4ToBeInReach = 70;
+    const int distanceForC4ToBeInReach = 70;
     if (distance < distanceForC4ToBeInReach) {
         vHead = vC4;
         vBody = vC4;
@@ -2111,7 +2111,7 @@ void cBot::CheckAround() {
     const Vector v_source = pEdict->v.origin + Vector(0, 0, ORIGIN_HEIGHT);
 
     // Go forward first
-    constexpr float distance = 90;
+    const float distance = 90.0f;
     const Vector v_forward = v_source + gpGlobals->v_forward * distance;
 
     // now really go left/right
@@ -2158,20 +2158,20 @@ void cBot::CheckAround() {
     }
 
     if (!bHitForwardLeft && bHitForwardRight) {
-        strafeLeft(0.5);
+        strafeLeft(0.5f);
         rprint_trace("CheckAround", "Can strafe left (forward left)");
     } else if (bHitForwardLeft && !bHitForwardRight) {
-        strafeRight(0.5);
+        strafeRight(0.5f);
         rprint_trace("CheckAround", "Can strafe right (forward right)");
     }
 
     if (bHitLeft && bHitRight) {
         rprint_trace("CheckAround", "Can't strafe left or right");
     } else if (!bHitLeft && bHitRight) {
-        strafeLeft(0.5);
+        strafeLeft(0.5f);
         rprint_trace("CheckAround", "Can strafe left");
     } else if (bHitLeft && !bHitRight) {
-        strafeRight(0.5);
+        strafeRight(0.5f);
         rprint_trace("CheckAround", "Can strafe right");
     }
 
@@ -2180,7 +2180,7 @@ void cBot::CheckAround() {
     // -------------------------------------------------------------
 
     edict_t *pent = nullptr;
-    while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 60)) != nullptr) {
+    while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 60.0f)) != nullptr) {
 	    char item_name[40];
 	    strcpy(item_name, STRING(pent->v.classname));
 

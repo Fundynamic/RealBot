@@ -187,7 +187,7 @@ void BotClient_Valve_CurrentWeapon(void *p, int bot_index) {
 
         iClip = *static_cast<int*>(p);       // ammo currently in the clip for this weapon
 
-        if (iId <= 31) {
+        if (iId <= 32) {
             bots[bot_index].bot_weapons |= (1 << iId);     // set this weapon bit
 
             if (iState == 1) {
@@ -532,7 +532,8 @@ void BotClient_CS_Damage(void *p, int bot_index) {
     BotClient_Valve_Damage(p, bot_index);
 }
 
-void BotClient_Gearbox_Damage(void *p, int bot_index) {
+// Not required? [APG]RoboCop[CL]
+/*void BotClient_Gearbox_Damage(void* p, int bot_index) {
     //DebugOut("bot_client: BotClient_Gearbox_Damage()\n");
     // this is just like the Valve Battery message
     BotClient_Valve_Damage(p, bot_index);
@@ -542,7 +543,7 @@ void BotClient_FLF_Damage(void *p, int bot_index) {
     //DebugOut("bot_client: BotClient_FLF_Damage()\n");
     // this is just like the Valve Battery message
     BotClient_Valve_Damage(p, bot_index);
-}
+}*/
 
 
 void BotClient_CS_SayText(void *p, int bot_index) {
@@ -854,7 +855,8 @@ void BotClient_CS_ScreenFade(void *p, int bot_index) {
     BotClient_Valve_ScreenFade(p, bot_index);
 }
 
-void BotClient_Gearbox_ScreenFade(void *p, int bot_index) {
+// Not required? [APG]RoboCop[CL]
+/*void BotClient_Gearbox_ScreenFade(void* p, int bot_index) {
     //DebugOut("bot_client: BotClient_Gearbox_ScreenFade()\n");
     // this is just like the Valve ScreenFade message
     BotClient_Valve_ScreenFade(p, bot_index);
@@ -864,7 +866,7 @@ void BotClient_FLF_ScreenFade(void *p, int bot_index) {
     //DebugOut("bot_client: BotClient_FLF_ScreenFade()\n");
     // this is just like the Valve ScreenFade message
     BotClient_Valve_ScreenFade(p, bot_index);
-}
+}*/
 
 // STEFAN
 // This message gets sent for HLTV, according to Alfred (Valve) also

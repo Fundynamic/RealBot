@@ -96,7 +96,7 @@
 
 // Node contact costs
 #define NODE_CONTACT      8192
-#define NODE_CONTACT_STEP 0.2f
+#define NODE_CONTACT_STEP 0.2
 #define NODE_CONTACT_DIST 128
 
 // Node boundries

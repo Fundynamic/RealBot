@@ -63,8 +63,7 @@ extern int draw_nodepath;
 //---------------------------------------------------------
 //CODE: CHEESEMONSTER
 
-int                             // BERKED
-cNodeMachine::GetVisibilityFromTo(int iFrom, int iTo) {
+int cNodeMachine::GetVisibilityFromTo(int iFrom, int iTo) {// BERKED
     // prevent negative indexes on iVisChecked below -- BERKED
     if (iFrom < 0 || iFrom > MAX_NODES || iTo < 0 || iTo > MAX_NODES) {
         return VIS_INVALID;
@@ -82,7 +81,7 @@ cNodeMachine::GetVisibilityFromTo(int iFrom, int iTo) {
     const long iByte = static_cast<int>(iPosition / 8);
     const unsigned int iBit = iPosition % 8;
 
-    if (iByte < g_iMaxVisibilityByte) {
+    if (iByte < static_cast<long>(g_iMaxVisibilityByte)) {
         // Get the Byte that this is in
         unsigned char *ToReturn = (cVisTable + iByte);
         // get the bit in the byte
@@ -92,8 +91,7 @@ cNodeMachine::GetVisibilityFromTo(int iFrom, int iTo) {
     return VIS_BLOCKED;          // BERKED
 }
 
-void
-cNodeMachine::SetVisibilityFromTo(int iFrom, int iTo, bool bVisible) {
+void cNodeMachine::SetVisibilityFromTo(int iFrom, int iTo, bool bVisible) {
     // prevent negative indexes on iVisChecked below, fixing SEGV -- BERKED
     if (iFrom < 0 || iFrom > MAX_NODES || iTo < 0 || iTo > MAX_NODES) {
         return;
@@ -109,7 +107,7 @@ cNodeMachine::SetVisibilityFromTo(int iFrom, int iTo, bool bVisible) {
     const long iByte = static_cast<int>(iPosition / 8);
     const unsigned int iBit = iPosition % 8;
 
-    if (iByte < g_iMaxVisibilityByte) {
+    if (iByte < static_cast<long>(g_iMaxVisibilityByte)) {
         unsigned char *ToChange = (cVisTable + iByte);
 
         if (bVisible)
@@ -174,7 +172,7 @@ void cNodeMachine::init() {
     }
 
     // CODE: From cheesemonster
-    constexpr unsigned long iSize = g_iMaxVisibilityByte;
+    const unsigned long iSize = g_iMaxVisibilityByte;
 
     //create a heap type thing...
     FreeVisibilityTable();       // 16/07/04 - free it first
@@ -776,7 +774,7 @@ int cNodeMachine::Reachable(const int iStart, const int iEnd) const
            (Nodes[iEnd].iNodeBits & BIT_LADDER) ? "OnLadder" : "");
 #endif
     // Just in case
-    if (Start.x == 9999 || End.x == 9999)
+    if (static_cast<int>(Start.x) == 9999 || static_cast<int>(End.x) == 9999)
         return false;
 
     // Quick & dirty check whether we can go through...
@@ -942,7 +940,7 @@ int cNodeMachine::add2(const Vector& vOrigin, int iType, edict_t *pEntity) {
 
         // When walking the human player can't pass a certain speed and distance
         // however, when a human is falling, the distance will be bigger.
-        constexpr int maxDistance = 3 * NODE_ZONE;
+        const int maxDistance = 3 * NODE_ZONE;
 
         if (horizontal_distance(Nodes[newNodeIndex].origin, Nodes[j].origin) > maxDistance)
             continue;
@@ -964,7 +962,7 @@ int cNodeMachine::add2(const Vector& vOrigin, int iType, edict_t *pEntity) {
 }
 
 /**
- * Returns a free node index, this is not bound to a meredian (subcluster)!
+ * Returns a free node index, this is not bound to a meridian (subcluster)!
  * @return
  */
 int cNodeMachine::getFreeNodeIndex() const
@@ -1278,7 +1276,7 @@ void cNodeMachine::addNodesForPlayers() {
 // Draw connections of the node we are standing on
 void cNodeMachine::connections(edict_t *pEntity) {
 
-    int closeNode = -1;
+    int closeNode;
     char msg[75];
     memset(msg, 0, sizeof(msg));
     if (draw_nodepath > -1 && draw_nodepath < 32) {
@@ -1437,7 +1435,7 @@ void cNodeMachine::experience_save() {
     FILE* rbl = fopen(filename, "wb");
 
     if (rbl != nullptr) {
-	    constexpr int iVersion = FILE_EXP_VER2;
+	    const int iVersion = FILE_EXP_VER2;
         fwrite(&iVersion, sizeof(int), 1, rbl);
 
         for (int i = 0; i < MAX_NODES; i++) {
@@ -1600,7 +1598,7 @@ void cNodeMachine::save() const
 
     if (rbl != nullptr) {
         // Write down version number
-        constexpr int iVersion = FILE_NODE_VER1;
+        const int iVersion = FILE_NODE_VER1;
         fwrite(&iVersion, sizeof(int), 1, rbl);
         for (int i = 0; i < MAX_NODES; i++) {
             fwrite(&Nodes[i].origin, sizeof(Vector), 1, rbl);
@@ -1736,6 +1734,7 @@ void cNodeMachine::path_draw(edict_t *pEntity) {
     int max_drawn = 0;
 
     for (int i = 0; i < MAX_NODES; i++) {
+    	//TODO: iPath appears to be out of bounds [APG]RoboCop[CL]
 	    const int iNode = iPath[draw_nodepath][i];
 	    const int iNextNode = iPath[draw_nodepath][(i + 1)];
 
@@ -1748,7 +1747,7 @@ void cNodeMachine::path_draw(edict_t *pEntity) {
                     FUNC_InFieldOfView(pEntity, (end - pEntity->v.origin));
 
             if (max_drawn < 39 && good && angle_to_waypoint < 50) {
-	            constexpr int red = 255;
+	            const int red = 255;
                 int green = 0;
                 int blue = 255;
                 int width = 15;
@@ -1807,7 +1806,7 @@ void cNodeMachine::contact(int iNode, int iTeam) {
                 // within distance and 'reachable'
                 if (tr.flFraction >= 1.0f) {
 	                const double costIncrease = (fDist / NODE_CONTACT_DIST) * NODE_CONTACT_STEP;
-                    InfoNodes[i].fContact[iTeam] += costIncrease;
+                    InfoNodes[i].fContact[iTeam] += static_cast<float>(costIncrease);
                 }
             }
         }
@@ -2209,7 +2208,7 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
         return false; // do not create a path when invalid params given
 
     if (pBot) {
-        int botTeam = UTIL_GetTeam(pBot->pEdict); // Stefan: yes we use 0-1 based, not 1-2 based
+        UTIL_GetTeam(pBot->pEdict); // Stefan: yes we use 0-1 based, not 1-2 based
     }
 
     const Vector &INVALID_VECTOR = Vector(9999, 9999, 9999);
@@ -2229,7 +2228,7 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
     makeAllWaypointsAvailable();
 
     // Our start waypoint is open
-    constexpr float gCost = 0.0f; // distance from starting node
+    const float gCost = 0.0f; // distance from starting node
     const float hCost = func_distance(Nodes[nodeStartIndex].origin,
                                       Nodes[nodeTargetIndex].origin); // distance from end node to node
     const float cost = gCost + hCost;
@@ -2525,7 +2524,7 @@ void cNodeMachine::vis_calculate(int iFrom) {
 
     for (int i = 0; i < MAX_NODES; i++)
         if ((i != iFrom) && (Nodes[i].origin != Vector(9999, 9999, 9999))) {
-	        constexpr float fClosest = 1024;
+	        const float fClosest = 1024;
 	        const float fDistance = func_distance(Nodes[i].origin, Nodes[iFrom].origin);
             if (fDistance < fClosest) {
                 TraceResult tr;
@@ -2733,7 +2732,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     }
 
     // Near Node
-    bool bNearNode = false; //Variable Reassigned [APG]RoboCop[CL]
+    bool bNearNode; //Variable Reassigned [APG]RoboCop[CL]
     if (pBot->isOnLadder()) {
         pBot->rprint("Bot is on ladder");
         // Set touch radius
@@ -3254,7 +3253,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     if (pBot->shouldBeWandering()) {
         int currentNode = -1;
         for (int attempts = 1; attempts < 5; attempts++) {
-	        const float distance = NODE_ZONE + (attempts * NODE_ZONE);
+	        const float distance = NODE_ZONE + static_cast<float>(attempts * NODE_ZONE);
             currentNode = pBot->determineCurrentNode(distance); // this also sets current node in bot state
             if (currentNode > -1) break;
         }
@@ -3360,8 +3359,8 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     int iFinalGoalNode = -1;
     int iFinalGoalIndex = -1;
 
-    constexpr float MAX_DISTANCE = 16384.0f; // theoretical max distance
-    constexpr float MAX_GOAL_DISTANCE = MAX_DISTANCE / 2.0f;
+    const float MAX_DISTANCE = 16384.0f; // theoretical max distance
+    const float MAX_GOAL_DISTANCE = MAX_DISTANCE / 2.0f;
 
     // 01-07-2008; Instead of using 'scores', use a normalized score.
     // We do:
@@ -3392,7 +3391,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         }
 
         // A bit off randomness
-        float weight = static_cast<float>(50) / pBot->ipRandom; // (yes, this will give us 1 or higher score)
+        float weight = 50.0f / static_cast<float>(pBot->ipRandom); // (yes, this will give us 1 or higher score)
         weight *= score;
 
         score += weight;

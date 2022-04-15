@@ -274,7 +274,7 @@ edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
 
         // skip invalid players and skip self (i.e. this bot)
         if ((pPlayer) && (!pPlayer->free) && (pPlayer != pEdict)) {
-	        constexpr int FOV = 90;// TODO: use server var "default_fov" ?
+	        int fov = 90;// TODO: use server var "default_fov" ?
 	        // skip this player if not alive (i.e. dead or dying)
             if (!IsAlive(pPlayer))
                 continue;
@@ -286,8 +286,8 @@ edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
 
             const int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
 
-            constexpr int distance = NODE_ZONE;
-            if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance && angleToPlayer < FOV) {
+            const int distance = NODE_ZONE;
+            if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance && angleToPlayer < fov) {
                 return pPlayer;
             }
 
@@ -319,10 +319,10 @@ edict_t * getEntityNearbyBotInFOV(cBot *pBot) {
  * Return TRUE of any players are near that could block him, regardless of FOV. Just checks distance
  * @param pBot
  * @return
- */
+ */ //TODO: FOV and angleToPlayer are unused variables [APG]RoboCop[CL]
 bool isAnyPlayerNearbyBot(cBot *pBot) {
     edict_t *pEdict = pBot->pEdict;
-    int FOV = 120;
+    int fov = 105;
 
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
@@ -340,7 +340,7 @@ bool isAnyPlayerNearbyBot(cBot *pBot) {
 
             int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
 
-            constexpr int distance = NODE_ZONE;
+            const int distance = NODE_ZONE;
             if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance) {
                 return true;
             }
@@ -533,7 +533,7 @@ bool BotShouldDuck(cBot *pBot) {
 
     TraceResult tr;
     Vector v_duck;
-    edict_t *pEdict = pBot->pEdict;
+    const edict_t *pEdict = pBot->pEdict;
 
     // convert current view angle to vectors for TraceLine math...
 

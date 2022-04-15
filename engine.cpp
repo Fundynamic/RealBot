@@ -112,7 +112,7 @@ void pfnRemoveEntity(edict_t *e) {
 #if DO_DEBUG == 2
     {
        fp = fopen("!rbdebug.txt", "a");
-       fprintf(fp, "pfnRemoveEntity: %x\n", e);
+       fprintf(fp, R"(pfnRemoveEntity: %x)", e);
        if (e->v.model != 0)
           fprintf(fp, " model=%s\n", STRING(e->v.model));
        fclose(fp);
@@ -397,7 +397,7 @@ void pfnWriteString(const char *sz) {
             radio_message = true;  // we found a radio message
 
             // Thank god Ditlew you already coded this...
-            const int length = strlen(sz) - strlen(strstr(sz, " (RADIO)"));
+            const unsigned length = strlen(sz) - strlen(strstr(sz, " (RADIO)"));
             strncpy(radio_messenger, sz, length);
 
             // Now search for any compatible radio command (old string).

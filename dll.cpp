@@ -289,7 +289,7 @@ void GameDLLInit() {
 
     // initialize the bots array of structures...
     rblog("Initializing memory for bots array..");
-    memset(bots, 0, sizeof(bots));
+    memset(bots, 0.0f, sizeof(bots));
     rblog("OK\n");
 
     rblog("Verifying realbot is installed correctly..");
