@@ -3792,7 +3792,7 @@ char *cNodeMachine::getGoalTypeAsText(const tGoal &goal)
         default:
             sprintf(typeAsText, "GOAL UNKNOWN");
     }
-    return typeAsText;
+    return typeAsText; //TODO: local variable invalid [APG]RoboCop[CL]
 }
 
 // Find cover
