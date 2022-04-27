@@ -121,11 +121,11 @@ void cChatEngine::think() {
     // Scan the message so we know in what block we should be to reply:
     char word[20];
     memset(word, 0, sizeof(word));
-
+	
     int c = 0;
     int wc = 0;
 
-    const int sentenceLength = strlen(sentence);
+    const int sentenceLength = static_cast<int>(strlen(sentence));
 
     // When length is not valid, get out.
     // 29/08/2019: Stefan, so let me get this. We declare the sentence to be max 128 chars, but then we still could end up with a longer one?
@@ -283,7 +283,7 @@ void cChatEngine::think() {
                                 memset(temp, 0, sizeof(temp));
 
                                 // get character position
-                                char *name_pos =
+                                const char *name_pos =
                                         strstr(ReplyBlock[iTheBlock].
                                                 sentence[the_c], "%n");
 
@@ -314,13 +314,13 @@ void cChatEngine::think() {
 
                                     // we just copied a name to chSentence
                                     // set our cursor after the name now (name length + 1)
-                                    int tc = strlen(temp);
+                                    int tc = static_cast<int>(strlen(temp));
 
                                     // now finish the sentence
                                     // get entire length of ReplyBlock and go until we reach the end
                                     const int length =
-                                            strlen(ReplyBlock[iTheBlock].
-                                                    sentence[the_c]);
+                                        static_cast<int>(strlen(ReplyBlock[iTheBlock].
+                                                    sentence[the_c]));
 
 
                                     // for every nC , read character from ReplyBlock
@@ -368,7 +368,37 @@ void cChatEngine::think() {
     memset(sender, 0, sizeof(sender));
 
 
-    fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0, 0.5);
+    fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0f, 0.5f);
+}
+
+void cChatEngine::handle_sentence() //Experimental implementation [APG]RoboCop[CL]
+{
+	// if we have a sentence to say
+	if (sentence[0] != '\0') {
+		// loop through all bots:
+		for (int i = 1; i <= gpGlobals->maxClients; i++) {
+			edict_t *pPlayer = INDEXENT(i);
+
+			// skip invalid players and skip self (i.e. this bot)
+			if (pPlayer && !pPlayer->free) {
+				cBot *pBotPointer = UTIL_GetBotPointer(pPlayer);
+
+				if (pBotPointer != nullptr)
+					if (RANDOM_LONG(0, 100) <
+						pBotPointer->ipChatRate + 25) {
+						// reply:
+						pBotPointer->PrepareChat(sentence);
+						//UTIL_SayTextBot(sentence, pBotPointer);
+					}
+			}
+		}
+	}
+
+	// clear sentence and such
+	memset(sentence, 0, sizeof(sentence));
+	memset(sender, 0, sizeof(sender));
+
+	fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0f, 0.5f);
 }
 
 //

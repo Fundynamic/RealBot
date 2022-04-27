@@ -234,7 +234,7 @@ void DrawBeam(edict_t *visibleForWho, const Vector& start, const Vector& end, in
  * @return
  */
 cBot *getCloseFellowBot(cBot *pBot) {
-    edict_t *pEdict = pBot->pEdict;
+	const edict_t *pEdict = pBot->pEdict;
     cBot *closestBot = nullptr;
 
     // Loop through all clients
@@ -267,14 +267,14 @@ cBot *getCloseFellowBot(cBot *pBot) {
  * @return
  */
 edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
-    edict_t *pEdict = pBot->pEdict;
+	const edict_t *pEdict = pBot->pEdict;
 
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
 
         // skip invalid players and skip self (i.e. this bot)
         if ((pPlayer) && (!pPlayer->free) && (pPlayer != pEdict)) {
-	        int fov = 90;// TODO: use server var "default_fov" ?
+	        const int fov = 90;// TODO: use server var "default_fov" ?
 	        // skip this player if not alive (i.e. dead or dying)
             if (!IsAlive(pPlayer))
                 continue;
@@ -321,7 +321,7 @@ edict_t * getEntityNearbyBotInFOV(cBot *pBot) {
  * @return
  */ //TODO: FOV and angleToPlayer are unused variables [APG]RoboCop[CL]
 bool isAnyPlayerNearbyBot(cBot *pBot) {
-    edict_t *pEdict = pBot->pEdict;
+	const edict_t *pEdict = pBot->pEdict;
     int fov = 105;
 
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
@@ -377,7 +377,7 @@ bool BotShouldJumpIfStuck(cBot *pBot) {
     }
 
     // should not jump, perhaps its a func_illusionary causing that we're stuck?
-    edict_t *entityInFov = getEntityNearbyBotInFOV(pBot);
+    const edict_t *entityInFov = getEntityNearbyBotInFOV(pBot);
 
     if (entityInFov && strcmp("func_illusionary", STRING(entityInFov->v.classname)) == 0) {
         return true; // yes it is the case
@@ -711,7 +711,7 @@ void FUNC_HearingTodo(cBot *pBot) {
  *  Created : 16/11/2001
  *	Changed : 16/11/2001
  */
-void FUNC_ClearEnemyPointer(edict_t *pPtr) {
+void FUNC_ClearEnemyPointer(edict_t *pPtr) { //pPtr muddled with c_pointer? [APG]RoboCop[CL]
     // Go through all bots and remove their enemy pointer that matches the given
     // pointer pPtr
     for (int i = 1; i <= gpGlobals->maxClients; i++) {

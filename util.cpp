@@ -72,7 +72,7 @@ int gmsgShowMenu = 0;
 Vector UTIL_VecToAngles(const Vector &vec) {
     float rgflVecOut[3];
     VEC_TO_ANGLES(vec, rgflVecOut);
-    return Vector(rgflVecOut);
+    return {rgflVecOut};
 }
 
 // Overloaded to add IGNORE_GLASS
@@ -878,7 +878,7 @@ int UTIL_GetGrenadeType(edict_t *pEntity) {
 }
 
 // 2 functions from podbot source
-unsigned short FixedUnsigned16(float value, float scale) {
+unsigned short fixed_unsigned16(float value, float scale) {
 	int output = static_cast<int>(value * scale);
     if (output < 0)
         output = 0;
@@ -888,7 +888,7 @@ unsigned short FixedUnsigned16(float value, float scale) {
     return static_cast<unsigned short>(output);
 }
 
-short FixedSigned16(float value, float scale) {
+short fixed_signed16(float value, float scale) {
 	int output = static_cast<int>(value * scale);
 
     if (output > 32767)
@@ -907,8 +907,8 @@ void HUD_DrawString(int r, int g, int b, char *msg, edict_t *edict) {
     MESSAGE_BEGIN(MSG_ONE, SVC_TEMPENTITY, nullptr, edict);
     WRITE_BYTE(TE_TEXTMESSAGE);
     WRITE_BYTE(1);
-    WRITE_SHORT(FixedSigned16(-1, 1 << 13));
-    WRITE_SHORT(FixedSigned16(0, 1 << 13));
+    WRITE_SHORT(fixed_signed16(-1, 1 << 13));
+    WRITE_SHORT(fixed_signed16(0, 1 << 13));
     WRITE_BYTE(2);
     WRITE_BYTE(r);               //r
     WRITE_BYTE(g);               //g
@@ -918,10 +918,10 @@ void HUD_DrawString(int r, int g, int b, char *msg, edict_t *edict) {
     WRITE_BYTE(255);
     WRITE_BYTE(255);
     WRITE_BYTE(200);
-    WRITE_SHORT(FixedUnsigned16(0.0078125, 1 << 8));
-    WRITE_SHORT(FixedUnsigned16(2, 1 << 8));
-    WRITE_SHORT(FixedUnsigned16(6, 1 << 8));
-    WRITE_SHORT(FixedUnsigned16(0.1f, 1 << 8));
+    WRITE_SHORT(fixed_unsigned16(0.0078125, 1 << 8));
+    WRITE_SHORT(fixed_unsigned16(2, 1 << 8));
+    WRITE_SHORT(fixed_unsigned16(6, 1 << 8));
+    WRITE_SHORT(fixed_unsigned16(0.1f, 1 << 8));
     WRITE_STRING(static_cast<const char*>(&msg[0]));
     MESSAGE_END();
 }

@@ -484,7 +484,7 @@ float INI_WordValueFLOAT(char result[80]) {
             if (c > 9)
                break;
          }
-         return atof(number);
+         return static_cast<float>(atof(number));
       }
       // nothing here, so we return NULL at the end
    }
@@ -727,11 +727,11 @@ void INI_PARSE_IAD() {
 
             if (section == INI_AREA) {
                if (wordtype == WORD_AREAX)
-                  AreaX = INI_WordValueINT(linefeed);
+                  AreaX = static_cast<float>(INI_WordValueINT(linefeed));
                if (wordtype == WORD_AREAY)
-                  AreaY = INI_WordValueINT(linefeed);
+                  AreaY = static_cast<float>(INI_WordValueINT(linefeed));
                if (wordtype == WORD_AREAZ)
-                  AreaZ = INI_WordValueINT(linefeed);
+                  AreaZ = static_cast<float>(INI_WordValueINT(linefeed));
 
 
                if (AreaX != 9999 && AreaY != 9999 && AreaZ != 9999) {
@@ -918,7 +918,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       pBot->ipBuySmokeGren = RANDOM_LONG(20, 80);
       pBot->ipBuyDefuseKit = RANDOM_LONG(20, 80);
       pBot->ipDroppedBomb = RANDOM_LONG(20, 80);
-      pBot->ipSaveForWeapon = RANDOM_LONG(0, 30);
+      pBot->ipSaveForWeapon = RANDOM_LONG(0, 20);
       pBot->ipBuyArmour = RANDOM_LONG(30, 100);
       pBot->ipFearRate = RANDOM_LONG(20, 60);
 
@@ -932,16 +932,17 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       else
          //30.8.04 redefined by frashman
          // fMinReact = RANDOM_FLOAT (0.05, (pBot->bot_skill / 10));
+		 // Reaction Time delay added for realistic gameplay [APG]RoboCop[CL]
          fMinReact =
-            RANDOM_FLOAT(int(pBot->bot_skill / 20) + 0.05f,
-                         int(pBot->bot_skill / 5) + 0.05f);
+            RANDOM_FLOAT((pBot->bot_skill / 20) + 0.3f,
+                         (pBot->bot_skill / 5) + 0.3f);
 
-      const float fMaxReact = fMinReact + RANDOM_FLOAT(0.05f, 0.2f);
+      const float fMaxReact = fMinReact + RANDOM_FLOAT(0.2f, 0.4f);
 
       // SET them
       pBot->fpMinReactTime = fMinReact;
       pBot->fpMaxReactTime = fMaxReact;
-
+	
       // Set Offsets (note, they are extra upon current aiming code)
       // 30.8.04 redefined by frashman
       // float fOffset = RANDOM_FLOAT ((pBot->bot_skill / 5), (pBot->bot_skill / 2));
@@ -952,7 +953,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       pBot->fpXOffset = pBot->fpYOffset = pBot->fpZOffset = fOffset;
 
       // Team
-      pBot->ipHelpTeammate = RANDOM_LONG(10, 70);
+      pBot->ipHelpTeammate = RANDOM_LONG(40, 80);
 
       // Game
       pBot->ipHostage = RANDOM_LONG(25, 70);
@@ -960,19 +961,19 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       pBot->ipRandom = RANDOM_LONG(25, 70);
 
       // Radio
-      pBot->ipReplyToRadio = RANDOM_LONG(10, 60);
-      pBot->ipCreateRadio = RANDOM_LONG(10, 60);
-      pBot->ipHearRate = RANDOM_LONG(10, 60);
+      pBot->ipReplyToRadio = RANDOM_LONG(10, 20);
+      pBot->ipCreateRadio = RANDOM_LONG(10, 20);
+      pBot->ipHearRate = RANDOM_LONG(20, 60);
 
       // Person
       pBot->ipTurnSpeed = RANDOM_LONG(20, 40);
       pBot->ipCampRate = RANDOM_LONG(0, 60);
-      pBot->ipChatRate = RANDOM_LONG(0, 30);
-      pBot->ipWalkWithKnife = RANDOM_LONG(0, 60);
+      pBot->ipChatRate = RANDOM_LONG(0, 20);
+      pBot->ipWalkWithKnife = RANDOM_LONG(0, 40);
 
       // SAVE TO DISK:
-      char dirname[256];
-      char filename[256];
+      //char dirname[256];
+      //char filename[256];
 
       // Set Directory name
       if (mod_id == CSTRIKE_DLL)

@@ -847,7 +847,7 @@ bool cBot::isOwningWeapon(int weaponId) const
  */
 bool cBot::isHoldingWeapon(int weaponId) const
 {
-    return (current_weapon.iId == weaponId);
+    return current_weapon.iId == weaponId;
 }
 
 bool cBot::hasFavoritePrimaryWeaponPreference() const
@@ -860,7 +860,7 @@ bool cBot::hasFavoriteSecondaryWeaponPreference() const
     return ipFavoSecWeapon > -1;
 }
 
-bool cBot::canAfford(int price) const
+bool cBot::canAfford(int price) const //price muddled with weaponId? [APG]RoboCop[CL]
 {
     return this->bot_money > price;
 }
@@ -1141,7 +1141,7 @@ void cBot::Combat() {
         }
 
         // get bot pointer
-        cBot *checkpointer = UTIL_GetBotPointer(pEnemyEdict);
+        const cBot *checkpointer = UTIL_GetBotPointer(pEnemyEdict);
 
         // This bot killed a human; adjust skill when 'autoskill' is on.
         if (checkpointer == nullptr) {
@@ -1390,7 +1390,7 @@ void cBot::InteractWithFriends() {
                 bCanSeePlayer = true;
 
             // there are tons of cases
-            cBot *pBotPointer = UTIL_GetBotPointer(pPlayer);
+            const cBot *pBotPointer = UTIL_GetBotPointer(pPlayer);
 
             // It is a fellow bot
             if (pBotPointer != nullptr) {
@@ -1560,7 +1560,7 @@ void cBot::InteractWithPlayers() {
 
         // Does our enemy (when a bot) has focus on us?
         bool focused;
-        cBot *playerbot = UTIL_GetBotPointer(pEnemyEdict);
+        const cBot *playerbot = UTIL_GetBotPointer(pEnemyEdict);
         if (playerbot) {
             if (playerbot->pEnemyEdict == pEdict)
                 focused = true;
@@ -2063,7 +2063,7 @@ void cBot::Act() {
     // Vector how it should be, however, we don't allow such a fast turn!
     v_shouldbe.x = pEdict->v.v_angle.x / 3;
     v_shouldbe.y = pEdict->v.v_angle.y;
-    v_shouldbe.z = 0;
+    v_shouldbe.z = 0; //unused? [APG]RoboCop[CL]
 
     // set the body angles to point the gun correctly
     pEdict->v.angles.x = ReturnTurnedAngle(ipTurnSpeed, pEdict->v.angles.x, v_shouldbe.x);
@@ -2483,6 +2483,11 @@ bool cBot::hasSecondaryWeaponEquiped() const
     return iSecondaryWeapon > -1;
 }
 
+bool cBot::hasPrimaryWeapon(int weaponId) const
+{
+	return isOwningWeapon(weaponId);
+}
+
 bool cBot::hasSecondaryWeapon(int weaponId) const
 {
     return isOwningWeapon(weaponId);
@@ -2886,7 +2891,7 @@ void cBot::Memory() {
                 }
                 // we go to the destination
 
-                const float fTime = 5 + ipFearRate / static_cast<float>(7);
+                const float fTime = 5 + static_cast<float>(ipFearRate) / static_cast<float>(7);
 
                 if (RANDOM_LONG(0, 100) < ipFearRate
                     && f_walk_time + 5 < gpGlobals->time) // last 5 seconds did not walk
@@ -2955,6 +2960,16 @@ void cBot::Memory() {
     } else {
         vEar = Vector(9999, 9999, 9999);
     }
+}
+
+void cBot::Walk() //Experimental implementation [APG]RoboCop[CL]
+{
+	if (f_walk_time + 0.1f < gpGlobals->time) {
+		f_walk_time = gpGlobals->time + 0.1f;
+		if (f_walk_time + 0.1f < gpGlobals->time) {
+			f_walk_time = gpGlobals->time + 0.1f;
+		}
+	}
 }
 
 
@@ -3173,7 +3188,7 @@ void cBot::Think() {
         rprint("Dead, need to re-initialize");
 
         // AUTOSKILL
-        cBot *botPointerOfKiller = UTIL_GetBotPointer(killer_edict);
+        const cBot *botPointerOfKiller = UTIL_GetBotPointer(killer_edict);
 
         // not killed by a fellow bot, presumably a human player
         if (botPointerOfKiller == nullptr) {
@@ -4202,7 +4217,7 @@ edict_t *cBot::getEntityBetweenMeAndCurrentPathNodeToHeadFor() const
  */
 float cBot::getDistanceToNextNode() const
 {
-    tNode *node = NodeMachine.getNode(getCurrentPathNodeToHeadFor());
+	const tNode *node = NodeMachine.getNode(getCurrentPathNodeToHeadFor());
     if (node) {
         return getDistanceTo(node->origin);
     }
@@ -4210,14 +4225,14 @@ float cBot::getDistanceToNextNode() const
 }
 
 void cBot::setBodyToNode(int nodeIndex) {
-    tNode *node = NodeMachine.getNode(nodeIndex);
+	const tNode *node = NodeMachine.getNode(nodeIndex);
     if (node) {
         vBody = node->origin;
     }
 }
 
 void cBot::lookAtNode(int nodeIndex) {
-    tNode *node = NodeMachine.getNode(nodeIndex);
+	const tNode *node = NodeMachine.getNode(nodeIndex);
     if (node) {
         vHead = node->origin;
     }

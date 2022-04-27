@@ -322,7 +322,7 @@ void GameDLLInit() {
 
     Game.Init();
     Game.LoadNames();
-    Game.LoadBuyTable();
+	cGame::LoadBuyTable();
 
     // NodeMachine
     NodeMachine.init();
@@ -1975,7 +1975,7 @@ void RealBot_ServerCommand() {
 
                 if (iFrom > -1) {
                     if (iTo < 0) {
-                        tGoal *ptr = NodeMachine.getRandomGoalByType(GOAL_SPAWNT);
+	                    const tGoal *ptr = NodeMachine.getRandomGoalByType(GOAL_SPAWNT);
                         if (ptr) iTo = ptr->iNode;
                     }
 
@@ -2025,7 +2025,7 @@ void RealBot_ServerCommand() {
         // Not a valid command
         sprintf(cMessage,
                 "REALBOT: Unknown command.\nValid commands are:\nhelp, add, remove, skill, max, debug, server");
-        bool bValidCommand = false;
+        bool bValidCommand = false; //Unused variable boolean [APG]RoboCop[CL]
     }
 
     // Send message

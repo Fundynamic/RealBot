@@ -28,6 +28,9 @@
   **/
 
 // Chatting Engine
+#ifndef CHATENGINE_H
+#define CHATENGINE_H
+
 #define MAX_BLOCKS	100
 #define BLOCK_DEATHS (MAX_BLOCKS-1)
 
@@ -64,3 +67,5 @@ public:
    // handles a sentence, decides to reply on it or not.
    void handle_sentence();
 };
+
+#endif // CHATENGINE_H

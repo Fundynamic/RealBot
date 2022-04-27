@@ -295,7 +295,7 @@ void cGame::LoadNames() {
 	    char name_buffer[80];
 	    while ((iAmountNames < MAX_BOT_NAMES) &&
                (fgets(name_buffer, 80, bot_name_fp) != nullptr)) {
-            int length = strlen(name_buffer);
+            int length = static_cast<int>(strlen(name_buffer));
             if (name_buffer[length - 1] == '\n') {
                 name_buffer[length - 1] = 0;        // remove '\n'
                 length--;
@@ -370,7 +370,7 @@ void cGame::SelectName(char *name) const
 
         // check if this name is used
         for (int iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
-            edict_t* pPlayer = INDEXENT(iIndex);
+	        const edict_t* pPlayer = INDEXENT(iIndex);
             if (pPlayer && !pPlayer->free) {
                 if (strcmp(cBotNames[iNameIndex], STRING(pPlayer->v.netname))
                     == 0) {
@@ -492,7 +492,7 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     }
 
     // length of name
-    int lengthOfBotName = strlen(botName);
+    int lengthOfBotName = static_cast<int>(strlen(botName));
 
     for (int i = 0; i < lengthOfBotName; i++) {
         if ((botName[i] <= ' ') || (botName[i] > '~') || (botName[i] == '"')) {

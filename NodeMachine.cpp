@@ -83,7 +83,7 @@ int cNodeMachine::GetVisibilityFromTo(int iFrom, int iTo) {// BERKED
 
     if (iByte < static_cast<long>(g_iMaxVisibilityByte)) {
         // Get the Byte that this is in
-        unsigned char *ToReturn = (cVisTable + iByte);
+        const unsigned char *ToReturn = (cVisTable + iByte);
         // get the bit in the byte
         return ((*ToReturn & (1 << iBit)) > 0) ? VIS_VISIBLE : VIS_BLOCKED;       // BERKED
     }
@@ -1233,7 +1233,7 @@ void cNodeMachine::init_players() {
 void cNodeMachine::init_round() {
     //UTIL_ClientPrintAll( HUD_PRINTNOTIFY, "NodeMachine: Roundstart\n");
     for (int index = 1; index <= gpGlobals->maxClients; index++) {
-        edict_t *pPlayer = INDEXENT(index);
+	    const edict_t *pPlayer = INDEXENT(index);
 
         // skip invalid players
         if ((pPlayer) && (!pPlayer->free))
@@ -1977,7 +1977,7 @@ int cNodeMachine::getGoalIndexFromNode(int iNode) const
 void cNodeMachine::updateGoals() {
     rblog("cNodeMachine::updateGoals - START\n");
     for (int i = 0; i < MAX_GOALS; i++) {
-        tGoal *goal = getGoal(i);
+	    const tGoal *goal = getGoal(i);
         if (goal == nullptr || goal->iNode < 0) continue;
 
         if (goal->iType == GOAL_HOSTAGE) {
@@ -2819,7 +2819,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
 
                     const int currentNode = pBot->determineCurrentNodeWithTwoAttempts();
                     if (currentNode > -1) {
-                        tNode *node = getNode(currentNode);
+	                    const tNode *node = getNode(currentNode);
 
                         // close node
                         DrawBeam(
@@ -2960,7 +2960,7 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vec
     const int iTo = currentNodeToHeadFor;
 
     // JUMP & DUCK
-    tNode &currentNode = Nodes[currentNodeToHeadFor];
+    const tNode &currentNode = Nodes[currentNodeToHeadFor];
     if (BotShouldJumpIfStuck(pBot) || (currentNode.iNodeBits & BIT_JUMP)) {
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased, increase node time - START");
         pBot->doJump(vector);
@@ -2992,11 +2992,11 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vec
     sprintf(msg, "I still have %f seconds to go to node before considered 'stuck' for connection", timeRemaining);
     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", msg);
 
-    cBot *pBotStuck = getCloseFellowBot(pBot);
+    const cBot *pBotStuck = getCloseFellowBot(pBot);
 //        edict_t *playerNearbyInFOV = getPlayerNearbyBotInFOV(pBot);
     edict_t *entityNearbyInFOV = getEntityNearbyBotInFOV(pBot);
 
-    edict_t *playerNearbyInFOV = nullptr;
+    const edict_t *playerNearbyInFOV = nullptr;
     edict_t *hostageNearbyInFOV = nullptr;
     if (entityNearbyInFOV) {
 
@@ -3397,7 +3397,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         score += weight;
 
         // Take into consideration how many times this goal has been selected
-        score = (score + (1.0f - Goals[goalIndex].iChecked / static_cast<float>(maxCheckedScore))) / 2.0f;
+        score = (score + (1.0f - Goals[goalIndex].iChecked / maxCheckedScore)) / 2.0f;
 
         // Danger (is important)
         score = (score + InfoNodes[Goals[goalIndex].iNode].fDanger[UTIL_GetTeam(pBot->pEdict)]) / 1.5f;
@@ -3405,7 +3405,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         // How many bots have already taken this goal?
         float goalAlreadyUsedScore = 0.0f;
         float teamMembers = 1.0f; // count self by default
-
+		
         for (int botIndex = 0; botIndex < MAX_BOTS; botIndex++) {
             // not a bot
             cBot *botPointer = &bots[botIndex];

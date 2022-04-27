@@ -453,9 +453,9 @@ public:
     bool hasFavoriteSecondaryWeaponPreference() const;
     bool hasPrimaryWeaponEquiped() const;
     bool hasSecondaryWeaponEquiped() const;
-    bool hasPrimaryWeapon(int weaponId);
+    bool hasPrimaryWeapon(int weaponId) const;
     bool hasSecondaryWeapon(int weaponId) const;
-    bool canAfford(int weaponId) const;
+    bool canAfford(int price) const; //price muddled with weaponId? [APG]RoboCop[CL]
 
     // -------------------
     // 20/06/04 - CS 1.6 shield functions
@@ -627,9 +627,9 @@ void UTIL_BuildFileName(char *filename, char *arg1, char *arg2);
 
 void UTIL_BuildFileNameRB(char *subdir, char *filename);
 
-unsigned short FixedUnsigned16(float value, float scale);
+unsigned short fixed_unsigned16(float value, float scale); //redundant declaration? [APG]RoboCop[CL]
 
-short FixedSigned16(float value, float scale);
+short fixed_signed16(float value, float scale); //redundant declaration? [APG]RoboCop[CL]
 
 void HUD_DrawString(int r, int g, int b, char *msg, edict_t *edict);
 

@@ -74,7 +74,7 @@ int FUNC_PlayerSpeed(edict_t * edict);
 
 bool FUNC_PlayerRuns(int speed);
 void FUNC_HearingTodo(cBot * pBot);
-void FUNC_ClearEnemyPointer(edict_t * c_pointer);
+void FUNC_ClearEnemyPointer(edict_t *pPtr); //pPtr muddled with c_pointer? [APG]RoboCop[CL]
 
 bool FUNC_IsOnLadder(edict_t * pEntity);
 void FUNC_FindBreakable(cBot * pBot);

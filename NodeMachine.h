@@ -125,8 +125,8 @@ public:
     // -----------------
     int node_cover(int iFrom, int iTo, edict_t *pEdict);
 
-    int node_look_at_hear(int iFrom, int iTo, edict_t *pEdict);
-
+    int node_look_at_hear(int iFrom, int iOrigin, edict_t* pEdict);
+	
     int node_camp(const Vector& vOrigin, int iTeam);
 
     void vis_calculate(int iFrom);
@@ -167,7 +167,7 @@ public:
     // Some debugging by EVY
     void dump_goals() const;
 
-    void dump_path(int iBot, int ThisNode);
+    void dump_path(int iBot, int CurrentPath);
 
     void Draw();
 
@@ -223,7 +223,7 @@ private:
 
     void ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vector &vector);
 
-    void ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pS);
+    void ExecuteDoorInteractionLogic(cBot* pBot, edict_t* pEntityHit);
 };
 
 #endif // NODEMACHINE_H
