@@ -54,8 +54,7 @@ extern cNodeMachine NodeMachine;
 // For taking cover decision
 #define TOTAL_SCORE 16300       // 16000 money + 100 health + 100 fear + 100 camp desire
 
-bool
-VectorIsVisibleWithEdict(edict_t *pEdict, const Vector& dest, char *checkname) {
+bool VectorIsVisibleWithEdict(edict_t *pEdict, const Vector& dest, char *checkname) {
     TraceResult tr;
 
     const Vector start = pEdict->v.origin + pEdict->v.view_ofs;
@@ -392,7 +391,7 @@ bool BotShouldJumpIfStuck(cBot *pBot) {
  * @return
  */
 bool BotShouldJump(cBot *pBot) {
-    // WHen a bot should jump, something is blocking his way.
+    // When a bot should jump, something is blocking his way.
     // Most of the time it is a fence, or a 'half wall' that reaches from body to feet
     // However, the body most of the time traces above this wall.
     // What i do:
@@ -431,9 +430,8 @@ bool BotShouldJump(cBot *pBot) {
     if (tr.flFraction < 1.0f) {
         pBot->rprint_trace("BotShouldJump", "I cannot jump because something is blocking the max jump height");
         return false;
-    } else {
-        pBot->rprint_trace("BotShouldJump", "I can make the jump, nothing blocking the jump height");
     }
+    pBot->rprint_trace("BotShouldJump", "I can make the jump, nothing blocking the jump height");
 
     // Ok the body is clear
     v_source = pEdict->v.origin + Vector(0, 0, ORIGIN_HEIGHT);
@@ -443,11 +441,10 @@ bool BotShouldJump(cBot *pBot) {
     UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
 
     if (tr.flFraction < 1.0f) {
-        pBot->rprint_trace("BotShouldJump", "cannot jump because body is blocked");
+        pBot->rprint_trace("BotShouldJump", "Cannot jump because body is blocked");
         return false;
-    } else {
-        pBot->rprint_trace("BotShouldJump", "Jump body is not blocked");
     }
+    pBot->rprint_trace("BotShouldJump", "Jump body is not blocked");
 
     // Ok the body is clear
     v_source = pEdict->v.origin + Vector(0, 0, -14); // 14 downwards (from center) ~ roughly the kneecaps
@@ -493,7 +490,7 @@ bool BotShouldJump(cBot *pBot) {
 }
 
 // FUNCTION: Calculates angles as pEdict->v.v_angle should be when checking for body
-Vector FUNC_CalculateAngles(cBot *pBot) {
+Vector FUNC_CalculateAngles(const cBot *pBot) {
     // aim for the head and/or body
     const Vector v_target = pBot->vBody - pBot->pEdict->v.origin;
     Vector v_body = UTIL_VecToAngles(v_target);
@@ -524,7 +521,7 @@ bool BotShouldDuck(cBot *pBot) {
 
     //return BotCanDuckUnder(pBot);  //Makes the code underneath unreachable? [APG]RoboCop[CL]
 
-    // WHen a bot should jump, something is blocking his way.
+    // When a bot should jump, something is blocking his way.
     // Most of the time it is a fence, or a 'half wall' that reaches from body to feet
     // However, the body most of the time traces above this wall.
     // What i do:
@@ -532,12 +529,11 @@ bool BotShouldDuck(cBot *pBot) {
     // When head blocked and waist is free, then we should duck...
 
     TraceResult tr;
-    Vector v_duck;
     const edict_t *pEdict = pBot->pEdict;
 
     // convert current view angle to vectors for TraceLine math...
 
-    v_duck = FUNC_CalculateAngles(pBot);
+    Vector v_duck = FUNC_CalculateAngles(pBot);
     v_duck.x = 0;                // reset pitch to 0 (level horizontally)
     v_duck.z = 0;                // reset roll to 0 (straight up and down)
 
@@ -572,7 +568,7 @@ bool BotShouldDuck(cBot *pBot) {
  * @param pBot
  * @return
  */
-bool FUNC_DoRadio(cBot *pBot) {
+bool FUNC_DoRadio(const cBot *pBot) {
 
     if (pBot->fDoRadio > gpGlobals->time) // allowed?
         return false;
@@ -606,6 +602,15 @@ bool FUNC_ShouldTakeCover(cBot *pBot) {
     return RANDOM_LONG(0, TOTAL_SCORE) < (vMoney + vHealth + vCamp);
 }
 
+bool FUNC_TakeCover(cBot* pBot) //Experimental [APG]RoboCop[CL]
+{
+    // If we are not allowed to take cover, return false
+	if (!FUNC_ShouldTakeCover(pBot))
+		return false;
+
+	return true;
+}
+
 int FUNC_BotEstimateHearVector(cBot *pBot, const Vector& v_sound) {
     // here we normally figure out where to look at when we hear an enemy, RealBot AI PR 2 lagged a lot on this so we need another approach
 
@@ -614,7 +619,7 @@ int FUNC_BotEstimateHearVector(cBot *pBot, const Vector& v_sound) {
 
 // Added Stefan
 // 7 November 2001
-int FUNC_PlayerSpeed(edict_t *edict) {
+int FUNC_PlayerSpeed(const edict_t *edict) {
     if (edict != nullptr)
         return static_cast<int>(edict->v.velocity.Length2D());      // Return speed of any edict given
 
@@ -623,43 +628,88 @@ int FUNC_PlayerSpeed(edict_t *edict) {
 
 bool FUNC_PlayerRuns(int speed) {
     if (speed < 200)
-        return false;             // We make no sound
-    else
-        return true;              // We make sound
+        return false;               // We make no sound
+	
+    return true;                    // We make sound
 }
 
 // return weapon type of edict.
 // only when 'important enough'.
-int FUNC_EdictHoldsWeapon(edict_t *pEdict) {
+int FUNC_EdictHoldsWeapon(const edict_t *pEdict) {
     // sniper guns
-    if (strcmp("models/p_awp.mdl", STRING(pEdict->v.weaponmodel)) == 0)
-        return CS_WEAPON_AWP;
+    //if (strcmp("models/p_awp.mdl", STRING(pEdict->v.weaponmodel)) == 0) //Excluded for high prices and accuracy [APG]RoboCop[CL]
+    //    return CS_WEAPON_AWP;
     if (strcmp("models/p_scout.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_SCOUT;
 
-    // good weapons (ak, m4a1)
+    // good weapons (ak, m4a1, mp5)
     if (strcmp("models/p_ak47.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_AK47;
     if (strcmp("models/p_m4a1.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_M4A1;
+    if (strcmp("models/p_mp5navy.mdl", STRING(pEdict->v.weaponmodel)) == 0)
+        return CS_WEAPON_MP5NAVY;
 
     // grenade types
-    if (strcmp("models/p_smokegrenade.mdl", STRING(pEdict->v.weaponmodel))
-        == 0)
+    if (strcmp("models/p_smokegrenade.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_SMOKEGRENADE;
-    if (strcmp("models/p_hegrenade.mdl", STRING(pEdict->v.weaponmodel)) ==
-        0)
+    if (strcmp("models/p_hegrenade.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_HEGRENADE;
-    if (strcmp("models/p_flashbang.mdl", STRING(pEdict->v.weaponmodel)) ==
-        0)
+    if (strcmp("models/p_flashbang.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_FLASHBANG;
 
-    // shield
-    if (strcmp("models/p_shield.mdl", STRING(pEdict->v.weaponmodel)) == 0)
-        return CS_WEAPON_SHIELD;
+    // shield types //Most CS Veterans dislikes the shield [APG]RoboCop[CL]
+    //if (strcmp("models/p_shield.mdl", STRING(pEdict->v.weaponmodel)) == 0)
+    //    return CS_WEAPON_SHIELD;
 
     // unknown
     return -1;
+}
+
+int FUNC_FindFarWaypoint(cBot* pBot, Vector avoid, bool safest) //Experimental [APG]RoboCop[CL]
+{
+	// Find a waypoint that is far away from the enemy.
+	// If safest is true, then we want the safest waypoint.
+	// If safest is false, then we want the farthest waypoint.
+
+	// Find the farthest waypoint
+	int farthest = -1;
+	float farthest_distance = 0.0f;
+
+	for (int i = 0; i < gpGlobals->maxEntities; i++) {
+		const edict_t *pEdict = INDEXENT(i);
+
+		if (pEdict == nullptr)
+			continue;
+
+		if (pEdict->v.flags & FL_DORMANT)
+			continue;
+
+		if (pEdict->v.classname != 0 && strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
+			if (strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
+				if (farthest == -1) {
+					farthest = i;
+					farthest_distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
+				} else {
+					const float distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
+
+					if (safest) {
+						if (distance < farthest_distance) {
+							farthest = i;
+							farthest_distance = distance;
+						}
+					} else {
+						if (distance > farthest_distance) {
+							farthest = i;
+							farthest_distance = distance;
+						}
+					} 
+				}
+			}
+		}
+	}
+
+	return farthest;
 }
 
 // Function to let a bot react on some sound which he cannot see
@@ -742,7 +792,7 @@ void FUNC_ClearEnemyPointer(edict_t *pPtr) { //pPtr muddled with c_pointer? [APG
 }
 
 // Returns true/false if an entity is on a ladder
-bool FUNC_IsOnLadder(edict_t *pEntity) {
+bool FUNC_IsOnLadder(const edict_t *pEntity) {
     if (pEntity == nullptr)
         return false;
 
@@ -825,10 +875,9 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
         pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "Hostage found, but not rescueable, forgetting...");
         pBot->forgetHostage(pHostage);
         return;
-    } else {
-        pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "Remembering hostage (target) to rescue");
-        pBot->rememberWhichHostageToRescue(pHostage);
     }
+    pBot->rprint_trace("TryToGetHostageTargetToFollowMe", "Remembering hostage (target) to rescue");
+    pBot->rememberWhichHostageToRescue(pHostage);
 
     // Prevent bots getting to close here
     const float distanceToHostage = func_distance(pBot->pEdict->v.origin, pHostage->v.origin);
@@ -869,7 +918,8 @@ void TryToGetHostageTargetToFollowMe(cBot *pBot) {
     }
 }
 
-bool isHostageRescued(cBot *pBot, edict_t *pHostage) {
+bool isHostageRescued(cBot *pBot, const edict_t *pHostage) //pBot not used [APG]RoboCop[CL]
+{
     if (pHostage == nullptr) return false;
 
     if (FBitSet(pHostage->v.effects, EF_NODRAW)) {
@@ -878,6 +928,57 @@ bool isHostageRescued(cBot *pBot, edict_t *pHostage) {
     }
 //    pBot->rprint("isHostageRescued()", "Hostage is NOT rescued");
     return false;
+}
+
+int FUNC_GiveHostage(cBot* pBot) //Experimental [APG]RoboCop[CL]
+{
+	if (pBot->isTerrorist()) {
+		return 0;
+	}
+
+	// find a hostage to rescue
+	edict_t *pHostage = pBot->getHostageToRescue();
+
+	if (pHostage == nullptr) {
+		pHostage = pBot->findHostageToRescue();
+	}
+
+	// still NULL
+	if (pHostage == nullptr) {
+		// Note: this means a hostage that is near and visible and rescueable etc.
+		return 0; // nothing to do yet
+	}
+
+	// Whenever we have a hostage to go after, verify it is still rescueable
+	const bool isRescueable = isHostageRescueable(pBot, pHostage);
+
+	if (!isRescueable) {
+		pBot->rprint_trace("GiveHostage", "Hostage found, but not rescueable, forgetting...");
+		pBot->forgetHostage(pHostage);
+		return 0;
+	}
+	pBot->rprint_trace("GiveHostage", "Remembering hostage (target) to rescue");
+	pBot->rememberWhichHostageToRescue(pHostage);
+
+	// Prevent bots getting to close here
+	const float distanceToHostage = func_distance(pBot->pEdict->v.origin, pHostage->v.origin);
+
+	// From here, we should get the hostage when still visible
+    if (pBot->canSeeEntity(pHostage))
+    {
+	    pBot->rprint_trace("GiveHostage", "I can see the hostage to rescue!");
+    	// set body to hostage!
+    	pBot->vBody = pBot->vHead = pHostage->v.origin + Vector(0, 0, 36);
+    	// by default run
+    	pBot->setMoveSpeed(pBot->f_max_speed);
+
+    	if (distanceToHostage <= 80)
+    	{
+    		pBot->rprint_trace("GiveHostage", "I can see hostage AND really close!");
+    		pBot->setMoveSpeed(0.0f); // too close, do not move
+    	}
+    }
+	return true; //gives any hostage we still have to go for
 }
 
 bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {

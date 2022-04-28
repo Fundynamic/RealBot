@@ -63,7 +63,8 @@ extern int draw_nodepath;
 //---------------------------------------------------------
 //CODE: CHEESEMONSTER
 
-int cNodeMachine::GetVisibilityFromTo(int iFrom, int iTo) {// BERKED
+int cNodeMachine::GetVisibilityFromTo(int iFrom, int iTo) const // BERKED
+{
     // prevent negative indexes on iVisChecked below -- BERKED
     if (iFrom < 0 || iFrom > MAX_NODES || iTo < 0 || iTo > MAX_NODES) {
         return VIS_INVALID;
@@ -678,7 +679,7 @@ bool cNodeMachine::remove_neighbour_nodes(int iNode) {
 }
 
 // returns the next free 'neighbour id' for that node
-int cNodeMachine::freeNeighbourNodeIndex(tNode *Node) {
+int cNodeMachine::freeNeighbourNodeIndex(const tNode *Node) {
     for (int i = 0; i < MAX_NEIGHBOURS; i++) {
         if (Node->iNeighbour[i] < 0) {
             return i;
@@ -686,6 +687,17 @@ int cNodeMachine::freeNeighbourNodeIndex(tNode *Node) {
     }
 
     return -1;
+}
+
+int cNodeMachine::is_neighbour_node(tNode node, int iNode)
+{
+    for (int i = 0; i < MAX_NEIGHBOURS; i++) {
+		if (node.iNeighbour[i] == iNode) {
+			return i;
+		}
+	}
+
+	return -1;
 }
 
 // Return the node id from bot path on Index NR
@@ -1087,7 +1099,6 @@ int cNodeMachine::addNode(const Vector& vOrigin, edict_t *pEntity) {
 
         // Check if Index is LOWER then J, if so, the height should be jumpable!
         // When height does not differ to much we can add this connection.
-        //
         //
         // 14/06/04 - fix: Some slopes are not counted in here..., de_dust jump from crates connects now
         const bool nodeIsHigherThanOrigin = Nodes[nodeIndex].origin.z > Nodes[currentIndex].origin.z;
@@ -1734,7 +1745,7 @@ void cNodeMachine::path_draw(edict_t *pEntity) {
     int max_drawn = 0;
 
     for (int i = 0; i < MAX_NODES; i++) {
-    	//TODO: iPath appears to be out of bounds [APG]RoboCop[CL]
+    	// TODO: iPath appears to be out of bounds [APG]RoboCop[CL]
 	    const int iNode = iPath[draw_nodepath][i];
 	    const int iNextNode = iPath[draw_nodepath][(i + 1)];
 
@@ -2893,9 +2904,8 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                 pBot->strafeRight(0.2f);
                 pBot->rprint_trace("cNodeMachine::path_walk", "Time left to move to node, so lets try strafing to unstuck.");
                 return;
-            } else {
-                pBot->rprint_trace("cNodeMachine::path_walk", "No time left to move to node, so we continue and let stuck logic kick in");
             }
+            pBot->rprint_trace("cNodeMachine::path_walk", "No time left to move to node, so we continue and let stuck logic kick in");
         }
 
         pBot->rprint_trace("cNodeMachine::path_walk", "Finished - entity hit end block");
@@ -2968,20 +2978,22 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vec
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased, increase node time  - END");
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
         return;
-    } else if (BotShouldDuck(pBot) || (currentNode.iNodeBits & BIT_DUCK)) {
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck tries increased, increase node time - START");
-        pBot->doDuck();
-        pBot->iDuckTries++;
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck tries increased, increase node time - END");
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
-        return;
-    } else if (pBot->isOnLadder()) {
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Is stuck on ladder, trying to get of the ladder by jumping");
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased");
-        pBot->doJump(vector);
-        pBot->iJumpTries++;
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
-        return;
+    }
+    if (BotShouldDuck(pBot) || (currentNode.iNodeBits & BIT_DUCK)) {
+	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck tries increased, increase node time - START");
+	    pBot->doDuck();
+	    pBot->iDuckTries++;
+	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck tries increased, increase node time - END");
+	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
+	    return;
+    }
+    if (pBot->isOnLadder()) {
+	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Is stuck on ladder, trying to get of the ladder by jumping");
+	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased");
+	    pBot->doJump(vector);
+	    pBot->iJumpTries++;
+	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
+	    return;
     }
 
     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "No need to duck or to jump");

@@ -64,7 +64,7 @@ void botFixIdealYaw(edict_t * pEdict) {
     pEdict->v.ideal_yaw = fixAngle(pEdict->v.ideal_yaw);
 }
 
-bool BotCanJumpUp(cBot * pBot) {
+bool BotCanJumpUp(const cBot * pBot) {
    // What I do here is trace 3 lines straight out, one unit higher than
    // the highest normal jumping distance.  I trace once at the center of
    // the body, once at the right side, and once at the left side.  If all
@@ -104,8 +104,7 @@ bool BotCanJumpUp(cBot * pBot) {
    // now check same height to one side of the bot...
    v_source =
       pEdict->v.origin + gpGlobals->v_right * 16 + Vector(0, 0,
-            -36 +
-            MAX_JUMPHEIGHT);
+            -36 + MAX_JUMPHEIGHT);
    v_dest = v_source + gpGlobals->v_forward * 24;
 
    // trace a line forward at maximum jump height...
@@ -119,8 +118,7 @@ bool BotCanJumpUp(cBot * pBot) {
    // now check same height on the other side of the bot...
    v_source =
       pEdict->v.origin + gpGlobals->v_right * -16 + Vector(0, 0,
-            -36 +
-            MAX_JUMPHEIGHT);
+            -36 + MAX_JUMPHEIGHT);
    v_dest = v_source + gpGlobals->v_forward * 24;
 
    // trace a line forward at maximum jump height...
@@ -186,7 +184,7 @@ bool BotCanJumpUp(cBot * pBot) {
    return TRUE;
 }
 
-bool BotCanDuckUnder(cBot * pBot) {
+bool BotCanDuckUnder(const cBot * pBot) {
    // What I do here is trace 3 lines straight out, one unit higher than
    // the ducking height.  I trace once at the center of the body, once
    // at the right side, and once at the left side.  If all three of these

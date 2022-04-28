@@ -160,8 +160,7 @@ void ClientPrint(edict_t *pEntity, int msg_dest, const char *msg_name) {
     MESSAGE_END();
 }
 
-void
-UTIL_ClientPrintAll(int msg_dest, const char *msg_name, const char *param1,
+void UTIL_ClientPrintAll(int msg_dest, const char *msg_name, const char *param1,
                     const char *param2, const char *param3,
                     const char *param4) {
     if (gmsgTextMsg == 0)

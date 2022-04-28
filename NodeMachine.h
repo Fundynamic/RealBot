@@ -60,9 +60,9 @@ public:
 
     bool remove_neighbour_nodes(int iNode);
 
-    static int freeNeighbourNodeIndex(tNode *Node);
+    static int freeNeighbourNodeIndex(const tNode *Node);
 
-    int is_neighbour_node(tNode node, int iNode);
+    static int is_neighbour_node(tNode node, int iNode);
 
     // -----------------
     void init();                 // Init (info)nodes
@@ -105,7 +105,7 @@ public:
 
     static bool node_on_crate(const Vector& vOrigin, edict_t *pEdict);
 
-    int node_dangerous(int iTeam, Vector vOrigin, float fMaxDistance);
+    static int node_dangerous(int iTeam, Vector vOrigin, float fMaxDistance);
 
     int node_look_camp(const Vector& vOrigin, int iTeam, edict_t *pEdict);
 
@@ -157,7 +157,7 @@ public:
 
     // -------------------
     // From cheesemonster:
-    int GetVisibilityFromTo(int iFrom, int iTo); // BERKED
+    int GetVisibilityFromTo(int iFrom, int iTo) const; // BERKED
     void ClearVisibilityTable() const;
 
     void SetVisibilityFromTo(int iFrom, int iTo, bool bVisible);
@@ -221,7 +221,7 @@ private:
 
     static bool isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHit);
 
-    void ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vector &vector);
+    void ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, const Vector &vector);
 
     void ExecuteDoorInteractionLogic(cBot* pBot, edict_t* pEntityHit);
 };

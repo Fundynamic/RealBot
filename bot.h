@@ -58,7 +58,7 @@ extern weapon_price_table weapons_table[32];
 
 // Define Join states for other mods
 #define JOIN_TEAM        1
-#define JOIN_CLASS        2
+#define JOIN_CLASS       2
 #define JOIN_NONE        9999
 
 // fix for steam (cs 1.6 bot will crash when FL_FAKECLIENT;
@@ -472,10 +472,8 @@ public:
 
     // -------------------
     void CheckAround();          // Check around body
-
     // -------------------
-
-    //
+	
     bool hasEnemy() const;
     bool hasEnemy(edict_t * pEdict) const;
     edict_t * getEnemyEdict() const;
@@ -508,8 +506,6 @@ public:
     int getPreviousPathIndex() const;
 
     int getGoalNode() const;
-
-
 
     void setMoveSpeed(float value);
     void setStrafeSpeed(float value, float time);
@@ -570,7 +566,7 @@ public:
     bool createPath(int destinationNode, int flags);
     bool createPath(int destinationNode);
 
-    void doJump(Vector &vector);
+    void doJump(const Vector &vector);
     void doJump();
     bool isJumping();
 

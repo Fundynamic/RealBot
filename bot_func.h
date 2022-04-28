@@ -35,8 +35,8 @@ void BotThink(cBot * pBot);
 
 void botFixIdealPitch(edict_t * pEdict);
 void botFixIdealYaw(edict_t * pEdict);
-bool BotCanJumpUp(cBot * pBot);
-bool BotCanDuckUnder(cBot * pBot);
+bool BotCanJumpUp(const cBot * pBot);
+bool BotCanDuckUnder(const cBot * pBot);
 
 bool EntityIsVisible(edict_t * pEntity, const Vector& dest);
 
@@ -58,32 +58,32 @@ bool BotShouldJump(cBot * pBot);
 bool BotShouldJumpIfStuck(cBot * pBot);
 bool BotShouldDuck(cBot * pBot);
 void TryToGetHostageTargetToFollowMe(cBot * pBot);
-Vector FUNC_CalculateAngles(cBot * pBot);
+Vector FUNC_CalculateAngles(const cBot * pBot);
 
 // New funcs
-bool FUNC_DoRadio(cBot * pBot);
+bool FUNC_DoRadio(const cBot * pBot);
 
 bool FUNC_ShouldTakeCover(cBot * pBot);
 bool FUNC_TakeCover(cBot * pBot);
 
-int FUNC_EdictHoldsWeapon(edict_t * pEdict);
+int FUNC_EdictHoldsWeapon(const edict_t * pEdict);
 
 int FUNC_FindFarWaypoint(cBot * pBot, Vector avoid, bool safest);
-int FUNC_FindCover(int from, int to);
-int FUNC_PlayerSpeed(edict_t * edict);
+int FUNC_FindCover(int from, int to); //TODO: Add definition for bots to find cover
+int FUNC_PlayerSpeed(const edict_t * edict);
 
 bool FUNC_PlayerRuns(int speed);
 void FUNC_HearingTodo(cBot * pBot);
 void FUNC_ClearEnemyPointer(edict_t *pPtr); //pPtr muddled with c_pointer? [APG]RoboCop[CL]
 
-bool FUNC_IsOnLadder(edict_t * pEntity);
-void FUNC_FindBreakable(cBot * pBot);
-void FUNC_CheckForBombPlanted();
+bool FUNC_IsOnLadder(const edict_t * pEntity);
+void FUNC_FindBreakable(cBot * pBot); //TODO: Add definition for bots to destory glass and crates?
+void FUNC_CheckForBombPlanted(edict_t* pEntity); //TODO: Add definition for bots to detect C4s
 
 int FUNC_GiveHostage(cBot * pBot);                      // gives any hostage we still have to go for
 
 bool isHostageRescueable(cBot *pBot, edict_t *pHostage);
-bool isHostageRescued(cBot *pBot, edict_t *pHostage);
+bool isHostageRescued(cBot *pBot, const edict_t *pHostage);
 bool isHostageFree(cBot * pBotWhoIsAsking, edict_t * pHostage);   // is this hostage not used by any other bot?
 
 int FUNC_BotEstimateHearVector(cBot * pBot, const Vector& v_sound);

@@ -144,8 +144,8 @@ private:
    char cBotNames[MAX_BOT_NAMES][BOT_NAME_LEN + 1] = {};
    int iMinPlayRounds = 0, iMaxPlayRounds = 0;  // Min/Max playable rounds
    bool bNewRound = false;              // New round triggered?
-   float fRoundTime = 0;            // Round time
-   float fUpdateGoalTimer = 0;
+   float fRoundTime = 0.0f;            // Round time
+   float fUpdateGoalTimer = 0.0f;
 };
 
 #endif // GAME_H

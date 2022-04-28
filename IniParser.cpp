@@ -961,8 +961,8 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       pBot->ipRandom = RANDOM_LONG(25, 70);
 
       // Radio
-      pBot->ipReplyToRadio = RANDOM_LONG(10, 20);
-      pBot->ipCreateRadio = RANDOM_LONG(10, 20);
+      pBot->ipReplyToRadio = RANDOM_LONG(5, 20);
+      pBot->ipCreateRadio = RANDOM_LONG(5, 20);
       pBot->ipHearRate = RANDOM_LONG(20, 60);
 
       // Person

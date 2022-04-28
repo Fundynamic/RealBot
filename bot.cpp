@@ -136,7 +136,7 @@ void cBot::SpawnInit() {
     fUpdateTime = gpGlobals->time;
     fLastRunPlayerMoveTime = gpGlobals->time - 0.1f;
     fButtonTime = gpGlobals->time;
-    fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5f, 5);
+    fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5f, 5.0f);
     fMemoryTime = gpGlobals->time;
     fDoRadio = gpGlobals->time;
     const float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
@@ -331,7 +331,7 @@ void cBot::NewRound() {
     f_c4_time = gpGlobals->time;
     f_update_weapon_time = gpGlobals->time;
     f_follow_time = gpGlobals->time;
-    f_jump_time = 0.0;
+    f_jump_time = 0.0f;
     f_hold_duck = gpGlobals->time - 1;
     f_camp_time = gpGlobals->time;
     f_wait_time = gpGlobals->time;
@@ -2009,7 +2009,7 @@ void cBot::Act() {
     // 'do nothing' for a short period of time.
     if (f_wait_time > gpGlobals->time) {
         rprint("Act", "f_wait_time > gpGlobals->time");
-        setMoveSpeed(0.0);
+        setMoveSpeed(0.0f);
     }
 
     // Button usage, change vBody to a 'trigger multiple' because we have to touch these
@@ -3913,7 +3913,7 @@ bool cBot::canSeeEntity(edict_t *pEntity) const
  * @return
  */
 float cBot::getDistanceTo(int nodeIndex) {
-    tNode *nodePtr = NodeMachine.getNode(nodeIndex);
+	const tNode *nodePtr = NodeMachine.getNode(nodeIndex);
     if (nodePtr != nullptr) {
         return getDistanceTo(nodePtr->origin);
     }
@@ -4366,7 +4366,7 @@ bool cBot::isWalking() {
     return b;
 }
 
-void cBot::doJump(Vector &vector) {
+void cBot::doJump(const Vector &vector) {
     rprint_trace("doJump", "With vector");
     // stay focussed with body and head to this vector
     this->vHead = vector;
@@ -4384,7 +4384,7 @@ void cBot::doJump() {
     UTIL_BotPressKey(this, IN_DUCK); // DUCK jump by default
     this->f_hold_duck = gpGlobals->time + 0.5f;
 
-    this->increaseTimeToMoveToNode(0.75);
+    this->increaseTimeToMoveToNode(0.75f);
 }
 
 bool cBot::isJumping() {

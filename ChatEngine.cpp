@@ -402,7 +402,7 @@ void cChatEngine::handle_sentence() //Experimental implementation [APG]RoboCop[C
 }
 
 //
-void cChatEngine::set_sentence(char csender[30], char csentence[128]) {
+void cChatEngine::set_sentence(char csender[30], char csentence[MAX_SENTENCE_LENGTH]) {
 
     if (sender[0] == ' ' || sender[0] == '\0') {
         //      SERVER_PRINT("Sender & sentence set.\nSender=");
