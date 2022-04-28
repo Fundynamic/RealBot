@@ -2962,14 +2962,14 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     pBot->rprint_trace("cNodeMachine::path_walk", "Finished - really the end of the method");
 }
 
-void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vector &vector) {
+void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, const Vector &vector) {
     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "START");
     pBot->fNotStuckTime = gpGlobals->time + 0.25f; // give some time to unstuck
 
     const int iFrom = pBot->getPreviousPathNodeToHeadFor();
     const int iTo = currentNodeToHeadFor;
 
-    // JUMP & DUCK
+    // JUMP & DUCK // TODO: Add a proper and reliable Duck-Jump Node [APG]RoboCop[CL]
     const tNode &currentNode = Nodes[currentNodeToHeadFor];
     if (BotShouldJumpIfStuck(pBot) || (currentNode.iNodeBits & BIT_JUMP)) {
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased, increase node time - START");
