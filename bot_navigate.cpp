@@ -139,7 +139,7 @@ bool BotCanJumpUp(const cBot * pBot) {
 
    // end point of trace is 99 units straight down from start...
    // (99 is 108 minus the jump limit height which is 45 - 36 = 9)
-   // fix by stefan, max jump height is 63 , not 45! (using duck-jump)
+   // fix by stefan, max jump height is 63 , not 45! (using duckjump)
    // 108 - (63-36) = 81
    v_dest = v_source + Vector(0, 0, -81);
 

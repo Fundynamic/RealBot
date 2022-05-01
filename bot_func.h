@@ -57,6 +57,7 @@ edict_t * getEntityNearbyBotInFOV(cBot * pBot);
 bool BotShouldJump(cBot * pBot);
 bool BotShouldJumpIfStuck(cBot * pBot);
 bool BotShouldDuck(cBot * pBot);
+bool BotShouldDuckJump(cBot* pBot);
 void TryToGetHostageTargetToFollowMe(cBot * pBot);
 Vector FUNC_CalculateAngles(const cBot * pBot);
 
@@ -69,7 +70,7 @@ bool FUNC_TakeCover(cBot * pBot);
 int FUNC_EdictHoldsWeapon(const edict_t * pEdict);
 
 int FUNC_FindFarWaypoint(cBot * pBot, Vector avoid, bool safest);
-int FUNC_FindCover(int from, int to); //TODO: Add definition for bots to find cover
+int FUNC_FindCover(const cBot* pBot);
 int FUNC_PlayerSpeed(const edict_t * edict);
 
 bool FUNC_PlayerRuns(int speed);
@@ -77,8 +78,8 @@ void FUNC_HearingTodo(cBot * pBot);
 void FUNC_ClearEnemyPointer(edict_t *pPtr); //pPtr muddled with c_pointer? [APG]RoboCop[CL]
 
 bool FUNC_IsOnLadder(const edict_t * pEntity);
-void FUNC_FindBreakable(cBot * pBot); //TODO: Add definition for bots to destory glass and crates?
-void FUNC_CheckForBombPlanted(edict_t* pEntity); //TODO: Add definition for bots to detect C4s
+void FUNC_FindBreakable(edict_t* pEntity);
+void FUNC_CheckForBombPlanted(edict_t* pEntity);
 
 int FUNC_GiveHostage(cBot * pBot);                      // gives any hostage we still have to go for
 

@@ -58,6 +58,7 @@
 #define BIT_WATER    (1 << 1)
 #define BIT_JUMP    (1 << 2)
 #define BIT_DUCK    (1 << 3)
+#define BIT_DUCKJUMP    (1 << 4)
 
 // Path flags
 #define PATH_DANGER     39      // Picked a random number here

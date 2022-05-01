@@ -307,6 +307,7 @@ public:
     // Remember stuck stuff
     int iJumpTries;
     int iDuckTries;
+    int iDuckJumpTries;  // Experimental DuckJump added for this new node [APG]RoboCop[CL]
 
     // ------------------------
     // BOOLEANS
@@ -533,7 +534,7 @@ public:
 
     void checkIfHostagesAreRescued();
 
-    bool isOnSameTeamAs(cBot *pBot) const;
+    bool isOnSameTeamAs(const cBot *pBot) const;
 
     bool shouldBeAbleToMove() const;
 
@@ -569,6 +570,10 @@ public:
     void doJump(const Vector &vector);
     void doJump();
     bool isJumping();
+
+    // Experimental DuckJump added for the NodeMachine [APG]RoboCop[CL]
+    void doDuckJump(); 
+    bool isDuckJumping();
 
     void doDuck();
     bool isDucking();

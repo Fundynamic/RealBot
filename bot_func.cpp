@@ -321,7 +321,7 @@ edict_t * getEntityNearbyBotInFOV(cBot *pBot) {
  */ //TODO: FOV and angleToPlayer are unused variables [APG]RoboCop[CL]
 bool isAnyPlayerNearbyBot(cBot *pBot) {
 	const edict_t *pEdict = pBot->pEdict;
-    int fov = 105;
+    //int fov = 105;
 
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
@@ -337,7 +337,7 @@ bool isAnyPlayerNearbyBot(cBot *pBot) {
                   || (pPlayer->v.flags & FL_CLIENT)))
                 continue;
 
-            int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
+            //int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
 
             const int distance = NODE_ZONE;
             if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance) {
@@ -405,7 +405,8 @@ bool BotShouldJump(cBot *pBot) {
         return false;
     }
 
-    if (pBot->isJumping()) return false; // already jumping
+    if (pBot->isJumping()) 
+        return false; // already jumping
 
     TraceResult tr;
     const edict_t *pEdict = pBot->pEdict;
@@ -518,7 +519,7 @@ bool BotShouldDuck(cBot *pBot) {
         pBot->rprint_trace("BotShouldDuck", "Returning false because ducked too many times.");
         return false;
     }
-
+	
     //return BotCanDuckUnder(pBot);  //Makes the code underneath unreachable? [APG]RoboCop[CL]
 
     // When a bot should jump, something is blocking his way.
@@ -563,6 +564,29 @@ bool BotShouldDuck(cBot *pBot) {
     return true;
 }
 
+bool BotShouldDuckJump(cBot* pBot) //Experimental DuckJump Incomplete [APG]RoboCop[CL]
+{
+	// This is crucial for bots to sneak inside vents and tight areas in order
+	// to inflitrate and prooceed on ahead. DuckJump is required for vaulting
+	// on top of crates, window ledges and edges as an important method.
+
+    if (pBot->isDefusing()) {
+        pBot->rprint_trace("BotShouldDuckJump", "Returning false because defusing.");
+        return false;
+    }
+
+    if (pBot->iDuckJumpTries > 3) {
+	    // tried to duck 3 times, so no longer!
+    	pBot->rprint_trace("BotShouldDuck", "Returning false because ducked too many times.");
+    	return false;
+    }
+	
+    if (pBot->isDuckJumping()) 
+        return false; // already duckjumping
+	
+    return false;
+}
+
 /**
  * Returns if a bot can and wants to do radio. Wanting is based on personality flag.
  * @param pBot
@@ -605,10 +629,10 @@ bool FUNC_ShouldTakeCover(cBot *pBot) {
 bool FUNC_TakeCover(cBot* pBot) //Experimental [APG]RoboCop[CL]
 {
     // If we are not allowed to take cover, return false
-	if (!FUNC_ShouldTakeCover(pBot))
-		return false;
+    if (!FUNC_ShouldTakeCover(pBot))
+        return false;
 
-	return true;
+    return true;
 }
 
 int FUNC_BotEstimateHearVector(cBot *pBot, const Vector& v_sound) {
@@ -712,6 +736,45 @@ int FUNC_FindFarWaypoint(cBot* pBot, Vector avoid, bool safest) //Experimental [
 	return farthest;
 }
 
+int FUNC_FindCover(const cBot* pBot) //Experimental [APG]RoboCop[CL]
+{
+	// Find a waypoint that is far away from the enemy.
+	// If safest is true, then we want the safest waypoint.
+	// If safest is false, then we want the farthest waypoint.
+
+	// Find the farthest waypoint
+	int farthest = -1;
+	float farthest_distance = 0.0f;
+
+	for (int i = 0; i < gpGlobals->maxEntities; i++) {
+		const edict_t *pEdict = INDEXENT(i);
+
+		if (pEdict == nullptr)
+			continue;
+
+		if (pEdict->v.flags & FL_DORMANT)
+			continue;
+
+		if (pEdict->v.classname != 0 && strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
+			if (strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
+				if (farthest == -1) {
+					farthest = i;
+					farthest_distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
+				} else {
+					const float distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
+
+					if (distance > farthest_distance) {
+						farthest = i;
+						farthest_distance = distance;
+					}
+				}
+			}
+		}
+	}
+
+	return farthest;
+}
+
 // Function to let a bot react on some sound which he cannot see
 void FUNC_HearingTodo(cBot *pBot) {
     // This is called every frame.
@@ -800,6 +863,50 @@ bool FUNC_IsOnLadder(const edict_t *pEntity) {
         return true;
 
     return false;
+}
+
+void FUNC_FindBreakable(edict_t* pEntity) //Experimental [APG]RoboCop[CL]
+{
+	// The "func_breakable" entity required for glass breaking and weak doors for bots to recognise,
+	// in order to attack breakable objects that would block their way.
+	
+	for (int i = 0; i < gpGlobals->maxEntities; i++) {
+		edict_t* pEdict = INDEXENT(i);
+
+		if (pEdict == nullptr)
+			continue;
+
+		if (pEdict->v.flags & FL_DORMANT)
+			continue;
+
+		if (pEdict->v.classname != 0 && strcmp(STRING(pEdict->v.classname), "func_breakable") == 0) {
+			if (strcmp(STRING(pEdict->v.classname), "func_breakable") == 0) {
+				if (pEdict->v.origin == pEntity->v.origin) {
+					pEntity->v.enemy = pEdict;
+					return;
+				}
+			}
+		}
+	}
+}
+
+void FUNC_CheckForBombPlanted(edict_t* pEntity) //Experimental [APG]RoboCop[CL]
+{
+	// Check if the bot has a bomb planted.
+	// If so, then we need to go to the bomb site.
+	// If not, then we need to go to the waypoint.
+	
+    // "models/w_c4.mdl" needed for CTs to see the bomb? [APG]RoboCop[CL]
+	if (pEntity->v.model != 0 && strcmp(STRING(pEntity->v.model), "models/w_c4.mdl") == 0) {
+		// Bot has a bomb planted.
+		// Go to the bomb site.
+		pEntity->v.button |= IN_USE;
+		pEntity->v.button |= IN_ATTACK;
+	} else {
+		// Bot does not have a bomb planted.
+		// Go to the waypoint.
+		pEntity->v.button |= IN_USE;
+	}
 }
 
 /**

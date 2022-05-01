@@ -1031,10 +1031,13 @@ int cNodeMachine::addNode(const Vector& vOrigin, edict_t *pEntity) {
         if (FUNC_IsOnLadder(pEntity))
             indexNodeFloats = false;
 
-        if (pEntity->v.button & IN_DUCK) {
+        if (pEntity->v.button & IN_DUCK) 
             // ??
             Nodes[currentIndex].iNodeBits |= BIT_DUCK;
-        }
+
+    	//Experimental - This new node requires for bots to vault onto crates and edges? [APG]RoboCop[CL]
+        if (pEntity->v.button & BIT_DUCKJUMP)
+            Nodes[currentIndex].iNodeBits |= BIT_DUCKJUMP;
 
     }                            // do only check pEntity when its not NULL
     else {
@@ -1389,9 +1392,15 @@ void cNodeMachine::draw(edict_t *pEntity) {
                 if (Nodes[i].iNodeBits & BIT_WATER)
                     r = g = 0;
 
-                if (Nodes[i].iNodeBits & BIT_DUCK)
+                if (Nodes[i].iNodeBits & BIT_DUCK)					
+                    r = b = 0;
+            	// Jump and DuckJump was missing for those nodes? [APG]RoboCop[CL]
+                if (Nodes[i].iNodeBits & BIT_JUMP)
                     r = b = 0;
 
+                if (Nodes[i].iNodeBits & BIT_DUCKJUMP)
+                    r = b = 0;
+            	
                 if (Nodes[i].iNeighbour[0] < 0)
                     r = 0;
 
@@ -1420,6 +1429,10 @@ void cNodeMachine::draw(edict_t *pEntity) {
 
     if (Nodes[iNodeClose].iNodeBits & BIT_DUCK)
         strcat(Flags, "D");
+
+    // Experimental DuckJump added for this new node [APG]RoboCop[CL]
+    if (Nodes[iNodeClose].iNodeBits & BIT_DUCKJUMP)
+        strcat(Flags, "h");
 
     sprintf(msg, "Node %d(%.0f,%.0f,%.0f)%s\nMe: (%.0f,%.0f,%.0f)\n",
             iNodeClose, (iNodeClose < 0) ? -1 : Nodes[iNodeClose].origin.x,
@@ -2969,13 +2982,13 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, con
     const int iFrom = pBot->getPreviousPathNodeToHeadFor();
     const int iTo = currentNodeToHeadFor;
 
-    // JUMP & DUCK // TODO: Add a proper and reliable Duck-Jump Node [APG]RoboCop[CL]
+    // JUMP & DUCK // TODO: Add a proper and reliable DuckJump Node [APG]RoboCop[CL]
     const tNode &currentNode = Nodes[currentNodeToHeadFor];
     if (BotShouldJumpIfStuck(pBot) || (currentNode.iNodeBits & BIT_JUMP)) {
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased, increase node time - START");
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Jump tries increased, increase node time - START");
         pBot->doJump(vector);
         pBot->iJumpTries++;
-        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased, increase node time  - END");
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Jump tries increased, increase node time  - END");
         pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
         return;
     }
@@ -2987,9 +3000,17 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, con
 	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
 	    return;
     }
+    if (BotShouldDuckJump(pBot) || (currentNode.iNodeBits & BIT_DUCKJUMP)) {
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "DuckJump tries increased, increase node time - START");
+        pBot->doDuckJump();
+        pBot->iDuckJumpTries++;
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "DuckJump tries increased, increase node time  - END");
+        pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
+        return;
+    }
     if (pBot->isOnLadder()) {
 	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Is stuck on ladder, trying to get of the ladder by jumping");
-	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Duck-jump tries increased");
+	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "DuckJump tries increased");
 	    pBot->doJump(vector);
 	    pBot->iJumpTries++;
 	    pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "Finished!");
@@ -3804,7 +3825,7 @@ char *cNodeMachine::getGoalTypeAsText(const tGoal &goal)
         default:
             sprintf(typeAsText, "GOAL UNKNOWN");
     }
-    return typeAsText; //TODO: local variable invalid [APG]RoboCop[CL]
+    return typeAsText;	//TODO: local variable invalid [APG]RoboCop[CL]
 }
 
 // Find cover

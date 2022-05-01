@@ -1026,10 +1026,10 @@ void cBot::FireWeapon() {
             UTIL_BotPressKey(this, IN_ATTACK);     // Hold fire
             // All other weapons, the more distance, the more time we add to holding weapon
             if (f_shoot_wait_time < gpGlobals->time) {
-                // AK, COLT, STEYR AUG, only when enough skill!
-                if ((CarryWeapon(CS_WEAPON_AK47)
-                     || CarryWeapon(CS_WEAPON_M4A1)
-                     || CarryWeapon(CS_WEAPON_AUG)) && (bot_skill < 3)) {
+                // AK, COLT, STEYR AUG, SIG SG552 only when enough skill!
+                if ((CarryWeapon(CS_WEAPON_AK47) || CarryWeapon(CS_WEAPON_M4A1)
+                     || CarryWeapon(CS_WEAPON_SG552) || CarryWeapon(CS_WEAPON_AUG))
+						&& (bot_skill < 3)) {
 	                float f_burst = (2048 / fDistance) + 0.1f;
                     if (f_burst < 0.1f)
                         f_burst = 0.1f;
@@ -1129,6 +1129,7 @@ void cBot::Combat() {
     // Bot is on ladder
     if (isOnLadder()) {
         // TODO: Bot fights when on ladder
+    	
         return;
     }
 
@@ -1479,6 +1480,7 @@ void cBot::InteractWithPlayers() {
 
             // We do not forget our enemy, but we will try to get the heck out of here.
             // TODO TODO TODO: code something here?
+        	
         }
         // Whenever we hold a knife, get our primary weapon
         if (CarryWeapon(CS_WEAPON_KNIFE)) {
@@ -4010,7 +4012,7 @@ bool cBot::canSeeVector(const Vector& vDest) const
 
     if (tr.flFraction < 1.0f)
         return false;
-
+	
     return true;
 }
 
@@ -4154,7 +4156,7 @@ void cBot::checkIfHostagesAreRescued() {
     if (isHostageRescued(this, hostage4))  forgetHostage(hostage4);
 }
 
-bool cBot::isOnSameTeamAs(cBot *pBot) const
+bool cBot::isOnSameTeamAs(const cBot *pBot) const
 {
     if (pBot == nullptr) return false;
     return pBot->iTeam == this->iTeam;
@@ -4347,7 +4349,7 @@ void cBot::doDuck() {
     UTIL_BotPressKey(this, IN_DUCK);
     this->f_hold_duck = gpGlobals->time + 0.5f;
 
-    this->increaseTimeToMoveToNode(0.5);
+    this->increaseTimeToMoveToNode(0.5f);
 }
 
 bool cBot::isDucking() {
@@ -4388,9 +4390,33 @@ void cBot::doJump() {
 }
 
 bool cBot::isJumping() {
-	const bool b = keyPressed(IN_JUMP) || f_jump_time > gpGlobals->time;
+	const bool b = keyPressed(IN_JUMP) || this->f_jump_time > gpGlobals->time;
     if (b) {
         rprint_trace("isJumping", "Yes I am jumping");
+    }
+    return b;
+}
+
+// Experimental DuckJump added for the NodeMachine [APG]RoboCop[CL]
+//
+void cBot::doDuckJump(){
+    rprint_trace("doDuckJump", "no vector");
+    UTIL_BotPressKey(this, IN_DUCK); 
+    this->f_hold_duck = gpGlobals->time + 0.75f;
+
+    UTIL_BotPressKey(this, IN_JUMP);
+    this->f_jump_time = gpGlobals->time + 0.75f;
+	
+	this->increaseTimeToMoveToNode(0.75f);
+}
+
+// Bots require both the combination of the (IN_DUCK) and (IN_JUMP) key to be pressed
+// in order to properly duck jump.
+bool cBot::isDuckJumping() {
+	const bool b = keyPressed(IN_JUMP) && keyPressed(IN_DUCK) ||
+        this->f_hold_duck > gpGlobals->time && this->f_jump_time > gpGlobals->time ;
+    if (b) {
+        rprint_trace("isDuckJumping", "Yes I am DuckJumping");
     }
     return b;
 }
