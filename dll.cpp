@@ -537,10 +537,10 @@ void StartFrame() {
 
     // TODO: Add Autovacate regulation with bot count loop
     // Experimental autovacate script from POD-Bot Incomplete [APG]RoboCop[CL]
-    max_bots = max_bots > gpGlobals->maxClients ? gpGlobals->maxClients : max_bots < 0 ? 0 : max_bots;
+    /*max_bots = max_bots > gpGlobals->maxClients ? gpGlobals->maxClients : max_bots < 0 ? 0 : max_bots;
     min_bots = min_bots > gpGlobals->maxClients ? gpGlobals->maxClients : min_bots < 0 ? 0 : min_bots;
     if (max_bots < min_bots)
-        min_bots = max_bots;
+        min_bots = max_bots;*/
 
     // When a user - or anything else - specified a higher number of 0 to
     // kick bots, then we will do as told.

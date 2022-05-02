@@ -465,6 +465,11 @@ bool cNodeMachine::node_on_crate(const Vector& vOrigin, edict_t *pEdict) {
     return false;
 }
 
+int cNodeMachine::node_dangerous(int iTeam, Vector vOrigin, float fMaxDistance) //Experimental & Incomplete [APG]RoboCop[CL]
+{
+    return 0;
+}
+
 /**
  * Find a node close to vOrigin within distance fDist. Ignoring any pEdict it hits.
  * @param vOrigin
@@ -1393,13 +1398,13 @@ void cNodeMachine::draw(edict_t *pEntity) {
                     r = g = 0;
 
                 if (Nodes[i].iNodeBits & BIT_DUCK)					
-                    r = b = 0;
+                    r = b = 50;
             	// Jump and DuckJump was missing for those nodes? [APG]RoboCop[CL]
                 if (Nodes[i].iNodeBits & BIT_JUMP)
-                    r = b = 0;
+                    r = b = 100;
 
                 if (Nodes[i].iNodeBits & BIT_DUCKJUMP)
-                    r = b = 0;
+                    r = b = 150;
             	
                 if (Nodes[i].iNeighbour[0] < 0)
                     r = 0;
@@ -2505,8 +2510,8 @@ int cNodeMachine::node_camp(const Vector& vOrigin, int iTeam) {
     if (iX > -1 && iY > -1)
     {
 	    int iVisibility = 9999;
-	    float fDistance = 9999;
-	    float fDanger = 2.0;
+	    float fDistance = 9999.0f;
+	    float fDanger = 2.0f;
 	    // Search in this meredian
         for (int i = 0; i < MAX_NODES_IN_MEREDIANS; i++)
             if (Meredians[iX][iY].iNodes[i] > -1) {

@@ -102,8 +102,8 @@
 
 // Node boundries
 #define MAX_NODES        4096
-#define MAX_NEIGHBOURS    16
-#define NODE_ZONE        45
+#define MAX_NEIGHBOURS   8
+#define NODE_ZONE        128
 #define MAX_PATH_NODES    MAX_NODES
 
 // Max troubled node connections we remember
