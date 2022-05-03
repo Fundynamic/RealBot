@@ -362,7 +362,7 @@ bool BotShouldJumpIfStuck(cBot *pBot) {
 
     if (pBot->isJumping()) return false; // already jumping
 
-    if (pBot->iJumpTries > 3) {
+    if (pBot->iJumpTries > 5) {
         char msg[255];
         sprintf(msg, "Returning false because jumped too many times (%d)", pBot->iJumpTries);
         pBot->rprint_trace("BotShouldJumpIfStuck", msg);
@@ -575,8 +575,8 @@ bool BotShouldDuckJump(cBot* pBot) //Experimental DuckJump Incomplete [APG]RoboC
         return false;
     }
 
-    if (pBot->iDuckJumpTries > 3) {
-	    // tried to duck 3 times, so no longer!
+    if (pBot->iDuckJumpTries > 5) {
+	    // tried to duck 5 times, so no longer!
     	pBot->rprint_trace("BotShouldDuck", "Returning false because ducked too many times.");
     	return false;
     }

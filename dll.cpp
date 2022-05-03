@@ -1245,7 +1245,7 @@ void RealBot_ServerCommand() {
     if (FStrEq(pcmd, "help")) {
         // Give information
         bSendMessage = false;     // do not use 'standard' stuff
-        SERVER_PRINT("=============================================================================\n");
+        SERVER_PRINT("=====================================\n");;
         SERVER_PRINT("Syntax: realbot [command] [arg1/subcommand] [arg2] [arg3] [arg4]\n\n");
         SERVER_PRINT("List of most-used commands; for full command list read the readme.\n\n");
         SERVER_PRINT("realbot add (team) (skill) (model) (name)\n");
@@ -1255,7 +1255,7 @@ void RealBot_ServerCommand() {
         SERVER_PRINT("realbot remove (amount) ((optional) of team 1(T)/2(CT))\n");
         SERVER_PRINT("realbot skill (-1(random), 0(godlike)-10(newbie)\n");
         SERVER_PRINT("realbot server [subcommand]\n");
-        SERVER_PRINT("=============================================================================\n");
+        SERVER_PRINT("=====================================\n");
     } else if (FStrEq(pcmd, "chatrate")) {
         if ((arg1 != nullptr) && (*arg1 != 0)) {
             Game.iMaxSentences = atoi(arg1);
@@ -2039,9 +2039,9 @@ void RealBot_ServerCommand() {
             SERVER_PRINT("\n");
         }
 
-        SERVER_PRINT("============================================================================\n");
+        SERVER_PRINT("=====================================\n");
         SERVER_PRINT(cMessage);
-        SERVER_PRINT("============================================================================\n");
+        SERVER_PRINT("=====================================\n");
 
         // Put an extra carriage return when using dedicated server.
         if (IS_DEDICATED_SERVER()) {
