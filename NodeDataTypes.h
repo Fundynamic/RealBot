@@ -102,7 +102,7 @@
 
 // Node boundries
 #define MAX_NODES        4096
-#define MAX_NEIGHBOURS   16 // Maybe reduce it to 6 ot 8 as 16 is maybe too much [APG]RoboCop[CL]
+#define MAX_NEIGHBOURS   16 // Maybe reduce it to 6 or 8 as 16 is maybe too much [APG]RoboCop[CL]
 #define NODE_ZONE        96 // Maybe increase it to 128 or 144 to reduce the amount of excess nodes [APG]RoboCop[CL]
 #define MAX_PATH_NODES    MAX_NODES
 
