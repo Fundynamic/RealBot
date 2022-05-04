@@ -8,3 +8,4 @@
 - Allow bots to autovacate for human players
 - Prevent bots from Team Killing when a player joins T in CZ
 - Find an automated solution for removing redundant or excessive nodes that can make the connections less messy (if it doesn't already exist?)
+- To add a cvar to toggle Reallog.txt on or off to reduce printing too many texts in the console and to prevent that txt file building up
