@@ -309,7 +309,8 @@ int UTIL_GetTeam(edict_t *pEntity) {
             (strcmp(model_name, "leet") == 0) ||  // L337 Krew
             (strcmp(model_name, "artic") == 0) || // Artic Avenger
             (strcmp(model_name, "arctic") == 0) ||        // Artic Avenger - fix for arctic? - seemed a typo?
-            (strcmp(model_name, "guerilla") == 0))        // Gorilla Warfare
+            (strcmp(model_name, "guerilla") == 0))      // Gorilla Warfare
+			//(strcmp(model_name, "militia") == 0))       // CZ Militia
         {
             return 0; // team Terrorists
         } else if ((strcmp(model_name, "urban") == 0) ||  // Seal Team 6
