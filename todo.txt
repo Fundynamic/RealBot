@@ -7,3 +7,4 @@
 - Improve 'unstucking'... when not stuck by other players.
 - Allow bots to autovacate for human players
 - Prevent bots from Team Killing when a player joins T in CZ
+- Find an automated solution for removing redundant or excessive nodes that can make the connections less messy (if it doesn't already exist?)
