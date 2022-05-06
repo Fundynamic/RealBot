@@ -4,7 +4,7 @@
 - Improve pathfinder by properly removing excessive connections, especially on ones that have blocked pathways - Not fully tested!
 - Allow bots to duck jump for vaulting upon crates or ledges, cs_italy, de_nuke and de_inferno are good examples - Almost done!
 - Improve the way bots walk path and decide it is a bad connection
-- Improve 'unstucking'... when not stuck by hostages.
+- Improve 'unstucking'... when not stuck by hostages and how to attack glass or vent grills in order to proceed.
 - Allow bots to autovacate for human players
 - Prevent bots from Team Killing when a player joins T in CZ
 - Find an automated solution for removing redundant or excessive nodes that can make the connections less messy (if it doesn't already exist?)

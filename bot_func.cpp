@@ -865,7 +865,7 @@ bool FUNC_IsOnLadder(const edict_t *pEntity) {
     return false;
 }
 
-void FUNC_FindBreakable(edict_t* pEntity) //Experimental [APG]RoboCop[CL]
+void FUNC_FindBreakable(edict_t* pEntity) //TODO: not functioning, bots won't shoot windows nor vent doors to proceed [APG]RoboCop[CL]
 {
 	// The "func_breakable" entity required for glass breaking and weak doors for bots to recognise,
 	// in order to attack breakable objects that would block their way.
