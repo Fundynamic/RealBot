@@ -961,15 +961,15 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       pBot->ipRandom = RANDOM_LONG(40, 80);
 
       // Radio
-      pBot->ipReplyToRadio = RANDOM_LONG(10, 25);
-      pBot->ipCreateRadio = RANDOM_LONG(10, 25);
+      pBot->ipReplyToRadio = RANDOM_LONG(10, 20);
+      pBot->ipCreateRadio = RANDOM_LONG(10, 20);
       pBot->ipHearRate = RANDOM_LONG(20, 60);
 
       // Person
       pBot->ipTurnSpeed = RANDOM_LONG(20, 40);
-      pBot->ipCampRate = RANDOM_LONG(0, 60);
-      pBot->ipChatRate = RANDOM_LONG(0, 20);
-      pBot->ipWalkWithKnife = RANDOM_LONG(0, 40);
+      pBot->ipCampRate = RANDOM_LONG(0, 40);
+      pBot->ipChatRate = RANDOM_LONG(10, 20);
+      pBot->ipWalkWithKnife = RANDOM_LONG(0, 30);
 
       // SAVE TO DISK:
       //char dirname[256];
