@@ -958,11 +958,11 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       // Game
       pBot->ipHostage = RANDOM_LONG(25, 70);
       pBot->ipBombspot = RANDOM_LONG(25, 70);
-      pBot->ipRandom = RANDOM_LONG(25, 70);
+      pBot->ipRandom = RANDOM_LONG(40, 80);
 
       // Radio
-      pBot->ipReplyToRadio = RANDOM_LONG(5, 20);
-      pBot->ipCreateRadio = RANDOM_LONG(5, 20);
+      pBot->ipReplyToRadio = RANDOM_LONG(10, 25);
+      pBot->ipCreateRadio = RANDOM_LONG(10, 25);
       pBot->ipHearRate = RANDOM_LONG(20, 60);
 
       // Person

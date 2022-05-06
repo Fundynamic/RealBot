@@ -1980,7 +1980,7 @@ void cBot::Act() {
 
         pEdict->v.button &= (~IN_RUN);    // release IN_RUN
         rprint("Act", "Walk time > gpGlobals->time");
-        setMoveSpeed(((f_max_speed) / 2 + (f_max_speed) / 50));
+        setMoveSpeed((f_max_speed) / 2 + (f_max_speed) / 50);
     }
 
     // When we are at max speed, press IN_RUN to get a running animation
