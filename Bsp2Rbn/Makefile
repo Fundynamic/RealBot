@@ -8,7 +8,7 @@ METAMOD_SRCDIR = ../../metamod-p/metamod
 HLSDK_BASEDIR = ../../hlsdk-2.3-p4
 
 BASEFLAGS = -g -Wall
-CPPFLAGS = ${BASEFLAGS} -march=${ARCHFLAG} -O2 -w -I"${METAMOD_SRCDIR}" -I"${HLSDK_BASEDIR}/multiplayer/common" -I"${HLSDK_BASEDIR}/multiplayer/dlls" -I"${HLSDK_BASEDIR}/multiplayer/engine" -I"${HLSDK_BASEDIR}/multiplayer/pm_shared"
+CPPFLAGS = ${BASEFLAGS} -march=${ARCHFLAG} -O2 -w -I"${METAMOD_SRCDIR}" -I"${HLSDK_BASEDIR}/multiplayer/common" -I"${HLSDK_BASEDIR}/multiplayer/dlls" -I"${HLSDK_BASEDIR}/multiplayer/engine" -I"${HLSDK_BASEDIR}/multiplayer/pm_shared" -I"${HLSDK_BASEDIR}/multiplayer/public"
 
 all: Bsp2Rbn DumpNodes DrawNodes
 
