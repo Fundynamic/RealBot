@@ -158,12 +158,12 @@ binary.sources += [
   'util.cpp',
 ]
 
-builder.RunBuildScripts(
-  [
-    'Bsp2Rbn/AMBuilder',
-  ],
-  #{ 'AMXX': AMXX }
-)
+#builder.RunBuildScripts(
+#  [
+#    'Bsp2Rbn/AMBuilder',
+#  ],
+#  #{ 'AMXX': AMXX }
+#)
 
 #
 # Run scripts, add binaries
