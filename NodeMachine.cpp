@@ -371,7 +371,7 @@ Vector cNodeMachine::node_vector(int iNode) const
         return Nodes[iNode].origin;
     }
 
-    return Vector(9999, 9999, 9999);
+    return {9999, 9999, 9999};
 }
 
 // Input: Vector, Output X and Y Meredians
@@ -465,8 +465,13 @@ bool cNodeMachine::node_on_crate(const Vector& vOrigin, edict_t *pEdict) {
     return false;
 }
 
-int cNodeMachine::node_dangerous(int iTeam, Vector vOrigin, float fMaxDistance) //Experimental & Incomplete [APG]RoboCop[CL]
+int cNodeMachine::node_dangerous(int iTeam, const Vector& vOrigin, float fMaxDistance) //Experimental & Incomplete [APG]RoboCop[CL]
 {
+	// check if node is dangerous
+	//int iDangerous = 0;
+	//int iDangerousCount = 0;
+	//int iDangerousIndex = 0;
+	
     return 0;
 }
 
@@ -694,7 +699,7 @@ int cNodeMachine::freeNeighbourNodeIndex(const tNode *Node) {
     return -1;
 }
 
-int cNodeMachine::is_neighbour_node(tNode node, int iNode)
+int cNodeMachine::is_neighbour_node(const tNode& node, int iNode)
 {
     for (int i = 0; i < MAX_NEIGHBOURS; i++) {
 		if (node.iNeighbour[i] == iNode) {
@@ -729,7 +734,7 @@ static Vector FloorBelow(const Vector& V) {
 
     // First use this hull
     int HullNumber = human_hull;
-    int HullHeight = 36;
+    float HullHeight = 36.0f;
 
     // Bump V a little higher (to allow for a steep climb)
     Vector UpALittle = V + Vector(0, 0, HullHeight);
@@ -1900,7 +1905,7 @@ void cNodeMachine::addGoal(edict_t *pEdict, int goalType, const Vector& vVec) {
         return;
     }
 
-    int distance = NODE_ZONE * 2;
+    float distance = NODE_ZONE * 2;
 
     // some goals require very close nodes
     if (goalType == GOAL_HOSTAGE ||

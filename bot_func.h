@@ -69,7 +69,7 @@ bool FUNC_TakeCover(cBot * pBot);
 
 int FUNC_EdictHoldsWeapon(const edict_t * pEdict);
 
-int FUNC_FindFarWaypoint(cBot * pBot, Vector avoid, bool safest);
+int FUNC_FindFarWaypoint(cBot * pBot, const Vector& avoid, bool safest);
 int FUNC_FindCover(const cBot* pBot);
 int FUNC_PlayerSpeed(const edict_t * edict);
 

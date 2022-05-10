@@ -62,7 +62,7 @@ public:
 
     static int freeNeighbourNodeIndex(const tNode *Node);
 
-    static int is_neighbour_node(tNode node, int iNode);
+    static int is_neighbour_node(const tNode& node, int iNode);
 
     // -----------------
     void init();                 // Init (info)nodes
@@ -105,7 +105,7 @@ public:
 
     static bool node_on_crate(const Vector& vOrigin, edict_t *pEdict);
 
-    static int node_dangerous(int iTeam, Vector vOrigin, float fMaxDistance);
+    static int node_dangerous(int iTeam, const Vector& vOrigin, float fMaxDistance);
 
     int node_look_camp(const Vector& vOrigin, int iTeam, edict_t *pEdict);
 

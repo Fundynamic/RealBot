@@ -690,7 +690,7 @@ int FUNC_EdictHoldsWeapon(const edict_t *pEdict) {
     return -1;
 }
 
-int FUNC_FindFarWaypoint(cBot* pBot, Vector avoid, bool safest) //Experimental [APG]RoboCop[CL]
+int FUNC_FindFarWaypoint(cBot* pBot, const Vector& avoid, bool safest) //Experimental [APG]RoboCop[CL]
 {
 	// Find a waypoint that is far away from the enemy.
 	// If safest is true, then we want the safest waypoint.

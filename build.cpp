@@ -8,4 +8,4 @@
 // 07/07/04 - Comment changed, it was moved from dll.cpp, not bot.cpp ;) (nitpicking) :D
 
 // BUILD NR & Version
-const char *rb_version_nr = "4.0.5-beta2";
+const char *rb_version_nr = "4.0.5-beta3";
