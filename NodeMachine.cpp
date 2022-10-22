@@ -3397,7 +3397,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     // DETERMINE GOAL / FIND GOAL
 
     // Loop through all goals.
-    float highestScore = 0.0;
+    float highestScore = 0.0f;
 
     int iFinalGoalNode = -1;
     int iFinalGoalIndex = -1;
@@ -3485,19 +3485,19 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
                     if (pBot->isEscortingHostages()) {
                         pBot->rprint("I am escorting hostages - assuming ct spawn is rescue zone and prioritizing");
                         // highest priority
-                        score = 2.0;
+                        score = 2.0f;
                     }
                 }
             }
 
             if (goalType == GOAL_HOSTAGE) {
                 // counter-terrorist should
-                float goalscore = 0.0;
+                float goalscore = 0.0f;
                 if (pBot->isCounterTerrorist()) {
                     if (pBot->isEscortingHostages()) {
                         pBot->rprint("I am escorting hostages - should ignore existing hostages");
                         // already escorting hostages, low interest for other hostages
-                        goalscore = 0.5;
+                        goalscore = 0.5f;
                     } else {
                         // always go to the most furthest hostage spot, and add some randomness here, else
                         // all bots go to there.
@@ -3573,11 +3573,11 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
                             } else {
                                 pBot->rprint_trace("path_think/determine goal", "We know where the C4 is planted, but unfortunately we can't find a close node to the planted c4.");
                                 // we can't find a node close to the c4, so we gamble
-                                goalscore = 2.0; // pick
+                                goalscore = 2.0f; // pick
                             }
                         } else {
                             pBot->rprint_trace("path_think/determine goal", "No clue where bomb is, picking bombspot to evaluate");
-                            goalscore = 2.0; // pick any bombspot
+                            goalscore = 2.0f; // pick any bombspot
                         }
                     } else {
                         pBot->rprint_trace("path_think/determine goal", "Bomb is not planted");
@@ -3625,7 +3625,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         {
             // Maximum importance when acting as T
             if (pBot->iTeam == 1) {
-                score = 2.0;
+                score = 2.0f;
             }
         }
 
@@ -4405,8 +4405,8 @@ static void WriteDebugBitmap(const char *filename) {
 
 void cNodeMachine::FindMinMax() const
 {
-	minx = miny = 9999.0;
-    maxx = maxy = -9999.0;
+	minx = miny = 9999.0f;
+    maxx = maxy = -9999.0f;
     for (int i = 0;
          (i < MAX_NODES) && (Nodes[i].origin != Vector(9999, 9999, 9999));
          i++) {
@@ -4568,7 +4568,7 @@ void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) 
         pBot->vHead = VecBModelOrigin(pEntityHit);
         pBot->vBody = pBot->vHead;
         UTIL_BotPressKey(pBot, IN_USE);
-        pBot->setTimeToWait(0.5);
+        pBot->setTimeToWait(0.5f);
         pBot->fButtonTime = gpGlobals->time + 5;
         pBot->pButtonEdict = nullptr;
 

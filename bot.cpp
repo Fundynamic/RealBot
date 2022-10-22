@@ -309,7 +309,7 @@ void cBot::NewRound() {
     fLastRunPlayerMoveTime = gpGlobals->time;
     fCheckHostageStatusTimer = gpGlobals->time;
     fButtonTime = gpGlobals->time;
-    fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5f, 5.0f);
+    fChatTime = gpGlobals->time + RANDOM_FLOAT(2.5f, 5.0f);
     fMemoryTime = gpGlobals->time;
     fDoRadio = gpGlobals->time;
     const float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
@@ -429,7 +429,7 @@ void cBot::NewRound() {
     bFirstOutOfSight = false;
 
 
-    f_strafe_speed = 0.0;
+    f_strafe_speed = 0.0f;
 
     // ------------------------
     // VECTORS
