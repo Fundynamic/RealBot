@@ -136,7 +136,7 @@ void cBot::SpawnInit() {
     fUpdateTime = gpGlobals->time;
     fLastRunPlayerMoveTime = gpGlobals->time - 0.1f;
     fButtonTime = gpGlobals->time;
-    fChatTime = gpGlobals->time + RANDOM_FLOAT(0.5f, 5.0f);
+    fChatTime = gpGlobals->time + RANDOM_FLOAT(2.5f, 5.0f);
     fMemoryTime = gpGlobals->time;
     fDoRadio = gpGlobals->time;
     const float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
