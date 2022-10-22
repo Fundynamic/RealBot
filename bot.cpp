@@ -1003,7 +1003,7 @@ void cBot::FireWeapon() {
     }
 
     // ------------------------------------------------------------
-    float fDistance = 50;
+    float fDistance = 50.0f;
 
     if (hasEnemy()) {
         fDistance = func_distance(pEdict->v.origin, pEnemyEdict->v.origin);
