@@ -465,7 +465,7 @@ bool cNodeMachine::node_on_crate(const Vector& vOrigin, edict_t *pEdict) {
     return false;
 }
 
-int cNodeMachine::node_dangerous(int iTeam, const Vector& vOrigin, float fMaxDistance) //Experimental & Incomplete [APG]RoboCop[CL]
+int cNodeMachine::node_dangerous(int iTeam, const Vector& vOrigin, float fMaxDistance) //TODO: Experimental & Incomplete [APG]RoboCop[CL]
 {
 	// check if node is dangerous
 	//int iDangerous = 0;
@@ -507,7 +507,7 @@ int cNodeMachine::getClosestNode(const Vector& vOrigin, float fDist, edict_t *pE
 
         const int iNode = Meredians[iX][iY].iNodes[i];
 
-//        if (Nodes[iNode].origin.z > (vOrigin.z + 32)) continue; // do not pick nodes higher than us
+		//if (Nodes[iNode].origin.z > (vOrigin.z + 32)) continue; // do not pick nodes higher than us
 
         const float distanceFromTo = func_distance(vOrigin, Nodes[iNode].origin);
         if (distanceFromTo < dist) {
