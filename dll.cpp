@@ -834,7 +834,7 @@ void StartFrame() {
         if (add_timer > gpGlobals->time && internet_addbot) {
             internet_addbot = false;
             Game.createBot(nullptr, nullptr, nullptr, nullptr, nullptr);
-            bot_check_time = gpGlobals->time + 5.0f;
+            bot_check_time = gpGlobals->time + 8.0f;
         }
 
     }
@@ -949,8 +949,8 @@ void StartFrame() {
             // 01/07/04 - Stefan - make 100% sure we do not crash on this part with the auto-add function
             f_minplayers_think = gpGlobals->time + 15;  // do not check this for 15 seconds from now
 
-            respawn_time = gpGlobals->time + 3.0f;       // set next respawn time
-            bot_check_time = gpGlobals->time + 5.0f;
+            respawn_time = gpGlobals->time + 5.0f;       // set next respawn time
+            bot_check_time = gpGlobals->time + 8.0f;
         } else {
             respawn_time = 0.0f;
         }
@@ -1155,7 +1155,7 @@ void ProcessBotCfgFile() {
 
         bot_cfg_fp = nullptr;
 
-        bot_cfg_pause_time = 0.0;
+        bot_cfg_pause_time = 5.0;
     }
 
     cmd_line[cmd_index] = 0;     // terminate the command line
@@ -1278,7 +1278,7 @@ void RealBot_ServerCommand() {
                         ATTN_NORM, 0, 100);
     } else if (FStrEq(pcmd, "add")) {
 	    const int iStatus = Game.createBot(pEntity, arg1, arg2, arg3, arg4);
-        bot_check_time = gpGlobals->time + 5.0f;
+        bot_check_time = gpGlobals->time + 8.0f;
         if (iStatus == GAME_MSG_SUCCESS)
             sprintf(cMessage, "REALBOT: Successfully created bot.");
 
