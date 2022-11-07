@@ -99,7 +99,7 @@ int internet_min_interval = 10;
 // Counter-Strike 1.6 or 1.5
 int counterstrike = 0;          // Default 1.5
 
-//void UpdateClientData(const edict_s *ent, int sendweapons, clientdata_s *cd); //Not used? [APG]RoboCop[CL]
+void UpdateClientData(const edict_s *ent, int sendweapons, clientdata_s *cd); //Not used? [APG]RoboCop[CL]
 
 void ProcessBotCfgFile();
 
@@ -1109,6 +1109,10 @@ void FakeClientCommand(edict_t *pBot, char *arg1, char *arg2, char *arg3) {
     RETURN_META(MRES_IGNORED);
 }*/
 
+void UpdateClientData(const edict_s* ent, int sendweapons, clientdata_s* cd) //TODO: Needed implemented
+{
+}
+
 void ProcessBotCfgFile() {
 	char cmd_line[256];
 	static char server_cmd[80];
@@ -1155,7 +1159,7 @@ void ProcessBotCfgFile() {
 
         bot_cfg_fp = nullptr;
 
-        bot_cfg_pause_time = 5.0;
+		bot_cfg_pause_time = 8.0f;  // wait 8 seconds before starting
     }
 
     cmd_line[cmd_index] = 0;     // terminate the command line
