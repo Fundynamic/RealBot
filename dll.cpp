@@ -949,7 +949,7 @@ void StartFrame() {
             // 01/07/04 - Stefan - make 100% sure we do not crash on this part with the auto-add function
             f_minplayers_think = gpGlobals->time + 15;  // do not check this for 15 seconds from now
 
-            respawn_time = gpGlobals->time + 5.0f;       // set next respawn time
+            respawn_time = gpGlobals->time + 7.0f;       // set next respawn time
             bot_check_time = gpGlobals->time + 8.0f;
         } else {
             respawn_time = 0.0f;
