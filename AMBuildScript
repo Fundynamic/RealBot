@@ -73,6 +73,7 @@ if cxx.like('gcc'):
     '-Wno-unused-value',
     '-fno-strict-aliasing',
     '-fPIC',
+	'-msse2',
     '-m32'
   ]
 
@@ -95,6 +96,8 @@ elif cxx.like('msvc'):
   ]
 
   cxx.cxxflags += [
+  	'/std:c++14',
+  	'/arch:SSE2',
     '/EHsc'
   ]
 
@@ -106,7 +109,7 @@ elif cxx.like('msvc'):
   ]
 
   if builder.options.opt == '1':
-    cxx.cflags += ['/Ox']
+    cxx.cflags += ['/O2']
     cxx.linkflags += ['/OPT:ICF', '/OPT:REF']
 
   if builder.options.debug == '1':

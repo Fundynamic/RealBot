@@ -1250,7 +1250,7 @@ void RealBot_ServerCommand() {
     if (FStrEq(pcmd, "help")) {
         // Give information
         bSendMessage = false;     // do not use 'standard' stuff
-        SERVER_PRINT("=====================================\n");;
+        SERVER_PRINT("=====================================\n");
         SERVER_PRINT("Syntax: realbot [command] [arg1/subcommand] [arg2] [arg3] [arg4]\n\n");
         SERVER_PRINT("List of most-used commands; for full command list read the readme.\n\n");
         SERVER_PRINT("realbot add (team) (skill) (model) (name)\n");
