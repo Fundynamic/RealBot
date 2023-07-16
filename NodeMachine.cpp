@@ -2960,7 +2960,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     pBot->rprint_trace("cNodeMachine::path_walk", msg);
 
     const bool isStuck = distanceMoved < expectedMoveDistance && pBot->shouldBeAbleToMove() && notStuckForAWhile; // also did not evaluate this logic for 0.5 second
-    Vector &vector = Nodes[currentNodeToHeadFor].origin;
+    const Vector &vector = Nodes[currentNodeToHeadFor].origin;
 
     if (isStuck) {
         pBot->rprint_trace("cNodeMachine::path_walk", "!!!STUCK STUCK STUCK STUCK STUCK STUCK STUCK!!!");
@@ -3451,7 +3451,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
 		
         for (int botIndex = 0; botIndex < MAX_BOTS; botIndex++) {
             // not a bot
-            cBot *botPointer = &bots[botIndex];
+            const cBot *botPointer = &bots[botIndex];
             if (botPointer == nullptr ||
                 !botPointer->bIsUsed ||
                 botPointer == pBot) { // skip self

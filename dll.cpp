@@ -987,12 +987,12 @@ void StartFrame() {
                     spawn_time_reset = TRUE;
 
                     if (respawn_time >= 1.0f)
-                        respawn_time = min(respawn_time, gpGlobals->time + (float) 1.0f);
+                        respawn_time = std::min(respawn_time, gpGlobals->time + 1.0f);
 
                     if (bot_cfg_pause_time >= 1.0f)
                         bot_cfg_pause_time =
-                                min(bot_cfg_pause_time,
-                                    gpGlobals->time + (float) 1.0f);
+                                std::min(bot_cfg_pause_time,
+                                    gpGlobals->time + 1.0f);
                 }
             }
         }
