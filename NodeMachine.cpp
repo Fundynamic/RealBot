@@ -722,7 +722,7 @@ int cNodeMachine::getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex) {
 
 // Compute the horizontal distance between A and B (ignoring z coordinate)
 static float horizontal_distance(const Vector& a, const Vector& b) {
-    return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
+    return std::sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y));
 }
 
 #define STEP    20              //Incremental move

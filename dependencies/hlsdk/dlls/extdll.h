@@ -92,9 +92,9 @@ typedef int BOOL;
 #endif //_WIN32
 
 // Misc C-runtime library headers
-#include "stdio.h"
-#include "stdlib.h"
-#include "math.h"
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
 
 // Header file containing definition of globalvars_t and entvars_t
 typedef unsigned int func_t;					//

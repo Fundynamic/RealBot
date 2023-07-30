@@ -890,6 +890,22 @@ void FUNC_FindBreakable(edict_t* pEntity) //TODO: not functioning, bots won't sh
 	}
 }
 
+/*bool IsShootableBreakable(edict_t* pent)  // KWo - 08.02.2006
+{
+    if (pent == nullptr)
+        return false;
+
+    return (FStrEq("func_breakable", STRING(pent->v.classname))
+        && (pent->v.playerclass == 1 || pent->v.health == 0
+            || pent->v.health > 1 && pent->v.health < 1000
+            || pent->v.rendermode == 4) // KWo - 21.02.2006 - br. crates has rendermode 4
+        || FStrEq("func_pushable", STRING(pent->v.classname))
+        && pent->v.health < 1000 && pent->v.spawnflags & SF_PUSH_BREAKABLE)  // KWo - 03.02.2007
+        && pent->v.impulse == 0
+        && pent->v.takedamage > 0
+        && !(pent->v.spawnflags & SF_BREAK_TRIGGER_ONLY);
+}*/
+
 void FUNC_CheckForBombPlanted(edict_t* pEntity) //Experimental [APG]RoboCop[CL]
 {
 	// Check if the bot has a bomb planted.

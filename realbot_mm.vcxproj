@@ -61,7 +61,7 @@
       <ProgramDataBaseFileName>.\Release/</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <BrowseInformationFile>.\Release/</BrowseInformationFile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
       <TreatWarningAsError>false</TreatWarningAsError>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
