@@ -230,8 +230,8 @@ void cBot::SpawnInit() {
     bWalkKnife = false;
     buy_ammo_primary = true;
     buy_ammo_secondary = true;
-    buy_primary = (Game.bPistols ? false : true);        //30/07/04: Josh, handle the pistols only mode
-    buy_secondary = (Game.bPistols ? true : false);
+    buy_primary = !Game.bPistols;        //30/07/04: Josh, handle the pistols only mode
+    buy_secondary = Game.bPistols;
     buy_armor = false;
     buy_defusekit = false;
     bFirstOutOfSight = false;
@@ -401,11 +401,11 @@ void cBot::NewRound() {
     // Buying
     buy_ammo_primary = true;
     buy_ammo_secondary = true;
-    buy_primary = (Game.bPistols ? false : true);
+    buy_primary = !Game.bPistols;
     buy_grenade = false;
     buy_smokegrenade = false;
     buy_flashbang = 0;
-    buy_secondary = (Game.bPistols ? true : false);
+    buy_secondary = Game.bPistols;
     buy_armor = false;
     buy_defusekit = false;
 
@@ -535,26 +535,33 @@ int cBot::FindEnemy() {
 
             // if bot can see the player...
             if (FInViewCone(&vVecEnd, pEdict) && FVisible(vVecEnd, pEdict)) {
-	            const int player_team = UTIL_GetTeam(pPlayer);
-	            const int bot_team = UTIL_GetTeam(pEdict);
-                if (player_team == bot_team)
-                    continue;        // do not target teammates
+                const int player_team = UTIL_GetTeam(pPlayer);
+                const int bot_team = UTIL_GetTeam(pEdict);
 
-                // Its not a friend, track enemy
-	            const float fDistance =
-                        (pPlayer->v.origin - pEdict->v.origin).Length();
+                if (player_team == bot_team) {
+                    // do not target teammates
+                    continue;
+                }
+
+                // It's not a friend, track enemy
+                const float fDistance = (pPlayer->v.origin - pEdict->v.origin).Length();
                 bool bCanSee = true;
 
                 // The further away, the less chance we see this enemy
-                //if (RANDOM_FLOAT(0,1.0) < (fDistance/4096))
-                //    bCanSee=false;
-                if (CarryWeaponType() == SNIPER)
+                // Uncomment the following lines if you want to add distance-based visibility check
+                // if (RANDOM_FLOAT(0, 1.0) < (fDistance / 4096)) {
+                //     bCanSee = false;
+                // }
+
+                // If the bot carries a sniper, always consider the enemy visible
+                if (CarryWeaponType() == SNIPER) {
                     bCanSee = true;
+                }
+
                 if (fDistance < fNearestDistance && bCanSee) {
                     fNearestDistance = fDistance;
                     pNewEnemy = pPlayer;
                 }
-                continue;
             }
         }                         // valid player
     }                            // FOR

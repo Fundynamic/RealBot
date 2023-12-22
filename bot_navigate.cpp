@@ -43,7 +43,10 @@ extern int mod_id;
 
 extern edict_t *pHostEdict;
 
-#define SCAN_RADIUS   60        // Radius to scan to prevent blocking with players
+enum
+{
+	SCAN_RADIUS = 60        // Radius to scan to prevent blocking with players
+};
 
 /**
  * Given an angle, makes sure it wraps around properly

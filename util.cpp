@@ -855,7 +855,6 @@ void UTIL_BotRadioMessage(cBot* pBot, int radio, char* arg1, char* arg2) {
 // UTIL_getGrenadeType function // - Stefan
 //////////////////////////////////
 int UTIL_GetGrenadeType(edict_t* pEntity) {
-
 	const int length = 32;
 
 	char model_name[length];
@@ -872,12 +871,10 @@ int UTIL_GetGrenadeType(edict_t* pEntity) {
 	char msg[512];
 	memset(msg, 0, sizeof(msg));
 
-	// when non empty string, let us know we missed something
-	if (!strlen(model_name) == 0) {
-		sprintf(msg, "UTIL_GetGrenadeType unknown grenade model : %s\n", model_name);
+	// when an empty string, let us know we missed something
+	if (model_name[0] == '\0') {
+		snprintf(msg, sizeof(msg), "UTIL_GetGrenadeType unknown grenade model: %s\n", model_name);
 	}
-
-	rblog(msg);
 
 	return 0;
 }
