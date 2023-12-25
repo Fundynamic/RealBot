@@ -76,18 +76,18 @@ void BotClient_CS_ShowMenu(void *p, int bot_index) {
         return;
     }
 
-    if (strcmp(static_cast<char*>(p), "#Team_Select") == 0 ||
-        strcmp(static_cast<char*>(p), "#Team_Select_Spect") == 0 ||
-        strcmp(static_cast<char*>(p), "#IG_Team_Select_Spect") == 0 ||
-        strcmp(static_cast<char*>(p), "#IG_Team_Select") == 0 ||
-        strcmp(static_cast<char*>(p), "#IG_VIP_Team_Select") == 0 ||
-        strcmp(static_cast<char*>(p), "#IG_VIP_Team_Select_Spect") == 0) {
+    if (std::strcmp(static_cast<char*>(p), "#Team_Select") == 0 ||
+        std::strcmp(static_cast<char*>(p), "#Team_Select_Spect") == 0 ||
+        std::strcmp(static_cast<char*>(p), "#IG_Team_Select_Spect") == 0 ||
+        std::strcmp(static_cast<char*>(p), "#IG_Team_Select") == 0 ||
+        std::strcmp(static_cast<char*>(p), "#IG_VIP_Team_Select") == 0 ||
+        std::strcmp(static_cast<char*>(p), "#IG_VIP_Team_Select_Spect") == 0) {
         // team select menu?
         bots[bot_index].start_action = MSG_CS_TEAM_SELECT;
-    } else if (strcmp(static_cast<char*>(p), "#Terrorist_Select") == 0) {
+    } else if (std::strcmp(static_cast<char*>(p), "#Terrorist_Select") == 0) {
         // T model select?
         bots[bot_index].start_action = MSG_CS_T_SELECT;
-    } else if (strcmp(static_cast<char*>(p), "#CT_Select") == 0) {
+    } else if (std::strcmp(static_cast<char*>(p), "#CT_Select") == 0) {
         // CT model select menu?
         bots[bot_index].start_action = MSG_CS_CT_SELECT;
     }
@@ -104,7 +104,7 @@ void BotClient_Valve_WeaponList(void *p, int bot_index) {
 
     if (state == 0) {
         state++;
-        strcpy(bot_weapon.szClassname, static_cast<char*>(p));
+        std::strcpy(bot_weapon.szClassname, static_cast<char*>(p));
     } else if (state == 1) {
         state++;
         bot_weapon.iAmmo1 = *static_cast<int*>(p);   // ammo index 1
@@ -487,7 +487,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
                 // face the attacker...
                 edict_t *damageInflictor = pBot->pEdict->v.dmg_inflictor;
                 if (damageInflictor) {
-                    if (strcmp(STRING(damageInflictor->v.classname), "player") == 0) {
+                    if (std::strcmp(STRING(damageInflictor->v.classname), "player") == 0) {
                         // Face danger vector
                         pBot->vHead = damage_origin;
                         pBot->vBody = damage_origin;
@@ -497,7 +497,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
                         pBot->rprint("BotClient_Valve_Damage", "Damage taken, by player, change goal to damage origin.");
 
                         char msg[255];
-                        sprintf(msg, "damage_origin (x,y,z) => (%f,%f,%f) | damageInflictor->v.origin (x,y,z) => (%f,%f,%f)",
+                        std::sprintf(msg, "damage_origin (x,y,z) => (%f,%f,%f) | damageInflictor->v.origin (x,y,z) => (%f,%f,%f)",
                                 damage_origin.x,
                                 damage_origin.y,
                                 damage_origin.z,
@@ -513,7 +513,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
                         pBot->forgetPath();
                     } else {
                         char msg[255];
-                        sprintf(msg, "I have a damage inflictor! -> %s", STRING(damageInflictor->v.classname));
+                        std::sprintf(msg, "I have a damage inflictor! -> %s", STRING(damageInflictor->v.classname));
                         pBot->rprint("BotClient_Valve_Damage", msg);
                     }
                 } else {
@@ -571,17 +571,17 @@ void BotClient_CS_SayText(void *p, int bot_index) {
                 char chSentence[MAX_SENTENCE_LENGTH];
                 char netname[30];
 
-                memset(sentence, 0, sizeof(sentence));
-                memset(chSentence, 0, sizeof(chSentence));
-                memset(netname, 0, sizeof(netname));
+                std::memset(sentence, 0, sizeof(sentence));
+                std::memset(chSentence, 0, sizeof(chSentence));
+                std::memset(netname, 0, sizeof(netname));
 
-                strcpy(sentence, static_cast<char*>(p)); // the actual sentence
+                std::strcpy(sentence, static_cast<char*>(p)); // the actual sentence
 
                 int length = 0;
 
                 // FIXED: In any case that this might return NULL, do not crash the server
-                if (strstr(sentence, " : "))
-                    length = strlen(sentence) - strlen(strstr(sentence, " : "));
+                if (std::strstr(sentence, " : "))
+                    length = std::strlen(sentence) - std::strlen(std::strstr(sentence, " : "));
 
                 int tc = 0;
 
@@ -591,7 +591,7 @@ void BotClient_CS_SayText(void *p, int bot_index) {
                 }
 
                 const edict_t *pPlayer = INDEXENT(ucEntIndex);
-                strcpy(netname, STRING(pPlayer->v.netname));
+                std::strcpy(netname, STRING(pPlayer->v.netname));
 
                 ChatEngine.set_sentence(netname, chSentence);
                 state = -1;
@@ -622,15 +622,15 @@ void BotClient_CS_SayText(void *p, int bot_index) {
             char netname[30];
 
             // init
-            memset(sentence, 0, sizeof(sentence));
-            memset(netname, 0, sizeof(netname));
+            std::memset(sentence, 0, sizeof(sentence));
+            std::memset(netname, 0, sizeof(netname));
 
             // copy in memory
-            strcpy(sentence, static_cast<char*>(p));
+            std::strcpy(sentence, static_cast<char*>(p));
 
             // copy netname
             const edict_t *pPlayer = INDEXENT(ucEntIndex);
-            strcpy(netname, STRING(pPlayer->v.netname));
+            std::strcpy(netname, STRING(pPlayer->v.netname));
 
             // and give chatengine something to do
             ChatEngine.set_sentence(netname, sentence);
@@ -673,7 +673,7 @@ void BotClient_CS_StatusIcon(void *p, int bot_index) {
             EnableIcon = *static_cast<int*>(p);  // check the byte
             break;
         case 1:                     // Which icon
-            if (strcmp(static_cast<char*>(p), "buyzone") == 0) {
+            if (std::strcmp(static_cast<char*>(p), "buyzone") == 0) {
                 switch (EnableIcon) {
                     case 0:               // Not in buy zone
                         state = 0;
@@ -683,7 +683,7 @@ void BotClient_CS_StatusIcon(void *p, int bot_index) {
                     default:
                         break;
                 }
-            } else if (strcmp(static_cast<char*>(p), "c4") == 0) {
+            } else if (std::strcmp(static_cast<char*>(p), "c4") == 0) {
                 switch (EnableIcon) {
                     case 0:               // No C4
                         bots[bot_index].bHUD_C4_plantable = false;
@@ -698,7 +698,7 @@ void BotClient_CS_StatusIcon(void *p, int bot_index) {
                     default:
                         break;
                 }
-            } else if (strcmp(static_cast<char*>(p), "defuser") == 0) {
+            } else if (std::strcmp(static_cast<char*>(p), "defuser") == 0) {
                 switch (EnableIcon) {
                     case 0:               // No defuser
                         state = 0;
@@ -708,7 +708,7 @@ void BotClient_CS_StatusIcon(void *p, int bot_index) {
                     default:
                         break;
                 }
-            } else if (strcmp(static_cast<char*>(p), "rescue") == 0) {
+            } else if (std::strcmp(static_cast<char*>(p), "rescue") == 0) {
                 switch (EnableIcon) {
                     case 0:               // Not in rescue zone
                         state = 0;

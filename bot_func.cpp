@@ -64,13 +64,13 @@ bool VectorIsVisibleWithEdict(edict_t *pEdict, const Vector& dest, char *checkna
                    pEdict->v.pContainingEntity, &tr);
 
     // When our check string is not "none" and the traceline has a hit...
-    if (strcmp("none", checkname) != 0 && tr.flFraction < 1.0f) {
+    if (std::strcmp("none", checkname) != 0 && tr.flFraction < 1.0f) {
         // Check if the blocking entity is same as checkname..
         char entity_blocker[128];
         const edict_t *pent = tr.pHit;  // Ok now retrieve the entity
-        strcpy(entity_blocker, STRING(pent->v.classname));        // the classname
+        std::strcpy(entity_blocker, STRING(pent->v.classname));        // the classname
 
-        if (strcmp(entity_blocker, checkname) == 0)
+        if (std::strcmp(entity_blocker, checkname) == 0)
             return true;           // We are blocked by our string, this means its ok.
         else {
             return false;          // We are blocked, but by something differernt then 'checkname' its not ok
@@ -95,13 +95,13 @@ bool VectorIsVisible(const Vector& start, const Vector& dest, char *checkname) {
     UTIL_TraceLine(start, dest, dont_ignore_monsters, nullptr, &tr);
 
     // Als we geblokt worden EN we checken voor een naam
-    if (strcmp("none", checkname) != 0 && tr.flFraction < 1.0f) {
+    if (std::strcmp("none", checkname) != 0 && tr.flFraction < 1.0f) {
         // Check if the blocking entity is same as checkname..
         char entity_blocker[128];
         const edict_t *pent = tr.pHit;  // Ok now retrieve the entity
-        strcpy(entity_blocker, STRING(pent->v.classname));        // the classname
+        std::strcpy(entity_blocker, STRING(pent->v.classname));        // the classname
 
-        if (strcmp(entity_blocker, checkname) == 0)
+        if (std::strcmp(entity_blocker, checkname) == 0)
             return false;          // We worden geblokt door die naam..
         else
             return true;           // We worden NIET geblokt door die naam (dus we worden niet geblokt).
@@ -123,7 +123,7 @@ float func_distance(Vector v1, Vector v2) {
     if (v1 && v2)
         return (v1 - v2).Length();
     else
-        return 0.0;
+        return 0.0f;
 }
 
 /**
@@ -155,7 +155,7 @@ int FUNC_InFieldOfView(edict_t *pEntity, const Vector& dest) {
     // 45 degrees to the right is the limit of the normal view angle
 
     // rsm - START angle bug fix
-    int angle = abs(static_cast<int>(view_angle) - static_cast<int>(entity_angles.y));
+    int angle = std::abs(static_cast<int>(view_angle) - static_cast<int>(entity_angles.y));
 
     if (angle > 180)
         angle = 360 - angle;
@@ -364,7 +364,7 @@ bool BotShouldJumpIfStuck(cBot *pBot) {
 
     if (pBot->iJumpTries > 5) {
         char msg[255];
-        sprintf(msg, "Returning false because jumped too many times (%d)", pBot->iJumpTries);
+        std::sprintf(msg, "Returning false because jumped too many times (%d)", pBot->iJumpTries);
         pBot->rprint_trace("BotShouldJumpIfStuck", msg);
         return false;
     }
@@ -378,7 +378,7 @@ bool BotShouldJumpIfStuck(cBot *pBot) {
     // should not jump, perhaps its a func_illusionary causing that we're stuck?
     const edict_t *entityInFov = getEntityNearbyBotInFOV(pBot);
 
-    if (entityInFov && strcmp("func_illusionary", STRING(entityInFov->v.classname)) == 0) {
+    if (entityInFov && std::strcmp("func_illusionary", STRING(entityInFov->v.classname)) == 0) {
         return true; // yes it is the case
     }
 
@@ -480,7 +480,7 @@ bool BotShouldJump(cBot *pBot) {
     // "func_illusionary" - although on cs_italy this is not detected, and probably in a lot of other cases as well
     if (tr.pHit) {
         pBot->rprint_trace("trace pHit", STRING(tr.pHit->v.classname));
-        if (strcmp("func_illusionary", STRING(tr.pHit->v.classname)) == 0) {
+        if (std::strcmp("func_illusionary", STRING(tr.pHit->v.classname)) == 0) {
         pBot->rprint_trace("BotShouldJump", "#1 Hit a func_illusionary, its a hit as well! (even though trace hit results no)");
         return true;
         }
@@ -663,23 +663,23 @@ int FUNC_EdictHoldsWeapon(const edict_t *pEdict) {
     // sniper guns
     //if (strcmp("models/p_awp.mdl", STRING(pEdict->v.weaponmodel)) == 0) //Excluded for high prices and accuracy [APG]RoboCop[CL]
     //    return CS_WEAPON_AWP;
-    if (strcmp("models/p_scout.mdl", STRING(pEdict->v.weaponmodel)) == 0)
+    if (std::strcmp("models/p_scout.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_SCOUT;
 
     // good weapons (ak, m4a1, mp5)
-    if (strcmp("models/p_ak47.mdl", STRING(pEdict->v.weaponmodel)) == 0)
+    if (std::strcmp("models/p_ak47.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_AK47;
-    if (strcmp("models/p_m4a1.mdl", STRING(pEdict->v.weaponmodel)) == 0)
+    if (std::strcmp("models/p_m4a1.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_M4A1;
-    if (strcmp("models/p_mp5navy.mdl", STRING(pEdict->v.weaponmodel)) == 0)
+    if (std::strcmp("models/p_mp5navy.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_MP5NAVY;
 
     // grenade types
-    if (strcmp("models/p_smokegrenade.mdl", STRING(pEdict->v.weaponmodel)) == 0)
+    if (std::strcmp("models/p_smokegrenade.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_SMOKEGRENADE;
-    if (strcmp("models/p_hegrenade.mdl", STRING(pEdict->v.weaponmodel)) == 0)
+    if (std::strcmp("models/p_hegrenade.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_HEGRENADE;
-    if (strcmp("models/p_flashbang.mdl", STRING(pEdict->v.weaponmodel)) == 0)
+    if (std::strcmp("models/p_flashbang.mdl", STRING(pEdict->v.weaponmodel)) == 0)
         return CS_WEAPON_FLASHBANG;
 
     // shield types //Most CS Veterans dislikes the shield [APG]RoboCop[CL]
@@ -709,8 +709,8 @@ int FUNC_FindFarWaypoint(cBot* pBot, const Vector& avoid, bool safest) //Experim
 		if (pEdict->v.flags & FL_DORMANT)
 			continue;
 
-		if (pEdict->v.classname != 0 && strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
-			if (strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
+		if (pEdict->v.classname != 0 && std::strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
+			if (std::strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
 				if (farthest == -1) {
 					farthest = i;
 					farthest_distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
@@ -755,8 +755,8 @@ int FUNC_FindCover(const cBot* pBot) //Experimental [APG]RoboCop[CL]
 		if (pEdict->v.flags & FL_DORMANT)
 			continue;
 
-		if (pEdict->v.classname != 0 && strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
-			if (strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
+		if (pEdict->v.classname != 0 && std::strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
+			if (std::strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
 				if (farthest == -1) {
 					farthest = i;
 					farthest_distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
@@ -879,8 +879,8 @@ void FUNC_FindBreakable(edict_t* pEntity) //TODO: not functioning, bots won't sh
 		if (pEdict->v.flags & FL_DORMANT)
 			continue;
 
-		if (pEdict->v.classname != 0 && strcmp(STRING(pEdict->v.classname), "func_breakable") == 0) {
-			if (strcmp(STRING(pEdict->v.classname), "func_breakable") == 0) {
+		if (pEdict->v.classname != 0 && std::strcmp(STRING(pEdict->v.classname), "func_breakable") == 0) {
+			if (std::strcmp(STRING(pEdict->v.classname), "func_breakable") == 0) {
 				if (pEdict->v.origin == pEntity->v.origin) {
 					pEntity->v.enemy = pEdict;
 					return;
@@ -913,7 +913,7 @@ void FUNC_CheckForBombPlanted(edict_t* pEntity) //Experimental [APG]RoboCop[CL]
 	// If not, then we need to go to the waypoint.
 	
     // "models/w_c4.mdl" needed for CTs to see the bomb? [APG]RoboCop[CL]
-	if (pEntity->v.model != 0 && strcmp(STRING(pEntity->v.model), "models/w_c4.mdl") == 0) {
+	if (pEntity->v.model != 0 && std::strcmp(STRING(pEntity->v.model), "models/w_c4.mdl") == 0) {
 		// Bot has a bomb planted.
 		// Go to the bomb site.
 		pEntity->v.button |= IN_USE;

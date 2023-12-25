@@ -121,15 +121,13 @@ void cNodeMachine::SetVisibilityFromTo(int iFrom, int iTo, bool bVisible) {
 void cNodeMachine::ClearVisibilityTable() const
 {
     if (cVisTable) {
-        memset(cVisTable, 0, g_iMaxVisibilityByte);
+        std::memset(cVisTable, 0, g_iMaxVisibilityByte);
     }
 }
 
 void cNodeMachine::FreeVisibilityTable() const
 {
-    if (cVisTable) {
-        free(cVisTable);
-    }
+    free(cVisTable);
 }
 
 //---------------------------------------------------------
@@ -178,7 +176,7 @@ void cNodeMachine::init() {
     //create a heap type thing...
     FreeVisibilityTable();       // 16/07/04 - free it first
     cVisTable = static_cast<unsigned char*>(malloc(iSize));
-    memset(cVisTable, 0, iSize);
+    std::memset(cVisTable, 0, iSize);
     ClearVisibilityTable();
     // END:
 
@@ -205,7 +203,7 @@ void cNodeMachine::initGoal(int g) {
     Goals[g].index = g;
     Goals[g].iChecked = 0;
     Goals[g].iBadScore = 0;   // no bad score at init
-    memset(Goals[g].name, 0, sizeof(Goals[g].name));
+    std::memset(Goals[g].name, 0, sizeof(Goals[g].name));
 }
 
 int cNodeMachine::GetTroubleIndexForConnection(int iFrom, int iTo) const
@@ -226,8 +224,8 @@ int cNodeMachine::GetTroubleIndexForConnection(int iFrom, int iTo) const
         if (Troubles[index].iFrom == iFrom &&
             Troubles[index].iTo == iTo) {
 	        char msg[255];
-	        memset(msg, 0, sizeof(msg));
-            sprintf(msg, "GetTroubleIndexForConnection | Found index [%d] for from %d to %d\n", index, iFrom, iTo);
+	        std::memset(msg, 0, sizeof(msg));
+            std::sprintf(msg, "GetTroubleIndexForConnection | Found index [%d] for from %d to %d\n", index, iFrom, iTo);
             rblog(msg);
             // found troubled connection, return its index
             return index;
@@ -279,7 +277,7 @@ bool cNodeMachine::hasAttemptedConnectionTooManyTimes(int index) {
 
     const tTrouble &trouble = Troubles[index];
     char msg[255];
-    sprintf(msg, "(trouble) hasAttemptedConnectionTooManyTimes | Connection %d (%d->%d) has %d tries.\n", index, trouble.iFrom, trouble.iTo, trouble.iTries);
+    std::sprintf(msg, "(trouble) hasAttemptedConnectionTooManyTimes | Connection %d (%d->%d) has %d tries.\n", index, trouble.iFrom, trouble.iTo, trouble.iTries);
     rblog(msg);
 
     if (trouble.iTries > 2) {
@@ -322,27 +320,27 @@ void cNodeMachine::IncreaseAttemptsForTroubledConnection(int index) {
     if (index < 0 || index >= MAX_TROUBLE) return;
 
     char msg[255];
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "(trouble) IncreaseAttemptsForTroubledConnection | Increasing trouble for connection [%d]\n", index);
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "(trouble) IncreaseAttemptsForTroubledConnection | Increasing trouble for connection [%d]\n", index);
     rblog(msg);
 
     Troubles[index].iTries++;
 
     const tTrouble &trouble = Troubles[index];
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "(trouble) IncreaseAttemptsForTroubledConnection | Connection %d (%d->%d) has %d tries.\n", index, trouble.iFrom, trouble.iTo, trouble.iTries);
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "(trouble) IncreaseAttemptsForTroubledConnection | Connection %d (%d->%d) has %d tries.\n", index, trouble.iFrom, trouble.iTo, trouble.iTries);
     rblog(msg);
 }
 
 bool cNodeMachine::ClearTroubledConnection(int iFrom, int iTo) {
     char msg[255];
-    sprintf(msg, "(trouble) NodeMachine::ClearTroubledConnection | %d -> %d - START\n", iFrom, iTo);
+    std::sprintf(msg, "(trouble) NodeMachine::ClearTroubledConnection | %d -> %d - START\n", iFrom, iTo);
     rblog(msg);
 
     const int index = GetTroubleIndexForConnection(iFrom, iTo);
 
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "(trouble) NodeMachine::ClearTroubledConnection | %d -> %d has index %d\n", iFrom, iTo, index);
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "(trouble) NodeMachine::ClearTroubledConnection | %d -> %d has index %d\n", iFrom, iTo, index);
     rblog(msg);
 
     if (index < 0) {
@@ -640,11 +638,11 @@ bool cNodeMachine::removeConnection(int iFrom, int iTo) {
     }
 
     char msg[255];
-    memset(msg, 0, sizeof(msg));
+    std::memset(msg, 0, sizeof(msg));
 
     tNode *node = getNode(iFrom);
     if (!node) {
-        sprintf(msg, "(trouble) cNodeMachine::removeConnection | From %d, to %d has no node! (error)\n", iFrom, iTo);
+        std::sprintf(msg, "(trouble) cNodeMachine::removeConnection | From %d, to %d has no node! (error)\n", iFrom, iTo);
         rblog(msg);
         return false;
     }
@@ -654,7 +652,7 @@ bool cNodeMachine::removeConnection(int iFrom, int iTo) {
     for (int i = 0; i < MAX_NEIGHBOURS; i++) {
 	    const int neighbourNode = node->iNeighbour[i];
 
-        sprintf(msg,
+        std::sprintf(msg,
                 "(trouble) removeConnection(from->%d, to->%d), evaluating neighbour [%d] = node %d\n",
                 iFrom,
                 iTo,
@@ -1203,7 +1201,7 @@ int cNodeMachine::addNode(const Vector& vOrigin, edict_t *pEntity) {
                 && (bNeighbourWater == false && bIsInWater == false)
                 && Nodes[currentIndex].origin.z >= Nodes[nodeIndex].origin.z) {
                 char msg[80];
-                sprintf(msg, "J.Z = %f, INDEX.Z = %f\n", Nodes[nodeIndex].origin.z,
+                std::sprintf(msg, "J.Z = %f, INDEX.Z = %f\n", Nodes[nodeIndex].origin.z,
                         Nodes[currentIndex].origin.z);
                 //              UTIL_ClientPrintAll( HUD_PRINTNOTIFY, msg);
                 bCanConnect = false;        // cannot connect
@@ -1302,29 +1300,29 @@ void cNodeMachine::connections(edict_t *pEntity) {
 
     int closeNode;
     char msg[75];
-    memset(msg, 0, sizeof(msg));
+    std::memset(msg, 0, sizeof(msg));
     if (draw_nodepath > -1 && draw_nodepath < 32) {
         cBot botPointer = bots[draw_nodepath];
         if (botPointer.bIsUsed) {
             closeNode = botPointer.determineCurrentNodeWithTwoAttempts();
             if (closeNode > -1) {
 	            const Vector &vector = Nodes[closeNode].origin;
-                sprintf(msg, "Bot [%s|%d] is at node %d (%f,%f,%f)\n", botPointer.name, draw_nodepath, closeNode, vector.x, vector.y, vector.z);
+                std::sprintf(msg, "Bot [%s|%d] is at node %d (%f,%f,%f)\n", botPointer.name, draw_nodepath, closeNode, vector.x, vector.y, vector.z);
             } else {
-                sprintf(msg, "Bot [%s|%d] is at node %d\n", botPointer.name, draw_nodepath, closeNode);
+                std::sprintf(msg, "Bot [%s|%d] is at node %d\n", botPointer.name, draw_nodepath, closeNode);
             }
         } else {
             closeNode = getClosestNode(pEntity->v.origin, NODE_ZONE, pEntity);
             if (closeNode > -1) {
 	            const Vector &vector = Nodes[closeNode].origin;
-                sprintf(msg, "No bot used for slot [%d], YOU are at node %d (%f,%f,%f)\n", draw_nodepath, closeNode, vector.x, vector.y, vector.z);
+                std::sprintf(msg, "No bot used for slot [%d], YOU are at node %d (%f,%f,%f)\n", draw_nodepath, closeNode, vector.x, vector.y, vector.z);
             } else {
-                sprintf(msg, "No bot used for slot [%d], YOU are at node %d\n", draw_nodepath, closeNode);
+                std::sprintf(msg, "No bot used for slot [%d], YOU are at node %d\n", draw_nodepath, closeNode);
             }
         }
     } else {
         closeNode = getClosestNode(pEntity->v.origin, NODE_ZONE, pEntity);
-        sprintf(msg, "YOU are at node %d\n", closeNode);
+        std::sprintf(msg, "YOU are at node %d\n", closeNode);
     }
 
     CenterMessage(msg);
@@ -1375,26 +1373,29 @@ void cNodeMachine::connections(edict_t *pEntity) {
 }
 
 // Draw
-void cNodeMachine::draw(edict_t *pEntity) {
-    //DebugOut("waypoint: waypoint_draw()\n");
+void cNodeMachine::draw(edict_t* pEntity) {
+    // DebugOut("waypoint: waypoint_draw()\n");
     int max_drawn = 0;
+
+    // Declare 'start' vector outside the loop
+    Vector start;
 
     for (int i = 0; i < MAX_NODES; i++) {
         if (Nodes[i].origin != Vector(9999, 9999, 9999)) {
-	        const Vector start = Nodes[i].origin - Vector(0, 0, 36);
+            start = Nodes[i].origin - Vector(0, 0, 36);
             Vector end = Nodes[i].origin;
 
-	        const bool good = VectorIsVisibleWithEdict(pEntity, end, "none");
+            const bool good = VectorIsVisibleWithEdict(pEntity, end, "none");
 
-	        const int angle_to_waypoint =
-                    FUNC_InFieldOfView(pEntity, (end - pEntity->v.origin));
+            const int angle_to_waypoint =
+                FUNC_InFieldOfView(pEntity, (end - pEntity->v.origin));
 
             if (good && angle_to_waypoint < 65) {
 
                 int g, b, l;
                 int r = g = b = l = 250;
                 l = 250;
-                //l = 250; // Normally light is 250
+                // l = 250; // Normally light is 250
 
                 if (Nodes[i].iNodeBits & BIT_LADDER)
                     b = g = 0;
@@ -1402,15 +1403,15 @@ void cNodeMachine::draw(edict_t *pEntity) {
                 if (Nodes[i].iNodeBits & BIT_WATER)
                     r = g = 0;
 
-                if (Nodes[i].iNodeBits & BIT_DUCK)					
+                if (Nodes[i].iNodeBits & BIT_DUCK)
                     r = b = 50;
-            	// Jump and DuckJump was missing for those nodes? [APG]RoboCop[CL]
+                // Jump and DuckJump were missing for those nodes? [APG]RoboCop[CL]
                 if (Nodes[i].iNodeBits & BIT_JUMP)
                     r = b = 100;
 
                 if (Nodes[i].iNodeBits & BIT_DUCKJUMP)
                     r = b = 150;
-            	
+
                 if (Nodes[i].iNeighbour[0] < 0)
                     r = 0;
 
@@ -1419,8 +1420,9 @@ void cNodeMachine::draw(edict_t *pEntity) {
                     max_drawn++;
                 }
             }
-        }                         // for
+        } // for
     }
+
     const int iNodeClose = getClosestNode(pEntity->v.origin, NODE_ZONE, pEntity);
 
     char msg[50];
@@ -1429,26 +1431,26 @@ void cNodeMachine::draw(edict_t *pEntity) {
     Flags[0] = 0;
 
     if (Nodes[iNodeClose].iNodeBits & BIT_LADDER)
-        strcat(Flags, "L");
+        std::strcat(Flags, "L");
 
     if (Nodes[iNodeClose].iNodeBits & BIT_WATER)
-        strcat(Flags, "W");
+        std::strcat(Flags, "W");
 
     if (Nodes[iNodeClose].iNodeBits & BIT_JUMP)
-        strcat(Flags, "J");
+        std::strcat(Flags, "J");
 
     if (Nodes[iNodeClose].iNodeBits & BIT_DUCK)
-        strcat(Flags, "D");
+        std::strcat(Flags, "D");
 
     // Experimental DuckJump added for this new node [APG]RoboCop[CL]
     if (Nodes[iNodeClose].iNodeBits & BIT_DUCKJUMP)
-        strcat(Flags, "h");
+        std::strcat(Flags, "h");
 
-    sprintf(msg, "Node %d(%.0f,%.0f,%.0f)%s\nMe: (%.0f,%.0f,%.0f)\n",
-            iNodeClose, (iNodeClose < 0) ? -1 : Nodes[iNodeClose].origin.x,
-            (iNodeClose < 0) ? -1 : Nodes[iNodeClose].origin.y,
-            (iNodeClose < 0) ? -1 : Nodes[iNodeClose].origin.z, Flags,
-            pEntity->v.origin.x, pEntity->v.origin.y, pEntity->v.origin.z);
+    std::sprintf(msg, "Node %d(%.0f,%.0f,%.0f)%s\nMe: (%.0f,%.0f,%.0f)\n",
+        iNodeClose, (iNodeClose < 0) ? -1 : Nodes[iNodeClose].origin.x,
+        (iNodeClose < 0) ? -1 : Nodes[iNodeClose].origin.y,
+        (iNodeClose < 0) ? -1 : Nodes[iNodeClose].origin.z, Flags,
+        pEntity->v.origin.x, pEntity->v.origin.y, pEntity->v.origin.z);
     CenterMessage(msg);
 }
 
@@ -1458,9 +1460,9 @@ void cNodeMachine::experience_save() {
     char filename[256];
 
     // Set Directory name
-    strcpy(dirname, "data/cstrike/exp/");
-    strcat(dirname, STRING(gpGlobals->mapname));
-    strcat(dirname, ".rbx");     // nodes file
+    std::strcpy(dirname, "data/cstrike/exp/");
+    std::strcat(dirname, STRING(gpGlobals->mapname));
+    std::strcat(dirname, ".rbx");     // nodes file
 
     // writes whole path into "filename", Linux compatible
     UTIL_BuildFileNameRB(dirname, filename);
@@ -1529,9 +1531,9 @@ void cNodeMachine::experience_load() {
     char filename[256];
 
     // Set Directory name
-    strcpy(dirname, "data/cstrike/exp/");
-    strcat(dirname, STRING(gpGlobals->mapname));
-    strcat(dirname, ".rbx");     // nodes file
+    std::strcpy(dirname, "data/cstrike/exp/");
+    std::strcat(dirname, STRING(gpGlobals->mapname));
+    std::strcat(dirname, ".rbx");     // nodes file
 
     // writes whole path into "filename", Linux compatible
     UTIL_BuildFileNameRB(dirname, filename);
@@ -1620,9 +1622,9 @@ void cNodeMachine::save() const
     char filename[256];
 
     // Set Directory name
-    strcpy(dirname, "data/cstrike/maps/");
-    strcat(dirname, STRING(gpGlobals->mapname));
-    strcat(dirname, ".rbn");     // nodes file
+    std::strcpy(dirname, "data/cstrike/maps/");
+    std::strcat(dirname, STRING(gpGlobals->mapname));
+    std::strcat(dirname, ".rbn");     // nodes file
 
     // writes whole path into "filename", Linux compatible
     UTIL_BuildFileNameRB(dirname, filename);
@@ -1653,9 +1655,9 @@ void cNodeMachine::save_important() const
     char filename[256];
 
     // Set Directory name
-    strcpy(dirname, "data/cstrike/ini/");
-    strcat(dirname, STRING(gpGlobals->mapname));
-    strcat(dirname, ".ini");     // nodes file
+    std::strcpy(dirname, "data/cstrike/ini/");
+    std::strcat(dirname, STRING(gpGlobals->mapname));
+    std::strcat(dirname, ".ini");     // nodes file
 
     // writes whole path into "filename", Linux compatible
     UTIL_BuildFileNameRB(dirname, filename);
@@ -1691,10 +1693,10 @@ void cNodeMachine::load() {
     char filename[256];
 
     // Set Directory name
-    strcpy(dirname, "data/cstrike/maps/");
+    std::strcpy(dirname, "data/cstrike/maps/");
 
-    strcat(dirname, STRING(gpGlobals->mapname));
-    strcat(dirname, ".rbn");     // nodes file
+    std::strcat(dirname, STRING(gpGlobals->mapname));
+    std::strcat(dirname, ".rbn");     // nodes file
 
     // writes whole path into "filename", Linux compatible
     UTIL_BuildFileNameRB(dirname, filename);
@@ -1739,7 +1741,7 @@ void cNodeMachine::load() {
             rblog("!!! Nodes table is full\n");
 
         char msg[80];
-        sprintf(msg, "After NodeMachine::load iMaxUsedNodes=%d\n",
+        std::sprintf(msg, "After NodeMachine::load iMaxUsedNodes=%d\n",
                 iMaxUsedNodes);
         rblog(msg);
         SERVER_PRINT("Going to load IAD file : ");
@@ -1757,7 +1759,7 @@ void cNodeMachine::ClearImportantGoals() {
             Goals[iGn].iType = -1;
             Goals[iGn].iNode = -1;
             Goals[iGn].pGoalEdict = nullptr;
-            memset(Goals[iGn].name, 0, sizeof(Goals[iGn].name));
+            std::memset(Goals[iGn].name, 0, sizeof(Goals[iGn].name));
         }
     }
 }
@@ -1766,6 +1768,7 @@ void cNodeMachine::ClearImportantGoals() {
 void cNodeMachine::path_draw(edict_t *pEntity) {
     //DebugOut("waypoint: waypoint_draw()\n");
     int max_drawn = 0;
+    Vector start;
 
     for (int i = 0; i < MAX_NODES; i++) {
     	// TODO: iPath appears to be out of bounds [APG]RoboCop[CL]
@@ -1773,7 +1776,7 @@ void cNodeMachine::path_draw(edict_t *pEntity) {
 	    const int iNextNode = iPath[draw_nodepath][(i + 1)];
 
         if (iNode > -1 && iNextNode > -1) {
-	        const Vector start = Nodes[iNode].origin;
+	        start = Nodes[iNode].origin;
             Vector end = Nodes[iNextNode].origin;
 
 	        const bool good = VectorIsVisibleWithEdict(pEntity, end, "none");
@@ -1938,8 +1941,8 @@ void cNodeMachine::addGoal(edict_t *pEdict, int goalType, const Vector& vVec) {
     //strcpy(goal->name, getGoalTypeAsText(*goal)); //That appears to trigger crash [APG]RoboCop[CL]
 
     char msg[255];
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Adding goal at index %d of type %s, with nearby node %d\n", index, goal->name, nNode);
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "Adding goal at index %d of type %s, with nearby node %d\n", index, goal->name, nNode);
     rblog(msg);
 }
 
@@ -2157,7 +2160,7 @@ tGoal *cNodeMachine::getRandomGoalByType(int goalType) {
     const int randomGoalIndex = RANDOM_LONG(0, (possibleCandidateIndex - 1));
 
     char msg[255];
-    sprintf(msg, "cNodeMachine::getRandomGoalByType() - Found %d nodes of type %d and picked %d\n",
+    std::sprintf(msg, "cNodeMachine::getRandomGoalByType() - Found %d nodes of type %d and picked %d\n",
             possibleCandidateIndex, goalType, randomGoalIndex);
     rblog(msg);
 
@@ -2230,8 +2233,8 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
 
     if (pBot) {
         char msg[255];
-        memset(msg, 0, sizeof(msg));
-        sprintf(msg, "createPath(from->%d, to->%d, botIndex->%d)", nodeStartIndex, nodeTargetIndex, botIndex);
+        std::memset(msg, 0, sizeof(msg));
+        std::sprintf(msg, "createPath(from->%d, to->%d, botIndex->%d)", nodeStartIndex, nodeTargetIndex, botIndex);
         pBot->rprint("cNodeMachine::createPath", msg);
     }
 
@@ -2393,8 +2396,8 @@ bool cNodeMachine::createPath(int nodeStartIndex, int nodeTargetIndex, int botIn
         // print out full path so we know what the order is
         if (pBot != nullptr) {
             char pathMsg[255];
-            memset(pathMsg, 0, sizeof(pathMsg));
-            sprintf(pathMsg, "Bot [%d] path index [%d] has node [%d]", botIndex, path_index, node);
+            std::memset(pathMsg, 0, sizeof(pathMsg));
+            std::sprintf(pathMsg, "Bot [%d] path index [%d] has node [%d]", botIndex, path_index, node);
             pBot->rprint("cNodeMachine::createPath", pathMsg);
         }
 
@@ -2558,7 +2561,7 @@ void cNodeMachine::vis_calculate(int iFrom) {
 
     for (int i = 0; i < MAX_NODES; i++)
         if ((i != iFrom) && (Nodes[i].origin != Vector(9999, 9999, 9999))) {
-	        const float fClosest = 1024;
+	        const float fClosest = 1024.0f;
 	        const float fDistance = func_distance(Nodes[i].origin, Nodes[iFrom].origin);
             if (fDistance < fClosest) {
                 TraceResult tr;
@@ -2633,7 +2636,7 @@ int cNodeMachine::node_look_camp(const Vector& vOrigin, int iTeam,
             }
     }
     char msg[255];
-    sprintf(msg, "Found best node to camp at %d\n", iBestNode);
+    std::sprintf(msg, "Found best node to camp at %d\n", iBestNode);
     rblog(msg);
     return iBestNode;
 }
@@ -2693,7 +2696,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         float fDistance = 90;
         bool bTrigger = false;
 
-        if (strcmp(STRING(pBot->pButtonEdict->v.classname), "trigger_multiple") == 0) {
+        if (std::strcmp(STRING(pBot->pButtonEdict->v.classname), "trigger_multiple") == 0) {
             fDistance = 32;
             bTrigger = true;
         }
@@ -2802,7 +2805,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
                 tGoal *goalData = pBot->getGoalData();
                 if (goalData) {
                     char msg[255];
-                    sprintf(msg, "Heading for goal node of type [%s]", goalData->name);
+                    std::sprintf(msg, "Heading for goal node of type [%s]", goalData->name);
                     pBot->rprint_trace("cNodeMachine::path_walk (bNear)", msg);
                     if (goalData->iType == GOAL_HOSTAGE) {
                         pBot->rprint_normal("cNodeMachine::path_walk (bNear)", "next node is destination and GOAL_HOSTAGE, so need to get really close");
@@ -2818,7 +2821,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         }
 
         char msg[255];
-        sprintf(msg, "Heading for node %d, required distance is %f, actual distance is %f, time remaining %f",
+        std::sprintf(msg, "Heading for node %d, required distance is %f, actual distance is %f, time remaining %f",
                 pBot->getCurrentPathNodeToHeadFor(), requiredDistance, pBot->getDistanceToNextNode(),
                 pBot->getMoveToNodeTimeRemaining());
         pBot->rprint_trace("cNodeMachine::path_walk (bNear)", msg);
@@ -2904,7 +2907,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
         !isEntityWorldspawn(pEntityHit)) // and it is not worldspawn (ie, the map itself)
     {
         char msg[255];
-        sprintf(msg, "Entity [%s] between me and next node.", STRING(pEntityHit->v.classname));
+        std::sprintf(msg, "Entity [%s] between me and next node.", STRING(pEntityHit->v.classname));
         pBot->rprint_trace("cNodeMachine::path_walk", msg);
 
         // hit by a door?
@@ -2921,7 +2924,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
             return;
         }
 
-        if (strcmp(STRING(pEntityHit->v.classname), "player") == 0) {
+        if (std::strcmp(STRING(pEntityHit->v.classname), "player") == 0) {
             pBot->rprint_trace("cNodeMachine::path_walk", "Another player between me and next node.");
             if (pBot->hasTimeToMoveToNode()) {
                 pBot->strafeRight(0.2f);
@@ -2954,8 +2957,8 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     // no need for 'is walking' because walking time influence `f_move_speed` hence it is already taken care of
 
     char msg[255];
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Distance moved %f, expected %f, should be able to move yes, notStuck for a while %d", distanceMoved,
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "Distance moved %f, expected %f, should be able to move yes, notStuck for a while %d", distanceMoved,
             expectedMoveDistance, notStuckForAWhile);
     pBot->rprint_trace("cNodeMachine::path_walk", msg);
 
@@ -3030,9 +3033,9 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, con
     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "No need to duck or to jump");
 
     char msg[255];
-    memset(msg, 0, sizeof(msg));
+    std::memset(msg, 0, sizeof(msg));
     const float timeRemaining = pBot->getMoveToNodeTimeRemaining();
-    sprintf(msg, "I still have %f seconds to go to node before considered 'stuck' for connection", timeRemaining);
+    std::sprintf(msg, "I still have %f seconds to go to node before considered 'stuck' for connection", timeRemaining);
     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", msg);
 
     const cBot *pBotStuck = getCloseFellowBot(pBot);
@@ -3043,19 +3046,19 @@ void cNodeMachine::ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, con
     edict_t *hostageNearbyInFOV = nullptr;
     if (entityNearbyInFOV) {
 
-        if (strcmp(STRING(entityNearbyInFOV->v.classname), "player") == 0) {
+        if (std::strcmp(STRING(entityNearbyInFOV->v.classname), "player") == 0) {
             playerNearbyInFOV = entityNearbyInFOV;
             pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "A player is in front of me");
         }
 
-        if (strcmp(STRING(entityNearbyInFOV->v.classname), "hostage_entity") == 0) {
+        if (std::strcmp(STRING(entityNearbyInFOV->v.classname), "hostage_entity") == 0) {
             hostageNearbyInFOV = entityNearbyInFOV;
             pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", "A hostage is in front of me");
         }
     }
 
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Player in FOV? %d, hostage in FOV? %d bot close ? %d, time remaining? %f",
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "Player in FOV? %d, hostage in FOV? %d bot close ? %d, time remaining? %f",
             playerNearbyInFOV != nullptr, hostageNearbyInFOV != nullptr, pBotStuck != nullptr, timeRemaining);
     pBot->rprint_trace("cNodeMachine::ExecuteIsStuckLogic", msg);
 
@@ -3173,7 +3176,7 @@ void cNodeMachine::ExecuteNearNodeLogic(cBot *pBot) {
 
     if (!isHeadingForGoalNode) {
         char msg[255];
-        memset(msg, 0, sizeof(msg));
+        std::memset(msg, 0, sizeof(msg));
 
         const int currentPathNode = pBot->getCurrentPathNodeToHeadFor();
 
@@ -3181,12 +3184,12 @@ void cNodeMachine::ExecuteNearNodeLogic(cBot *pBot) {
 	        const int troubleIndex = GetTroubleIndexForConnection(pBot->getPreviousPathNodeToHeadFor(), currentNodeToHeadFor);
             if (troubleIndex > -1) {
 	            const tTrouble &trouble = Troubles[troubleIndex];
-                sprintf(msg, "Heading to next node: %d, trouble (tries) %d", currentPathNode, trouble.iTries);
+                std::sprintf(msg, "Heading to next node: %d, trouble (tries) %d", currentPathNode, trouble.iTries);
             } else {
-                sprintf(msg, "Heading to next node: %d - with no trouble", currentPathNode);
+                std::sprintf(msg, "Heading to next node: %d - with no trouble", currentPathNode);
             }
         } else {
-            sprintf(msg, "Heading to next node: %d", currentPathNode);
+            std::sprintf(msg, "Heading to next node: %d", currentPathNode);
         }
         pBot->rprint("cNodeMachine::path_walk()", msg);
     }
@@ -3275,19 +3278,19 @@ bool cNodeMachine::isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHi
 
 bool cNodeMachine::isEntityDoor(const edict_t *pEntityHit)
 {
-    return  strcmp(STRING(pEntityHit->v.classname), "func_door") == 0 || // normal door (can be used as an elevator)
-            strcmp(STRING(pEntityHit->v.classname), "func_wall") == 0 || // I am not 100% sure about func_wall, but include it anyway
-            strcmp(STRING(pEntityHit->v.classname), "func_door_rotating") == 0; // rotating door
+    return  std::strcmp(STRING(pEntityHit->v.classname), "func_door") == 0 || // normal door (can be used as an elevator)
+            std::strcmp(STRING(pEntityHit->v.classname), "func_wall") == 0 || // I am not 100% sure about func_wall, but include it anyway
+            std::strcmp(STRING(pEntityHit->v.classname), "func_door_rotating") == 0; // rotating door
 }
 
 bool cNodeMachine::isEntityHostage(const edict_t *pEntityHit)
 {
-    return  strcmp(STRING(pEntityHit->v.classname), "hostage_entity") == 0; // hostage
+    return  std::strcmp(STRING(pEntityHit->v.classname), "hostage_entity") == 0; // hostage
 }
 
 bool cNodeMachine::isEntityWorldspawn(const edict_t *pEntityHit)
 {
-    return  strcmp(STRING(pEntityHit->v.classname), "worldspawn") == 0; // the world
+    return  std::strcmp(STRING(pEntityHit->v.classname), "worldspawn") == 0; // the world
 }
 
 // Think about path creation here
@@ -3440,7 +3443,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         score += weight;
 
         // Take into consideration how many times this goal has been selected
-        score = (score + (1.0f - Goals[goalIndex].iChecked / maxCheckedScore)) / 2.0f;
+        score = (score + (1.0f - static_cast<float>(Goals[goalIndex].iChecked) / static_cast<float>(maxCheckedScore))) / 2.0f;
 
         // Danger (is important)
         score = (score + InfoNodes[Goals[goalIndex].iNode].fDanger[UTIL_GetTeam(pBot->pEdict)]) / 1.5f;
@@ -3543,8 +3546,8 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
                         if (Game.isPlantedC4Discovered()) {
                             pBot->rprint_trace("path_think/determine goal", "I know where the C4 is planted, evaluating if this is the closest bombspot.");
                             char msg[255];
-                            memset(msg, 0, sizeof(msg));
-                            sprintf(msg, "C4 is located at %f, %f, %f", Game.vPlantedC4.x, Game.vPlantedC4.y, Game.vPlantedC4.z);
+                            std::memset(msg, 0, sizeof(msg));
+                            std::sprintf(msg, "C4 is located at %f, %f, %f", Game.vPlantedC4.x, Game.vPlantedC4.y, Game.vPlantedC4.z);
                             pBot->rprint_trace("path_think/determine goal", msg);
 
                             // find a node close to the C4
@@ -3564,8 +3567,8 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
 
                                 const float score = distanceToC4FromCloseNode / distanceToC4FromThisGoalNode;
                                 goalscore = 1.5f + score;
-                                memset(msg, 0, sizeof(msg));
-                                sprintf(msg, "Distance from C4 to closest node is %f, distance from evaluating node to C4 is %f, resulting into score of %f",
+                                std::memset(msg, 0, sizeof(msg));
+                                std::sprintf(msg, "Distance from C4 to closest node is %f, distance from evaluating node to C4 is %f, resulting into score of %f",
                                         distanceToC4FromCloseNode,
                                         distanceToC4FromThisGoalNode,
                                         goalscore);
@@ -3655,8 +3658,8 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
         // even though its float comparison, it can h appen since we hard-set it to 2.0 at some places, making
         // some scores the same
         char msg[255];
-        memset(msg, 0, sizeof(msg));
-        sprintf(msg, "Evaluating goal %s gives a score of %f, highest score so far is %f",
+        std::memset(msg, 0, sizeof(msg));
+        std::sprintf(msg, "Evaluating goal %s gives a score of %f, highest score so far is %f",
                 Goals[goalIndex].name,
                 score,
                 highestScore);
@@ -3726,10 +3729,10 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
     tGoal *goalData = pBot->getGoalData();
 
     char msg[255];
-    memset(msg, 0, sizeof(msg));
+    std::memset(msg, 0, sizeof(msg));
 
     if (goalData != nullptr) {
-        sprintf(msg, "I have chosen a goal: Node [%d], Goal type [%s], checked [%d], score [%f], distance [%f]",
+        std::sprintf(msg, "I have chosen a goal: Node [%d], Goal type [%s], checked [%d], score [%f], distance [%f]",
                 iFinalGoalNode,
                 goalData->name,
                 goalData->iChecked,
@@ -3737,7 +3740,7 @@ void cNodeMachine::path_think(cBot *pBot, float distanceMoved) {
                 pBot->getDistanceTo(iFinalGoalNode)
         );
     } else {
-        sprintf(msg, "I have chosen a goal: Node [%d], - NO GOAL DATA - score [%f], distance [%f]",
+        std::sprintf(msg, "I have chosen a goal: Node [%d], - NO GOAL DATA - score [%f], distance [%f]",
                 iFinalGoalNode,
                 highestScore,
                 pBot->getDistanceTo(iFinalGoalNode)
@@ -3790,50 +3793,50 @@ tNode *cNodeMachine::getNode(int index) {
 char *cNodeMachine::getGoalTypeAsText(const tGoal &goal)
 {
     char typeAsText[32];
-    memset(typeAsText, 0, sizeof(typeAsText));
+    std::memset(typeAsText, 0, sizeof(typeAsText));
 
     switch (goal.iType) {
         case GOAL_SPAWNT:
-            sprintf(typeAsText, "GOAL_SPAWNT");
+            std::sprintf(typeAsText, "GOAL_SPAWNT");
             break;
         case GOAL_SPAWNCT:
-            sprintf(typeAsText, "GOAL_SPAWNCT");
+            std::sprintf(typeAsText, "GOAL_SPAWNCT");
             break;
         case GOAL_BOMBSPOT:
-            sprintf(typeAsText, "GOAL_BOMBSPOT");
+            std::sprintf(typeAsText, "GOAL_BOMBSPOT");
             break;
         case GOAL_BOMB:
-            sprintf(typeAsText, "GOAL_BOMB");
+            std::sprintf(typeAsText, "GOAL_BOMB");
             break;
         case GOAL_HOSTAGE:
-            sprintf(typeAsText, "GOAL_HOSTAGE");
+            std::sprintf(typeAsText, "GOAL_HOSTAGE");
             break;
         case GOAL_RESCUEZONE:
-            sprintf(typeAsText, "GOAL_RESCUEZONE");
+            std::sprintf(typeAsText, "GOAL_RESCUEZONE");
             break;
         case GOAL_CONTACT:
-            sprintf(typeAsText, "GOAL_CONTACT");
+            std::sprintf(typeAsText, "GOAL_CONTACT");
             break;
         case GOAL_IMPORTANT:
-            sprintf(typeAsText, "GOAL_IMPORTANT");
+            std::sprintf(typeAsText, "GOAL_IMPORTANT");
             break;
         case GOAL_VIP:
-            sprintf(typeAsText, "GOAL_VIP");
+            std::sprintf(typeAsText, "GOAL_VIP");
             break;
         case GOAL_VIPSAFETY:
-            sprintf(typeAsText, "GOAL_VIPSAFETY");
+            std::sprintf(typeAsText, "GOAL_VIPSAFETY");
             break;
         case GOAL_ESCAPEZONE:
-            sprintf(typeAsText, "GOAL_ESCAPEZONE");
+            std::sprintf(typeAsText, "GOAL_ESCAPEZONE");
             break;
         case GOAL_WEAPON:
-            sprintf(typeAsText, "GOAL_WEAPON");
+            std::sprintf(typeAsText, "GOAL_WEAPON");
             break;
         case GOAL_NONE:
-            sprintf(typeAsText, "GOAL_NONE");
+            std::sprintf(typeAsText, "GOAL_NONE");
             break;
         default:
-            sprintf(typeAsText, "GOAL UNKNOWN");
+            std::sprintf(typeAsText, "GOAL UNKNOWN");
     }
     return typeAsText;	//TODO: local variable invalid [APG]RoboCop[CL]
 }
@@ -3990,53 +3993,53 @@ void cNodeMachine::dump_goals() const
     for (int i = 0; (i < MAX_GOALS) && (Goals[i].iNode >= 0); i++) {
 	    char buffer[100];
 	    const Vector v = Nodes[Goals[i].iNode].origin;
-        sprintf(buffer,
+        std::sprintf(buffer,
                 "Goal#%d is at node %d (%.0f, %.0f, %.0f), iChecked= %d, ",
                 i + 1, Goals[i].iNode, v.x, v.y, v.z, Goals[i].iChecked);
         switch (Goals[i].iType) {
             case GOAL_SPAWNCT:
-                strcat(buffer, "GOAL_SPAWNCT");
+                std::strcat(buffer, "GOAL_SPAWNCT");
                 break;
             case GOAL_SPAWNT:
-                strcat(buffer, "GOAL_SPAWNT");
+                std::strcat(buffer, "GOAL_SPAWNT");
                 break;
             case GOAL_BOMBSPOT:
-                strcat(buffer, "GOAL_BOMBSPOT");
+                std::strcat(buffer, "GOAL_BOMBSPOT");
                 break;
             case GOAL_BOMB:
-                strcat(buffer, "GOAL_BOMB");
+                std::strcat(buffer, "GOAL_BOMB");
                 break;
             case GOAL_HOSTAGE:
-                strcat(buffer, "GOAL_HOSTAGE");
+                std::strcat(buffer, "GOAL_HOSTAGE");
                 break;
             case GOAL_RESCUEZONE:
-                strcat(buffer, "GOAL_RESCUEZONE");
+                std::strcat(buffer, "GOAL_RESCUEZONE");
                 break;
             case GOAL_CONTACT:
-                strcat(buffer, "GOAL_CONTACT");
+                std::strcat(buffer, "GOAL_CONTACT");
                 break;
             case GOAL_IMPORTANT:
-                strcat(buffer, "GOAL_IMPORTANT");
+                std::strcat(buffer, "GOAL_IMPORTANT");
                 break;
             case GOAL_VIP:
-                strcat(buffer, "GOAL_VIP");
+                std::strcat(buffer, "GOAL_VIP");
                 break;
             case GOAL_VIPSAFETY:
-                strcat(buffer, "GOAL_VIPSAFETY");
+                std::strcat(buffer, "GOAL_VIPSAFETY");
                 break;
             case GOAL_ESCAPEZONE:
-                strcat(buffer, "GOAL_ESCAPEZONE");
+                std::strcat(buffer, "GOAL_ESCAPEZONE");
                 break;
             case GOAL_WEAPON:
-                strcat(buffer, "GOAL_WEAPON");
+                std::strcat(buffer, "GOAL_WEAPON");
                 break;
             case GOAL_NONE:
-                strcat(buffer, "GOAL_NONE");
+                std::strcat(buffer, "GOAL_NONE");
                 break;
             default:
-                strcat(buffer, "unknown type");
+                std::strcat(buffer, "unknown type");
         }
-        strcat(buffer, "\n");
+        std::strcat(buffer, "\n");
         rblog(buffer);
     }
 
@@ -4054,9 +4057,9 @@ void cNodeMachine::dump_path(int iBot, int CurrentPath) {
     rblog("  Path is: ");
     for (i = 0; (i < MAX_NODES) && (iPath[iBot][i] >= 0); i++) {
         if (i == CurrentPath)
-            sprintf(buffer, "<%d> ", iPath[iBot][i]);
+            std::sprintf(buffer, "<%d> ", iPath[iBot][i]);
         else
-            sprintf(buffer, "%d ", iPath[iBot][i]);
+            std::sprintf(buffer, "%d ", iPath[iBot][i]);
         rblog(buffer);
     }
     rblog("\n");
@@ -4067,7 +4070,7 @@ void cNodeMachine::dump_path(int iBot, int CurrentPath) {
         if (Nodes[CurrentNode].iNeighbour[i] >= 0) {
 	        const int j = Nodes[CurrentNode].iNeighbour[i];
 	        const Vector v = Nodes[j].origin;
-            sprintf(buffer, "      %d (%.0f, %.0f, %.0f)\n", j, v.x, v.y,
+            std::sprintf(buffer, "      %d (%.0f, %.0f, %.0f)\n", j, v.x, v.y,
                     v.z);
             rblog(buffer);
         }
@@ -4100,7 +4103,7 @@ static void InitDebugBitmap() {
         exit(1);
     }
 
-    memset(bmp_buffer, 14, DEBUG_BMP_WIDTH * DEBUG_BMP_HEIGHT);  // Set all to all white (and allow for darker palette)
+    std::memset(bmp_buffer, 14, DEBUG_BMP_WIDTH * DEBUG_BMP_HEIGHT);  // Set all to all white (and allow for darker palette)
 }
 
 // Draw a small cross
@@ -4552,7 +4555,7 @@ void cNodeMachine::Draw() {
     PlotNodes(0, 5);             // 0 = black, 5 = blue
     PlotPaths(11, 7);            // 11 = Red 7 = light blue ?
     PlotGoals(9);                // 9 = green
-    sprintf(Filename, "%s%4.4d.bmp", STRING(gpGlobals->mapname), Count++);
+    std::sprintf(Filename, "%s%4.4d.bmp", STRING(gpGlobals->mapname), Count++);
     WriteDebugBitmap(Filename);
 }
 
@@ -4583,8 +4586,8 @@ void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) 
 
     if (doorButtonToLookFor) {
         char msg[255];
-        memset(msg, 0, sizeof(msg));
-        sprintf(msg, "There is a target button , named %s, to open this door [%s] - going to search for it.", doorButtonToLookFor, STRING(pEntityHit->v.classname));
+        std::memset(msg, 0, sizeof(msg));
+        std::sprintf(msg, "There is a target button , named %s, to open this door [%s] - going to search for it.", doorButtonToLookFor, STRING(pEntityHit->v.classname));
         pBot->rprint_trace("cNodeMachine::ExecuteDoorInteractionLogic", msg);
 
         // find this entity
@@ -4598,7 +4601,7 @@ void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) 
             if (pent == pEntityHit) continue;
 
             // found button entity matching target
-            if (strcmp(STRING(pent->v.target), doorButtonToLookFor) == 0) {
+            if (std::strcmp(STRING(pent->v.target), doorButtonToLookFor) == 0) {
                 Vector buttonVector = VecBModelOrigin(pent);
 
                 UTIL_TraceLine(pBot->pEdict->v.origin, buttonVector,
@@ -4633,7 +4636,7 @@ void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) 
                     continue;
 
                 // found button entity
-                if (strcmp(STRING(pent->v.target), doorButtonToLookFor) == 0) {
+                if (std::strcmp(STRING(pent->v.target), doorButtonToLookFor) == 0) {
                     // get vectr
                     Vector vPentVector = VecBModelOrigin(pent);
 
@@ -4661,7 +4664,7 @@ void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) 
                         // as most doors have 2 buttons to access it (ie prodigy)
 
                         // hits by worldspawn here
-                        if (strcmp(STRING(trb.pHit->v.classname), "worldspawn") == 0) {
+                        if (std::strcmp(STRING(trb.pHit->v.classname), "worldspawn") == 0) {
 
                             // DE_PRODIGY FIX:
                             // Somehow the button is not detectable. Find a node, that is close to it.
@@ -4692,7 +4695,7 @@ void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) 
 
         // We have found a button to go to
         if (pButtonEdict) {
-            memset(msg, 0, sizeof(msg));
+            std::memset(msg, 0, sizeof(msg));
             // Get its vector
             const Vector vButtonVector = VecBModelOrigin(pButtonEdict);
 
@@ -4701,13 +4704,13 @@ void cNodeMachine::ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pEntityHit) 
 
             // When node found, create path to it
             if (pBot->createPath(iButtonNode, PATH_NONE)) {
-                sprintf(msg, "Found a button at node %d and created a path to it.", iButtonNode);
+                std::sprintf(msg, "Found a button at node %d and created a path to it.", iButtonNode);
                 pBot->pButtonEdict = pButtonEdict;
             } else {
                 if (iButtonNode > -1) {
-                    sprintf(msg, "Found a button at node %d but failed to create a path to it.", iButtonNode);
+                    std::sprintf(msg, "Found a button at node %d but failed to create a path to it.", iButtonNode);
                 } else {
-                    sprintf(msg, "Found a button, but there is no nearby node :/");
+                    std::sprintf(msg, "Found a button, but there is no nearby node :/");
                 }
             }
             pBot->rprint_trace("cNodeMachine::ExecuteDoorInteractionLogic", msg);

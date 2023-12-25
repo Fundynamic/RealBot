@@ -211,16 +211,16 @@ void UTIL_HostSay(edict_t* pEntity, int teamonly, char* message) {
 
 	// turn on color set 2  (color on,  no sound)
 	if (teamonly)
-		sprintf(text, "%c(TEAM) %s: ", 2, STRING(pEntity->v.netname));
+		std::sprintf(text, "%c(TEAM) %s: ", 2, STRING(pEntity->v.netname));
 	else
-		sprintf(text, "%c%s: ", 2, STRING(pEntity->v.netname));
+		std::sprintf(text, "%c%s: ", 2, STRING(pEntity->v.netname));
 
-	const int j = sizeof(text) - 2 - strlen(text); // -2 for /n and null terminator
-	if (static_cast<int>(strlen(message)) > j)
+	const int j = sizeof(text) - 2 - std::strlen(text); // -2 for /n and null terminator
+	if (static_cast<int>(std::strlen(message)) > j)
 		message[j] = 0;
 
-	strcat(text, message);
-	strcat(text, "\n");
+	std::strcat(text, message);
+	std::strcat(text, "\n");
 
 	// loop through all players
 	// Start with the first player.
@@ -286,9 +286,9 @@ bool UTIL_IsVip(edict_t* pEntity) {
 		char model_name[32];
 
 		char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
-		strcpy(model_name, (g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
+		std::strcpy(model_name, (g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
 
-		if (strcmp(model_name, "vip") == 0)       // VIP
+		if (std::strcmp(model_name, "vip") == 0)       // VIP
 			return true;
 	}
 
@@ -301,25 +301,25 @@ int UTIL_GetTeam(edict_t* pEntity) {
 		char model_name[32];
 
 		char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
-		strcpy(model_name,
+		std::strcpy(model_name,
 			(g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
 
-		if ((strcmp(model_name, "terror") == 0) ||        // Phoenix Connektion
-			(strcmp(model_name, "arab") == 0) ||  // old L337 Krew
-			(strcmp(model_name, "leet") == 0) ||  // L337 Krew
-			(strcmp(model_name, "artic") == 0) || // Artic Avenger
-			(strcmp(model_name, "arctic") == 0) ||        // Artic Avenger - fix for arctic? - seemed a typo?
-			(strcmp(model_name, "guerilla") == 0))      // Gorilla Warfare
+		if ((std::strcmp(model_name, "terror") == 0) ||        // Phoenix Connektion
+			(std::strcmp(model_name, "arab") == 0) ||  // old L337 Krew
+			(std::strcmp(model_name, "leet") == 0) ||  // L337 Krew
+			(std::strcmp(model_name, "artic") == 0) || // Artic Avenger
+			(std::strcmp(model_name, "arctic") == 0) ||        // Artic Avenger - fix for arctic? - seemed a typo?
+			(std::strcmp(model_name, "guerilla") == 0))      // Gorilla Warfare
 			//(strcmp(model_name, "militia") == 0))       // CZ Militia
 		{
 			return 0; // team Terrorists
 		}
-		else if ((strcmp(model_name, "urban") == 0) ||  // Seal Team 6
-			(strcmp(model_name, "gsg9") == 0) ||   // German GSG-9
-			(strcmp(model_name, "sas") == 0) ||    // UK SAS
-			(strcmp(model_name, "gign") == 0) ||   // French GIGN
-			(strcmp(model_name, "vip") == 0) ||    // VIP
-			(strcmp(model_name, "spetsnatz") == 0))        // CZ Spetsnatz
+		else if ((std::strcmp(model_name, "urban") == 0) ||  // Seal Team 6
+			(std::strcmp(model_name, "gsg9") == 0) ||   // German GSG-9
+			(std::strcmp(model_name, "sas") == 0) ||    // UK SAS
+			(std::strcmp(model_name, "gign") == 0) ||   // French GIGN
+			(std::strcmp(model_name, "vip") == 0) ||    // VIP
+			(std::strcmp(model_name, "spetsnatz") == 0))        // CZ Spetsnatz
 		{
 			return 1; // team Counter-Terrorists
 		}
@@ -335,7 +335,7 @@ int UTIL_GetClass(edict_t* pEntity) {
 	char model_name[32];
 
 	char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
-	strcpy(model_name, (g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
+	std::strcpy(model_name, (g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
 
 	return 0;
 }
@@ -449,10 +449,10 @@ UTIL_ShowMenu(edict_t* pEdict, int slots, int displaytime, bool needmore,
 void UTIL_BuildFileName(char* filename, char* arg1, char* arg2) {
 
 	if (mod_id == VALVE_DLL)
-		strcpy(filename, "valve/");
+		std::strcpy(filename, "valve/");
 
 	else if (mod_id == CSTRIKE_DLL)
-		strcpy(filename, "cstrike/");
+		std::strcpy(filename, "cstrike/");
 
 	else {
 		filename[0] = 0;
@@ -460,12 +460,12 @@ void UTIL_BuildFileName(char* filename, char* arg1, char* arg2) {
 	}
 
 	if ((arg1) && (*arg1) && (arg2) && (*arg2)) {
-		strcat(filename, arg1);
-		strcat(filename, "/");
-		strcat(filename, arg2);
+		std::strcat(filename, arg1);
+		std::strcat(filename, "/");
+		std::strcat(filename, arg2);
 	}
 	else if ((arg1) && (*arg1)) {
-		strcat(filename, arg1);
+		std::strcat(filename, arg1);
 	}
 }
 
@@ -481,8 +481,8 @@ void UTIL_BuildFileNameRB(char* subdir, char* filename) {
 #define S '/'
 #endif
 
-	strcpy(filename, "realbot/");
-	strcat(filename, subdir);
+	std::strcpy(filename, "realbot/");
+	std::strcat(filename, subdir);
 	while (*filename) {
 		if ((*filename == '/') || (*filename == '\\'))
 			*filename = S;
@@ -569,7 +569,7 @@ void UTIL_BotPressKey(cBot* pBot, int type) {
 		break;
 	default:
 		char msg[255];
-		sprintf(msg, "unknown key to print [%d]", type);
+		std::sprintf(msg, "unknown key to print [%d]", type);
 		pBot->rprint_trace("UTIL_BotPressKey", msg);
 		break;
 	}
@@ -622,65 +622,65 @@ int UTIL_GiveWeaponType(int weapon_id) {
 // Return weapon ID (depended on mod)
 int UTIL_GiveWeaponId(const char* name) {
 	if (mod_id == CSTRIKE_DLL) {
-		if (strcmp(name, "weapon_knife") == 0)
+		if (std::strcmp(name, "weapon_knife") == 0)
 			return CS_WEAPON_KNIFE;
-		if (strcmp(name, "weapon_c4") == 0)
+		if (std::strcmp(name, "weapon_c4") == 0)
 			return CS_WEAPON_C4;
-		if (strcmp(name, "weapon_mp5navy") == 0)
+		if (std::strcmp(name, "weapon_mp5navy") == 0)
 			return CS_WEAPON_MP5NAVY;
-		if (strcmp(name, "weapon_ak47") == 0)
+		if (std::strcmp(name, "weapon_ak47") == 0)
 			return CS_WEAPON_AK47;
-		if (strcmp(name, "weapon_m3") == 0)
+		if (std::strcmp(name, "weapon_m3") == 0)
 			return CS_WEAPON_M3;
-		if (strcmp(name, "weapon_aug") == 0)
+		if (std::strcmp(name, "weapon_aug") == 0)
 			return CS_WEAPON_AUG;
-		if (strcmp(name, "weapon_sg552") == 0)
+		if (std::strcmp(name, "weapon_sg552") == 0)
 			return CS_WEAPON_SG552;
-		if (strcmp(name, "weapon_m249") == 0)
+		if (std::strcmp(name, "weapon_m249") == 0)
 			return CS_WEAPON_M249;
-		if (strcmp(name, "weapon_xm1014") == 0)
+		if (std::strcmp(name, "weapon_xm1014") == 0)
 			return CS_WEAPON_XM1014;
-		if (strcmp(name, "weapon_p90") == 0)
+		if (std::strcmp(name, "weapon_p90") == 0)
 			return CS_WEAPON_P90;
-		if (strcmp(name, "weapon_tmp") == 0)
+		if (std::strcmp(name, "weapon_tmp") == 0)
 			return CS_WEAPON_TMP;
-		if (strcmp(name, "weapon_m4a1") == 0)
+		if (std::strcmp(name, "weapon_m4a1") == 0)
 			return CS_WEAPON_M4A1;
-		if (strcmp(name, "weapon_awp") == 0)
+		if (std::strcmp(name, "weapon_awp") == 0)
 			return CS_WEAPON_AWP;
-		if (strcmp(name, "weapon_fiveseven") == 0)
+		if (std::strcmp(name, "weapon_fiveseven") == 0)
 			return CS_WEAPON_FIVESEVEN;
-		if (strcmp(name, "weapon_ump45") == 0)
+		if (std::strcmp(name, "weapon_ump45") == 0)
 			return CS_WEAPON_UMP45;
-		if (strcmp(name, "weapon_sg550") == 0)
+		if (std::strcmp(name, "weapon_sg550") == 0)
 			return CS_WEAPON_SG550;
-		if (strcmp(name, "weapon_scout") == 0)
+		if (std::strcmp(name, "weapon_scout") == 0)
 			return CS_WEAPON_SCOUT;
-		if (strcmp(name, "weapon_mac10") == 0)
+		if (std::strcmp(name, "weapon_mac10") == 0)
 			return CS_WEAPON_MAC10;
-		if (strcmp(name, "weapon_g3sg1") == 0)
+		if (std::strcmp(name, "weapon_g3sg1") == 0)
 			return CS_WEAPON_G3SG1;
-		if (strcmp(name, "weapon_elite") == 0)
+		if (std::strcmp(name, "weapon_elite") == 0)
 			return CS_WEAPON_ELITE;
-		if (strcmp(name, "weapon_p228") == 0)
+		if (std::strcmp(name, "weapon_p228") == 0)
 			return CS_WEAPON_P228;
-		if (strcmp(name, "weapon_deagle") == 0)
+		if (std::strcmp(name, "weapon_deagle") == 0)
 			return CS_WEAPON_DEAGLE;
-		if (strcmp(name, "weapon_usp") == 0)
+		if (std::strcmp(name, "weapon_usp") == 0)
 			return CS_WEAPON_USP;
-		if (strcmp(name, "weapon_glock18") == 0)
+		if (std::strcmp(name, "weapon_glock18") == 0)
 			return CS_WEAPON_GLOCK18;
 		// Counter-Strike 1.6
-		if (strcmp(name, "weapon_famas") == 0)
+		if (std::strcmp(name, "weapon_famas") == 0)
 			return CS_WEAPON_FAMAS;
-		if (strcmp(name, "weapon_galil") == 0)
+		if (std::strcmp(name, "weapon_galil") == 0)
 			return CS_WEAPON_GALIL;
 
 		// TODO: Detect shield carrying.
 		// 06/07/04
 		// Unconfirmed for handling shield
 		// 31.08.04 Frashman: moved shield string before unknown weapon, not after it
-		if (name != nullptr && strcmp(name, "weapon_shield") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_shield") == 0)
 			return CS_WEAPON_SHIELD;
 
 		char buffer[80];
@@ -829,18 +829,18 @@ void UTIL_BotRadioMessage(cBot* pBot, int radio, char* arg1, char* arg2) {
 	if (pBot->console_nr == 0) {
 		switch (radio) {
 		case 1:
-			strcpy(pBot->arg1, "radio1");
+			std::strcpy(pBot->arg1, "radio1");
 			break;
 		case 2:
-			strcpy(pBot->arg1, "radio2");
+			std::strcpy(pBot->arg1, "radio2");
 			break;
 		case 3:
-			strcpy(pBot->arg1, "radio3");
+			std::strcpy(pBot->arg1, "radio3");
 			break;
 		}
 
-		strcpy(pBot->arg2, arg1);
-		strcpy(pBot->arg3, arg2);
+		std::strcpy(pBot->arg2, arg1);
+		std::strcpy(pBot->arg3, arg2);
 		pBot->console_nr = 1;     // Begin message
 
 		// 02/07/04 - pointed out, eliminate any possible 'devide by zero'
@@ -858,18 +858,18 @@ int UTIL_GetGrenadeType(edict_t* pEntity) {
 	const int length = 32;
 
 	char model_name[length];
-	memset(model_name, 0, sizeof(model_name));
+	std::memset(model_name, 0, sizeof(model_name));
 
-	strncpy(model_name, STRING(pEntity->v.model), length - 1);
+	std::strncpy(model_name, STRING(pEntity->v.model), length - 1);
 	model_name[length - 1] = 0;      // Make sure it is NULL terminated
 
-	if (strcmp(model_name, "models/w_hegrenade.mdl") == 0) return 1;          // He grenade
-	if (strcmp(model_name, "models/w_flashbang.mdl") == 0) return 2;          // FlashBang
-	if (strcmp(model_name, "models/w_smokegrenade.mdl") == 0) return 3;       // SmokeGrenade
-	if (strcmp(model_name, "models/w_c4.mdl") == 0) return 4;                 // C4 Explosive
+	if (std::strcmp(model_name, "models/w_hegrenade.mdl") == 0) return 1;          // He grenade
+	if (std::strcmp(model_name, "models/w_flashbang.mdl") == 0) return 2;          // FlashBang
+	if (std::strcmp(model_name, "models/w_smokegrenade.mdl") == 0) return 3;       // SmokeGrenade
+	if (std::strcmp(model_name, "models/w_c4.mdl") == 0) return 4;                 // C4 Explosive
 
 	char msg[512];
-	memset(msg, 0, sizeof(msg));
+	std::memset(msg, 0, sizeof(msg));
 
 	// when an empty string, let us know we missed something
 	if (model_name[0] == '\0') {
@@ -951,8 +951,8 @@ void UTIL_SayTextBot(const char* pText, cBot* pBot) {
 	int i;
 
 	// clear out
-	memset(szTemp, 0, sizeof(szTemp));
-	memset(szName, 0, sizeof(szName));
+	std::memset(szTemp, 0, sizeof(szTemp));
+	std::memset(szName, 0, sizeof(szName));
 
 	// init
 	szTemp[0] = 2;
@@ -960,7 +960,7 @@ void UTIL_SayTextBot(const char* pText, cBot* pBot) {
 	const int entind = ENTINDEX(pBot->pEdict);
 
 	if (IsAlive(pBot->pEdict)) {
-		strcpy(szName, pBot->name);
+		std::strcpy(szName, pBot->name);
 		for (i = 1; i <= gpGlobals->maxClients; i++) {
 			edict_t* pPlayer = INDEXENT(i);
 
@@ -970,21 +970,21 @@ void UTIL_SayTextBot(const char* pText, cBot* pBot) {
 				{
 					MESSAGE_BEGIN(MSG_ONE, gmsgSayText, nullptr, pPlayer);
 					WRITE_BYTE(entind);
-					sprintf(&szTemp[1], "%s :   %s", szName, pText);
+					std::sprintf(&szTemp[1], "%s :   %s", szName, pText);
 					WRITE_STRING(&szTemp[0]);
 					MESSAGE_END();
 				}
 		}
 	}
 	else {
-		strcpy(szName, pBot->name);
+		std::strcpy(szName, pBot->name);
 		for (i = 1; i <= gpGlobals->maxClients; i++) {
 			edict_t* pPlayer = INDEXENT(i);
 			if (pPlayer)
 				if (!IsAlive(pPlayer)) {
 					MESSAGE_BEGIN(MSG_ONE, gmsgSayText, nullptr, pPlayer);
 					WRITE_BYTE(entind);
-					sprintf(&szTemp[1], "*DEAD*%s :   %s", szName, pText);
+					std::sprintf(&szTemp[1], "*DEAD*%s :   %s", szName, pText);
 					WRITE_STRING(&szTemp[0]);
 					MESSAGE_END();
 				}
@@ -995,10 +995,10 @@ void UTIL_SayTextBot(const char* pText, cBot* pBot) {
 	// pass through on ChatEngine (not always)
 	if (RANDOM_LONG(0, 100) < 90) {
 		char chSentence[80];
-		memset(chSentence, 0, sizeof(chSentence));
+		std::memset(chSentence, 0, sizeof(chSentence));
 
 		// copy pText to chSentence
-		strcpy(chSentence, pText);
+		std::strcpy(chSentence, pText);
 
 		// pass through
 		ChatEngine.set_sentence(pBot->name, chSentence);
@@ -1012,7 +1012,7 @@ void UTIL_SpeechSynth(edict_t* pEdict, char* szMessage) {
 
 	char szSpeak[128];
 
-	sprintf(szSpeak, "speak \"%s\"\n", szMessage);
+	std::sprintf(szSpeak, "speak \"%s\"\n", szMessage);
 	CLIENT_COMMAND(pEdict, szSpeak);
 }
 

@@ -120,120 +120,120 @@ void INI_Word(char input[80], char word[25]) {
 int INI_WordType(char word[25], int section) {
    if (word[0] != '\0') {
 
-      if (strcmp(word, "Word") == 0)
+      if (std::strcmp(word, "Word") == 0)
          return WORD_WORD;
-      if (strcmp(word, "Sentence") == 0)
+      if (std::strcmp(word, "Sentence") == 0)
          return WORD_SENTENCE;
 
 
-      if (strcmp(word, "X") == 0)
+      if (std::strcmp(word, "X") == 0)
          return WORD_AREAX;
-      if (strcmp(word, "Y") == 0)
+      if (std::strcmp(word, "Y") == 0)
          return WORD_AREAY;
-      if (strcmp(word, "Z") == 0)
+      if (std::strcmp(word, "Z") == 0)
          return WORD_AREAZ;
 
       // ------ personality stuff ------
-      if (strcmp(word, "PrimaryWeapon") == 0)
+      if (std::strcmp(word, "PrimaryWeapon") == 0)
          return WORD_PRIWEAPON;
 
-      if (strcmp(word, "SecondaryWeapon") == 0)
+      if (std::strcmp(word, "SecondaryWeapon") == 0)
          return WORD_SECWEAPON;
 
-      if (strcmp(word, "SaveForWeapon") == 0)
+      if (std::strcmp(word, "SaveForWeapon") == 0)
          return WORD_SAVEFORWEAP;
 
-      if (strcmp(word, "Grenade") == 0)
+      if (std::strcmp(word, "Grenade") == 0)
          return WORD_GRENADE;
 
-      if (strcmp(word, "FlashBang") == 0)
+      if (std::strcmp(word, "FlashBang") == 0)
          return WORD_FLASHBANG;
 
-      if (strcmp(word, "SmokeGrenade") == 0)
+      if (std::strcmp(word, "SmokeGrenade") == 0)
          return WORD_SMOKEGREN;
 
-      if (strcmp(word, "DefuseKit") == 0)
+      if (std::strcmp(word, "DefuseKit") == 0)
          return WORD_DEFUSEKIT;
 
-      if (strcmp(word, "Armour") == 0)
+      if (std::strcmp(word, "Armour") == 0)
          return WORD_ARMOUR;
 
       // ---- skill
 
-      if (strcmp(word, "XOffset") == 0)
+      if (std::strcmp(word, "XOffset") == 0)
          return WORD_XOFFSET;
 
-      if (strcmp(word, "YOffset") == 0)
+      if (std::strcmp(word, "YOffset") == 0)
          return WORD_YOFFSET;
 
-      if (strcmp(word, "ZOffset") == 0)
+      if (std::strcmp(word, "ZOffset") == 0)
          return WORD_ZOFFSET;
 
-      if (strcmp(word, "BotSkill") == 0)
+      if (std::strcmp(word, "BotSkill") == 0)
          return WORD_BOTSKILL;
 
-      if (strcmp(word, "MaxReactionTime") == 0)
+      if (std::strcmp(word, "MaxReactionTime") == 0)
          return WORD_MAXREACTTIME;
 
-      if (strcmp(word, "MinReactionTime") == 0)
+      if (std::strcmp(word, "MinReactionTime") == 0)
          return WORD_MINREACTTIME;
 
-      if (strcmp(word, "Turnspeed") == 0)
+      if (std::strcmp(word, "Turnspeed") == 0)
          return WORD_TURNSPEED;
 
       // ---- Game
-      if (strcmp(word, "Hostage") == 0)
+      if (std::strcmp(word, "Hostage") == 0)
          return WORD_HOSTAGERATE;
 
-      if (strcmp(word, "BompSpot") == 0)
+      if (std::strcmp(word, "BompSpot") == 0)
          return WORD_BOMBSPOTRATE;
 
-      if (strcmp(word, "Random") == 0)
+      if (std::strcmp(word, "Random") == 0)
          return WORD_RANDOMRATE;
-      if (strcmp(word, "DroppedBomb") == 0)
+      if (std::strcmp(word, "DroppedBomb") == 0)
          return WORD_DROPPEDBOMB;
 
       // ---- Radio
-      if (strcmp(word, "Reply") == 0)
+      if (std::strcmp(word, "Reply") == 0)
          return WORD_REPLYRADIO;
 
-      if (strcmp(word, "Create") == 0)
+      if (std::strcmp(word, "Create") == 0)
          return WORD_CREATERADIO;
 
       // ---- Team
-      if (strcmp(word, "HelpTeammate") == 0)
+      if (std::strcmp(word, "HelpTeammate") == 0)
          return WORD_HELPTEAM;
 
       // ---- person
-      if (strcmp(word, "WalkWithKnife") == 0)
+      if (std::strcmp(word, "WalkWithKnife") == 0)
          return WORD_WALKKNIFE;
-      if (strcmp(word, "FearRate") == 0)
+      if (std::strcmp(word, "FearRate") == 0)
          return WORD_FEARRATE;
-      if (strcmp(word, "HearRate") == 0)
+      if (std::strcmp(word, "HearRate") == 0)
          return WORD_HEARRATE;
-      if (strcmp(word, "ChatRate") == 0)
+      if (std::strcmp(word, "ChatRate") == 0)
          return WORD_CHATRATE;
 
-      if (strcmp(word, "CampRate") == 0)
+      if (std::strcmp(word, "CampRate") == 0)
          return WORD_CAMPRATE;
 
       // ------ buy table stuff -------
-      if (strcmp(word, "Price") == 0)
+      if (std::strcmp(word, "Price") == 0)
          return WORD_PRICE;
 
-      if (strcmp(word, "Priority") == 0)
+      if (std::strcmp(word, "Priority") == 0)
          return WORD_PRIORITY;
 
-      if (strcmp(word, "Ammo1Index") == 0)
+      if (std::strcmp(word, "Ammo1Index") == 0)
          return WORD_INDEX1;
 
-      if (strcmp(word, "Ammo2Index") == 0)
+      if (std::strcmp(word, "Ammo2Index") == 0)
          return WORD_INDEX2;
 
-      if (strcmp(word, "Ammo1Max") == 0)
+      if (std::strcmp(word, "Ammo1Max") == 0)
          return WORD_MAXAMMO1;
 
-      if (strcmp(word, "Ammo2Max") == 0)
+      if (std::strcmp(word, "Ammo2Max") == 0)
          return WORD_MAXAMMO2;
 
    } 
@@ -268,34 +268,34 @@ void INI_Sentence(FILE * f, char result[80]) {
 // Reads out section[], does a string compare and returns type id
 int INI_SectionType(char section[30], int last) {
 
-   if (strcmp(section, "BLOCK") == 0)
+   if (std::strcmp(section, "BLOCK") == 0)
       return INI_BLOCK;
 
-   if (strcmp(section, "DEATH") == 0)
+   if (std::strcmp(section, "DEATH") == 0)
       return INI_DEATHS;
 
-   if (strcmp(section, "WELCOME") == 0)
+   if (std::strcmp(section, "WELCOME") == 0)
       return INI_WELCOME;
 
-   if (strcmp(section, "AREA") == 0)
+   if (std::strcmp(section, "AREA") == 0)
       return INI_AREA;
 
-   if (strcmp(section, "WEAPON") == 0)
+   if (std::strcmp(section, "WEAPON") == 0)
       return INI_WEAPON;
 
-   if (strcmp(section, "SKILL") == 0)
+   if (std::strcmp(section, "SKILL") == 0)
       return INI_SKILL;
 
-   if (strcmp(section, "GAME") == 0)
+   if (std::strcmp(section, "GAME") == 0)
       return INI_GAME;
 
-   if (strcmp(section, "RADIO") == 0)
+   if (std::strcmp(section, "RADIO") == 0)
       return INI_RADIO;
 
-   if (strcmp(section, "TEAM") == 0)
+   if (std::strcmp(section, "TEAM") == 0)
       return INI_TEAM;
 
-   if (strcmp(section, "PERSON") == 0)
+   if (std::strcmp(section, "PERSON") == 0)
       return INI_PERSON;
 
    // When nothing found; we assume its just a new ID tag for some unit or structure
@@ -307,69 +307,69 @@ int INI_SectionType(char section[30], int last) {
 // BUYTABLE.INI SPECIFIC!
 int INI_SectionType_BUYTABLE(char section[30], int last) {
 
-   if (strcmp(section, "P228") == 0)
+   if (std::strcmp(section, "P228") == 0)
       return CS_WEAPON_P228;
-   if (strcmp(section, "HEGRENADE") == 0)
+   if (std::strcmp(section, "HEGRENADE") == 0)
       return CS_WEAPON_HEGRENADE;
-   if (strcmp(section, "AK47") == 0)
+   if (std::strcmp(section, "AK47") == 0)
       return CS_WEAPON_AK47;
-   if (strcmp(section, "DEAGLE") == 0)
+   if (std::strcmp(section, "DEAGLE") == 0)
       return CS_WEAPON_DEAGLE;
-   if (strcmp(section, "MAC10") == 0)
+   if (std::strcmp(section, "MAC10") == 0)
       return CS_WEAPON_MAC10;
-   if (strcmp(section, "AUG") == 0)
+   if (std::strcmp(section, "AUG") == 0)
       return CS_WEAPON_AUG;
-   if (strcmp(section, "SG552") == 0)
+   if (std::strcmp(section, "SG552") == 0)
       return CS_WEAPON_SG552;
-   if (strcmp(section, "ELITE") == 0)
+   if (std::strcmp(section, "ELITE") == 0)
       return CS_WEAPON_ELITE;
-   if (strcmp(section, "FIVESEVEN") == 0)
+   if (std::strcmp(section, "FIVESEVEN") == 0)
       return CS_WEAPON_FIVESEVEN;
-   if (strcmp(section, "UMP45") == 0)
+   if (std::strcmp(section, "UMP45") == 0)
       return CS_WEAPON_UMP45;
-   if (strcmp(section, "SG550") == 0)
+   if (std::strcmp(section, "SG550") == 0)
       return CS_WEAPON_SG550;
-   if (strcmp(section, "USP") == 0)
+   if (std::strcmp(section, "USP") == 0)
       return CS_WEAPON_USP;
-   if (strcmp(section, "GLOCK18") == 0)
+   if (std::strcmp(section, "GLOCK18") == 0)
       return CS_WEAPON_GLOCK18;
-   if (strcmp(section, "AWP") == 0)
+   if (std::strcmp(section, "AWP") == 0)
       return CS_WEAPON_AWP;
-   if (strcmp(section, "MP5") == 0)
+   if (std::strcmp(section, "MP5") == 0)
       return CS_WEAPON_MP5NAVY;
-   if (strcmp(section, "M249") == 0)
+   if (std::strcmp(section, "M249") == 0)
       return CS_WEAPON_M249;
-   if (strcmp(section, "M3") == 0)
+   if (std::strcmp(section, "M3") == 0)
       return CS_WEAPON_M3;
-   if (strcmp(section, "M4A1") == 0)
+   if (std::strcmp(section, "M4A1") == 0)
       return CS_WEAPON_M4A1;
-   if (strcmp(section, "TMP") == 0)
+   if (std::strcmp(section, "TMP") == 0)
       return CS_WEAPON_TMP;
-   if (strcmp(section, "G3SG1") == 0)
+   if (std::strcmp(section, "G3SG1") == 0)
       return CS_WEAPON_G3SG1;
-   if (strcmp(section, "SCOUT") == 0)
+   if (std::strcmp(section, "SCOUT") == 0)
       return CS_WEAPON_SCOUT;
-   if (strcmp(section, "FLASHBANG") == 0)
+   if (std::strcmp(section, "FLASHBANG") == 0)
       return CS_WEAPON_FLASHBANG;
-   if (strcmp(section, "C4") == 0)
+   if (std::strcmp(section, "C4") == 0)
       return CS_WEAPON_C4;
-   if (strcmp(section, "SMOKEGRENADE") == 0)
+   if (std::strcmp(section, "SMOKEGRENADE") == 0)
       return CS_WEAPON_SMOKEGRENADE;
-   if (strcmp(section, "XM1014") == 0)
+   if (std::strcmp(section, "XM1014") == 0)
       return CS_WEAPON_XM1014;
-   if (strcmp(section, "KNIFE") == 0)
+   if (std::strcmp(section, "KNIFE") == 0)
       return CS_WEAPON_KNIFE;
-   if (strcmp(section, "P90") == 0)
+   if (std::strcmp(section, "P90") == 0)
       return CS_WEAPON_P90;
 
    // Counter-Strike 1.6
-   if (strcmp(section, "FAMAS") == 0)
+   if (std::strcmp(section, "FAMAS") == 0)
       return CS_WEAPON_FAMAS;
-   if (strcmp(section, "GALIL") == 0)
+   if (std::strcmp(section, "GALIL") == 0)
       return CS_WEAPON_GALIL;
 
    // Unconfirmed
-   if (strcmp(section, "SHIELD") == 0)
+   if (std::strcmp(section, "SHIELD") == 0)
       return CS_WEAPON_SHIELD;
 
    // When nothing found; we assume its just a new ID tag for some unit or structure
@@ -430,7 +430,7 @@ int INI_WordValueINT(char result[80]) {
             DebugOut(aa);
           */
 
-         return atoi(number);
+         return std::atoi(number);
       }
       // nothing here, so we return NULL at the end
    }
@@ -484,7 +484,7 @@ float INI_WordValueFLOAT(char result[80]) {
             if (c > 9)
                break;
          }
-         return static_cast<float>(atof(number));
+         return static_cast<float>(std::atof(number));
       }
       // nothing here, so we return NULL at the end
    }
@@ -551,7 +551,7 @@ void INI_PARSE_CHATFILE() {
 
 
    // Set Directory name + file
-   strcpy(dirname, "data/cstrike/chat.ini");
+   std::strcpy(dirname, "data/cstrike/chat.ini");
 
    // writes whole path into "filename", Linux compatible
    UTIL_BuildFileNameRB(dirname, filename);
@@ -583,7 +583,7 @@ void INI_PARSE_CHATFILE() {
          // Every line is checked for a new section.
          INI_Section(linefeed, linesection);
 
-         if (linesection[0] != '\0' && strlen(linesection) > 1) {
+         if (linesection[0] != '\0' && std::strlen(linesection) > 1) {
             section = INI_SectionType(linesection, section);
 
             if (section == INI_BLOCK) {
@@ -625,7 +625,7 @@ void INI_PARSE_CHATFILE() {
 
                // write the word in the block
                char chWord[25];
-               memset(chWord, 0, sizeof(chWord));
+               std::memset(chWord, 0, sizeof(chWord));
                INI_WordValueCHAR(linefeed, chWord);
                // lower case
                //chWord = _strlwr( _strdup( chWord ) );
@@ -645,7 +645,7 @@ void INI_PARSE_CHATFILE() {
                   pString++;
                }
 #endif
-               strcpy(ChatEngine.ReplyBlock[iBlockId].word[iBlockWord],
+               std::strcpy(ChatEngine.ReplyBlock[iBlockId].word[iBlockWord],
                       chWord);
             }
 
@@ -656,9 +656,9 @@ void INI_PARSE_CHATFILE() {
 
                // write the word in the block
                char chSentence[80];
-               memset(chSentence, 0, sizeof(chSentence));
+               std::memset(chSentence, 0, sizeof(chSentence));
                INI_WordValueCHAR(linefeed, chSentence);
-               strcpy(ChatEngine.ReplyBlock[iBlockId].
+               std::strcpy(ChatEngine.ReplyBlock[iBlockId].
                       sentence[iBlockSentence], chSentence);
 
                // here we say it is used
@@ -682,10 +682,10 @@ void INI_PARSE_IAD() {
    int section = INI_NONE;
 
    // Set Directory name
-   strcpy(dirname, "data/cstrike/ini/");
+   std::strcpy(dirname, "data/cstrike/ini/");
 
-   strcat(dirname, STRING(gpGlobals->mapname));
-   strcat(dirname, ".ini");     // nodes file
+   std::strcat(dirname, STRING(gpGlobals->mapname));
+   std::strcat(dirname, ".ini");     // nodes file
 
    // writes whole path into "filename", Linux compatible
    UTIL_BuildFileNameRB(dirname, filename);
@@ -714,7 +714,7 @@ void INI_PARSE_IAD() {
          // Every line is checked for a new section.
          INI_Section(linefeed, linesection);
 
-         if (linesection[0] != '\0' && strlen(linesection) > 1) {
+         if (linesection[0] != '\0' && std::strlen(linesection) > 1) {
             section = INI_SectionType(linesection, section);
             continue;           // next line
          }
@@ -768,11 +768,11 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
 
    // Set Directory name
    if (mod_id == CSTRIKE_DLL)
-      strcpy(dirname, "data/cstrike/bots/");
+      std::strcpy(dirname, "data/cstrike/bots/");
 
    //strcat(dirname, STRING(gpGlobals->mapname));
-   strcat(dirname, cBotName);
-   strcat(dirname, ".ini");
+   std::strcat(dirname, cBotName);
+   std::strcat(dirname, ".ini");
 
    // writes whole path into "filename", Linux compatible
    UTIL_BuildFileNameRB(dirname, filename);
@@ -797,7 +797,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
          // Every line is checked for a new section.
          INI_Section(linefeed, linesection);
 
-         if (linesection[0] != '\0' && strlen(linesection) > 1) {
+         if (linesection[0] != '\0' && std::strlen(linesection) > 1) {
             section = INI_SectionType(linesection, section);
             continue;           // next line
          }
@@ -934,7 +934,7 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
          // fMinReact = RANDOM_FLOAT (0.05, (pBot->bot_skill / 10));
 		 // Reaction Time delay added for realistic gameplay [APG]RoboCop[CL]
          fMinReact =
-            RANDOM_FLOAT((pBot->bot_skill / 20) + 0.3f,
+            RANDOM_FLOAT(pBot->bot_skill / 20 + 0.3f,
                          (pBot->bot_skill / 5) + 0.3f);
 
       const float fMaxReact = fMinReact + RANDOM_FLOAT(0.2f, 0.4f);
@@ -977,10 +977,10 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
 
       // Set Directory name
       if (mod_id == CSTRIKE_DLL)
-         strcpy(dirname, "data/cstrike/bots/");
+         std::strcpy(dirname, "data/cstrike/bots/");
 
-      strcat(dirname, cBotName);
-      strcat(dirname, ".ini");
+      std::strcat(dirname, cBotName);
+      std::strcat(dirname, ".ini");
 
       // writes whole path into "filename", Linux compatible
       UTIL_BuildFileNameRB(dirname, filename);
@@ -1072,10 +1072,10 @@ void INI_PARSE_BUYTABLE() {
 
    // Set Directory name
    if (mod_id == CSTRIKE_DLL)
-      strcpy(dirname, "data/cstrike/");
+      std::strcpy(dirname, "data/cstrike/");
 
    //strcat(dirname, STRING(gpGlobals->mapname));
-   strcat(dirname, "buytable.ini");
+   std::strcat(dirname, "buytable.ini");
 
    // writes whole path into "filename", Linux compatible
    UTIL_BuildFileNameRB(dirname, filename);
@@ -1106,7 +1106,7 @@ void INI_PARSE_BUYTABLE() {
          INI_Section(linefeed, linesection);
 
          // Found a new section
-         if (linesection[0] != '\0' && strlen(linesection) > 1) {
+         if (linesection[0] != '\0' && std::strlen(linesection) > 1) {
             section = INI_SectionType_BUYTABLE(linesection, section);
             // Check if its the same as the previous section
             if (section != prev_section) {

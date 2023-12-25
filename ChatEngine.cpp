@@ -70,8 +70,8 @@ cChatEngine::init() {
     iLastSentence = -1;
 
     // init sentence
-    memset(sentence, 0, sizeof(sentence));
-    memset(sender, 0, sizeof(sender));
+    std::memset(sentence, 0, sizeof(sentence));
+    std::memset(sender, 0, sizeof(sender));
 }
 
 // load
@@ -103,14 +103,14 @@ void cChatEngine::think() {
         if (pPlayer && (!pPlayer->free)) {
             char name[30], name2[30];
             // clear
-            memset(name, 0, sizeof(name));
-            memset(name2, 0, sizeof(name2));
+            std::memset(name, 0, sizeof(name));
+            std::memset(name2, 0, sizeof(name2));
 
             // copy
-            strcpy(name, STRING(pPlayer->v.netname));
-            strcpy(name2, sender);
+            std::strcpy(name, STRING(pPlayer->v.netname));
+            std::strcpy(name2, sender);
 
-            if (strcmp(name, name2) == 0) {
+            if (std::strcmp(name, name2) == 0) {
                 pSender = pPlayer;
                 break;
             }
@@ -120,20 +120,20 @@ void cChatEngine::think() {
 
     // Scan the message so we know in what block we should be to reply:
     char word[20];
-    memset(word, 0, sizeof(word));
+    std::memset(word, 0, sizeof(word));
 	
     int c = 0;
     int wc = 0;
 
-    const int sentenceLength = static_cast<int>(strlen(sentence));
+    const int sentenceLength = static_cast<int>(std::strlen(sentence));
 
     // When length is not valid, get out.
     // 29/08/2019: Stefan, so let me get this. We declare the sentence to be max 128 chars, but then we still could end up with a longer one?
     // how did we allow for this to happen?
     if (sentenceLength == 0 || sentenceLength >= (MAX_SENTENCE_LENGTH-1)) {
         // clear out sentence and sender
-        memset(sentence, 0, sizeof(sentence));
-        memset(sender, 0, sizeof(sender));
+        std::memset(sentence, 0, sizeof(sentence));
+        std::memset(sender, 0, sizeof(sender));
 
         // reset timer
         fThinkTimer = gpGlobals->time;
@@ -169,7 +169,7 @@ void cChatEngine::think() {
                 word[wc] = sentence[c];
 
             // not a good word (too small)
-            if (strlen(word) <= 0) {
+            if (std::strlen(word) <= 0) {
                 //SERVER_PRINT("This is not a good word!\n");
             } else {
                 for (int iB = 0; iB < MAX_BLOCKS; iB++) {
@@ -179,12 +179,12 @@ void cChatEngine::think() {
                             if (ReplyBlock[iB].word[iBw][0] == '\0')
                                 continue; // not filled in
 
-                            if (strlen(ReplyBlock[iB].word[iBw]) <= 0)
+                            if (std::strlen(ReplyBlock[iB].word[iBw]) <= 0)
                                 continue; // not long enough (a space?)
 
                             // 03/07/04
                             // add score to matching word (evy: ignoring case)
-                            if (strcmp(ReplyBlock[iB].word[iBw], word) == 0)
+                            if (std::strcmp(ReplyBlock[iB].word[iBw], word) == 0)
                                 WordBlockScore[iB]++;
                         }       // all words in this block
                     }          // any used block
@@ -194,7 +194,7 @@ void cChatEngine::think() {
             // clear out entire word.
             //for (int cw=0; cw < 20; cw++)
             //      word[cw] = '\0';
-            memset(word, 0, sizeof(word));
+            std::memset(word, 0, sizeof(word));
 
             wc = 0;          // reset WC position (start writing 'word[WC]' at 0 again)
             c++;             // next position in sentence
@@ -279,12 +279,12 @@ void cChatEngine::think() {
                                 char chSentence[128];
                                 char temp[80];
 
-                                memset(chSentence, 0, sizeof(chSentence));
-                                memset(temp, 0, sizeof(temp));
+                                std::memset(chSentence, 0, sizeof(chSentence));
+                                std::memset(temp, 0, sizeof(temp));
 
                                 // get character position
                                 const char *name_pos =
-                                        strstr(ReplyBlock[iTheBlock].
+                                        std::strstr(ReplyBlock[iTheBlock].
                                                 sentence[the_c], "%n");
 
                                 // when name_pos var is found, fill it in.
@@ -307,19 +307,19 @@ void cChatEngine::think() {
                                     temp[nC] = ' ';
 
                                     // copy senders name to chSentence
-                                    strcat(temp, sender);
+                                    std::strcat(temp, sender);
 
                                     // Skip %n part in ReplyBlock
                                     nC = name_offset + 3;
 
                                     // we just copied a name to chSentence
                                     // set our cursor after the name now (name length + 1)
-                                    int tc = static_cast<int>(strlen(temp));
+                                    int tc = static_cast<int>(std::strlen(temp));
 
                                     // now finish the sentence
                                     // get entire length of ReplyBlock and go until we reach the end
                                     const int length =
-                                        static_cast<int>(strlen(ReplyBlock[iTheBlock].
+                                        static_cast<int>(std::strlen(ReplyBlock[iTheBlock].
                                                     sentence[the_c]));
 
 
@@ -339,11 +339,11 @@ void cChatEngine::think() {
                                     // terminate
                                     temp[tc] = '\n';
 
-                                    sprintf(chSentence, "%s \n", temp);
+                                    std::sprintf(chSentence, "%s \n", temp);
                                 }
                                     // when no name pos is found, we just copy the string and say that (works ok)
                                 else
-                                    sprintf(chSentence, "%s \n",
+                                    std::sprintf(chSentence, "%s \n",
                                             ReplyBlock[iTheBlock].
                                                     sentence[the_c]);
 
@@ -364,8 +364,8 @@ void cChatEngine::think() {
 
     }
     // clear sentence and such
-    memset(sentence, 0, sizeof(sentence));
-    memset(sender, 0, sizeof(sender));
+    std::memset(sentence, 0, sizeof(sentence));
+    std::memset(sender, 0, sizeof(sender));
 
 
     fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0f, 0.5f);
@@ -395,8 +395,8 @@ void cChatEngine::handle_sentence() //Experimental implementation [APG]RoboCop[C
 	}
 
 	// clear sentence and such
-	memset(sentence, 0, sizeof(sentence));
-	memset(sender, 0, sizeof(sender));
+	std::memset(sentence, 0, sizeof(sentence));
+	std::memset(sender, 0, sizeof(sender));
 
 	fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0f, 0.5f);
 }
@@ -411,7 +411,7 @@ void cChatEngine::set_sentence(char csender[30], char csentence[MAX_SENTENCE_LEN
         //      SERVER_PRINT(csentence);
         //      SERVER_PRINT("--\n");
 
-        strcpy(sender, csender);
+        std::strcpy(sender, csender);
 #ifdef _WIN32
 
         _strupr(csentence);
@@ -427,7 +427,7 @@ void cChatEngine::set_sentence(char csender[30], char csentence[MAX_SENTENCE_LEN
             pString++;
         }
 #endif
-        strcpy(sentence, csentence);
+        std::strcpy(sentence, csentence);
     }
 }
 

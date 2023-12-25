@@ -73,7 +73,7 @@ void pfnChangeLevel(const char *s1, const char *s2) {
         {
             char cmd[40];
 
-            sprintf(cmd, "kick \"%s\"\n", bots[index].name);
+            std::sprintf(cmd, "kick \"%s\"\n", bots[index].name);
 
             bots[index].respawn_state = RESPAWN_NEED_TO_RESPAWN;
 
@@ -91,7 +91,7 @@ edict_t *pfnFindEntityByString(edict_t *pEdictStartSearchAfter,
                                const char *pszField, const char *pszValue) {
 
     // Counter-Strike - New Round Started
-    if (strcmp(pszValue, "info_map_parameters") == 0) {
+    if (std::strcmp(pszValue, "info_map_parameters") == 0) {
         rblog("pfnFindEntityByString: Game new round\n");
 
         // New round started.
@@ -121,7 +121,7 @@ void pfnRemoveEntity(edict_t *e) {
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnRemoveEntity() - model -> '%s'\n",
+        std::sprintf(msg, "ENGINE: pfnRemoveEntity() - model -> '%s'\n",
                 STRING(e->v.model));
         rblog(msg);
     }
@@ -145,7 +145,7 @@ pfnMessageBegin(int msg_dest, int msg_type, const float *pOrigin, edict_t *edict
 
     if (Game.bEngineDebug) {
         char dmsg[256];
-        sprintf(dmsg, "ENGINE: pfnMessageBegin(), dest=%d, msg_type=%d\n", msg_dest, msg_type);
+        std::sprintf(dmsg, "ENGINE: pfnMessageBegin(), dest=%d, msg_type=%d\n", msg_dest, msg_type);
         rblog(dmsg);
     }
 
@@ -294,7 +294,7 @@ void pfnWriteByte(int iValue) {
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteByte() - '%d'\n", iValue);
+        std::sprintf(msg, "ENGINE: pfnWriteByte() - '%d'\n", iValue);
         rblog(msg);
     }
 
@@ -310,7 +310,7 @@ void pfnWriteChar(int iValue) {
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteChar() - '%d'\n", iValue);
+        std::sprintf(msg, "ENGINE: pfnWriteChar() - '%d'\n", iValue);
         rblog(msg);
     }
     RETURN_META(MRES_IGNORED);
@@ -325,7 +325,7 @@ void pfnWriteShort(int iValue) {
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteShort() - '%d'\n", iValue);
+        std::sprintf(msg, "ENGINE: pfnWriteShort() - '%d'\n", iValue);
         rblog(msg);
     }
 
@@ -341,7 +341,7 @@ void pfnWriteLong(int iValue) {
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteLong() - '%d'\n", iValue);
+        std::sprintf(msg, "ENGINE: pfnWriteLong() - '%d'\n", iValue);
         rblog(msg);
     }
 
@@ -358,7 +358,7 @@ void pfnWriteAngle(float flValue) {
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteAngle() - '%f'\n", flValue);
+        std::sprintf(msg, "ENGINE: pfnWriteAngle() - '%f'\n", flValue);
         rblog(msg);
     }
 
@@ -375,7 +375,7 @@ void pfnWriteCoord(float flValue) {
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteCoord() - '%f'\n", flValue);
+        std::sprintf(msg, "ENGINE: pfnWriteCoord() - '%f'\n", flValue);
         rblog(msg);
     }
 
@@ -386,41 +386,41 @@ void pfnWriteCoord(float flValue) {
 void pfnWriteString(const char *sz) {
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteByte() - '%s'\n", sz);
+        std::sprintf(msg, "ENGINE: pfnWriteByte() - '%s'\n", sz);
         rblog(msg);
     }
 
     if (gpGlobals->deathmatch) {
         // Ditlew's Radio
-        if ((strstr(sz, "(RADIO):") != nullptr) && !radio_message) {
+        if ((std::strstr(sz, "(RADIO):") != nullptr) && !radio_message) {
             // We found an old radio message, we should convert the strings...
             radio_message = true;  // we found a radio message
 
             // Thank god Ditlew you already coded this...
-            const unsigned length = strlen(sz) - strlen(strstr(sz, " (RADIO)"));
-            strncpy(radio_messenger, sz, length);
+            const unsigned length = std::strlen(sz) - std::strlen(std::strstr(sz, " (RADIO)"));
+            std::strncpy(radio_messenger, sz, length);
 
             // Now search for any compatible radio command (old string).
             // if found then convert the message in the new way so the code
             // thinks its CS 1.1 and thus every version lower then CS 1.1 should work too...
-            if ((strstr(sz, "Follow Me") != nullptr)) {
+            if ((std::strstr(sz, "Follow Me") != nullptr)) {
                 // convert string
-                strcpy(message, "#Follow me");
-            } else if ((strstr(sz, "You Take the Point") != nullptr)) {
+                std::strcpy(message, "#Follow me");
+            } else if ((std::strstr(sz, "You Take the Point") != nullptr)) {
                 // convert string
-                strcpy(message, "#You_take_the_point");
-            } else if ((strstr(sz, "Need backup") != nullptr)) {
+                std::strcpy(message, "#You_take_the_point");
+            } else if ((std::strstr(sz, "Need backup") != nullptr)) {
                 // convert string
-                strcpy(message, "#Need_backup");
-            } else if ((strstr(sz, "Taking Fire.. Need Assistance!") != nullptr)) {
+                std::strcpy(message, "#Need_backup");
+            } else if ((std::strstr(sz, "Taking Fire.. Need Assistance!") != nullptr)) {
                 // convert string
-                strcpy(message, "#Taking_fire");
-            } else if ((strstr(sz, "Team, fall back!") != nullptr)) {
+                std::strcpy(message, "#Taking_fire");
+            } else if ((std::strstr(sz, "Team, fall back!") != nullptr)) {
                 // convert string
-                strcpy(message, "#Team_fall_back");
-            } else if ((strstr(sz, "Go go go") != nullptr)) {
+                std::strcpy(message, "#Team_fall_back");
+            } else if ((std::strstr(sz, "Go go go") != nullptr)) {
                 // convert string
-                strcpy(message, "#Go_go_go");
+                std::strcpy(message, "#Go_go_go");
             }
 
         }
@@ -497,14 +497,14 @@ void pfnWriteString(const char *sz) {
            }
          */
         if (radio_message_start) {
-            strcpy(radio_messenger, sz);   // the messenger of the radio
+            std::strcpy(radio_messenger, sz);   // the messenger of the radio
             radio_message_start = false;
             radio_message_from = true;
         } else if (radio_message_from) {
-            strcpy(message, sz);   // copy message and handle at bot.cpp radio routine.
+            std::strcpy(message, sz);   // copy message and handle at bot.cpp radio routine.
             radio_message = true;
             radio_message_from = false;
-        } else if (strcmp(sz, "#Game_radio") == 0) {
+        } else if (std::strcmp(sz, "#Game_radio") == 0) {
             radio_message_start = true;
         }
 
@@ -628,6 +628,6 @@ GetEngineFunctions(enginefuncs_t *pengfuncsFromEngine,
     meta_engfuncs.pfnCmd_Argc = pfnCmd_Argc;
     meta_engfuncs.pfnSetClientMaxspeed = pfnSetClientMaxspeed;
     meta_engfuncs.pfnGetPlayerUserId = pfnGetPlayerUserId;
-    memcpy(pengfuncsFromEngine, &meta_engfuncs, sizeof(enginefuncs_t));
+    std::memcpy(pengfuncsFromEngine, &meta_engfuncs, sizeof(enginefuncs_t));
     return TRUE;
 }

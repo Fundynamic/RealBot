@@ -191,7 +191,7 @@ void cBot::SpawnInit() {
     pEnemyEdict = nullptr;
 
     // chat
-    memset(chChatSentence, 0, sizeof(chChatSentence));
+    std::memset(chChatSentence, 0, sizeof(chChatSentence));
 
 
     // ------------------------
@@ -290,8 +290,8 @@ void cBot::SpawnInit() {
     arg1[0] = 0;
     arg2[0] = 0;
     arg3[0] = 0;
-    memset(&(current_weapon), 0, sizeof(current_weapon));
-    memset(&(m_rgAmmo), 0, sizeof(m_rgAmmo));
+    std::memset(&(current_weapon), 0, sizeof(current_weapon));
+    std::memset(&(m_rgAmmo), 0, sizeof(m_rgAmmo));
 
     rprint_trace("SpawnInit()", "END");
 }
@@ -388,7 +388,7 @@ void cBot::NewRound() {
     // ------------------------
 
     // chat
-    memset(chChatSentence, 0, sizeof(chChatSentence));
+    std::memset(chChatSentence, 0, sizeof(chChatSentence));
 
     vip = UTIL_IsVip(pEdict);
 
@@ -467,8 +467,8 @@ void cBot::NewRound() {
 
             if (the_c > -1 && iMax > -1) {
                 char chSentence[80];
-                memset(chSentence, 0, sizeof(chSentence));
-                sprintf(chSentence, "%s ",
+                std::memset(chSentence, 0, sizeof(chSentence));
+                std::sprintf(chSentence, "%s ",
                         ChatEngine.ReplyBlock[98].sentence[the_c]);
                 PrepareChat(chSentence);
             }
@@ -488,7 +488,7 @@ void cBot::PrepareChat(char sentence[128]) {
     if (Game.iProducedSentences <= Game.iMaxSentences) {
         // makes bot chat away
         fChatTime = gpGlobals->time + RANDOM_FLOAT(0.1f, 2.0f);
-        strcpy(chChatSentence, sentence); // copy this
+        std::strcpy(chChatSentence, sentence); // copy this
         Game.iProducedSentences++;
     }
 }
@@ -500,7 +500,7 @@ float cBot::ReactionTime(int iSkill) {
 	const float time = RANDOM_FLOAT(fpMinReactTime, fpMaxReactTime);
     if (Game.messageVerbosity > 1) {
         char msg[255];
-        sprintf(msg, "minReactTime %f, maxReactTime %f, skill %d, results into %f", fpMinReactTime, fpMaxReactTime, iSkill, time);
+        std::sprintf(msg, "minReactTime %f, maxReactTime %f, skill %d, results into %f", fpMinReactTime, fpMaxReactTime, iSkill, time);
         rprint_trace("ReactionTime()", msg);
     }
     return time;
@@ -883,7 +883,7 @@ void cBot::PickBestWeapon() {
     // Distance to enemy
     const float fDistance = func_distance(pEdict->v.origin, lastSeenEnemyVector);
 
-    const float knifeDistance = 300;
+    const float knifeDistance = 300.0f;
 
     // ----------------------------
     // In this function all we do is decide what weapon to pick
@@ -913,10 +913,10 @@ void cBot::PickBestWeapon() {
             func_distance(pEdict->v.origin, lastSeenEnemyVector) > 200 &&     // but not to close
             RANDOM_LONG(0, 100) < 10 &&   // only randomly we pick a grenade in the heat of the battle
             current_weapon.iId != CS_WEAPON_HEGRENADE && current_weapon.iId != CS_WEAPON_FLASHBANG &&
-            f_gren_time + 15 < gpGlobals->time) // and dont hold it yet
+            f_gren_time + 15.0f < gpGlobals->time) // and dont hold it yet
         {
             UTIL_SelectItem(pEdict, "weapon_hegrenade");   // select grenade
-            f_wait_time = gpGlobals->time + 1;     // wait 1 second (stand still 1 sec)
+            f_wait_time = gpGlobals->time + 1.0f;     // wait 1 second (stand still 1 sec)
             f_gren_time =
                     gpGlobals->time + (1.0f + RANDOM_FLOAT(0.5f, 1.5f));        // and determine how long we should hold it
             zoomed = ZOOM_NONE;    // Counter-Strike resets zooming when choosing another weapon
@@ -931,7 +931,7 @@ void cBot::PickBestWeapon() {
             f_gren_time + 15 < gpGlobals->time) // and dont hold it yet
         {
             UTIL_SelectItem(pEdict, "weapon_flashbang");   // select grenade
-            f_wait_time = gpGlobals->time + 1;     // wait 1 second (stand still 1 sec)
+            f_wait_time = gpGlobals->time + 1.0f;     // wait 1 second (stand still 1 sec)
             f_gren_time =
                     gpGlobals->time + (1.0f + RANDOM_FLOAT(0.5f, 1.5f));        // and determine how long we should hold it
             zoomed = ZOOM_NONE;    // Counter-Strike resets zooming when choosing another weapon
@@ -1167,9 +1167,9 @@ void cBot::Combat() {
                 const int b = RANDOM_LONG(30, 155);
                 char msg[128];
                 if (Game.iDeathsBroadcasting == BROADCAST_DEATHS_FULL) {
-                    sprintf(msg, "A RealBot has killed you!\n\nName:%s\nSkill:%d\n", name, bot_skill);
+                    std::sprintf(msg, "A RealBot has killed you!\n\nName:%s\nSkill:%d\n", name, bot_skill);
                 } else {
-                    sprintf(msg, "A RealBot named %s has killed you!", name);
+                    std::sprintf(msg, "A RealBot named %s has killed you!", name);
                 }
 
                 HUD_DrawString(r, g, b, msg, pEnemyEdict);
@@ -1629,11 +1629,11 @@ void cBot::JoinTeam() {
 
         // select the team the bot wishes to join...
         if (iTeam == 1) {
-            strcpy(c_team, "1");
+            std::strcpy(c_team, "1");
         } else if (iTeam == 2) {
-            strcpy(c_team, "2");
+            std::strcpy(c_team, "2");
         } else {
-            strcpy(c_team, "5");
+            std::strcpy(c_team, "5");
         }
 
         // choose
@@ -1657,15 +1657,15 @@ void cBot::JoinTeam() {
 
         // select the class the bot wishes to use...
         if (bot_class == 1)
-            strcpy(c_class, "1");
+            std::strcpy(c_class, "1");
         else if (bot_class == 2)
-            strcpy(c_class, "2");
+            std::strcpy(c_class, "2");
         else if (bot_class == 3)
-            strcpy(c_class, "3");
+            std::strcpy(c_class, "3");
         else if (bot_class == 4)
-            strcpy(c_class, "4");
+            std::strcpy(c_class, "4");
         else
-            strcpy(c_class, "5");       // random
+            std::strcpy(c_class, "5");       // random
 
         FakeClientCommand(this->pEdict, "menuselect", c_class, nullptr);
 
@@ -1689,15 +1689,15 @@ void cBot::JoinTeam() {
 
         // select the class the bot wishes to use...
         if (bot_class == 1)
-            strcpy(c_class, "1");
+            std::strcpy(c_class, "1");
         else if (bot_class == 2)
-            strcpy(c_class, "2");
+            std::strcpy(c_class, "2");
         else if (bot_class == 3)
-            strcpy(c_class, "3");
+            std::strcpy(c_class, "3");
         else if (bot_class == 4)
-            strcpy(c_class, "4");
+            std::strcpy(c_class, "4");
         else
-            strcpy(c_class, "5");       // random
+            std::strcpy(c_class, "5");       // random
 
         FakeClientCommand(this->pEdict, "menuselect", c_class, nullptr);
 
@@ -1898,7 +1898,7 @@ void cBot::Act() {
     if (fChatTime < gpGlobals->time) {
         if (chChatSentence[0] != '\0') {
             UTIL_SayTextBot(chChatSentence, this);
-            memset(chChatSentence, 0, sizeof(chChatSentence));
+            std::memset(chChatSentence, 0, sizeof(chChatSentence));
         }
     }
 
@@ -2023,7 +2023,7 @@ void cBot::Act() {
 
     // Button usage, change vBody to a 'trigger multiple' because we have to touch these
     if (pButtonEdict) {
-        if (strcmp(STRING(pButtonEdict->v.classname), "trigger_multiple") == 0) {
+        if (std::strcmp(STRING(pButtonEdict->v.classname), "trigger_multiple") == 0) {
             if (func_distance(pEdict->v.origin, VecBModelOrigin(pButtonEdict)) < 60) {
                 vBody = VecBModelOrigin(pButtonEdict);
             }
@@ -2153,7 +2153,7 @@ void cBot::CheckAround() {
 
 
     char msg[255];
-    sprintf(msg, "HIT results: forward: %d, left: %d, right: %d, forward left: %d, forward right: %d", bHitForward, bHitLeft, bHitRight, bHitForwardLeft, bHitForwardRight);
+    std::sprintf(msg, "HIT results: forward: %d, left: %d, right: %d, forward left: %d, forward right: %d", bHitForward, bHitLeft, bHitRight, bHitForwardLeft, bHitForwardRight);
     rprint_trace("CheckAround", msg);
 
     // Set 'act' properties
@@ -2191,10 +2191,10 @@ void cBot::CheckAround() {
     edict_t *pent = nullptr;
     while ((pent = UTIL_FindEntityInSphere(pent, pEdict->v.origin, 60.0f)) != nullptr) {
 	    char item_name[40];
-	    strcpy(item_name, STRING(pent->v.classname));
+	    std::strcpy(item_name, STRING(pent->v.classname));
 
         // See if it matches our object name
-        if (strcmp("func_breakable", item_name) == 0) {
+        if (std::strcmp("func_breakable", item_name) == 0) {
 
             // Found a func_breakable
             const Vector vBreakableOrigin = VecBModelOrigin(pent);
@@ -2305,8 +2305,8 @@ bool cBot::hasEnemy(edict_t * pEdict) const
 bool cBot::shouldBeWandering() {
     if (this->fWanderTime > gpGlobals->time) {
         char msg[255];
-        memset(msg, 0, sizeof(msg));
-        sprintf(msg, "Wander time is %f , globals time is %f, so should still wander", this->fWanderTime, gpGlobals->time);
+        std::memset(msg, 0, sizeof(msg));
+        std::sprintf(msg, "Wander time is %f , globals time is %f, so should still wander", this->fWanderTime, gpGlobals->time);
         rprint(msg);
         return true;
     }
@@ -2322,7 +2322,7 @@ void cBot::setMoveSpeed(float value) {
 
 void cBot::setStrafeSpeed(float value, float time) {
     char msg[255];
-    sprintf(msg, "%f for %f seconds.", value, time);
+    std::sprintf(msg, "%f for %f seconds.", value, time);
     rprint_trace("setStrafeSpeed", msg);
 //    if (f_strafe_time > gpGlobals->time) {
 //
@@ -2344,8 +2344,8 @@ void cBot::startWandering(float time) {
     this->fWanderTime = gpGlobals->time + time;
     setMoveSpeed(f_max_speed);
     char msg[255];
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Start wandering for %f seconds", time);
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "Start wandering for %f seconds", time);
     rprint("startWandering", msg);
 }
 
@@ -2398,17 +2398,17 @@ void cBot::setGoalNode(int nodeIndex, int iGoalIndex) {
 
     tGoal *goalPtr = getGoalData();
     char msg[255];
-    memset(msg, 0, sizeof(msg));
+    std::memset(msg, 0, sizeof(msg));
 
     if (goalPtr != nullptr) {
-        sprintf(msg, "Setting iGoalNode to [%d] and goalIndex [%d] - GOAL: type [%s], checked [%d]",
+        std::sprintf(msg, "Setting iGoalNode to [%d] and goalIndex [%d] - GOAL: type [%s], checked [%d]",
                 nodeIndex,
                 goalIndex,
                 goalPtr->name,
                 goalPtr->iChecked
         );
     } else {
-        sprintf(msg, "Setting iGoalNode to [%d] and goalIndex [%d] - could not retrieve goal data.", nodeIndex, goalIndex);
+        std::sprintf(msg, "Setting iGoalNode to [%d] and goalIndex [%d] - could not retrieve goal data.", nodeIndex, goalIndex);
     }
     rprint("setGoalNode()", msg);
 }
@@ -2510,10 +2510,10 @@ void cBot::performBuyWeapon(const char *menuItem, const char *subMenuItem) {
 
     if (this->console_nr == 0) {
         // set up first command and argument
-        strcpy(this->arg1, "buy");
-        strcpy(this->arg2, menuItem);
+        std::strcpy(this->arg1, "buy");
+        std::strcpy(this->arg2, menuItem);
 
-        if (subMenuItem != nullptr) strcpy(this->arg3, subMenuItem);
+        if (subMenuItem != nullptr) std::strcpy(this->arg3, subMenuItem);
 
         this->console_nr = 1;     // start console command sequence
     }
@@ -2913,7 +2913,7 @@ void cBot::Memory() {
                 }
 
             } else {
-                fMemoryTime = gpGlobals->time + 5;
+                fMemoryTime = gpGlobals->time + 5.0f;
             }
 
             /*
@@ -3082,7 +3082,7 @@ edict_t * cBot::findHostageToRescue() {
         if (getDistanceTo(pent->v.origin) > (NODE_ZONE * 2.5f)) continue;
 
         char msg[255];
-        sprintf(msg, "Found hostage to rescue at %f,%f,%f", pent->v.origin.x, pent->v.origin.y, pent->v.origin.z);
+        std::sprintf(msg, "Found hostage to rescue at %f,%f,%f", pent->v.origin.x, pent->v.origin.y, pent->v.origin.z);
         this->rprint_trace("findHostageToRescue()", msg);
         return pent;
     }
@@ -3216,11 +3216,11 @@ void cBot::Think() {
                 const int b = RANDOM_LONG(30, 155);
                 char msg[128];
                 if (Game.iDeathsBroadcasting == BROADCAST_DEATHS_FULL)
-                    sprintf(msg,
+                    std::sprintf(msg,
                             "You have killed a RealBot!\n\nName:%s\nSkill:%d\n",
                             name, bot_skill);
                 else
-                    sprintf(msg, "You have killed a RealBot named %s!",
+                    std::sprintf(msg, "You have killed a RealBot named %s!",
                             name);
 
                 HUD_DrawString(r, g, b, msg, killer_edict);
@@ -3259,8 +3259,8 @@ void cBot::Think() {
 
                         if (the_c > -1 && iMax > -1) {
                             char chSentence[80];
-                            memset(chSentence, 0, sizeof(chSentence));
-                            sprintf(chSentence, "%s ",
+                            std::memset(chSentence, 0, sizeof(chSentence));
+                            std::sprintf(chSentence, "%s ",
                                     ChatEngine.ReplyBlock[99].sentence[the_c]);
                             //strcpy(chSentence, ChatEngine.ReplyBlock[99].sentence[the_c]);
                             PrepareChat(chSentence);
@@ -3297,7 +3297,7 @@ void cBot::Think() {
         rprint("Played enough rounds");
         bIsUsed = FALSE;          // no longer used
         char cmd[80];
-        sprintf(cmd, "kick \"%s\"\n", name);
+        std::sprintf(cmd, "kick \"%s\"\n", name);
         SERVER_COMMAND(cmd);      // kick the bot using (kick "name")
         return;
     }
@@ -3311,9 +3311,9 @@ void cBot::Think() {
 
         // prevent division by zero
         if (movedTwoTimes > 0.0f) {
-            distanceMoved = movedTwoTimes / 2;
+            distanceMoved = movedTwoTimes / 2.0f;
         } else {
-            distanceMoved = 0;
+            distanceMoved = 0.0f;
         }
 
         // save current position as previous
@@ -3372,7 +3372,7 @@ void cBot::Think() {
 
 
     // NEW: When round time is over and still busy playing, kill bots
-    const float roundTimeInSeconds = CVAR_GET_FLOAT("mp_roundtime") * 60;
+    const float roundTimeInSeconds = CVAR_GET_FLOAT("mp_roundtime") * 60.0f;
     const float freezeTimeCVAR = CVAR_GET_FLOAT("mp_freezetime");
     if (Game.getRoundStartedTime() + 10.0f + roundTimeInSeconds + freezeTimeCVAR < gpGlobals->time) {
         end_round = true;
@@ -3437,11 +3437,11 @@ void cBot::Think() {
 
         bool bMayFromGame = true;
 
-        if (Game.fWalkWithKnife > 0)
+        if (Game.fWalkWithKnife > 0.0f)
             if (Game.getRoundStartedTime() + Game.fWalkWithKnife < gpGlobals->time)
                 bMayFromGame = false;
 
-        if (Game.fWalkWithKnife == 0)
+        if (Game.fWalkWithKnife == 0.0f)
             bMayFromGame = false;
 
         if (hasShield()) {
@@ -3593,7 +3593,7 @@ void cBot::CheckGear() {
 void cBot::UpdateStatus() {
     // name filled in yet?
     if (name[0] == 0)
-        strcpy(name, STRING(pEdict->v.netname));
+        std::strcpy(name, STRING(pEdict->v.netname));
 
     // Set thirdpartybot flag
     pEdict->v.flags |= FL_THIRDPARTYBOT;
@@ -3646,7 +3646,7 @@ bool BotRadioAction() {
     int team = -1;
     int i;
     int radios = 0;              // Hold amount of replies here, so we don't flood :)
-    strcpy(name, radio_messenger);
+    std::strcpy(name, radio_messenger);
 
     // First find the team messager name
     for (i = 1; i <= gpGlobals->maxClients; i++) {
@@ -3654,8 +3654,8 @@ bool BotRadioAction() {
         if (pPlayer)              // If player exists
         {
 	        char netname[64];
-	        strcpy(netname, STRING(pPlayer->v.netname));   // Copy netname
-            if (strcmp(netname, name) == 0)        // If
+	        std::strcpy(netname, STRING(pPlayer->v.netname));   // Copy netname
+            if (std::strcmp(netname, name) == 0)        // If
             {
                 plr = pPlayer;
                 team = UTIL_GetTeam(pPlayer);
@@ -3669,9 +3669,9 @@ bool BotRadioAction() {
         if (pPlayer) {
 	        char netname[64];
 
-	        strcpy(netname, STRING(pPlayer->v.netname));
+	        std::strcpy(netname, STRING(pPlayer->v.netname));
 
-            if ((strcmp(netname, name) != 0) &&    // When not the same name
+            if ((std::strcmp(netname, name) != 0) &&    // When not the same name
                 (team == UTIL_GetTeam(pPlayer)) && // .. the same team...
                 (pPlayer->v.deadflag == DEAD_NO) &&        // .. not dead ..
                 ((UTIL_GetBotPointer(pPlayer) != nullptr)))   // and a RealBot
@@ -3682,7 +3682,7 @@ bool BotRadioAction() {
                 if (BotPointer == nullptr)
                     continue;        // somehow this fucked up, bail out
 
-                const auto distance = func_distance(plr->v.origin,
+                const float distance = func_distance(plr->v.origin,
                                                     BotPointer->pEdict->v.origin);        // distance between the 2
 
                 // Same team, randomly, do we even listen to the radio?
@@ -3703,12 +3703,12 @@ bool BotRadioAction() {
 	                bool can_do_negative = false;
 
 	                // Report in team!
-                    if (strstr(message, "#Report_in_team") != nullptr) {
+                    if (std::strstr(message, "#Report_in_team") != nullptr) {
                         // gives human knowledge who is on his team
                     }
 
                     // Regroup team!
-                    if (strstr(message, "#Regroup_team") != nullptr) {
+                    if (std::strstr(message, "#Regroup_team") != nullptr) {
                         // regroup now!
                         unstood = true;
 
@@ -3719,21 +3719,21 @@ bool BotRadioAction() {
                     }
 
                     // Hold this position
-                    if (strstr(message, "#Hold_this_position") != nullptr ||
-                        strstr(message, "#Get_in_position_and_wait") != nullptr) {
+                    if (std::strstr(message, "#Hold_this_position") != nullptr ||
+                        std::strstr(message, "#Get_in_position_and_wait") != nullptr) {
                         // do nothing
                     }
                     // Follow me!!
-                    if (strstr(message, "#Follow_me") != nullptr) {}
+                    if (std::strstr(message, "#Follow_me") != nullptr) {}
 
                     // You take the point!
                     // 23/06/04 - Stefan - Here the leader should break up his position?
                     // ie, the leader will be assigned to the bot this human/bot is facing?
-                    if (strstr(message, "#You_take_the_point") != nullptr) {
+                    if (std::strstr(message, "#You_take_the_point") != nullptr) {
                         can_do_negative = false;
                     }
                     // Enemy Sotted!
-                    if (strstr(message, "#Enemy_spotted") != nullptr) {
+                    if (std::strstr(message, "#Enemy_spotted") != nullptr) {
                         can_do_negative = false;
 
                         // Find player who issues this message and go to it
@@ -3753,14 +3753,14 @@ bool BotRadioAction() {
                         }
                     }
                     // Enemy Down!
-                    if (strstr(message, "#Enemy_down") != nullptr) {
+                    if (std::strstr(message, "#Enemy_down") != nullptr) {
                         BotPointer->rprint_trace("BotRadioAction", "Understood Enemy down - no logic");
 
                         unstood = true;
                         can_do_negative = false;
                     }
                     // Stick together team!
-                    if (strstr(message, "#Stick_together_team") != nullptr) {
+                    if (std::strstr(message, "#Stick_together_team") != nullptr) {
                         BotPointer->rprint_trace("BotRadioAction", "Understood Stick together team - no logic");
                         unstood = true;
 						can_do_negative = false;                    	
@@ -3768,7 +3768,7 @@ bool BotRadioAction() {
                     // cover me|| strstr (message, "#Cover_me") != NULL
 
                     // Need backup / taking fire...
-                    if (strstr(message, "#Need_backup") != nullptr || strstr(message, "#Taking_fire") != nullptr) {
+                    if (std::strstr(message, "#Need_backup") != nullptr || std::strstr(message, "#Taking_fire") != nullptr) {
                         BotPointer->rprint_trace("BotRadioAction", "Understood Need backup or Taking fire");
 
                         unstood = true;
@@ -3786,7 +3786,7 @@ bool BotRadioAction() {
                     }
 
                     // Taking fire!
-                    if (strstr(message, "#Taking_fire") != nullptr) {
+                    if (std::strstr(message, "#Taking_fire") != nullptr) {
 						BotPointer->rprint_trace("BotRadioAction", "Understood Taking fire");
                         unstood = true;
 						
@@ -3804,11 +3804,11 @@ bool BotRadioAction() {
 						
                     }
                     // Team fall back!
-                    if (strstr(message, "#Team_fall_back") != nullptr) {
+                    if (std::strstr(message, "#Team_fall_back") != nullptr) {
 
                     }
                     // Go Go Go, stop camping, stop following, get the heck out of there!
-                    if (strstr(message, "#Go_go_go") != nullptr) {
+                    if (std::strstr(message, "#Go_go_go") != nullptr) {
                         BotPointer->rprint_trace("BotRadioAction", "Understood Go Go Go");
                         unstood = true;
                         BotPointer->f_camp_time = gpGlobals->time - 30;
@@ -4066,7 +4066,7 @@ void BotThink(cBot *pBot) {
 
     const double upMove = 0.0;
     char msg[255];
-    sprintf(msg, "moveSpeed %f, strafeSpeed %f, msecVal %f", pBot->f_move_speed, pBot->f_strafe_speed, msecval);
+    std::sprintf(msg, "moveSpeed %f, strafeSpeed %f, msecVal %f", pBot->f_move_speed, pBot->f_strafe_speed, msecval);
     pBot->rprint_trace("BotThink/pfnRunPlayerMove", msg);
     g_engfuncs.pfnRunPlayerMove(pBot->pEdict, pBot->vecMoveAngles, pBot->f_move_speed, pBot->f_strafe_speed,
                                 upMove, pBot->pEdict->v.button, 0, msecval);
@@ -4093,21 +4093,21 @@ void cBot::Dump() {
               iGoalNode, iCurrentNode);
     switch (iPathFlags) {
         case PATH_NONE:
-            strncat(buffer, "PATH_NONE ", 180);
+            std::strncat(buffer, "PATH_NONE ", 180);
             break;
         case PATH_DANGER:
-            strncat(buffer, "PATH_DANGER ", 180);
+            std::strncat(buffer, "PATH_DANGER ", 180);
             break;
         case PATH_CONTACT:
-            strncat(buffer, "PATH_CONTACT ", 180);
+            std::strncat(buffer, "PATH_CONTACT ", 180);
             break;
         case PATH_CAMP:
-            strncat(buffer, "PATH_CAMP ", 180);
+            std::strncat(buffer, "PATH_CAMP ", 180);
             break;
         default:
-            strncat(buffer, "???", 180);
+            std::strncat(buffer, "???", 180);
     }
-    strncat(buffer, "\n", 180);
+    std::strncat(buffer, "\n", 180);
     rblog(buffer);
     if (iGoalNode >= 0)
         NodeMachine.dump_path(iBotIndex, pathIndex);
@@ -4255,7 +4255,7 @@ void cBot::lookAtNode(int nodeIndex) {
 void cBot::setTimeToMoveToNode(float timeInSeconds) {
     char msg[255];
     const float endTime = gpGlobals->time + timeInSeconds;
-    sprintf(msg, "Set to %f so results into end time of %f", timeInSeconds, endTime);
+    std::sprintf(msg, "Set to %f so results into end time of %f", timeInSeconds, endTime);
     rprint_trace("setTimeToMoveToNode", msg);
 
     this->nodeTimeIncreasedAmount = 0;
@@ -4272,8 +4272,8 @@ void cBot::increaseTimeToMoveToNode(float timeInSeconds) {
         this->fMoveToNodeTime += timeInSeconds;
         const float timeToMoveToNodeRemaining = getMoveToNodeTimeRemaining();
         char msg[255];
-        memset(msg, 0, sizeof(msg));
-        sprintf(msg, "increaseTimeToMoveToNode with %f for the %d time, making time to move to node remaining %f.",
+        std::memset(msg, 0, sizeof(msg));
+        std::sprintf(msg, "increaseTimeToMoveToNode with %f for the %d time, making time to move to node remaining %f.",
                 timeInSeconds, nodeTimeIncreasedAmount, timeToMoveToNodeRemaining);
         rprint_trace("increaseTimeToMoveToNode", msg);
     } else {
@@ -4345,8 +4345,8 @@ bool cBot::createPath(int destinationNode, int flags) {
     forgetPath();
 
     char msg[255];
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "Creating path from currentNode [%d] to destination node [%d]", currentNode, destinationNode);
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "Creating path from currentNode [%d] to destination node [%d]", currentNode, destinationNode);
     rprint("createPath()", msg);
 
     return NodeMachine.createPath(currentNode, destinationNode, iBotIndex, this, flags);

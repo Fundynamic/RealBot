@@ -70,12 +70,12 @@ void BotPrepareConsoleCommandsToBuyWeapon(cBot *pBot, const char *arg1, const ch
 
     if (pBot->console_nr == 0) {
         // set up first command and argument
-        strcpy(pBot->arg1, "buy");
-        strcpy(pBot->arg2, arg1);
+        std::strcpy(pBot->arg1, "buy");
+        std::strcpy(pBot->arg2, arg1);
 
         // add argument
         if (arg2 != nullptr)
-            strcpy(pBot->arg3, arg2);
+            std::strcpy(pBot->arg3, arg2);
 
         pBot->console_nr = 1;     // start console command sequence
     }
