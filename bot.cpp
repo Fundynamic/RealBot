@@ -1977,7 +1977,7 @@ void cBot::Act() {
     }
 
     if (f_strafe_time < gpGlobals->time) {
-        f_strafe_speed = 0;
+        f_strafe_speed = 0.0f;
     }
 
     // walk only when NOT holding duck (is same as walking, combination makes bot super slow)
@@ -1987,7 +1987,7 @@ void cBot::Act() {
 
         pEdict->v.button &= (~IN_RUN);    // release IN_RUN
         rprint("Act", "Walk time > gpGlobals->time");
-        setMoveSpeed((f_max_speed) / 2 + (f_max_speed) / 50);
+        setMoveSpeed((f_max_speed) / 2.0f + (f_max_speed) / 50.0f);
     }
 
     // When we are at max speed, press IN_RUN to get a running animation
@@ -3272,7 +3272,7 @@ void cBot::Think() {
                     if (chChatSentence[0] == '\0')   // we did not want to say anything
                         if (RANDOM_LONG(0, 100) < ipChatRate) // rate
                             fChatTime = gpGlobals->time +
-                            RANDOM_FLOAT(0.0f, ((Game.iProducedSentences + static_cast<float>(1)) / 2));      // wait
+                            RANDOM_FLOAT(0.0f, ((Game.iProducedSentences + 1.0f) / 2.0f));      // wait
 
             }
 

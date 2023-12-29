@@ -2773,7 +2773,7 @@ void cNodeMachine::path_walk(cBot *pBot, float distanceMoved) {
     if (pBot->isOnLadder()) {
         pBot->rprint("Bot is on ladder");
         // Set touch radius
-        pBot->f_strafe_speed = 0.0;       // we may not strafe
+        pBot->f_strafe_speed = 0.0f;       // we may not strafe
         pBot->setMoveSpeed(pBot->f_max_speed / 2);
         //pBot->pEdict->v.button |= IN_DUCK;                    // duck
 

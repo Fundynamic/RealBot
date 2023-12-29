@@ -934,8 +934,8 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
          // fMinReact = RANDOM_FLOAT (0.05, (pBot->bot_skill / 10));
 		 // Reaction Time delay added for realistic gameplay [APG]RoboCop[CL]
          fMinReact =
-            RANDOM_FLOAT(pBot->bot_skill / 20 + 0.3f,
-                         (pBot->bot_skill / 5) + 0.3f);
+            RANDOM_FLOAT(pBot->bot_skill / 20.0f + 0.3f,
+                         (pBot->bot_skill / 5.0f) + 0.3f);
 
       const float fMaxReact = fMinReact + RANDOM_FLOAT(0.2f, 0.4f);
 
@@ -946,8 +946,8 @@ void INI_PARSE_BOTS(char cBotName[33], cBot * pBot) {
       // Set Offsets (note, they are extra upon current aiming code)
       // 30.8.04 redefined by frashman
       // float fOffset = RANDOM_FLOAT ((pBot->bot_skill / 5), (pBot->bot_skill / 2));
-      const float fOffset = RANDOM_FLOAT((pBot->bot_skill / 5) + 0.05f,
-                                         (pBot->bot_skill / 2) + 0.05f);
+      const float fOffset = RANDOM_FLOAT((pBot->bot_skill / 5.0f) + 0.05f,
+                                         (pBot->bot_skill / 2.0f) + 0.05f);
 
       // SET
       pBot->fpXOffset = pBot->fpYOffset = pBot->fpZOffset = fOffset;

@@ -79,7 +79,7 @@ void cGame::Init() {
     vDroppedC4 = Vector(9999, 9999, 9999);
 
     // May we walk with knife (when bots want to), default = yes (3600 seconds)
-    fWalkWithKnife = 3600;
+    fWalkWithKnife = 3600.0f;
 
     // Chat related
     iMaxSentences = 1;           // max sentences produced by chatengine per second (1=default)
@@ -134,7 +134,7 @@ void cGame::InitNewRound() {
     }
 
     iProducedSentences = RANDOM_LONG(0, Game.iMaxSentences);
-    ChatEngine.fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0, 0.5);
+    ChatEngine.fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0f, 0.5f);
 }
 
 /**

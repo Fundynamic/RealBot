@@ -1295,7 +1295,7 @@ void RealBot_ServerCommand() {
                     "REALBOT: Failed creating bot, server is full.");
     } else if (FStrEq(pcmd, "walkwithknife")) {
         if ((arg1 != nullptr) && (*arg1 != 0)) {
-	        const float fVar = atof(arg1);
+	        const float fVar = std::atof(arg1);
 
             // Only set when valid
             if (fVar < 0)

@@ -371,7 +371,7 @@ bool IsAlive(edict_t* pEdict) {
 		(pEdict->v.deadflag == DEAD_NO) &&   // NOT DEAD
 		(pEdict->v.health > 0) &&    // ENOUGHT HEALTH
 		!(pEdict->v.flags & FL_NOTARGET) &&  // ?
-		(pEdict->v.takedamage != 0));        // CAN TAKE DAMAGE
+		(pEdict->v.takedamage != 0.0f));        // CAN TAKE DAMAGE
 }
 
 bool FInViewCone(Vector* pOrigin, edict_t* pEdict) {
