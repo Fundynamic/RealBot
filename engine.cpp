@@ -27,7 +27,7 @@
   *
   **/
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -40,7 +40,7 @@
 //#include "engine.h"
 #include "game.h"
 
-extern enginefuncs_t g_engfuncs;
+extern enginefuncs_t g_engfuncs; //Redundant? [APG]RoboCop[CL]
 
 extern cBot bots[32];
 extern cGame Game;
@@ -60,9 +60,9 @@ bool radio_message_from = false;
 bool show_beginmessage = true;
 // End Ditlew's Radio
 
-void (*botMsgFunction)(void *, int) = NULL;
+void (*botMsgFunction)(void *, int) = nullptr;
 
-void (*botMsgEndFunction)(void *, int) = NULL;
+void (*botMsgEndFunction)(void *, int) = nullptr;
 
 int botMsgIndex;
 
@@ -73,7 +73,7 @@ void pfnChangeLevel(const char *s1, const char *s2) {
         {
             char cmd[40];
 
-            sprintf(cmd, "kick \"%s\"\n", bots[index].name);
+            std::sprintf(cmd, "kick \"%s\"\n", bots[index].name);
 
             bots[index].respawn_state = RESPAWN_NEED_TO_RESPAWN;
 
@@ -91,7 +91,7 @@ edict_t *pfnFindEntityByString(edict_t *pEdictStartSearchAfter,
                                const char *pszField, const char *pszValue) {
 
     // Counter-Strike - New Round Started
-    if (strcmp(pszValue, "info_map_parameters") == 0) {
+    if (std::strcmp(pszValue, "info_map_parameters") == 0) {
         rblog("pfnFindEntityByString: Game new round\n");
 
         // New round started.
@@ -112,7 +112,7 @@ void pfnRemoveEntity(edict_t *e) {
 #if DO_DEBUG == 2
     {
        fp = fopen("!rbdebug.txt", "a");
-       fprintf(fp, "pfnRemoveEntity: %x\n", e);
+       fprintf(fp, R"(pfnRemoveEntity: %x)", e);
        if (e->v.model != 0)
           fprintf(fp, " model=%s\n", STRING(e->v.model));
        fclose(fp);
@@ -121,7 +121,7 @@ void pfnRemoveEntity(edict_t *e) {
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnRemoveEntity() - model -> '%s'\n",
+        std::sprintf(msg, "ENGINE: pfnRemoveEntity() - model -> '%s'\n",
                 STRING(e->v.model));
         rblog(msg);
     }
@@ -145,122 +145,120 @@ pfnMessageBegin(int msg_dest, int msg_type, const float *pOrigin, edict_t *edict
 
     if (Game.bEngineDebug) {
         char dmsg[256];
-        sprintf(dmsg, "ENGINE: pfnMessageBegin(), dest=%d, msg_type=%d\n", msg_dest, msg_type);
+        std::sprintf(dmsg, "ENGINE: pfnMessageBegin(), dest=%d, msg_type=%d\n", msg_dest, msg_type);
         rblog(dmsg);
     }
 
     if (gpGlobals->deathmatch) {
-        int index = -1;
-
-        // Fix this up for CS 1.6 weaponlists
+	    // Fix this up for CS 1.6 weaponlists
         // 01/07/04 - Stefan - Thanks to Whistler for pointing this out!
-        if (msg_type == GET_USER_MSG_ID(PLID, "WeaponList", NULL))
+        if (msg_type == GET_USER_MSG_ID(PLID, "WeaponList", nullptr))
             botMsgFunction = BotClient_CS_WeaponList;
 
         if (edict) {
-            index = UTIL_GetBotIndex(edict);
+	        const int index = UTIL_GetBotIndex(edict);
 
             // is this message for a bot?
             if (index != -1) {
-                botMsgFunction = NULL;      // no msg function until known otherwise
-                botMsgEndFunction = NULL;   // no msg end function until known otherwise
+                botMsgFunction = nullptr;      // no msg function until known otherwise
+                botMsgEndFunction = nullptr;   // no msg end function until known otherwise
                 botMsgIndex = index;        // index of bot receiving message
 
                 if (mod_id == VALVE_DLL) {
-                    if (msg_type == GET_USER_MSG_ID(PLID, "WeaponList", NULL))
+                    if (msg_type == GET_USER_MSG_ID(PLID, "WeaponList", nullptr))
                         botMsgFunction = BotClient_Valve_WeaponList;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "CurWeapon", NULL))
+                             GET_USER_MSG_ID(PLID, "CurWeapon", nullptr))
                         botMsgFunction = BotClient_Valve_CurrentWeapon;
-                    else if (msg_type == GET_USER_MSG_ID(PLID, "AmmoX", NULL))
+                    else if (msg_type == GET_USER_MSG_ID(PLID, "AmmoX", nullptr))
                         botMsgFunction = BotClient_Valve_AmmoX;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "AmmoPickup", NULL))
+                             GET_USER_MSG_ID(PLID, "AmmoPickup", nullptr))
                         botMsgFunction = BotClient_Valve_AmmoPickup;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "WeapPickup", NULL))
+                             GET_USER_MSG_ID(PLID, "WeapPickup", nullptr))
                         botMsgFunction = BotClient_Valve_WeaponPickup;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "ItemPickup", NULL))
+                             GET_USER_MSG_ID(PLID, "ItemPickup", nullptr))
                         botMsgFunction = BotClient_Valve_ItemPickup;
-                    else if (msg_type == GET_USER_MSG_ID(PLID, "Health", NULL))
+                    else if (msg_type == GET_USER_MSG_ID(PLID, "Health", nullptr))
                         botMsgFunction = BotClient_Valve_Health;
-                    else if (msg_type == GET_USER_MSG_ID(PLID, "Battery", NULL))
+                    else if (msg_type == GET_USER_MSG_ID(PLID, "Battery", nullptr))
                         botMsgFunction = BotClient_Valve_Battery;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "DeathMsg", NULL))
+                             GET_USER_MSG_ID(PLID, "DeathMsg", nullptr))
                         botMsgFunction = BotClient_Valve_Damage;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "ScreenFade", NULL))
+                             GET_USER_MSG_ID(PLID, "ScreenFade", nullptr))
                         botMsgFunction = BotClient_Valve_ScreenFade;
                 } else if (mod_id == CSTRIKE_DLL) {
-                    if (msg_type == GET_USER_MSG_ID(PLID, "VGUIMenu", NULL))
+                    if (msg_type == GET_USER_MSG_ID(PLID, "VGUIMenu", nullptr))
                         botMsgFunction = BotClient_CS_VGUI;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "ShowMenu", NULL))
+                             GET_USER_MSG_ID(PLID, "ShowMenu", nullptr))
                         botMsgFunction = BotClient_CS_ShowMenu;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "WeaponList", NULL)) {
+                             GET_USER_MSG_ID(PLID, "WeaponList", nullptr)) {
                         botMsgFunction = BotClient_CS_WeaponList;
                         //DebugOut("BUGBUG: WEAPONLIST FUNCTION CALLED\n");
                     } else if (msg_type ==
-                               GET_USER_MSG_ID(PLID, "CurWeapon", NULL))
+                               GET_USER_MSG_ID(PLID, "CurWeapon", nullptr))
                         botMsgFunction = BotClient_CS_CurrentWeapon;
-                    else if (msg_type == GET_USER_MSG_ID(PLID, "AmmoX", NULL))
+                    else if (msg_type == GET_USER_MSG_ID(PLID, "AmmoX", nullptr))
                         botMsgFunction = BotClient_CS_AmmoX;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "WeapPickup", NULL))
+                             GET_USER_MSG_ID(PLID, "WeapPickup", nullptr))
                         botMsgFunction = BotClient_CS_WeaponPickup;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "AmmoPickup", NULL))
+                             GET_USER_MSG_ID(PLID, "AmmoPickup", nullptr))
                         botMsgFunction = BotClient_CS_AmmoPickup;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "ItemPickup", NULL))
+                             GET_USER_MSG_ID(PLID, "ItemPickup", nullptr))
                         botMsgFunction = BotClient_CS_ItemPickup;
-                    else if (msg_type == GET_USER_MSG_ID(PLID, "Health", NULL))
+                    else if (msg_type == GET_USER_MSG_ID(PLID, "Health", nullptr))
                         botMsgFunction = BotClient_CS_Health;
-                    else if (msg_type == GET_USER_MSG_ID(PLID, "Battery", NULL))
+                    else if (msg_type == GET_USER_MSG_ID(PLID, "Battery", nullptr))
                         botMsgFunction = BotClient_CS_Battery;
-                    else if (msg_type == GET_USER_MSG_ID(PLID, "Damage", NULL))
+                    else if (msg_type == GET_USER_MSG_ID(PLID, "Damage", nullptr))
                         botMsgFunction = BotClient_CS_Damage;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "StatusIcon", NULL)) {
-                        BotClient_CS_StatusIcon(0, -1);       // clear state -- redo this -- BERKED
+                             GET_USER_MSG_ID(PLID, "StatusIcon", nullptr)) {
+                        BotClient_CS_StatusIcon(nullptr, -1);       // clear state -- redo this -- BERKED
                         botMsgFunction = BotClient_CS_StatusIcon;
                     }
-                    if (msg_type == GET_USER_MSG_ID(PLID, "SayText", NULL)) {
+                    if (msg_type == GET_USER_MSG_ID(PLID, "SayText", nullptr)) {
                         botMsgFunction = BotClient_CS_SayText;
-                    } else if (msg_type == GET_USER_MSG_ID(PLID, "Money", NULL))
+                    } else if (msg_type == GET_USER_MSG_ID(PLID, "Money", nullptr))
                         botMsgFunction = BotClient_CS_Money;
                     else if (msg_type ==
-                             GET_USER_MSG_ID(PLID, "ScreenFade", NULL))
+                             GET_USER_MSG_ID(PLID, "ScreenFade", nullptr))
                         botMsgFunction = BotClient_CS_ScreenFade;
                 }
             }
         } else if (msg_dest == MSG_ALL) {
-            botMsgFunction = NULL; // no msg function until known otherwise
+            botMsgFunction = nullptr; // no msg function until known otherwise
             botMsgIndex = -1;      // index of bot receiving message (none)
 
             if (mod_id == VALVE_DLL) {
-                if (msg_type == GET_USER_MSG_ID(PLID, "DeathMsg", NULL))
+                if (msg_type == GET_USER_MSG_ID(PLID, "DeathMsg", nullptr))
                     botMsgFunction = BotClient_Valve_DeathMsg;
             } else if (mod_id == CSTRIKE_DLL) {
-                if (msg_type == GET_USER_MSG_ID(PLID, "DeathMsg", NULL))
+                if (msg_type == GET_USER_MSG_ID(PLID, "DeathMsg", nullptr))
                     botMsgFunction = BotClient_CS_DeathMsg;
-                else if (msg_type == GET_USER_MSG_ID(PLID, "SayText", NULL))
+                else if (msg_type == GET_USER_MSG_ID(PLID, "SayText", nullptr))
                     botMsgFunction = BotClient_CS_SayText;
             }
         }
             // STEFAN
         else if (msg_dest == MSG_SPEC) {
-            botMsgFunction = NULL; // no msg function until known otherwise
+            botMsgFunction = nullptr; // no msg function until known otherwise
             botMsgIndex = -1;      // index of bot receiving message (none)
 
             if (mod_id == CSTRIKE_DLL) {
-                if (msg_type == GET_USER_MSG_ID(PLID, "HLTV", NULL)) {
+                if (msg_type == GET_USER_MSG_ID(PLID, "HLTV", nullptr)) {
                     botMsgFunction = BotClient_CS_HLTV;
                 }
-                else if (msg_type == GET_USER_MSG_ID(PLID, "SayText", NULL))
+                else if (msg_type == GET_USER_MSG_ID(PLID, "SayText", nullptr))
                     botMsgFunction = BotClient_CS_SayText;
             }
 
@@ -271,14 +269,14 @@ pfnMessageBegin(int msg_dest, int msg_type, const float *pOrigin, edict_t *edict
     RETURN_META(MRES_IGNORED);
 }
 
-void pfnMessageEnd(void) {
+void pfnMessageEnd() {
     if (gpGlobals->deathmatch) {
         if (botMsgEndFunction)
-            (*botMsgEndFunction)(NULL, botMsgIndex);      // NULL indicated msg end
+            (*botMsgEndFunction)(nullptr, botMsgIndex);      // NULL indicated msg end
 
         // clear out the bot message function pointers...
-        botMsgFunction = NULL;
-        botMsgEndFunction = NULL;
+        botMsgFunction = nullptr;
+        botMsgEndFunction = nullptr;
     }
 
     if (Game.bEngineDebug)
@@ -291,12 +289,12 @@ void pfnWriteByte(int iValue) {
     if (gpGlobals->deathmatch) {
         // if this message is for a bot, call the client message function...
         if (botMsgFunction)
-            (*botMsgFunction)((void *) &iValue, botMsgIndex);
+            (*botMsgFunction)(static_cast<void*>(&iValue), botMsgIndex);
     }
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteByte() - '%d'\n", iValue);
+        std::sprintf(msg, "ENGINE: pfnWriteByte() - '%d'\n", iValue);
         rblog(msg);
     }
 
@@ -307,12 +305,12 @@ void pfnWriteChar(int iValue) {
     if (gpGlobals->deathmatch) {
         // if this message is for a bot, call the client message function...
         if (botMsgFunction)
-            (*botMsgFunction)((void *) &iValue, botMsgIndex);
+            (*botMsgFunction)(static_cast<void*>(&iValue), botMsgIndex);
     }
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteChar() - '%d'\n", iValue);
+        std::sprintf(msg, "ENGINE: pfnWriteChar() - '%d'\n", iValue);
         rblog(msg);
     }
     RETURN_META(MRES_IGNORED);
@@ -322,12 +320,12 @@ void pfnWriteShort(int iValue) {
     if (gpGlobals->deathmatch) {
         // if this message is for a bot, call the client message function...
         if (botMsgFunction)
-            (*botMsgFunction)((void *) &iValue, botMsgIndex);
+            (*botMsgFunction)(static_cast<void*>(&iValue), botMsgIndex);
     }
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteShort() - '%d'\n", iValue);
+        std::sprintf(msg, "ENGINE: pfnWriteShort() - '%d'\n", iValue);
         rblog(msg);
     }
 
@@ -338,12 +336,12 @@ void pfnWriteLong(int iValue) {
     if (gpGlobals->deathmatch) {
         // if this message is for a bot, call the client message function...
         if (botMsgFunction)
-            (*botMsgFunction)((void *) &iValue, botMsgIndex);
+            (*botMsgFunction)(static_cast<void*>(&iValue), botMsgIndex);
     }
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteLong() - '%d'\n", iValue);
+        std::sprintf(msg, "ENGINE: pfnWriteLong() - '%d'\n", iValue);
         rblog(msg);
     }
 
@@ -355,12 +353,12 @@ void pfnWriteAngle(float flValue) {
     if (gpGlobals->deathmatch) {
         // if this message is for a bot, call the client message function...
         if (botMsgFunction)
-            (*botMsgFunction)((void *) &flValue, botMsgIndex);
+            (*botMsgFunction)(static_cast<void*>(&flValue), botMsgIndex);
     }
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteAngle() - '%f'\n", flValue);
+        std::sprintf(msg, "ENGINE: pfnWriteAngle() - '%f'\n", flValue);
         rblog(msg);
     }
 
@@ -372,12 +370,12 @@ void pfnWriteCoord(float flValue) {
     if (gpGlobals->deathmatch) {
         // if this message is for a bot, call the client message function...
         if (botMsgFunction)
-            (*botMsgFunction)((void *) &flValue, botMsgIndex);
+            (*botMsgFunction)(static_cast<void*>(&flValue), botMsgIndex);
     }
 
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteCoord() - '%f'\n", flValue);
+        std::sprintf(msg, "ENGINE: pfnWriteCoord() - '%f'\n", flValue);
         rblog(msg);
     }
 
@@ -388,41 +386,41 @@ void pfnWriteCoord(float flValue) {
 void pfnWriteString(const char *sz) {
     if (Game.bEngineDebug) {
         char msg[256];
-        sprintf(msg, "ENGINE: pfnWriteByte() - '%s'\n", sz);
+        std::sprintf(msg, "ENGINE: pfnWriteByte() - '%s'\n", sz);
         rblog(msg);
     }
 
     if (gpGlobals->deathmatch) {
         // Ditlew's Radio
-        if ((strstr(sz, "(RADIO):") != NULL) && !radio_message) {
+        if ((std::strstr(sz, "(RADIO):") != nullptr) && !radio_message) {
             // We found an old radio message, we should convert the strings...
             radio_message = true;  // we found a radio message
 
             // Thank god Ditlew you already coded this...
-            int length = strlen(sz) - strlen(strstr(sz, " (RADIO)"));
-            strncpy(radio_messenger, sz, length);
+            const unsigned length = std::strlen(sz) - std::strlen(std::strstr(sz, " (RADIO)"));
+            std::strncpy(radio_messenger, sz, length);
 
             // Now search for any compatible radio command (old string).
             // if found then convert the message in the new way so the code
             // thinks its CS 1.1 and thus every version lower then CS 1.1 should work too...
-            if ((strstr(sz, "Follow Me") != NULL)) {
+            if ((std::strstr(sz, "Follow Me") != nullptr)) {
                 // convert string
-                strcpy(message, "#Follow me");
-            } else if ((strstr(sz, "You Take the Point") != NULL)) {
+                std::strcpy(message, "#Follow me");
+            } else if ((std::strstr(sz, "You Take the Point") != nullptr)) {
                 // convert string
-                strcpy(message, "#You_take_the_point");
-            } else if ((strstr(sz, "Need backup") != NULL)) {
+                std::strcpy(message, "#You_take_the_point");
+            } else if ((std::strstr(sz, "Need backup") != nullptr)) {
                 // convert string
-                strcpy(message, "#Need_backup");
-            } else if ((strstr(sz, "Taking Fire.. Need Assistance!") != NULL)) {
+                std::strcpy(message, "#Need_backup");
+            } else if ((std::strstr(sz, "Taking Fire.. Need Assistance!") != nullptr)) {
                 // convert string
-                strcpy(message, "#Taking_fire");
-            } else if ((strstr(sz, "Team, fall back!") != NULL)) {
+                std::strcpy(message, "#Taking_fire");
+            } else if ((std::strstr(sz, "Team, fall back!") != nullptr)) {
                 // convert string
-                strcpy(message, "#Team_fall_back");
-            } else if ((strstr(sz, "Go go go") != NULL)) {
+                std::strcpy(message, "#Team_fall_back");
+            } else if ((std::strstr(sz, "Go go go") != nullptr)) {
                 // convert string
-                strcpy(message, "#Go_go_go");
+                std::strcpy(message, "#Go_go_go");
             }
 
         }
@@ -499,14 +497,14 @@ void pfnWriteString(const char *sz) {
            }
          */
         if (radio_message_start) {
-            strcpy(radio_messenger, sz);   // the messenger of the radio
+            std::strcpy(radio_messenger, sz);   // the messenger of the radio
             radio_message_start = false;
             radio_message_from = true;
         } else if (radio_message_from) {
-            strcpy(message, sz);   // copy message and handle at bot.cpp radio routine.
+            std::strcpy(message, sz);   // copy message and handle at bot.cpp radio routine.
             radio_message = true;
             radio_message_from = false;
-        } else if (strcmp(sz, "#Game_radio") == 0) {
+        } else if (std::strcmp(sz, "#Game_radio") == 0) {
             radio_message_start = true;
         }
 
@@ -530,7 +528,7 @@ void pfnWriteEntity(int iValue) {
     if (gpGlobals->deathmatch) {
         // if this message is for a bot, call the client message function...
         if (botMsgFunction)
-            (*botMsgFunction)((void *) &iValue, botMsgIndex);
+            (*botMsgFunction)(static_cast<void*>(&iValue), botMsgIndex);
     }
 
     RETURN_META(MRES_IGNORED);
@@ -543,7 +541,7 @@ void pfnClientPrintf(edict_t *pEdict, PRINT_TYPE ptype, const char *szMsg) {
     RETURN_META(MRES_IGNORED);
 }
 
-const char *pfnCmd_Args(void) {
+const char *pfnCmd_Args() {
     if (isFakeClientCommand)
         RETURN_META_VALUE(MRES_SUPERCEDE, &g_argv[0]);
     RETURN_META_VALUE(MRES_IGNORED, NULL);
@@ -566,7 +564,7 @@ const char *pfnCmd_Argv(int argc) {
     RETURN_META_VALUE(MRES_IGNORED, NULL);
 }
 
-int pfnCmd_Argc(void) {
+int pfnCmd_Argc() {
     if (isFakeClientCommand)
         RETURN_META_VALUE(MRES_SUPERCEDE, fake_arg_count);
     RETURN_META_VALUE(MRES_IGNORED, 0);
@@ -576,7 +574,7 @@ void pfnSetClientMaxspeed(const edict_t *pEdict, float fNewMaxspeed) {
     // Set client max speed (CS / All mods)
 
     // Check if edict_t is a bot, then set maxspeed
-    cBot *pPlayerBot = NULL;
+    cBot *pPlayerBot = nullptr;
     int index;
 
     for (index = 0; index < 32; index++) {
@@ -630,6 +628,6 @@ GetEngineFunctions(enginefuncs_t *pengfuncsFromEngine,
     meta_engfuncs.pfnCmd_Argc = pfnCmd_Argc;
     meta_engfuncs.pfnSetClientMaxspeed = pfnSetClientMaxspeed;
     meta_engfuncs.pfnGetPlayerUserId = pfnGetPlayerUserId;
-    memcpy(pengfuncsFromEngine, &meta_engfuncs, sizeof(enginefuncs_t));
+    std::memcpy(pengfuncsFromEngine, &meta_engfuncs, sizeof(enginefuncs_t));
     return TRUE;
 }

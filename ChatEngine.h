@@ -28,8 +28,11 @@
   **/
 
 // Chatting Engine
+#ifndef CHATENGINE_H
+#define CHATENGINE_H
+
 #define MAX_BLOCKS	100
-#define BLOCK_DEATHS MAX_BLOCKS-1
+#define BLOCK_DEATHS (MAX_BLOCKS-1)
 
 static const int MAX_SENTENCE_LENGTH = 128;
 // Reply block
@@ -64,3 +67,5 @@ public:
    // handles a sentence, decides to reply on it or not.
    void handle_sentence();
 };
+
+#endif // CHATENGINE_H

@@ -28,7 +28,7 @@
   **/
 
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -43,7 +43,10 @@ extern int mod_id;
 
 extern edict_t *pHostEdict;
 
-#define SCAN_RADIUS   45        // Radius to scan to prevent blocking with players
+enum
+{
+	SCAN_RADIUS = 60        // Radius to scan to prevent blocking with players
+};
 
 /**
  * Given an angle, makes sure it wraps around properly
@@ -51,8 +54,8 @@ extern edict_t *pHostEdict;
  * @return
  */
 float fixAngle(float angle) {
-    if (angle > 180) return (angle - 360);
-    if (angle < -180) return (angle + 360);
+    if (angle > 180.0f) return (angle - 360.0f);
+    if (angle < -180.0f) return (angle + 360.0f);
     return angle;
 }
 
@@ -64,7 +67,7 @@ void botFixIdealYaw(edict_t * pEdict) {
     pEdict->v.ideal_yaw = fixAngle(pEdict->v.ideal_yaw);
 }
 
-bool BotCanJumpUp(cBot * pBot) {
+bool BotCanJumpUp(const cBot * pBot) {
    // What I do here is trace 3 lines straight out, one unit higher than
    // the highest normal jumping distance.  I trace once at the center of
    // the body, once at the right side, and once at the left side.  If all
@@ -77,12 +80,11 @@ bool BotCanJumpUp(cBot * pBot) {
    // that the bot can not get onto.
 
    TraceResult tr;
-   Vector v_jump, v_source, v_dest;
-   edict_t *pEdict = pBot->pEdict;
+   const edict_t *pEdict = pBot->pEdict;
 
    // convert current view angle to vectors for TraceLine math...
 
-   v_jump = pEdict->v.v_angle;
+   Vector v_jump = pEdict->v.v_angle;
    v_jump.x = 0;                // reset pitch to 0 (level horizontally)
    v_jump.z = 0;                // reset roll to 0 (straight up and down)
 
@@ -91,22 +93,21 @@ bool BotCanJumpUp(cBot * pBot) {
    // use center of the body first...
 
    // maximum jump height is 45, so check one unit above that (46)
-   v_source = pEdict->v.origin + Vector(0, 0, -36 + MAX_JUMPHEIGHT);
-   v_dest = v_source + gpGlobals->v_forward * 24;
+   Vector v_source = pEdict->v.origin + Vector(0, 0, -36 + MAX_JUMPHEIGHT);
+   Vector v_dest = v_source + gpGlobals->v_forward * 24;
 
    // trace a line forward at maximum jump height...
    UTIL_TraceLine(v_source, v_dest, dont_ignore_monsters,
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    // now check same height to one side of the bot...
    v_source =
       pEdict->v.origin + gpGlobals->v_right * 16 + Vector(0, 0,
-            -36 +
-            MAX_JUMPHEIGHT);
+            -36 + MAX_JUMPHEIGHT);
    v_dest = v_source + gpGlobals->v_forward * 24;
 
    // trace a line forward at maximum jump height...
@@ -114,14 +115,13 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    // now check same height on the other side of the bot...
    v_source =
       pEdict->v.origin + gpGlobals->v_right * -16 + Vector(0, 0,
-            -36 +
-            MAX_JUMPHEIGHT);
+            -36 + MAX_JUMPHEIGHT);
    v_dest = v_source + gpGlobals->v_forward * 24;
 
    // trace a line forward at maximum jump height...
@@ -129,7 +129,7 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    // now trace from head level downward to check for obstructions...
@@ -142,7 +142,7 @@ bool BotCanJumpUp(cBot * pBot) {
 
    // end point of trace is 99 units straight down from start...
    // (99 is 108 minus the jump limit height which is 45 - 36 = 9)
-   // fix by stefan, max jump height is 63 , not 45! (using duck-jump)
+   // fix by stefan, max jump height is 63 , not 45! (using duckjump)
    // 108 - (63-36) = 81
    v_dest = v_source + Vector(0, 0, -81);
 
@@ -151,7 +151,7 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    // now check same height to one side of the bot...
@@ -166,7 +166,7 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    // now check same height on the other side of the bot...
@@ -181,13 +181,13 @@ bool BotCanJumpUp(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return FALSE;
 
    return TRUE;
 }
 
-bool BotCanDuckUnder(cBot * pBot) {
+bool BotCanDuckUnder(const cBot * pBot) {
    // What I do here is trace 3 lines straight out, one unit higher than
    // the ducking height.  I trace once at the center of the body, once
    // at the right side, and once at the left side.  If all three of these
@@ -197,12 +197,11 @@ bool BotCanDuckUnder(cBot * pBot) {
    // we can duck under it.
 
    TraceResult tr;
-   Vector v_duck, v_source, v_dest;
-   edict_t *pEdict = pBot->pEdict;
+   const edict_t *pEdict = pBot->pEdict;
 
    // convert current view angle to vectors for TraceLine math...
 
-   v_duck = pEdict->v.v_angle;
+   Vector v_duck = pEdict->v.v_angle;
    v_duck.x = 0;                // reset pitch to 0 (level horizontally)
    v_duck.z = 0;                // reset roll to 0 (straight up and down)
 
@@ -211,15 +210,15 @@ bool BotCanDuckUnder(cBot * pBot) {
    // use center of the body first...
 
    // duck height is 36, so check one unit above that (37)
-   v_source = pEdict->v.origin + Vector(0, 0, -36 + 37);
-   v_dest = v_source + gpGlobals->v_forward * 24;
+   Vector v_source = pEdict->v.origin + Vector(0, 0, -36 + 37);
+   Vector v_dest = v_source + gpGlobals->v_forward * 24;
 
    // trace a line forward at duck height...
    UTIL_TraceLine(v_source, v_dest, dont_ignore_monsters,
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return false;
 
    // now check same height to one side of the bot...
@@ -232,7 +231,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return false;
 
    // now check same height on the other side of the bot...
@@ -246,7 +245,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace hit something, return FALSE
-   if (tr.flFraction < 1.0)
+   if (tr.flFraction < 1.0f)
       return false;
 
    // now trace from the ground up to check for object to duck under...
@@ -263,7 +262,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace didn't hit something, return FALSE
-   if (tr.flFraction >= 1.0)
+   if (tr.flFraction >= 1.0f)
       return false;
 
    // now check same height to one side of the bot...
@@ -278,7 +277,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace didn't hit something, return FALSE
-   if (tr.flFraction >= 1.0)
+   if (tr.flFraction >= 1.0f)
       return false;
 
    // now check same height on the other side of the bot...
@@ -293,7 +292,7 @@ bool BotCanDuckUnder(cBot * pBot) {
                   pEdict->v.pContainingEntity, &tr);
 
    // if trace didn't hit something, return FALSE
-   if (tr.flFraction >= 1.0)
+   if (tr.flFraction >= 1.0f)
       return false;
 
    return true;

@@ -27,7 +27,7 @@
   *
   **/
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -79,7 +79,7 @@ void cGame::Init() {
     vDroppedC4 = Vector(9999, 9999, 9999);
 
     // May we walk with knife (when bots want to), default = yes (3600 seconds)
-    fWalkWithKnife = 3600;
+    fWalkWithKnife = 3600.0f;
 
     // Chat related
     iMaxSentences = 1;           // max sentences produced by chatengine per second (1=default)
@@ -93,22 +93,22 @@ void cGame::Init() {
     bPistols = false;            // pistols only mode
 
     // Speech sentences (from POD and a *few* own made)
-    strcpy(cSpeechSentences[0], "hello user,communication is acquired");
-    strcpy(cSpeechSentences[1], "your presence is acknowledged");
-    strcpy(cSpeechSentences[2], "high man, your in command now");
-    strcpy(cSpeechSentences[3], "blast your hostile for good");
-    strcpy(cSpeechSentences[4], "high man, kill some idiot here");
-    strcpy(cSpeechSentences[5], "is there a doctor in the area");
-    strcpy(cSpeechSentences[6], "warning, experimental materials detected");
-    strcpy(cSpeechSentences[7], "high amigo, shoot some but");
-    strcpy(cSpeechSentences[8], "attention, hours of work software, detected");
-    strcpy(cSpeechSentences[9], "time for some bad ass explosion");
-    strcpy(cSpeechSentences[10], "bad ass son of a breach device activated");
-    strcpy(cSpeechSentences[11], "high, do not question this great service");
-    strcpy(cSpeechSentences[12], "engine is operative, hello and goodbye");
-    strcpy(cSpeechSentences[13], "high amigo, your administration has been great last day");
-    strcpy(cSpeechSentences[14], "attention, expect experimental armed hostile presence");
-    strcpy(cSpeechSentences[15], "warning,medical attention required");
+    std::strcpy(cSpeechSentences[0], "hello user,communication is acquired");
+    std::strcpy(cSpeechSentences[1], "your presence is acknowledged");
+    std::strcpy(cSpeechSentences[2], "high man, your in command now");
+    std::strcpy(cSpeechSentences[3], "blast your hostile for good");
+    std::strcpy(cSpeechSentences[4], "high man, kill some idiot here");
+    std::strcpy(cSpeechSentences[5], "is there a doctor in the area");
+    std::strcpy(cSpeechSentences[6], "warning, experimental materials detected");
+    std::strcpy(cSpeechSentences[7], "high amigo, shoot some but");
+    std::strcpy(cSpeechSentences[8], "attention, hours of work software, detected");
+    std::strcpy(cSpeechSentences[9], "time for some bad ass explosion");
+    std::strcpy(cSpeechSentences[10], "bad ass son of a breach device activated");
+    std::strcpy(cSpeechSentences[11], "high, do not question this great service");
+    std::strcpy(cSpeechSentences[12], "engine is operative, hello and goodbye");
+    std::strcpy(cSpeechSentences[13], "high amigo, your administration has been great last day");
+    std::strcpy(cSpeechSentences[14], "attention, expect experimental armed hostile presence");
+    std::strcpy(cSpeechSentences[15], "warning,medical attention required");
 
     InitNewRound();
 }                               // Init()
@@ -134,14 +134,15 @@ void cGame::InitNewRound() {
     }
 
     iProducedSentences = RANDOM_LONG(0, Game.iMaxSentences);
-    ChatEngine.fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0, 0.5);
+    ChatEngine.fThinkTimer = gpGlobals->time + RANDOM_FLOAT(0.0f, 0.5f);
 }
 
 /**
  * If the c4 is dropped (not planted), then return true.
  * @return
  */
-bool cGame::isC4Dropped() {
+bool cGame::isC4Dropped() const
+{
     return vDroppedC4 != Vector(9999, 9999, 9999);
 }
 
@@ -149,7 +150,8 @@ bool cGame::isC4Dropped() {
  * Is the C4 - when planted - discovered?
  * @return
  */
-bool cGame::isPlantedC4Discovered() {
+bool cGame::isPlantedC4Discovered() const
+{
     return vPlantedC4 != Vector(9999, 9999, 9999);
 }
 
@@ -158,34 +160,35 @@ char *cGame::RandomSentence() {
     return cSpeechSentences[RANDOM_LONG(0, 15)];
 }
 
-void cGame::DetermineMapGoal() {
+void cGame::DetermineMapGoal() const
+{
     rblog("DetermineMapGoal called\n");
-    edict_t *pEnt = NULL;
+    edict_t *pEnt = nullptr;
 
     int hostagesFound = 0;
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "hostage_entity")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "hostage_entity")) != nullptr) {
         hostagesFound++;
     }
 
     char msg[255];
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "DetermineMapGoal: There are %d hostages found to rescue\n", hostagesFound);
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "DetermineMapGoal: There are %d hostages found to rescue\n", hostagesFound);
     rblog(msg);
     Game.bHostageRescueMap = hostagesFound > 0;
 
     int rescueZonesFound = 0;
     // GOAL #3 - Hostage rescue zone
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "func_hostage_rescue")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "func_hostage_rescue")) != nullptr) {
         rescueZonesFound++;
     }
 
     // rescue zone can also be an entity of info_hostage_rescue
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "info_hostage_rescue")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "info_hostage_rescue")) != nullptr) {
         rescueZonesFound++;
     }
 
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "DetermineMapGoal: There are %d rescue zones found\n", rescueZonesFound);
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "DetermineMapGoal: There are %d rescue zones found\n", rescueZonesFound);
     rblog(msg);
     Game.bHostageRescueZoneFound = rescueZonesFound > 0;
 
@@ -193,15 +196,15 @@ void cGame::DetermineMapGoal() {
     int bombSpots = 0;
     // GOAL #4 - Bombspot zone
     // Bomb spot
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "func_bomb_target")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "func_bomb_target")) != nullptr) {
         bombSpots++;
     }
 
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "info_bomb_target")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "info_bomb_target")) != nullptr) {
         bombSpots++;
     }
-    memset(msg, 0, sizeof(msg));
-    sprintf(msg, "DetermineMapGoal: There are %d bomb spots in this level\n", bombSpots);
+    std::memset(msg, 0, sizeof(msg));
+    std::sprintf(msg, "DetermineMapGoal: There are %d bomb spots in this level\n", bombSpots);
     Game.bBombPlantMap = bombSpots > 0;
     rblog(msg);
 }
@@ -218,11 +221,13 @@ void cGame::SetRoundTime(float fTime) {
 
 // GAME: Get round time
 // NOTE: This is the time when a round has just started!
-float cGame::getRoundStartedTime() {
+float cGame::getRoundStartedTime() const
+{
     return fRoundTime;
 }
 
-float cGame::getRoundTimeElapsed() {
+float cGame::getRoundTimeElapsed() const
+{
     if (getRoundStartedTime() > -1) {
         return gpGlobals->time - getRoundStartedTime();
     } else {
@@ -236,7 +241,8 @@ void cGame::SetNewRound(bool bState) {
 }
 
 // GAME: Get new round status
-bool cGame::NewRound() {
+bool cGame::NewRound() const
+{
     return bNewRound;
 }
 
@@ -261,12 +267,14 @@ void cGame::SetPlayingRounds(int iMin, int iMax) {
 }                               // SetPlayingRounds()
 
 // GAME: GET Max playing rounds
-int cGame::GetMaxPlayRounds() {
+int cGame::GetMaxPlayRounds() const
+{
     return iMaxPlayRounds;
 }
 
 // GAME: GET Min playing rounds
-int cGame::GetMinPlayRounds() {
+int cGame::GetMinPlayRounds() const
+{
     return iMinPlayRounds;
 }
 
@@ -280,33 +288,30 @@ void cGame::LoadCFG() {
 // NOTE: This function is just a copy/paste stuff from Botmans template, nothing more, nothing less
 // TODO: Rewrite this, can be done much cleaner.
 void cGame::LoadNames() {
-    FILE *bot_name_fp;
-    int str_index;
-    char name_buffer[80];
-    int length, index;
-    char filename[256];
+	char filename[256];
     UTIL_BuildFileNameRB("rb_names.txt", filename);
-    bot_name_fp = fopen(filename, "r");
-    if (bot_name_fp != NULL) {
-        while ((iAmountNames < MAX_BOT_NAMES) &&
-               (fgets(name_buffer, 80, bot_name_fp) != NULL)) {
-            length = strlen(name_buffer);
+    FILE* bot_name_fp = fopen(filename, "r");
+    if (bot_name_fp != nullptr) {
+	    char name_buffer[80];
+	    while ((iAmountNames < MAX_BOT_NAMES) &&
+               (fgets(name_buffer, 80, bot_name_fp) != nullptr)) {
+            int length = static_cast<int>(std::strlen(name_buffer));
             if (name_buffer[length - 1] == '\n') {
                 name_buffer[length - 1] = 0;        // remove '\n'
                 length--;
             }
-            str_index = 0;
+            int str_index = 0;
             while (str_index < length) {
                 if ((name_buffer[str_index] < ' ')
                     || (name_buffer[str_index] > '~')
                     || (name_buffer[str_index] == '"'))
-                    for (index = str_index; index < length; index++)
+                    for (int index = str_index; index < length; index++)
                         name_buffer[index] = name_buffer[index + 1];
                 str_index++;
             }
 
             if (name_buffer[0] != 0) {
-                strncpy(cBotNames[iAmountNames], name_buffer, BOT_NAME_LEN);
+                std::strncpy(cBotNames[iAmountNames], name_buffer, BOT_NAME_LEN);
                 iAmountNames++;
             }
         }
@@ -315,21 +320,19 @@ void cGame::LoadNames() {
 }                               // LoadNames()
 
 // Any names available?
-bool cGame::NamesAvailable() {
+bool cGame::NamesAvailable() const
+{
     if (iAmountNames > 0)
         return true;
 
     return false;
 }                               // NamesAvailable()
 
-
 // Picks a random name
 // rewritten on april 10th 2004
-void cGame::SelectName(char *name) {
-    int iNameIndex, iIndex;
-    bool bUsed;
-    edict_t *pPlayer;
-    iNameIndex = 0;              // zero based (RANDOM_LONG (0, iAmountNames-1))
+void cGame::SelectName(char *name) const
+{
+	int iNameIndex = 0;              // zero based (RANDOM_LONG (0, iAmountNames-1))
 
     bool iNameUsed[MAX_BOT_NAMES];
     for (int i = 0; i < MAX_BOT_NAMES; i++) {
@@ -337,10 +340,10 @@ void cGame::SelectName(char *name) {
     }
 
     // check make sure this name isn't used
-    bUsed = true;
+    bool bUsed = true;
     while (bUsed) {
         iNameIndex = RANDOM_LONG(0, iAmountNames - 1);    // pick random one
-        int iLimit = iNameIndex;  // remember this.
+        const int iLimit = iNameIndex;  // remember this.
 
         // make sure it is not checked yet
         while (iNameUsed[iNameIndex]) {
@@ -357,7 +360,7 @@ void cGame::SelectName(char *name) {
 
             // when we are back to where we came from, get the fuck outta here
             if (iNameIndex == iLimit) {
-                strcpy(name, "RealBot");
+                std::strcpy(name, "RealBot");
                 return;
             }
         }
@@ -366,10 +369,10 @@ void cGame::SelectName(char *name) {
         bUsed = false;
 
         // check if this name is used
-        for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
-            pPlayer = INDEXENT(iIndex);
+        for (int iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
+	        const edict_t* pPlayer = INDEXENT(iIndex);
             if (pPlayer && !pPlayer->free) {
-                if (strcmp(cBotNames[iNameIndex], STRING(pPlayer->v.netname))
+                if (std::strcmp(cBotNames[iNameIndex], STRING(pPlayer->v.netname))
                     == 0) {
                     // atten tion, this namehas been used.
                     bUsed = true;
@@ -384,7 +387,7 @@ void cGame::SelectName(char *name) {
     }
 
     // copy name into the name_buffer
-    strcpy(name, cBotNames[iNameIndex]);
+    std::strcpy(name, cBotNames[iNameIndex]);
 }                               // SelectName()
 
 // GAME: Load BUYTABLE.INI file
@@ -394,9 +397,7 @@ void cGame::LoadBuyTable() {
 
 // GAME: Update global vars (called by StartFrame)
 void cGame::UpdateGameStatus() {
-    // Used variables
-    edict_t *pEnt;
-    pEnt = NULL;
+	edict_t* pEnt = nullptr;
 
     // ------------------
     // Update: Dropped C4
@@ -405,7 +406,7 @@ void cGame::UpdateGameStatus() {
     vDroppedC4 = Vector(9999, 9999, 9999);
 
     // Find the dropped bomb
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "weaponbox")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "weaponbox")) != nullptr) {
         // when DROPPED C4
         if ((FStrEq(STRING(pEnt->v.model), "models/w_backpack.mdl"))) {
             vDroppedC4 = pEnt->v.origin;   // this is the origin.
@@ -417,10 +418,10 @@ void cGame::UpdateGameStatus() {
     // Update: Is the bomb planted?
     // ------------------
     // Same as dropped c4, its NOT, unless stated otherwise.
-    pEnt = NULL;
+    pEnt = nullptr;
     bool bPlanted = bBombPlanted;
 
-    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "grenade")) != NULL) {
+    while ((pEnt = UTIL_FindEntityByClassname(pEnt, "grenade")) != nullptr) {
         if (UTIL_GetGrenadeType(pEnt) == 4) {
             bPlanted = true;         // Found planted bomb!
             break;
@@ -432,9 +433,7 @@ void cGame::UpdateGameStatus() {
     if (bPlanted && // found a planted bomb
         bPlanted != bBombPlanted // and previously we didn't know that
             ) {
-
-        int i;
-        for (i = 1; i <= gpGlobals->maxClients; i++) {
+	    for (int i = 1; i <= gpGlobals->maxClients; i++) {
             edict_t *pPlayer = INDEXENT(i);
             cBot *bot = UTIL_GetBotPointer(pPlayer);
 
@@ -474,32 +473,31 @@ void cGame::UpdateGameStatus() {
  * @param nameArg
  * @return
  */
-int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg, const char *modelArg, const char *nameArg) {
+int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg, const char *modelArg, const char *nameArg) const
+{
 
     // NAME
     char botName[BOT_NAME_LEN + 1];
-    memset(botName, 0, sizeof(botName));
+    std::memset(botName, 0, sizeof(botName));
     // if name given, use that
-    if ((nameArg != NULL) && (*nameArg != 0)) {
-        strncpy(botName, nameArg, BOT_NAME_LEN - 1);
+    if ((nameArg != nullptr) && (*nameArg != 0)) {
+        std::strncpy(botName, nameArg, BOT_NAME_LEN - 1);
         botName[BOT_NAME_LEN] = 0; // make sure botName is null terminated
     } else { // else pick random one or fallback to default "RealBot"
         if (NamesAvailable()) {
             SelectName(botName);
         } else {
-            strcpy(botName, "RealBot");
+            std::strcpy(botName, "RealBot");
         }
     }
 
     // length of name
-    int lengthOfBotName = strlen(botName);
+    int lengthOfBotName = static_cast<int>(std::strlen(botName));
 
-    // remove any illegal characters from name...
-    int i, j;
-    for (i = 0; i < lengthOfBotName; i++) {
+    for (int i = 0; i < lengthOfBotName; i++) {
         if ((botName[i] <= ' ') || (botName[i] > '~') || (botName[i] == '"')) {
             // move chars to the left (and null)
-            for (j = i; j < lengthOfBotName; j++) {
+            for (int j = i; j < lengthOfBotName; j++) {
                 botName[j] = botName[j + 1];
             }
             lengthOfBotName--;
@@ -509,8 +507,8 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     int botSkill = -2; // -2, not valid
 
     // Skill argument provided
-    if ((skillArg != NULL) && (*skillArg != 0)) {
-        botSkill = atoi(skillArg);       // set to given skill
+    if ((skillArg != nullptr) && (*skillArg != 0)) {
+        botSkill = std::atoi(skillArg);       // set to given skill
     }
 
     // when not valid (-2), it has default skill
@@ -526,18 +524,13 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     // CREATE fake client!
     edict_t *pBotEdict = (*g_engfuncs.pfnCreateFakeClient)(botName);
     if (FNullEnt(pBotEdict)) {
-        REALBOT_PRINT(NULL, "cGame::CreateBot", "Cannot create bot, server is full");
+        REALBOT_PRINT(nullptr, "cGame::CreateBot", "Cannot create bot, server is full");
         return GAME_MSG_FAIL_SERVERFULL;  // failed
     }
 
-
     char ptr[128];            // allocate space for message from ClientConnect
-    char *infobuffer;
-    int clientIndex;
 
-    // find empty bot index
-    int freeBotIndex;
-    freeBotIndex = 0;
+    int freeBotIndex = 0;
     while ((bots[freeBotIndex].bIsUsed) && (freeBotIndex < MAX_BOTS))
         freeBotIndex++;
 
@@ -549,16 +542,16 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     // (from LINK_ENTITY_TO_CLASS for player object)
 
     // FIX: Free data for bot, so we can fill in new
-    if (pBotEdict->pvPrivateData != NULL)
+    if (pBotEdict->pvPrivateData != nullptr)
         FREE_PRIVATE(pBotEdict);
 
-    pBotEdict->pvPrivateData = NULL;
+    pBotEdict->pvPrivateData = nullptr;
     pBotEdict->v.frags = 0;
 
     // END OF FIX: --- score resetted
     CALL_GAME_ENTITY(PLID, "player", VARS(pBotEdict));
-    infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pBotEdict);
-    clientIndex = ENTINDEX(pBotEdict);
+    char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pBotEdict);
+    const int clientIndex = ENTINDEX(pBotEdict);
 
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "model", "");
     (*g_engfuncs.pfnSetClientKeyValue)(clientIndex, infobuffer, "rate", "3500.000000");
@@ -594,14 +587,14 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     pBot->bIsUsed = true;
     pBot->respawn_state = RESPAWN_IDLE;
     pBot->fCreateTime = gpGlobals->time;
-    pBot->fKickTime = 0.0;
+    pBot->fKickTime = 0.0f;
     pBot->name[0] = 0;        // name not set by server yet
     pBot->bot_money = 0;
 
     // clear
     char c_skin[BOT_SKIN_LEN + 1];
-    memset(c_skin, 0, sizeof(c_skin));
-    strcpy(pBot->skin, c_skin);
+    std::memset(c_skin, 0, sizeof(c_skin));
+    std::strcpy(pBot->skin, c_skin);
 
     pBot->pEdict = pBotEdict;
     pBot->hasJoinedTeam = false;   // hasn't joined game yet
@@ -644,12 +637,12 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     pBot->ipBuyArmour = 0;
 
     // here we set team
-    if ((teamArg != NULL) && (teamArg[0] != 0)) {
-        pBot->iTeam = atoi(teamArg);
+    if ((teamArg != nullptr) && (teamArg[0] != 0)) {
+        pBot->iTeam = std::atoi(teamArg);
 
         // and class
-        if ((modelArg != NULL) && (modelArg[0] != 0)) {
-            pBot->bot_class = atoi(modelArg);
+        if ((modelArg != nullptr) && (modelArg[0] != 0)) {
+            pBot->bot_class = std::atoi(modelArg);
         }
     }
 
@@ -665,7 +658,7 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
 
 // Debug message (without BOT)
 void REALBOT_PRINT(const char *Function, const char *msg) {
-    REALBOT_PRINT(NULL, Function, msg);
+    REALBOT_PRINT(nullptr, Function, msg);
 }
 
 // Debug message
@@ -676,28 +669,28 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
     char mapName[32];
     int botIndex = -1;
 
-    memset(team, 0, sizeof(team));       // clear
-    memset(name, 0, sizeof(name));       // clear
-    memset(mapName, 0, sizeof(mapName));       // clear
+    std::memset(team, 0, sizeof(team));       // clear
+    std::memset(name, 0, sizeof(name));       // clear
+    std::memset(mapName, 0, sizeof(mapName));       // clear
 
-    strcpy(team, "NONE");
-    strcpy(name, "FUNCTION");
+    std::strcpy(team, "NONE");
+    std::strcpy(name, "FUNCTION");
 
     if (gpGlobals->mapname) {
-        strcpy(mapName, STRING(gpGlobals->mapname));
+        std::strcpy(mapName, STRING(gpGlobals->mapname));
     } else {
-        strcpy(mapName, "NA");
+        std::strcpy(mapName, "NA");
     }
 
     if (pBot) {
         botIndex = pBot->iBotIndex;
-        memset(name, 0, sizeof(name));    // clear
-        strcpy(name, pBot->name); // copy name
+        std::memset(name, 0, sizeof(name));    // clear
+        std::strcpy(name, pBot->name); // copy name
 
         if (pBot->isCounterTerrorist()) {
-            strcpy(team, "COUNTER");
+            std::strcpy(team, "COUNTER");
         } else if (pBot->isTerrorist()) {
-            strcpy(team, "TERROR");
+            std::strcpy(team, "TERROR");
         }
     }
 
@@ -707,12 +700,12 @@ void REALBOT_PRINT(cBot *pBot, const char *Function, const char *msg) {
     float roundTimeInMinutes = CVAR_GET_FLOAT("mp_roundtime");
     if (roundTimeInMinutes < 0) roundTimeInMinutes = 4; // sensible default
 
-    float roundTimeInSeconds = roundTimeInMinutes * 60;
-    float roundTimeRemaining = roundTimeInSeconds - roundElapsedTimeInSeconds;
-    int minutesLeft = roundTimeRemaining / 60;
-    int secondsLeft = (int)roundTimeRemaining % 60;
+    const float roundTimeInSeconds = roundTimeInMinutes * 60;
+    const float roundTimeRemaining = roundTimeInSeconds - roundElapsedTimeInSeconds;
+    const int minutesLeft = static_cast<int>(roundTimeRemaining) / 60;
+    const int secondsLeft = static_cast<int>(roundTimeRemaining) % 60;
 
-    sprintf(cMessage, "[rb] [%s] [%0d:%02d] - [%s|%d] [%s] [%s] : %s\n", mapName, minutesLeft, secondsLeft, name, botIndex, team, Function, msg);
+    std::sprintf(cMessage, "[rb] [%s] [%0d:%02d] - [%s|%d] [%s] [%s] : %s\n", mapName, minutesLeft, secondsLeft, name, botIndex, team, Function, msg);
 
     // print in console only when on debug print
     if (Game.bDebug > -2) {

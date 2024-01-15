@@ -27,7 +27,7 @@
   *
   **/
 
-#include <string.h>
+#include <cstring>
 #include <extdll.h>
 #include <dllapi.h>
 #include <meta_api.h>
@@ -70,12 +70,12 @@ void BotPrepareConsoleCommandsToBuyWeapon(cBot *pBot, const char *arg1, const ch
 
     if (pBot->console_nr == 0) {
         // set up first command and argument
-        strcpy(pBot->arg1, "buy");
-        strcpy(pBot->arg2, arg1);
+        std::strcpy(pBot->arg1, "buy");
+        std::strcpy(pBot->arg2, arg1);
 
         // add argument
-        if (arg2 != NULL)
-            strcpy(pBot->arg3, arg2);
+        if (arg2 != nullptr)
+            std::strcpy(pBot->arg3, arg2);
 
         pBot->console_nr = 1;     // start console command sequence
     }
@@ -110,13 +110,16 @@ bool GoodWeaponForTeam(int weapon, int team) {
                 case CS_WEAPON_AK47:
                     return false;
                     break;
-                case CS_WEAPON_ELITE:
+                case CS_WEAPON_DEAGLE:
                     return false;
                     break;
-                case CS_WEAPON_MAC10:
+                case CS_WEAPON_MP5NAVY:
                     return false;
                     break;
                 case CS_WEAPON_GALIL:
+                    return false;
+                    break;
+                case CS_WEAPON_P90:
                     return false;
                     break;
                     // 30.8.04 added by frashman
@@ -129,19 +132,19 @@ bool GoodWeaponForTeam(int weapon, int team) {
                 case CS_WEAPON_AUG:
                     return false;
                     break;
-                case CS_WEAPON_FIVESEVEN:
+                case CS_WEAPON_DEAGLE:
                     return false;
                     break;
                 case CS_WEAPON_M4A1:
                     return false;
                     break;
-                case CS_WEAPON_TMP:
+                case CS_WEAPON_MP5NAVY:
                     return false;
                     break;
                 case CS_WEAPON_FAMAS:
                     return false;
                     break;
-                case CS_WEAPON_SHIELD:
+                case CS_WEAPON_P90:
                     return false;
                     break;
                     //30.8.04 added by Frashman
@@ -186,8 +189,8 @@ void BotDecideWhatToBuy(cBot *pBot) {
      * In other words, it needs refactoring...
      *
      */
-    int money = pBot->bot_money; // Money
-    int team = pBot->iTeam;      // Team
+    const int money = pBot->bot_money; // Money
+    const int team = pBot->iTeam;      // Team
 
     int buy_weapon = -1;
 
@@ -279,7 +282,7 @@ void BotDecideWhatToBuy(cBot *pBot) {
             pBot->rprint("BotDecideWhatToBuy()", "Found a primary weapon to buy");
 
             // depending on amount of money we have left buy *also* secondary weapon
-            int iMoneyLeft = money - PriceWeapon(buy_weapon);
+            const int iMoneyLeft = money - PriceWeapon(buy_weapon);
 
             // TODO: this should be dependant on something else... not only money
             // 01.09.04 Frashman if buyed a Shield, try to buy a good Pistol
@@ -341,7 +344,7 @@ void BotDecideWhatToBuy(cBot *pBot) {
 
                 if (weapons_table[i].price <= money) {
                     if (pBot->iSecondaryWeapon > -1) {
-                        int index =
+	                    const int index =
                                 weapons_table[pBot->iSecondaryWeapon].iIdIndex;
                         // 31.08.04 Frashman > corrected to >= ,
                         // else the bot will buy another weapon with the same priority
@@ -371,14 +374,14 @@ void BotDecideWhatToBuy(cBot *pBot) {
     } else if (pBot->buy_ammo_primary == true) {
         pBot->rprint("BotDecideWhatToBuy()", "buy_ammo_primary");
         // Buy primary ammo
-        BotPrepareConsoleCommandsToBuyWeapon(pBot, "6", NULL);
+        BotPrepareConsoleCommandsToBuyWeapon(pBot, "6", nullptr);
         pBot->buy_ammo_primary = false;
         return;
 
     } else if (pBot->buy_ammo_secondary == true) {
         pBot->rprint("BotDecideWhatToBuy()", "buy_ammo_secondary");
         // Buy secondary ammo
-        BotPrepareConsoleCommandsToBuyWeapon(pBot, "7", NULL);
+        BotPrepareConsoleCommandsToBuyWeapon(pBot, "7", nullptr);
         pBot->buy_ammo_secondary = false;
         return;
     } else if (pBot->buy_defusekit) {
@@ -442,7 +445,7 @@ void ConsoleThink(cBot *pBot) {
 
     // buy time is in minutes, we need
     // gpGlobals->time is in seconds, so we need to translate the minutes into seconds
-    float buyTime = CVAR_GET_FLOAT("mp_buytime") * 60;
+    const float buyTime = CVAR_GET_FLOAT("mp_buytime") * 60;
     if (Game.getRoundStartedTime() + buyTime > gpGlobals->time &&
         pBot->wantsToBuyStuff()) {
         BotDecideWhatToBuy(pBot);
@@ -472,22 +475,22 @@ void BotConsole(cBot *pBot) {
 
         // issue command (buy/radio)
         if (pBot->console_nr == 1)
-            FakeClientCommand(pBot->pEdict, pBot->arg1, NULL, NULL);
+            FakeClientCommand(pBot->pEdict, pBot->arg1, nullptr, nullptr);
 
         // do menuselect
         if (pBot->console_nr == 2)
-            FakeClientCommand(pBot->pEdict, "menuselect", pBot->arg2, NULL);
+            FakeClientCommand(pBot->pEdict, "menuselect", pBot->arg2, nullptr);
 
         // do menuselect
         if (pBot->console_nr == 3) {
             // When the last parameter is not null, we will perform that action.
             if (pBot->arg3[0] != 0)
                 FakeClientCommand(pBot->pEdict, "menuselect", pBot->arg3,
-                                  NULL);
+                nullptr);
 
             // reset
             pBot->console_nr = -1;
-            pBot->f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.2, 0.5);
+            pBot->f_console_timer = gpGlobals->time + RANDOM_FLOAT(0.2f, 0.5f);
         }
 
         if (pBot->console_nr > 0)
