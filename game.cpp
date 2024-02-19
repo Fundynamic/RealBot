@@ -230,9 +230,8 @@ float cGame::getRoundTimeElapsed() const
 {
     if (getRoundStartedTime() > -1) {
         return gpGlobals->time - getRoundStartedTime();
-    } else {
-        return -1;
     }
+    return -1;
 }
 
 // GAME: Set new round flag
@@ -290,21 +289,21 @@ void cGame::LoadCFG() {
 void cGame::LoadNames() {
 	char filename[256];
     UTIL_BuildFileNameRB("rb_names.txt", filename);
-    FILE* bot_name_fp = fopen(filename, "r");
+    FILE* bot_name_fp = std::fopen(filename, "r");
     if (bot_name_fp != nullptr) {
 	    char name_buffer[80];
-	    while ((iAmountNames < MAX_BOT_NAMES) &&
-               (fgets(name_buffer, 80, bot_name_fp) != nullptr)) {
+	    while (iAmountNames < MAX_BOT_NAMES &&
+               std::fgets(name_buffer, 80, bot_name_fp) != nullptr) {
             int length = static_cast<int>(std::strlen(name_buffer));
-            if (name_buffer[length - 1] == '\n') {
+            if (length > 0 && name_buffer[length - 1] == '\n') {
                 name_buffer[length - 1] = 0;        // remove '\n'
                 length--;
             }
             int str_index = 0;
             while (str_index < length) {
-                if ((name_buffer[str_index] < ' ')
-                    || (name_buffer[str_index] > '~')
-                    || (name_buffer[str_index] == '"'))
+                if (name_buffer[str_index] < ' '
+                    || name_buffer[str_index] > '~'
+                    || name_buffer[str_index] == '"')
                     for (int index = str_index; index < length; index++)
                         name_buffer[index] = name_buffer[index + 1];
                 str_index++;
@@ -315,7 +314,7 @@ void cGame::LoadNames() {
                 iAmountNames++;
             }
         }
-        fclose(bot_name_fp);
+        std::fclose(bot_name_fp);
     }
 }                               // LoadNames()
 
@@ -455,8 +454,8 @@ void cGame::UpdateGameStatus() {
     } // planted, and not planted before
 
     // Every 3 seconds update the goals
-    if (gpGlobals->time > (fUpdateGoalTimer + 3)) {
-//        rblog("cGame::UpdateGameStatus - updateGoals\n");
+    if (gpGlobals->time > fUpdateGoalTimer + 3) {
+	//  rblog("cGame::UpdateGameStatus - updateGoals\n");
         NodeMachine.updateGoals();
         fUpdateGoalTimer = gpGlobals->time;
     }
@@ -480,7 +479,7 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     char botName[BOT_NAME_LEN + 1];
     std::memset(botName, 0, sizeof(botName));
     // if name given, use that
-    if ((nameArg != nullptr) && (*nameArg != 0)) {
+    if (nameArg != nullptr && *nameArg != 0) {
         std::strncpy(botName, nameArg, BOT_NAME_LEN - 1);
         botName[BOT_NAME_LEN] = 0; // make sure botName is null terminated
     } else { // else pick random one or fallback to default "RealBot"
@@ -512,7 +511,7 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     }
 
     // when not valid (-2), it has default skill
-    if ((botSkill < -1) || (botSkill > 10)) {
+    if (botSkill < -1 || botSkill > 10) {
         botSkill = iDefaultBotSkill;
     }
 
@@ -531,13 +530,13 @@ int cGame::createBot(edict_t *pPlayer, const char *teamArg, const char *skillArg
     char ptr[128];            // allocate space for message from ClientConnect
 
     int freeBotIndex = 0;
-    while ((bots[freeBotIndex].bIsUsed) && (freeBotIndex < MAX_BOTS))
+    while (freeBotIndex < MAX_BOTS && bots[freeBotIndex].bIsUsed)
         freeBotIndex++;
 
     if (freeBotIndex == MAX_BOTS) { // failure
         return GAME_MSG_FAILURE;
     }
-
+	
     // create the player entity by calling MOD's player function
     // (from LINK_ENTITY_TO_CLASS for player object)
 

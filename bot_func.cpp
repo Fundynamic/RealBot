@@ -110,9 +110,9 @@ bool VectorIsVisible(const Vector& start, const Vector& dest, char *checkname) {
         // check if line of sight to object is not blocked (i.e. visible)
         // Als er NONE wordt opgegeven dan checken we gewoon of we worden geblokt
         if (tr.flFraction >= 1.0f)
-            return TRUE;
+            return true;
         else
-            return FALSE;
+            return false;
 
     }
 
@@ -241,7 +241,7 @@ cBot *getCloseFellowBot(cBot *pBot) {
         edict_t *pPlayer = INDEXENT(i);
 
         // skip invalid players
-        if ((pPlayer) && (!pPlayer->free) && (pPlayer != pEdict)) {
+        if (pPlayer && !pPlayer->free && pPlayer != pEdict) {
             // skip this player if not alive (i.e. dead or dying)
             if (!IsAlive(pPlayer))
                 continue;
@@ -272,18 +272,18 @@ edict_t * getPlayerNearbyBotInFOV(cBot *pBot) {
         edict_t *pPlayer = INDEXENT(i);
 
         // skip invalid players and skip self (i.e. this bot)
-        if ((pPlayer) && (!pPlayer->free) && (pPlayer != pEdict)) {
+        if (pPlayer && !pPlayer->free && pPlayer != pEdict) {
 	        const int fov = 90;// TODO: use server var "default_fov" ?
 	        // skip this player if not alive (i.e. dead or dying)
             if (!IsAlive(pPlayer))
                 continue;
 
-            if (!((pPlayer->v.flags & FL_THIRDPARTYBOT)
-                  || (pPlayer->v.flags & FL_FAKECLIENT)
-                  || (pPlayer->v.flags & FL_CLIENT)))
+            if (!(pPlayer->v.flags & FL_THIRDPARTYBOT
+	            || pPlayer->v.flags & FL_FAKECLIENT
+	            || pPlayer->v.flags & FL_CLIENT))
                 continue;
 
-            const int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
+            const int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, pPlayer->v.origin - pBot->pEdict->v.origin);
 
             const int distance = NODE_ZONE;
             if (func_distance(pBot->pEdict->v.origin, pPlayer->v.origin) < distance && angleToPlayer < fov) {
@@ -327,14 +327,14 @@ bool isAnyPlayerNearbyBot(cBot *pBot) {
         edict_t *pPlayer = INDEXENT(i);
 
         // skip invalid players and skip self (i.e. this bot)
-        if ((pPlayer) && (!pPlayer->free) && (pPlayer != pEdict)) {
+        if (pPlayer && !pPlayer->free && pPlayer != pEdict) {
             // skip this player if not alive (i.e. dead or dying)
             if (!IsAlive(pPlayer))
                 continue;
 
-            if (!((pPlayer->v.flags & FL_THIRDPARTYBOT)
-                  || (pPlayer->v.flags & FL_FAKECLIENT)
-                  || (pPlayer->v.flags & FL_CLIENT)))
+            if (!(pPlayer->v.flags & FL_THIRDPARTYBOT
+	            || pPlayer->v.flags & FL_FAKECLIENT
+	            || pPlayer->v.flags & FL_CLIENT))
                 continue;
 
             //int angleToPlayer = FUNC_InFieldOfView(pBot->pEdict, (pPlayer->v.origin - pBot->pEdict->v.origin));
@@ -452,23 +452,23 @@ bool BotShouldJump(cBot *pBot) {
     v_dest = v_source + gpGlobals->v_forward * 40;
 
     //
-//    int player_index = 0;
-//    for (player_index = 1; player_index <= gpGlobals->maxClients;
-//         player_index++) {
-//        edict_t *pPlayer = INDEXENT(player_index);
-//
-//        if (pPlayer && !pPlayer->free) {
-//            if (FBitSet(pPlayer->v.flags, FL_CLIENT)) { // do not draw for now
-//
-//                DrawBeam(
-//                        pPlayer, // player sees beam
-//                        v_source, // + Vector(0, 0, 32) (head?)
-//                        v_dest,
-//                        255, 255, 255
-//                );
-//            }
-//        }
-//    }
+	// int player_index = 0;
+	//    for (player_index = 1; player_index <= gpGlobals->maxClients;
+	//         player_index++) {
+	//        edict_t *pPlayer = INDEXENT(player_index);
+	//
+	//        if (pPlayer && !pPlayer->free) {
+	//            if (FBitSet(pPlayer->v.flags, FL_CLIENT)) { // do not draw for now
+	//
+	//                DrawBeam(
+	//                        pPlayer, // player sees beam
+	//                        v_source, // + Vector(0, 0, 32) (head?)
+	//                        v_dest,
+	//                        255, 255, 255
+	//                );
+	//            }
+	//        }
+	//    }
 
     UTIL_TraceHull(v_source, v_dest, dont_ignore_monsters, point_hull, pEdict->v.pContainingEntity, &tr);
 
@@ -623,7 +623,7 @@ bool FUNC_ShouldTakeCover(cBot *pBot) {
     // CAMP: The more we want, the more we want to take cover
     const int vCamp = pBot->ipCampRate;
 
-    return RANDOM_LONG(0, TOTAL_SCORE) < (vMoney + vHealth + vCamp);
+    return RANDOM_LONG(0, TOTAL_SCORE) < vMoney + vHealth + vCamp;
 }
 
 bool FUNC_TakeCover(cBot* pBot) //Experimental [APG]RoboCop[CL]
@@ -709,28 +709,26 @@ int FUNC_FindFarWaypoint(cBot* pBot, const Vector& avoid, bool safest) //Experim
 		if (pEdict->v.flags & FL_DORMANT)
 			continue;
 
-		if (pEdict->v.classname != 0 && std::strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
-			if (std::strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
-				if (farthest == -1) {
-					farthest = i;
-					farthest_distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
-				} else {
-					const float distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
+        if (pEdict->v.classname != 0 && std::strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
+            if (farthest == -1) {
+                farthest = i;
+                farthest_distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
+            } else {
+                const float distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
 
-					if (safest) {
-						if (distance < farthest_distance) {
-							farthest = i;
-							farthest_distance = distance;
-						}
-					} else {
-						if (distance > farthest_distance) {
-							farthest = i;
-							farthest_distance = distance;
-						}
-					} 
-				}
-			}
-		}
+                if (safest) {
+                    if (distance < farthest_distance) {
+                        farthest = i;
+                        farthest_distance = distance;
+                    }
+                } else {
+                    if (distance > farthest_distance) {
+                        farthest = i;
+                        farthest_distance = distance;
+                    }
+                }
+            }
+        }
 	}
 
 	return farthest;
@@ -755,21 +753,19 @@ int FUNC_FindCover(const cBot* pBot) //Experimental [APG]RoboCop[CL]
 		if (pEdict->v.flags & FL_DORMANT)
 			continue;
 
-		if (pEdict->v.classname != 0 && std::strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
-			if (std::strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
-				if (farthest == -1) {
-					farthest = i;
-					farthest_distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
-				} else {
-					const float distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
+        if (pEdict->v.classname != 0 && std::strcmp(STRING(pEdict->v.classname), "info_waypoint") == 0) {
+            if (farthest == -1) {
+                farthest = i;
+                farthest_distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
+            } else {
+                const float distance = (pEdict->v.origin - pBot->pEdict->v.origin).Length();
 
-					if (distance > farthest_distance) {
-						farthest = i;
-						farthest_distance = distance;
-					}
-				}
-			}
-		}
+                if (distance > farthest_distance) {
+                    farthest = i;
+                    farthest_distance = distance;
+                }
+            }
+        }
 	}
 
 	return farthest;
@@ -831,7 +827,7 @@ void FUNC_ClearEnemyPointer(edict_t *pPtr) { //pPtr muddled with c_pointer? [APG
         edict_t *pPlayer = INDEXENT(i);
 
         // Skip invalid players.
-        if ((pPlayer) && (!pPlayer->free)) {
+        if (pPlayer && !pPlayer->free) {
 
             // skip this player if not alive (i.e. dead or dying)
             if (!IsAlive(pPlayer))
@@ -850,7 +846,6 @@ void FUNC_ClearEnemyPointer(edict_t *pPtr) { //pPtr muddled with c_pointer? [APG
                 botpointer->forgetEnemy();    // Clear its pointer
             }
         }
-
     }
 }
 
@@ -879,14 +874,12 @@ void FUNC_FindBreakable(edict_t* pEntity) //TODO: not functioning, bots won't sh
 		if (pEdict->v.flags & FL_DORMANT)
 			continue;
 
-		if (pEdict->v.classname != 0 && std::strcmp(STRING(pEdict->v.classname), "func_breakable") == 0) {
-			if (std::strcmp(STRING(pEdict->v.classname), "func_breakable") == 0) {
-				if (pEdict->v.origin == pEntity->v.origin) {
-					pEntity->v.enemy = pEdict;
-					return;
-				}
-			}
-		}
+        if (pEdict->v.classname != 0 && std::strcmp(STRING(pEdict->v.classname), "func_breakable") == 0) {
+            if (pEdict->v.origin == pEntity->v.origin) {
+                pEntity->v.enemy = pEdict;
+                return;
+            }
+        }
 	}
 }
 
@@ -932,31 +925,29 @@ void FUNC_CheckForBombPlanted(edict_t* pEntity) //Experimental [APG]RoboCop[CL]
  * @param pHostage
  * @return
  */
-bool isHostageFree(cBot *pBotWhoIsAsking, edict_t *pHostage) {
+bool isHostageFree(cBot* pBotWhoIsAsking, edict_t* pHostage) {
     if (pHostage == nullptr) return false;
     if (pBotWhoIsAsking == nullptr) return false;
-
+	
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
-        edict_t *pPlayer = INDEXENT(i);
-
-        if ((!pPlayer) || // NULL
-            (pPlayer && pPlayer->free)) // free - ie no client
+        edict_t* pPlayer = INDEXENT(i);
+        if (!pPlayer || pPlayer->free) // free - ie no client
             continue; // next
-
+    	
         // skip this player if not alive (i.e. dead or dying)
         if (!IsAlive(pPlayer))
             continue;
-
+    	
         // not a bot
         if (!(pPlayer->v.flags & FL_THIRDPARTYBOT))
             continue;
-
+    	
         // Only check other bots (do not check self)
-        cBot *botpointer = UTIL_GetBotPointer(pPlayer);
+        cBot* botpointer = UTIL_GetBotPointer(pPlayer);
         if (botpointer && // a bot
-            (botpointer != pBotWhoIsAsking) && // not self
+            botpointer != pBotWhoIsAsking && // not self
             !botpointer->isDead()) { // not dead
-
+        	
             // other bot uses hostage, so hostage is not 'free'
             if (botpointer->isUsingHostage(pHostage)) {
                 pBotWhoIsAsking->rprint("Looks like the hostage is used by another one");
@@ -965,7 +956,7 @@ bool isHostageFree(cBot *pBotWhoIsAsking, edict_t *pHostage) {
             }
         }
     }
-
+	
     return true;
 }
 
@@ -1125,7 +1116,7 @@ bool isHostageRescueable(cBot *pBot, edict_t *pHostage) {
     // Already used by bot?
 
     if (pBot != nullptr) {
-//        rblog("isHostageRescueable - pBot is != NULL\n");
+    	// rblog("isHostageRescueable - pBot is != NULL\n");
         if (pBot->isUsingHostage(pHostage)) return false;
         // Is the hostage not used by *any other* bot?
         if (!isHostageFree(pBot, pHostage)) {
@@ -1193,7 +1184,7 @@ void rblog(char *txt) {
 
     // and to reallog file
     if (fpRblog) {
-        fprintf(fpRblog, "%s", txt);        // print the text into the file
+        std::fprintf(fpRblog, "%s", txt);        // print the text into the file
 
         // this way we make sure we have all latest info - even with crashes
         fflush(fpRblog);

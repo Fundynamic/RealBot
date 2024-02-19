@@ -10,4 +10,5 @@
 - To allow bots to really, I mean REALLY ignore nodes from VERY hard to reach places - including non-vaultable edges and tall crates
 - Find an automated solution for removing redundant or excessive nodes that can make the connections less messy (if it doesn't already exist?)
 - To add a cvar to toggle Reallog.txt on or off to reduce printing too many texts in the console and to prevent that txt file building up
+- To allow bots to use melee on breakables or "func_breakable" to infiltrate windows and vents
 - Ensure that the RealBot personality directories are correctly assigned

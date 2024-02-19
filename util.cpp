@@ -57,7 +57,7 @@
 #include <cctype>
 
 #ifndef _WIN32
-#define _snprintf snprintf
+#define snprintf std::snprintf //-V1059
 #endif
 
 extern int mod_id;
@@ -82,7 +82,7 @@ UTIL_TraceLine(const Vector& vecStart, const Vector& vecEnd,
 	edict_t* pentIgnore, TraceResult* ptr) {
 	TRACE_LINE(vecStart, vecEnd,
 		(igmon ==
-			ignore_monsters ? TRUE : FALSE) | (ignoreGlass ? 0x100 : 0),
+		ignore_monsters) | (ignoreGlass ? 0x100 : 0),
 		pentIgnore, ptr);
 }
 
@@ -90,7 +90,7 @@ void
 UTIL_TraceLine(const Vector& vecStart, const Vector& vecEnd,
 	IGNORE_MONSTERS igmon, edict_t* pentIgnore,
 	TraceResult* ptr) {
-	TRACE_LINE(vecStart, vecEnd, (igmon == ignore_monsters ? TRUE : FALSE),
+	TRACE_LINE(vecStart, vecEnd, (igmon == ignore_monsters),
 		pentIgnore, ptr);
 }
 
@@ -98,7 +98,7 @@ void
 UTIL_TraceHull(const Vector& vecStart, const Vector& vecEnd,
 	IGNORE_MONSTERS igmon, int hullNumber, edict_t* pentIgnore,
 	TraceResult* ptr) {
-	TRACE_HULL(vecStart, vecEnd, (igmon == ignore_monsters ? TRUE : FALSE), hullNumber, pentIgnore, ptr);
+	TRACE_HULL(vecStart, vecEnd, (igmon == ignore_monsters), hullNumber, pentIgnore, ptr);
 }
 
 void UTIL_MakeVectors(const Vector& vecAngles) {
@@ -233,14 +233,14 @@ void UTIL_HostSay(edict_t* pEntity, int teamonly, char* message) {
 	const int sender_team = UTIL_GetTeam(pEntity);
 
 	edict_t* client = nullptr;
-	while (((client = UTIL_FindEntityByClassname(client, "player")) != nullptr)
-		&& (!FNullEnt(client))) {
+	while ((client = UTIL_FindEntityByClassname(client, "player")) != nullptr
+		&& !FNullEnt(client)) {
 		if (client == pEntity)    // skip sender of message
 			continue;
 
 		const int player_team = UTIL_GetTeam(client);
 
-		if (teamonly && (sender_team != player_team))
+		if (teamonly && sender_team != player_team)
 			continue;
 
 		MESSAGE_BEGIN(MSG_ONE, gmsgSayText, nullptr, client);
@@ -282,15 +282,13 @@ edict_t* DBG_EntOfVars(const entvars_t* pev) {
 bool UTIL_IsVip(edict_t* pEntity) {
 	if (mod_id != CSTRIKE_DLL)
 		return false;
-	else {
-		char model_name[32];
+	char model_name[32];
 
-		char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
-		std::strcpy(model_name, (g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
+	char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
+	std::strcpy(model_name, g_engfuncs.pfnInfoKeyValue(infobuffer, "model"));
 
-		if (std::strcmp(model_name, "vip") == 0)       // VIP
-			return true;
-	}
+	if (std::strcmp(model_name, "vip") == 0)       // VIP
+		return true;
 
 	return false;
 }
@@ -302,24 +300,24 @@ int UTIL_GetTeam(edict_t* pEntity) {
 
 		char* infobuffer = (*g_engfuncs.pfnGetInfoKeyBuffer)(pEntity);
 		std::strcpy(model_name,
-			(g_engfuncs.pfnInfoKeyValue(infobuffer, "model")));
+			g_engfuncs.pfnInfoKeyValue(infobuffer, "model"));
 
-		if ((std::strcmp(model_name, "terror") == 0) ||        // Phoenix Connektion
-			(std::strcmp(model_name, "arab") == 0) ||  // old L337 Krew
-			(std::strcmp(model_name, "leet") == 0) ||  // L337 Krew
-			(std::strcmp(model_name, "artic") == 0) || // Artic Avenger
-			(std::strcmp(model_name, "arctic") == 0) ||        // Artic Avenger - fix for arctic? - seemed a typo?
-			(std::strcmp(model_name, "guerilla") == 0))      // Gorilla Warfare
+		if (std::strcmp(model_name, "terror") == 0 ||        // Phoenix Connektion
+			std::strcmp(model_name, "arab") == 0 ||  // old L337 Krew
+			std::strcmp(model_name, "leet") == 0 ||  // L337 Krew
+			std::strcmp(model_name, "artic") == 0 || // Artic Avenger
+			std::strcmp(model_name, "arctic") == 0 ||        // Artic Avenger - fix for arctic? - seemed a typo?
+			std::strcmp(model_name, "guerilla") == 0)      // Gorilla Warfare
 			//(strcmp(model_name, "militia") == 0))       // CZ Militia
 		{
 			return 0; // team Terrorists
 		}
-		else if ((std::strcmp(model_name, "urban") == 0) ||  // Seal Team 6
-			(std::strcmp(model_name, "gsg9") == 0) ||   // German GSG-9
-			(std::strcmp(model_name, "sas") == 0) ||    // UK SAS
-			(std::strcmp(model_name, "gign") == 0) ||   // French GIGN
-			(std::strcmp(model_name, "vip") == 0) ||    // VIP
-			(std::strcmp(model_name, "spetsnatz") == 0))        // CZ Spetsnatz
+		if (std::strcmp(model_name, "urban") == 0 ||  // Seal Team 6
+			std::strcmp(model_name, "gsg9") == 0 ||   // German GSG-9
+			std::strcmp(model_name, "sas") == 0 ||    // UK SAS
+			std::strcmp(model_name, "gign") == 0 ||   // French GIGN
+			std::strcmp(model_name, "vip") == 0 ||    // VIP
+			std::strcmp(model_name, "spetsnatz") == 0)        // CZ Spetsnatz
 		{
 			return 1; // team Counter-Terrorists
 		}
@@ -367,11 +365,11 @@ cBot* UTIL_GetBotPointer(edict_t* pEdict) {
 
 bool IsAlive(edict_t* pEdict) {
 	// FIX: Make sure the edict is valid and such, else return false:
-	return ((pEdict != nullptr) &&  // VALID
-		(pEdict->v.deadflag == DEAD_NO) &&   // NOT DEAD
-		(pEdict->v.health > 0) &&    // ENOUGHT HEALTH
+	return pEdict != nullptr &&  // VALID
+		pEdict->v.deadflag == DEAD_NO &&   // NOT DEAD
+		pEdict->v.health > 0 &&    // ENOUGHT HEALTH
 		!(pEdict->v.flags & FL_NOTARGET) &&  // ?
-		(pEdict->v.takedamage != 0.0f));        // CAN TAKE DAMAGE
+		pEdict->v.takedamage != 0.0f;        // CAN TAKE DAMAGE
 }
 
 bool FInViewCone(Vector* pOrigin, edict_t* pEdict) {
@@ -384,11 +382,9 @@ bool FInViewCone(Vector* pOrigin, edict_t* pEdict) {
 
 	if (flDot > 0.50f)            // 60 degree field of view
 	{
-		return TRUE;
+		return true;
 	}
-	else {
-		return FALSE;
-	}
+	return false;
 }
 
 // FVisible()
@@ -398,27 +394,25 @@ bool FVisible(const Vector& vecOrigin, edict_t* pEdict) {
 	// look through caller's eyes
 	const Vector vecLookerOrigin = pEdict->v.origin + pEdict->v.view_ofs;
 
-	const int bInWater = (UTIL_PointContents(vecOrigin) == CONTENTS_WATER);
+	const int bInWater = UTIL_PointContents(vecOrigin) == CONTENTS_WATER;
 	const int bLookerInWater =
-		(UTIL_PointContents(vecLookerOrigin) == CONTENTS_WATER);
+		UTIL_PointContents(vecLookerOrigin) == CONTENTS_WATER;
 
 	// don't look through water
 	if (bInWater != bLookerInWater)
-		return FALSE;
+		return false;
 
 	UTIL_TraceLine(vecLookerOrigin, vecOrigin, ignore_monsters,
 		ignore_glass, pEdict, &tr);
 
 	if (tr.flFraction != 1.0f) {
-		return FALSE;             // Line of sight is not established
+		return false;             // Line of sight is not established
 	}
-	else {
-		return TRUE;              // line of sight is valid.
-	}
+	return true;              // line of sight is valid.
 }
 
 Vector GetGunPosition(edict_t* pEdict) {
-	return (pEdict->v.origin + pEdict->v.view_ofs);
+	return pEdict->v.origin + pEdict->v.view_ofs;
 }
 
 void UTIL_SelectItem(edict_t* pEdict, char* item_name) {
@@ -459,12 +453,12 @@ void UTIL_BuildFileName(char* filename, char* arg1, char* arg2) {
 		return;
 	}
 
-	if ((arg1) && (*arg1) && (arg2) && (*arg2)) {
+	if (arg1 && *arg1 && arg2 && *arg2) {
 		std::strcat(filename, arg1);
 		std::strcat(filename, "/");
 		std::strcat(filename, arg2);
 	}
-	else if ((arg1) && (*arg1)) {
+	else if (arg1 && *arg1) {
 		std::strcat(filename, arg1);
 	}
 }
@@ -622,69 +616,73 @@ int UTIL_GiveWeaponType(int weapon_id) {
 // Return weapon ID (depended on mod)
 int UTIL_GiveWeaponId(const char* name) {
 	if (mod_id == CSTRIKE_DLL) {
-		if (std::strcmp(name, "weapon_knife") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_knife") == 0)
 			return CS_WEAPON_KNIFE;
-		if (std::strcmp(name, "weapon_c4") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_c4") == 0)
 			return CS_WEAPON_C4;
-		if (std::strcmp(name, "weapon_mp5navy") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_mp5navy") == 0)
 			return CS_WEAPON_MP5NAVY;
-		if (std::strcmp(name, "weapon_ak47") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_ak47") == 0)
 			return CS_WEAPON_AK47;
-		if (std::strcmp(name, "weapon_m3") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_m3") == 0)
 			return CS_WEAPON_M3;
-		if (std::strcmp(name, "weapon_aug") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_aug") == 0)
 			return CS_WEAPON_AUG;
-		if (std::strcmp(name, "weapon_sg552") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_sg552") == 0)
 			return CS_WEAPON_SG552;
-		if (std::strcmp(name, "weapon_m249") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_m249") == 0)
 			return CS_WEAPON_M249;
-		if (std::strcmp(name, "weapon_xm1014") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_xm1014") == 0)
 			return CS_WEAPON_XM1014;
-		if (std::strcmp(name, "weapon_p90") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_p90") == 0)
 			return CS_WEAPON_P90;
-		if (std::strcmp(name, "weapon_tmp") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_tmp") == 0)
 			return CS_WEAPON_TMP;
-		if (std::strcmp(name, "weapon_m4a1") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_m4a1") == 0)
 			return CS_WEAPON_M4A1;
-		if (std::strcmp(name, "weapon_awp") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_awp") == 0)
 			return CS_WEAPON_AWP;
-		if (std::strcmp(name, "weapon_fiveseven") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_fiveseven") == 0)
 			return CS_WEAPON_FIVESEVEN;
-		if (std::strcmp(name, "weapon_ump45") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_ump45") == 0)
 			return CS_WEAPON_UMP45;
-		if (std::strcmp(name, "weapon_sg550") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_sg550") == 0)
 			return CS_WEAPON_SG550;
-		if (std::strcmp(name, "weapon_scout") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_scout") == 0)
 			return CS_WEAPON_SCOUT;
-		if (std::strcmp(name, "weapon_mac10") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_mac10") == 0)
 			return CS_WEAPON_MAC10;
-		if (std::strcmp(name, "weapon_g3sg1") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_g3sg1") == 0)
 			return CS_WEAPON_G3SG1;
-		if (std::strcmp(name, "weapon_elite") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_elite") == 0)
 			return CS_WEAPON_ELITE;
-		if (std::strcmp(name, "weapon_p228") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_p228") == 0)
 			return CS_WEAPON_P228;
-		if (std::strcmp(name, "weapon_deagle") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_deagle") == 0)
 			return CS_WEAPON_DEAGLE;
-		if (std::strcmp(name, "weapon_usp") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_usp") == 0)
 			return CS_WEAPON_USP;
-		if (std::strcmp(name, "weapon_glock18") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_glock18") == 0)
 			return CS_WEAPON_GLOCK18;
 		// Counter-Strike 1.6
-		if (std::strcmp(name, "weapon_famas") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_famas") == 0)
 			return CS_WEAPON_FAMAS;
-		if (std::strcmp(name, "weapon_galil") == 0)
+		if (name != nullptr && std::strcmp(name, "weapon_galil") == 0)
 			return CS_WEAPON_GALIL;
-
-		// TODO: Detect shield carrying.
+		
 		// 06/07/04
 		// Unconfirmed for handling shield
 		// 31.08.04 Frashman: moved shield string before unknown weapon, not after it
 		if (name != nullptr && std::strcmp(name, "weapon_shield") == 0)
 			return CS_WEAPON_SHIELD;
-
+		
 		char buffer[80];
-		_snprintf(buffer, 79, "UTIL_GiveWeaponId: Unknown weapon name %s\n", name);
+		if (name != nullptr) {
+			snprintf(buffer, 79, "UTIL_GiveWeaponId: Unknown weapon name %s\n", name);
+		}
+		else {
+			snprintf(buffer, 79, "UTIL_GiveWeaponId: Unknown weapon name (null)\n");
+		}
 		rblog(buffer);
 	}
 
@@ -697,86 +695,60 @@ char* UTIL_GiveWeaponName(int id) {
 		switch (id) {
 		case CS_WEAPON_C4:
 			return "weapon_c4";
-			break;
 		case CS_WEAPON_MP5NAVY:
 			return "weapon_mp5navy";
-			break;
 		case CS_WEAPON_AK47:
 			return "weapon_ak47";
-			break;
 		case CS_WEAPON_M3:
 			return "weapon_m3";
-			break;
 		case CS_WEAPON_AUG:
 			return "weapon_aug";
-			break;
 		case CS_WEAPON_SG552:
 			return "weapon_sg552";
-			break;
 		case CS_WEAPON_M249:
 			return "weapon_m249";
-			break;
 		case CS_WEAPON_XM1014:
 			return "weapon_xm1014";
-			break;
 		case CS_WEAPON_P90:
 			return "weapon_p90";
-			break;
 		case CS_WEAPON_TMP:
 			return "weapon_tmp";
-			break;
 		case CS_WEAPON_M4A1:
 			return "weapon_m4a1";
-			break;
 		case CS_WEAPON_AWP:
 			return "weapon_awp";
-			break;
 		case CS_WEAPON_FIVESEVEN:
 			return "weapon_fiveseven";
-			break;
 		case CS_WEAPON_UMP45:
 			return "weapon_ump45";
-			break;
 		case CS_WEAPON_SG550:
 			return "weapon_ag550";
-			break;
 		case CS_WEAPON_SCOUT:
 			return "weapon_scout";
-			break;
 		case CS_WEAPON_MAC10:
 			return "weapon_mac10";
-			break;
 		case CS_WEAPON_G3SG1:
 			return "weapon_g3sg1";
-			break;
 		case CS_WEAPON_ELITE:
 			return "weapon_elite";
-			break;
 		case CS_WEAPON_P228:
 			return "weapon_p228";
-			break;
 		case CS_WEAPON_DEAGLE:
 			return "weapon_deagle";
-			break;
 		case CS_WEAPON_USP:
 			return "weapon_usp";
-			break;
 		case CS_WEAPON_GLOCK18:
 			return "weapon_glock18";
-			break;
 
-			// Counter-Strike 1.6
+		// Counter-Strike 1.6
 		case CS_WEAPON_FAMAS:
 			return "weapon_famas";
-			break;
 		case CS_WEAPON_GALIL:
 			return "weapon_galil";
-			break;
 
-			// Unconfirmed shield
+		// Unconfirmed shield
 		case CS_WEAPON_SHIELD:
 			return "weapon_shield";
-			break;
 		}
 	}
 
@@ -844,10 +816,10 @@ void UTIL_BotRadioMessage(cBot* pBot, int radio, char* arg1, char* arg2) {
 		pBot->console_nr = 1;     // Begin message
 
 		// 02/07/04 - pointed out, eliminate any possible 'devide by zero'
-		int iExtra = (100 / (pBot->ipCreateRadio + 1));
+		int iExtra = 100 / (pBot->ipCreateRadio + 1);
 		if (iExtra > 30)
 			iExtra = 30;
-		pBot->fDoRadio = gpGlobals->time + iExtra;
+		pBot->fDoRadio = gpGlobals->time + static_cast<float>(iExtra);
 	}
 }
 

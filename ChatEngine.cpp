@@ -100,7 +100,7 @@ void cChatEngine::think() {
     for (int i = 1; i <= gpGlobals->maxClients; i++) {
         edict_t *pPlayer = INDEXENT(i);
 
-        if (pPlayer && (!pPlayer->free)) {
+        if (pPlayer && !pPlayer->free) {
             char name[30], name2[30];
             // clear
             std::memset(name, 0, sizeof(name));
@@ -130,7 +130,7 @@ void cChatEngine::think() {
     // When length is not valid, get out.
     // 29/08/2019: Stefan, so let me get this. We declare the sentence to be max 128 chars, but then we still could end up with a longer one?
     // how did we allow for this to happen?
-    if (sentenceLength == 0 || sentenceLength >= (MAX_SENTENCE_LENGTH-1)) {
+    if (sentenceLength == 0 || sentenceLength >= MAX_SENTENCE_LENGTH-1) {
         // clear out sentence and sender
         std::memset(sentence, 0, sizeof(sentence));
         std::memset(sender, 0, sizeof(sender));
@@ -163,7 +163,7 @@ void cChatEngine::think() {
         if (sentence[c] == ' ' || sentence[c] == '\n' ||
             sentence[c] == '.' || sentence[c] == '?' ||
             sentence[c] == '!' || c == sentenceLength) {
-            // Now find the word and add up scors on the proper score blocks.
+            // Now find the word and add up scores on the proper score blocks.
 
             if (c == sentenceLength)
                 word[wc] = sentence[c];
@@ -242,7 +242,7 @@ void cChatEngine::think() {
             edict_t *pPlayer = INDEXENT(i);
 
             // skip invalid players and skip self (i.e. this bot)
-            if ((pPlayer) && (!pPlayer->free) && pSender != pPlayer) {
+            if (pPlayer && !pPlayer->free && pSender != pPlayer) {
 	            const bool bSenderAlive = IsAlive(pSender);      // CRASH : it sometimes crashes here
 	            const bool bPlayerAlive = IsAlive(pPlayer);
 
@@ -253,7 +253,7 @@ void cChatEngine::think() {
 
                 if (pBotPointer != nullptr)
                     if (RANDOM_LONG(0, 100) <
-                        (pBotPointer->ipChatRate + 25)) {
+                        pBotPointer->ipChatRate + 25) {
                         // When we have at least 1 sentence...
                         if (iMax > -1) {
                             // choose randomly a reply
@@ -343,9 +343,8 @@ void cChatEngine::think() {
                                 }
                                     // when no name pos is found, we just copy the string and say that (works ok)
                                 else
-                                    std::sprintf(chSentence, "%s \n",
-                                            ReplyBlock[iTheBlock].
-                                                    sentence[the_c]);
+	                                snprintf(chSentence, sizeof(chSentence), "%s \n",
+	                                         ReplyBlock[iTheBlock].sentence[the_c]);
 
                                 // reply:
                                 pBotPointer->PrepareChat(chSentence);

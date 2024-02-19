@@ -111,11 +111,11 @@ void pfnRemoveEntity(edict_t *e) {
 
 #if DO_DEBUG == 2
     {
-       fp = fopen("!rbdebug.txt", "a");
-       fprintf(fp, R"(pfnRemoveEntity: %x)", e);
+       fp = std::fopen("!rbdebug.txt", "a");
+       std::fprintf(fp, R"(pfnRemoveEntity: %x)", e);
        if (e->v.model != 0)
-          fprintf(fp, " model=%s\n", STRING(e->v.model));
-       fclose(fp);
+          std::fprintf(fp, " model=%s\n", STRING(e->v.model));
+       std::fclose(fp);
     }
 #endif
 
@@ -392,37 +392,38 @@ void pfnWriteString(const char *sz) {
 
     if (gpGlobals->deathmatch) {
         // Ditlew's Radio
-        if ((std::strstr(sz, "(RADIO):") != nullptr) && !radio_message) {
+        if (sz != nullptr && std::strstr(sz, "(RADIO):") != nullptr && !radio_message) {
             // We found an old radio message, we should convert the strings...
             radio_message = true;  // we found a radio message
 
             // Thank god Ditlew you already coded this...
-            const unsigned length = std::strlen(sz) - std::strlen(std::strstr(sz, " (RADIO)"));
-            std::strncpy(radio_messenger, sz, length);
+            const char* radio_ptr = std::strstr(sz, " (RADIO)");
+            if (radio_ptr != nullptr) {
+                const unsigned length = std::strlen(sz) - std::strlen(radio_ptr);
+                std::strncpy(radio_messenger, sz, length);
+            }
 
             // Now search for any compatible radio command (old string).
             // if found then convert the message in the new way so the code
             // thinks its CS 1.1 and thus every version lower then CS 1.1 should work too...
-            if ((std::strstr(sz, "Follow Me") != nullptr)) {
-                // convert string
+            if (std::strstr(sz, "Follow Me") != nullptr) {
                 std::strcpy(message, "#Follow me");
-            } else if ((std::strstr(sz, "You Take the Point") != nullptr)) {
-                // convert string
+            }
+            else if (std::strstr(sz, "You Take the Point") != nullptr) {
                 std::strcpy(message, "#You_take_the_point");
-            } else if ((std::strstr(sz, "Need backup") != nullptr)) {
-                // convert string
+            }
+            else if (std::strstr(sz, "Need backup") != nullptr) {
                 std::strcpy(message, "#Need_backup");
-            } else if ((std::strstr(sz, "Taking Fire.. Need Assistance!") != nullptr)) {
-                // convert string
+            }
+            else if (std::strstr(sz, "Taking Fire.. Need Assistance!") != nullptr) {
                 std::strcpy(message, "#Taking_fire");
-            } else if ((std::strstr(sz, "Team, fall back!") != nullptr)) {
-                // convert string
+            }
+            else if (std::strstr(sz, "Team, fall back!") != nullptr) {
                 std::strcpy(message, "#Team_fall_back");
-            } else if ((std::strstr(sz, "Go go go") != nullptr)) {
-                // convert string
+            }
+            else if (std::strstr(sz, "Go go go") != nullptr) {
                 std::strcpy(message, "#Go_go_go");
             }
-
         }
         /*
            else
@@ -551,15 +552,11 @@ const char *pfnCmd_Argv(int argc) {
     if (isFakeClientCommand) {
         if (argc == 0)
             RETURN_META_VALUE(MRES_SUPERCEDE, &g_argv[64]);
-
-        else if (argc == 1)
-            RETURN_META_VALUE(MRES_SUPERCEDE, &g_argv[128]);
-
-        else if (argc == 2)
-            RETURN_META_VALUE(MRES_SUPERCEDE, &g_argv[192]);
-
-        else
-            RETURN_META_VALUE(MRES_SUPERCEDE, NULL);
+        if (argc == 1)
+	        RETURN_META_VALUE(MRES_SUPERCEDE, &g_argv[128]);
+        if (argc == 2)
+	        RETURN_META_VALUE(MRES_SUPERCEDE, &g_argv[192]);
+        RETURN_META_VALUE(MRES_SUPERCEDE, NULL);
     }
     RETURN_META_VALUE(MRES_IGNORED, NULL);
 }
@@ -629,5 +626,5 @@ GetEngineFunctions(enginefuncs_t *pengfuncsFromEngine,
     meta_engfuncs.pfnSetClientMaxspeed = pfnSetClientMaxspeed;
     meta_engfuncs.pfnGetPlayerUserId = pfnGetPlayerUserId;
     std::memcpy(pengfuncsFromEngine, &meta_engfuncs, sizeof(enginefuncs_t));
-    return TRUE;
+    return true;
 }

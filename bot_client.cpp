@@ -58,11 +58,11 @@ static FILE *fp;
 // This message is sent when the Counter-Strike VGUI menu is displayed.
 void BotClient_CS_VGUI(void *p, int bot_index) {
     //DebugOut("bot_client: BotClient_CS_VGUI()\n");
-    if ((*static_cast<int*>(p)) == 2)       // is it a team select menu?
+    if (*static_cast<int*>(p) == 2)       // is it a team select menu?
         bots[bot_index].start_action = MSG_CS_TEAM_SELECT;
-    else if ((*static_cast<int*>(p)) == 26) // is is a terrorist model select menu?
+    else if (*static_cast<int*>(p) == 26) // is is a terrorist model select menu?
         bots[bot_index].start_action = MSG_CS_T_SELECT;
-    else if ((*static_cast<int*>(p)) == 27) // is is a counter-terrorist model select menu?
+    else if (*static_cast<int*>(p) == 27) // is is a counter-terrorist model select menu?
         bots[bot_index].start_action = MSG_CS_CT_SELECT;
 }
 
@@ -187,8 +187,8 @@ void BotClient_Valve_CurrentWeapon(void *p, int bot_index) {
 
         iClip = *static_cast<int*>(p);       // ammo currently in the clip for this weapon
 
-        if (iId <= 32) {
-            bots[bot_index].bot_weapons |= (1 << iId);     // set this weapon bit
+        if (iId < static_cast<int>(sizeof(weapon_defs) / sizeof(weapon_defs[0]))) {
+            bots[bot_index].bot_weapons |= 1 << iId;     // set this weapon bit
 
             if (iState == 1) {
                 bots[bot_index].current_weapon.iId = iId;   // weapon id
@@ -205,7 +205,6 @@ void BotClient_Valve_CurrentWeapon(void *p, int bot_index) {
             }
         }
     }
-
 }
 
 void BotClient_CS_CurrentWeapon(void *p, int bot_index) {
@@ -447,7 +446,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
         state = 0;
 
         damage_origin.z = *static_cast<float*>(p);
-        if ((damage_armor > 0) || (damage_taken > 0)) {
+        if (damage_armor > 0 || damage_taken > 0) {
 
             // Damage recieved:
             // - when the prev node was higher (so we are sure we do FIX the correct nodes!)
@@ -479,7 +478,7 @@ void BotClient_Valve_Damage(void *p, int bot_index) {
                 return;
 
             // depending on bot skill slow this bot down a bit
-//            pBot->f_move_speed *= (((10 - pBot->bot_skill) + 1) / 10);
+			// pBot->f_move_speed *= (((10 - pBot->bot_skill) + 1) / 10);
 
             // if the bot doesn't have an enemy and someone is shooting at it then
             // turn in the attacker's direction...
@@ -577,15 +576,16 @@ void BotClient_CS_SayText(void *p, int bot_index) {
 
                 std::strcpy(sentence, static_cast<char*>(p)); // the actual sentence
 
-                int length = 0;
+                unsigned int length = 0;
 
                 // FIXED: In any case that this might return NULL, do not crash the server
-                if (std::strstr(sentence, " : "))
-                    length = std::strlen(sentence) - std::strlen(std::strstr(sentence, " : "));
+                const char* found = std::strstr(sentence, " : ");
+                if (found != nullptr)
+                    length = std::strlen(sentence) - std::strlen(found);
 
                 int tc = 0;
 
-                for (int c = length; c < MAX_SENTENCE_LENGTH; c++) {
+                for (unsigned int c = length; c < MAX_SENTENCE_LENGTH; c++) {
                     chSentence[tc] = sentence[c];
                     tc++;
                 }
@@ -838,9 +838,9 @@ void BotClient_Valve_ScreenFade(void *p, int bot_index) {
         const int iCoverNode = NodeMachine.node_cover(iCurrentNode, iCurrentNode, pBot->pEdict);
 
         if (iCoverNode > -1) {
-//         pBot->forgetPath();
-//         pBot->rprint("Setting goal from screenfade");
-//         pBot->setGoalNode(iCoverNode);
+		// pBot->forgetPath();
+		// pBot->rprint("Setting goal from screenfade");
+		// pBot->setGoalNode(iCoverNode);
             pBot->rprint("TODO: Make bot react upon screenfade/flashbang\n");
         }
 

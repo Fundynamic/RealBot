@@ -106,54 +106,39 @@ bool GoodWeaponForTeam(int weapon, int team) {
             switch (weapon) {
                 case CS_WEAPON_SG552:
                     return false;
-                    break;
                 case CS_WEAPON_AK47:
                     return false;
-                    break;
                 case CS_WEAPON_DEAGLE:
                     return false;
-                    break;
                 case CS_WEAPON_MP5NAVY:
                     return false;
-                    break;
                 case CS_WEAPON_GALIL:
                     return false;
-                    break;
                 case CS_WEAPON_P90:
                     return false;
-                    break;
-                    // 30.8.04 added by frashman
+                // 30.8.04 added by frashman
                 case CS_WEAPON_G3SG1:
                     return false;
-                    break;
             }
         } else {
             switch (weapon) {
                 case CS_WEAPON_AUG:
                     return false;
-                    break;
                 case CS_WEAPON_DEAGLE:
                     return false;
-                    break;
                 case CS_WEAPON_M4A1:
                     return false;
-                    break;
                 case CS_WEAPON_MP5NAVY:
                     return false;
-                    break;
                 case CS_WEAPON_FAMAS:
                     return false;
-                    break;
                 case CS_WEAPON_P90:
                     return false;
-                    break;
-                    //30.8.04 added by Frashman
+                //30.8.04 added by Frashman
                 case CS_WEAPON_SG550:
                     return false;
-                    break;
                 case CS_DEFUSEKIT:
                     return false;
-                    break;
             }
         }
     }
@@ -243,8 +228,8 @@ void BotDecideWhatToBuy(cBot *pBot) {
                 // 31.08.04 Frashman Filter Out all except PRIMARY and SHIELD
                 // SHIELD is used as primary weapon
 
-                if ((UTIL_GiveWeaponType(weapons_table[i].iId) != PRIMARY)
-                    && (UTIL_GiveWeaponType(weapons_table[i].iId) != SHIELD))
+                if (UTIL_GiveWeaponType(weapons_table[i].iId) != PRIMARY
+	                && UTIL_GiveWeaponType(weapons_table[i].iId) != SHIELD)
                     continue;
 
                 // must be a weapon that the team can buy (CT/T weapon)
@@ -287,8 +272,8 @@ void BotDecideWhatToBuy(cBot *pBot) {
             // TODO: this should be dependant on something else... not only money
             // 01.09.04 Frashman if buyed a Shield, try to buy a good Pistol
             if (iMoneyLeft >= 600)
-                if ((RANDOM_LONG(0, 100) < 15)
-                    || (pBot->iPrimaryWeapon == CS_WEAPON_SHIELD))
+                if (RANDOM_LONG(0, 100) < 15
+                    || pBot->iPrimaryWeapon == CS_WEAPON_SHIELD)
                     pBot->buy_secondary = true;
         }
     } else if (pBot->buy_secondary) {
@@ -496,7 +481,7 @@ void BotConsole(cBot *pBot) {
         if (pBot->console_nr > 0)
             pBot->console_nr++;    // Increase command
 
-        return;
+        //return;
     }
 
 }                               // BotConsole()

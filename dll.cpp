@@ -71,7 +71,7 @@ float f_load_time = 0.0f;
 float f_minplayers_think = 0.0f; // timer used to add realbots if internet play enabled
 int mod_id = CSTRIKE_DLL;       // should be changed to 0 when we are going to do multi-mod stuff
 int m_spriteTexture = 0;
-bool isFakeClientCommand = FALSE;
+bool isFakeClientCommand = false;
 int fake_arg_count;
 float bot_check_time = 30.0f;
 int min_bots = -1;
@@ -79,17 +79,17 @@ int max_bots = -1;
 int min_players = -1;           // minimum amount of players that should be in the server all the time
 int num_bots = 0;
 int prev_num_bots = 0;
-bool g_GameRules = FALSE;
+bool g_GameRules = false;
 edict_t *clients[32];
 edict_t *pHostEdict = nullptr;
 float welcome_time = 0.0f;
 bool welcome_sent = false;
 
 FILE *bot_cfg_fp = nullptr;
-bool need_to_open_cfg = TRUE;
+bool need_to_open_cfg = true;
 float bot_cfg_pause_time = 0.0f;
 float respawn_time = 0.0f;
-bool spawn_time_reset = FALSE;
+bool spawn_time_reset = false;
 
 // Interval between joining bots.
 int internet_max_interval = 30;
@@ -175,23 +175,23 @@ C_DLLEXPORT int Meta_Query(const char *ifvers, plugin_info_t **pPlugInfo,
         // if plugin has later interface version, it's incompatible (update metamod)
         sscanf(ifvers, "%d:%d", &mmajor, &mminor);
         sscanf(META_INTERFACE_VERSION, "%d:%d", &pmajor, &pminor);
-        if ((pmajor > mmajor) || ((pmajor == mmajor) && (pminor > mminor))) {
+        if (pmajor > mmajor || (pmajor == mmajor && pminor > mminor)) {
             LOG_CONSOLE(PLID,
                         "metamod version is too old for this plugin; update metamod");
             LOG_ERROR(PLID,
                       "metamod version is too old for this plugin; update metamod");
-            return (FALSE);
+            return false;
         }
             // if plugin has older major interface version, it's incompatible (update plugin)
-        else if (pmajor < mmajor) {
-            LOG_CONSOLE(PLID,
-                        "metamod version is incompatible with this plugin; please find a newer version of this plugin");
-            LOG_ERROR(PLID,
-                      "metamod version is incompatible with this plugin; please find a newer version of this plugin");
-            return (FALSE);
+        if (pmajor < mmajor) {
+	        LOG_CONSOLE(PLID,
+	                    "metamod version is incompatible with this plugin; please find a newer version of this plugin");
+	        LOG_ERROR(PLID,
+	                  "metamod version is incompatible with this plugin; please find a newer version of this plugin");
+	        return false;
         }
     }
-    return (TRUE);               // tell metamod this plugin looks safe
+    return true;               // tell metamod this plugin looks safe
 }
 
 C_DLLEXPORT int
@@ -209,7 +209,7 @@ Meta_Attach(PLUG_LOADTIME now, META_FUNCTIONS *pFunctionTable,
         LOG_ERROR(PLID,
                   "%s: plugin NOT attaching (can't load plugin right now)",
                   Plugin_info.name);
-        return (FALSE);           // returning FALSE prevents metamod from attaching this plugin
+        return false;           // returning FALSE prevents metamod from attaching this plugin
     }
     // keep track of the pointers to engine function tables metamod gives us
     gpMetaGlobals = pMGlobals;
@@ -226,7 +226,7 @@ Meta_Attach(PLUG_LOADTIME now, META_FUNCTIONS *pFunctionTable,
     // Notify user that 'realbot' command is regged
     LOG_CONSOLE(PLID, "realbot - command prefix is now reserved.");
     LOG_MESSAGE(PLID, "realbot - command prefix is now reserved.");
-    return (TRUE);               // returning TRUE enables metamod to attach this plugin
+    return true;               // returning TRUE enables metamod to attach this plugin
 }
 
 C_DLLEXPORT int Meta_Detach(PLUG_LOADTIME now, PL_UNLOAD_REASON reason) {
@@ -241,12 +241,12 @@ C_DLLEXPORT int Meta_Detach(PLUG_LOADTIME now, PL_UNLOAD_REASON reason) {
         LOG_ERROR(PLID,
                   "%s: plugin NOT detaching (can't unload plugin right now)",
                   Plugin_info.name);
-        return (FALSE);           // returning FALSE prevents metamod from unloading this plugin
+        return false;           // returning FALSE prevents metamod from unloading this plugin
     }
 
     NodeMachine.FreeVisibilityTable();
     free(message);
-    return (TRUE);               // returning TRUE enables metamod to unload this plugin
+    return true;               // returning TRUE enables metamod to unload this plugin
 }
 
 // END of Metamod stuff
@@ -254,7 +254,7 @@ C_DLLEXPORT int Meta_Detach(PLUG_LOADTIME now, PL_UNLOAD_REASON reason) {
 #ifdef _WIN32
 // Required DLL entry point
 int WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) {
-   return TRUE;
+   return true;
 }
 
 #endif                          /*  */
@@ -271,16 +271,16 @@ GiveFnptrsToDll(enginefuncs_t *pengfuncsFromEngine,
 }
 
 void GameDLLInit() {
-	FILE* fplog = fopen("reallog.txt", "wt");
+	FILE* fplog = std::fopen("reallog.txt", "wt");
 
     if (fplog) {
-        fprintf(fplog, "Realbot Logbook\n");
-        fprintf(fplog, "Version %s\n\n", rb_version_nr);
-        fclose(fplog);
+        std::fprintf(fplog, "Realbot Logbook\n");
+        std::fprintf(fplog, "Version %s\n\n", rb_version_nr);
+        std::fclose(fplog);
     }
 
     // and now open it for the entire bot-dll-lifetime
-    fpRblog = fopen("reallog.txt", "at");
+    fpRblog = std::fopen("reallog.txt", "at");
 
     rblog("Initializing clients..");
     for (int i = 0; i < 32; i++)
@@ -289,22 +289,22 @@ void GameDLLInit() {
 
     // initialize the bots array of structures...
     rblog("Initializing memory for bots array..");
-    std::memset(bots, 0.0f, sizeof(bots));
+    std::memset(bots, 0, sizeof(bots));
     rblog("OK\n");
 
     rblog("Verifying realbot is installed correctly..");
 
 	bool bInstalledCorrectly = false;
-    FILE* fp = fopen("realbot/dll/realbot_mm.dll", "rb");
+    FILE* fp = std::fopen("realbot/dll/realbot_mm.dll", "rb");
     if (fp != nullptr) {
         bInstalledCorrectly = true;
-        fclose(fp);
+        std::fclose(fp);
     }
 
-    fp = fopen("realbot/dll/realbot_mm_i386.so", "rb");
+    fp = std::fopen("realbot/dll/realbot_mm.so", "rb");
     if (fp != nullptr) {
         bInstalledCorrectly = true;
-        fclose(fp);
+        std::fclose(fp);
     }
 
     if (bInstalledCorrectly)
@@ -345,15 +345,15 @@ void GameDLLInit() {
     // if you know a more orthodox way of doing this, please tell me.
 
     // test file, if found = STEAM Linux/Win32 dedicated server
-    fp = fopen("valve/steam.inf", "rb");
+    fp = std::fopen("valve/steam.inf", "rb");
     if (fp != nullptr) {
-        fclose(fp);               // test was successful, close it
+        std::fclose(fp);               // test was successful, close it
         counterstrike = 1;        // its cs 1.6
     }
     // test file, if found = STEAM Win32 listenserver
-    fp = fopen("FileSystem_Steam.dll", "rb");
+    fp = std::fopen("FileSystem_Steam.dll", "rb");
     if (fp != nullptr) {
-        fclose(fp);               // test was successful, close it
+        std::fclose(fp);               // test was successful, close it
         counterstrike = 1;        // its cs 1.6
     }
 
@@ -385,10 +385,10 @@ int Spawn(edict_t *pent) {
             // sound
             PRECACHE_SOUND("misc/imgood12.wav");
 
-            g_GameRules = TRUE;
+            g_GameRules = true;
             //bot_cfg_pause_time = 0.0;
             respawn_time = 0.0f;
-            spawn_time_reset = FALSE;
+            spawn_time_reset = false;
             prev_num_bots = num_bots;
             num_bots = 0;
             bot_check_time = gpGlobals->time + 30.0f;
@@ -440,7 +440,7 @@ ClientConnect(edict_t *pEntity, const char *pszName,
             }
             // if there are currently more than the minimum number of bots running
             // then kick one of the bots off the server...
-            if ((count > min_bots) && (min_bots != -1)) {
+            if (count > min_bots && min_bots != -1) {
                 for (i = 0; i < 32; i++) {
                     if (bots[i].bIsUsed)     // is this slot used?
                     {
@@ -463,7 +463,7 @@ void ClientDisconnect(edict_t *pEntity) {
 
     if (gpGlobals->deathmatch) {
 	    int i = 0;
-        while ((i < 32) && (clients[i] != pEntity))
+        while (i < 32 && clients[i] != pEntity)
             i++;
 
         if (i < 32)
@@ -488,7 +488,7 @@ void ClientDisconnect(edict_t *pEntity) {
 void ClientPutInServer(edict_t *pEntity) {
     int i = 0;
 
-    while ((i < 32) && (clients[i] != nullptr))
+    while (i < 32 && (clients[i] != nullptr))
         i++;
 
     if (i < 32)
@@ -591,7 +591,7 @@ void StartFrame() {
     // which is determined by comparing the previously recorded time (at the end of this function)
     // with the current time. If the current time somehow was less (before) the previous time, then we
     // assume a reset/restart/reload of a map.
-    if ((gpGlobals->time + 0.1f) < previous_time) {
+    if (gpGlobals->time + 0.1f < previous_time) {
 	    static int index;
 	    static float check_server_cmd = 0.0f;
 	    rblog("NEW MAP because time is reset #1\n");
@@ -615,7 +615,7 @@ void StartFrame() {
             }
 
             // check for any bots that were very recently kicked...
-            if ((pBot->fKickTime + 5.0f) > previous_time) {
+            if (pBot->fKickTime + 5.0f > previous_time) {
                 pBot->respawn_state = RESPAWN_NEED_TO_RESPAWN;
                 count++;
             } else {
@@ -656,7 +656,7 @@ void StartFrame() {
             for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
                 edict_t *pPlayer = INDEXENT(iIndex);
                 // skip invalid players
-                if ((pPlayer) && (!pPlayer->free)) {
+                if (pPlayer && !pPlayer->free) {
                     // we found a player which is alive. w00t
                     welcome_time = gpGlobals->time + 10.0f;
                     break;
@@ -664,7 +664,7 @@ void StartFrame() {
             }
         }
 
-        if ((welcome_time > 0.0f) && (welcome_time < gpGlobals->time)) {
+        if (welcome_time > 0.0f && welcome_time < gpGlobals->time) {
             // let's send a welcome message to this client...
             char total_welcome[256];
             std::sprintf(total_welcome, "RealBot - Version %s\nBy Stefan Hendriks\n", rb_version_nr);
@@ -682,14 +682,14 @@ void StartFrame() {
             for (iIndex = 1; iIndex <= gpGlobals->maxClients; iIndex++) {
                 edict_t *pPlayer = INDEXENT(iIndex);
                 // skip invalid players and skip self (i.e. this bot)
-                if ((pPlayer) && (!pPlayer->free)) {
+                if (pPlayer && !pPlayer->free) {
                     // skip bots!
                     if (UTIL_GetBotPointer(pPlayer))
                         continue;
 
                     // skip fake clients
-                    if ((pPlayer->v.flags & FL_THIRDPARTYBOT)
-                        || (pPlayer->v.flags & FL_FAKECLIENT))
+                    if (pPlayer->v.flags & FL_THIRDPARTYBOT
+	                    || pPlayer->v.flags & FL_FAKECLIENT)
                         continue;
 
                     // random color
@@ -760,7 +760,7 @@ void StartFrame() {
         for (int i = 1; i <= gpGlobals->maxClients; i++) {
             edict_t *pPlayer = INDEXENT(i);
             // skip invalid players and skip self (i.e. this bot)
-            if ((pPlayer) && (!pPlayer->free)) {
+            if (pPlayer && !pPlayer->free) {
                 // a bot
                 if (UTIL_GetBotPointer(pPlayer) != nullptr)
                     iBots++;
@@ -831,7 +831,7 @@ void StartFrame() {
 
     if (internet_addbot) {
         // When timer is set, create a new bot.
-        if (add_timer > gpGlobals->time && internet_addbot) {
+        if (add_timer > gpGlobals->time) {
             internet_addbot = false;
             Game.createBot(nullptr, nullptr, nullptr, nullptr, nullptr);
             bot_check_time = gpGlobals->time + 8.0f;
@@ -851,8 +851,8 @@ void StartFrame() {
 
     for (bot_index = 0; bot_index < gpGlobals->maxClients; bot_index++) {
         cBot &bot = bots[bot_index];
-        if ((bot.bIsUsed) &&                        // is this slot used AND
-            (bot.respawn_state == RESPAWN_IDLE))    // not respawning
+        if (bot.bIsUsed &&                        // is this slot used AND
+            bot.respawn_state == RESPAWN_IDLE)    // not respawning
         {
             if (bot.fUpdateTime < gpGlobals->time) {
                 BotThink(&bot);
@@ -921,11 +921,11 @@ void StartFrame() {
     }
 
     // are we currently respawning bots and is it time to spawn one yet?
-    if ((respawn_time > 1.0f) && (respawn_time <= gpGlobals->time)) {
+    if (respawn_time > 1.0f && respawn_time <= gpGlobals->time) {
         int index = 0;
         // find bot needing to be respawned...
-        while ((index < 32)
-               && (bots[index].respawn_state != RESPAWN_NEED_TO_RESPAWN))
+        while (index < 32
+               && bots[index].respawn_state != RESPAWN_NEED_TO_RESPAWN)
             index++;
 
         if (index < 32) {
@@ -963,14 +963,14 @@ void StartFrame() {
 	        char msg[256];
 	        char filename[256];
 
-            need_to_open_cfg = FALSE;   // only do this once!!!
+            need_to_open_cfg = false;   // only do this once!!!
 
             UTIL_BuildFileNameRB("bot.cfg", filename);
 
             std::sprintf(msg, "Executing %s\n", filename);
             ALERT(at_console, msg);
 
-            bot_cfg_fp = fopen(filename, "r");
+            bot_cfg_fp = std::fopen(filename, "r");
 
             if (bot_cfg_fp == nullptr)
                 ALERT(at_console, "bot.cfg file not found\n");
@@ -984,7 +984,7 @@ void StartFrame() {
         if (!IS_DEDICATED_SERVER() && !spawn_time_reset) {
             if (pHostEdict != nullptr) {
                 if (IsAlive(pHostEdict)) {
-                    spawn_time_reset = TRUE;
+                    spawn_time_reset = true;
 
                     if (respawn_time >= 1.0f)
                         respawn_time = std::min(respawn_time, gpGlobals->time + 1.0f);
@@ -997,8 +997,8 @@ void StartFrame() {
             }
         }
         // DO BOT.CFG crap here
-        if ((bot_cfg_fp) && (bot_cfg_pause_time >= 1.0f)
-            && (bot_cfg_pause_time <= gpGlobals->time)) {
+        if (bot_cfg_fp && bot_cfg_pause_time >= 1.0f
+            && bot_cfg_pause_time <= gpGlobals->time) {
             // process bot.cfg file options...
             ProcessBotCfgFile();
         }
@@ -1008,7 +1008,7 @@ void StartFrame() {
     // remember the time
     previous_time = gpGlobals->time;
 
-//    REALBOT_PRINT("StartFrame", "END");
+	// REALBOT_PRINT("StartFrame", "END");
     RETURN_META(MRES_IGNORED);
 }
 
@@ -1017,15 +1017,15 @@ void FakeClientCommand(edict_t *pBot, char *arg1, char *arg2, char *arg3) {
 
     std::memset(g_argv, 0, sizeof(g_argv));
 
-    isFakeClientCommand = TRUE;
+    isFakeClientCommand = true;
 
-    if ((arg1 == nullptr) || (*arg1 == 0))
+    if (arg1 == nullptr || *arg1 == 0)
         return;
 
-    if ((arg2 == nullptr) || (*arg2 == 0)) {
+    if (arg2 == nullptr || *arg2 == 0) {
         length = std::sprintf(&g_argv[0], "%s", arg1);
         fake_arg_count = 1;
-    } else if ((arg3 == nullptr) || (*arg3 == 0)) {
+    } else if (arg3 == nullptr || *arg3 == 0) {
         length = std::sprintf(&g_argv[0], "%s %s", arg1, arg2);
         fake_arg_count = 2;
     } else {
@@ -1046,7 +1046,7 @@ void FakeClientCommand(edict_t *pBot, char *arg1, char *arg2, char *arg3) {
     // allow the MOD DLL to execute the ClientCommand...
     MDLL_ClientCommand(pBot);
 
-    isFakeClientCommand = FALSE;
+    isFakeClientCommand = false;
 }
 
 /*void UpdateClientData(const edict_s* ent, int sendweapons, clientdata_s* cd) // KWo 02.03.2010 - thanks to MeRcyLeZZ
@@ -1135,7 +1135,7 @@ void ProcessBotCfgFile() {
     while (ch == ' ')
         ch = fgetc(bot_cfg_fp);
 
-    while ((ch != EOF) && (ch != '\r') && (ch != '\n')) {
+    while (ch != EOF && ch != '\r' && ch != '\n') {
         if (ch == '\t')           // convert tabs to spaces
             ch = ' ';
 
@@ -1144,7 +1144,7 @@ void ProcessBotCfgFile() {
         ch = fgetc(bot_cfg_fp);
 
         // skip multiple spaces in input file
-        while ((cmd_line[cmd_index] == ' ') && (ch == ' '))
+        while (cmd_line[cmd_index] == ' ' && ch == ' ')
             ch = fgetc(bot_cfg_fp);
 
         cmd_index++;
@@ -1156,7 +1156,7 @@ void ProcessBotCfgFile() {
     }
     // if reached end of file, then close it
     if (ch == EOF) {
-        fclose(bot_cfg_fp);
+        std::fclose(bot_cfg_fp);
 
         bot_cfg_fp = nullptr;
 
@@ -1174,7 +1174,7 @@ void ProcessBotCfgFile() {
 	const char* arg1 = arg2 = arg3 = arg4 = nullptr;
 
     // skip to blank or end of string...
-    while ((cmd_line[cmd_index] != ' ') && (cmd_line[cmd_index] != 0))
+    while (cmd_line[cmd_index] != ' ' && cmd_line[cmd_index] != 0)
         cmd_index++;
 
     if (cmd_line[cmd_index] == ' ') {
@@ -1182,7 +1182,7 @@ void ProcessBotCfgFile() {
         arg1 = &cmd_line[cmd_index];
 
         // skip to blank or end of string...
-        while ((cmd_line[cmd_index] != ' ') && (cmd_line[cmd_index] != 0))
+        while (cmd_line[cmd_index] != ' ' && cmd_line[cmd_index] != 0)
             cmd_index++;
 
         if (cmd_line[cmd_index] == ' ') {
@@ -1191,7 +1191,7 @@ void ProcessBotCfgFile() {
 
 
             // skip to blank or end of string...
-            while ((cmd_line[cmd_index] != ' ') && (cmd_line[cmd_index] != 0))
+            while (cmd_line[cmd_index] != ' ' && cmd_line[cmd_index] != 0)
                 cmd_index++;
 
             if (cmd_line[cmd_index] == ' ') {
@@ -1199,8 +1199,8 @@ void ProcessBotCfgFile() {
                 arg3 = &cmd_line[cmd_index];
 
                 // skip to blank or end of string...
-                while ((cmd_line[cmd_index] != ' ')
-                       && (cmd_line[cmd_index] != 0))
+                while (cmd_line[cmd_index] != ' '
+                       && cmd_line[cmd_index] != 0)
                     cmd_index++;
 
                 if (cmd_line[cmd_index] == ' ') {
@@ -1211,7 +1211,7 @@ void ProcessBotCfgFile() {
         }
     }
 
-    if ((cmd_line[0] == '#') || (cmd_line[0] == 0))
+    if (cmd_line[0] == '#' || cmd_line[0] == 0)
         return;                   // return if comment or blank line
 
     if (std::strcmp(cmd, "pause") == 0) {
@@ -1262,7 +1262,7 @@ void RealBot_ServerCommand() {
         SERVER_PRINT("realbot server [subcommand]\n");
         SERVER_PRINT("=====================================\n");
     } else if (FStrEq(pcmd, "chatrate")) {
-        if ((arg1 != nullptr) && (*arg1 != 0)) {
+        if (arg1 != nullptr && *arg1 != 0) {
             Game.iMaxSentences = std::atoi(arg1);
             if (Game.iMaxSentences < -1)
                 Game.iMaxSentences = -1;
@@ -1294,7 +1294,7 @@ void RealBot_ServerCommand() {
             std::sprintf(cMessage,
                     "REALBOT: Failed creating bot, server is full.");
     } else if (FStrEq(pcmd, "walkwithknife")) {
-        if ((arg1 != nullptr) && (*arg1 != 0)) {
+        if (arg1 != nullptr && *arg1 != 0) {
 	        const float fVar = std::atof(arg1);
 
             // Only set when valid
@@ -1316,9 +1316,9 @@ void RealBot_ServerCommand() {
         } else
             std::sprintf(cMessage, "REALBOT: No valid argument given.");
     } else if (FStrEq(pcmd, "max")) {
-        if ((arg1 != nullptr) && (*arg1 != 0)) {
+        if (arg1 != nullptr && *arg1 != 0) {
             max_bots = std::atoi(arg1);
-            if ((max_bots < 0) || (max_bots > 31))
+            if (max_bots < 0 || max_bots > 31)
                 max_bots = -1;
 
             // Show amount set
@@ -1356,7 +1356,7 @@ void RealBot_ServerCommand() {
         std::sprintf(cMessage, "REALBOT: Killing all bots.");
         end_round = true;
     } else if (FStrEq(pcmd, "csversion")) {
-        if ((arg1 != nullptr) && (*arg1 != 0)) {
+        if (arg1 != nullptr && *arg1 != 0) {
 	        const int temp = std::atoi(arg1);
             if (temp <= 0)
                 counterstrike = 0;  // cs 1.5
@@ -1379,7 +1379,7 @@ void RealBot_ServerCommand() {
                         "REALBOT: bot-rules are set for Counter-Strike 1.6.");
         }
     } else if (FStrEq(pcmd, "internet")) {
-        if ((arg1 != nullptr) && (*arg1 != 0)) {
+        if (arg1 != nullptr && *arg1 != 0) {
 
             // switch on/off internet mode
             const int temp = std::atoi(arg1);
@@ -1398,7 +1398,7 @@ void RealBot_ServerCommand() {
     } else if (FStrEq(pcmd, "internet_interval")) {
 
         // 1st argument
-        if ((arg1 != nullptr) && (*arg1 != 0)) {
+        if (arg1 != nullptr && *arg1 != 0) {
 
             // switch on/off internet mode
             int temp = std::atoi(arg1);
@@ -1409,7 +1409,7 @@ void RealBot_ServerCommand() {
             }
         }
         // 2nd argument
-        if ((arg2 != nullptr) && (*arg2 != 0)) {
+        if (arg2 != nullptr && *arg2 != 0) {
 
             // switch on/off internet mode
             int temp = std::atoi(arg2);
@@ -1426,7 +1426,7 @@ void RealBot_ServerCommand() {
     } else if (FStrEq(pcmd, "remove") && kick_amount_bots == 0) {
 
         // ARG1 - Amount
-        if ((arg1 != nullptr) && (*arg1 != 0)) {
+        if (arg1 != nullptr && *arg1 != 0) {
 
             // get amount
             const int temp = std::atoi(arg1);
@@ -1437,7 +1437,7 @@ void RealBot_ServerCommand() {
                 kick_amount_bots = 0;
         }
         // ARG 2 - Team
-        if ((arg2 != nullptr) && (*arg2 != 0)) {
+        if (arg2 != nullptr && *arg2 != 0) {
 
             // get team
             int team = 0;
@@ -1465,16 +1465,16 @@ void RealBot_ServerCommand() {
     } else if (FStrEq(pcmd, "roundlimit")) {
 
         // Check if Arguments are valid
-        if (((arg2 != nullptr) && (*arg2 != 0))
-            && ((arg1 != nullptr) && (*arg1 != 0))) {
+        if (arg2 != nullptr && *arg2 != 0
+            && (arg1 != nullptr && *arg1 != 0)) {
             int s1 = -1, s2 = -1;
 
             // argument 1
-            if ((arg1 != nullptr) && (*arg1 != 0))
+            if (arg1 != nullptr && *arg1 != 0)
                 s1 = std::atoi(arg1);
 
             // argument 2
-            if ((arg2 != nullptr) && (*arg2 != 0))
+            if (arg2 != nullptr && *arg2 != 0)
                 s2 = std::atoi(arg2);
             Game.SetPlayingRounds(s1, s2);
             std::sprintf(cMessage,
@@ -1487,11 +1487,11 @@ void RealBot_ServerCommand() {
         int s1 = -2, s2 = -2;
 
         // argument 1
-        if ((arg1 != nullptr) && (*arg1 != 0))
+        if (arg1 != nullptr && *arg1 != 0)
             s1 = std::atoi(arg1);
 
         // argument 2
-        if ((arg2 != nullptr) && (*arg2 != 0))
+        if (arg2 != nullptr && *arg2 != 0)
             s2 = std::atoi(arg2);
 
         // When first argument is invalid
@@ -1519,7 +1519,7 @@ void RealBot_ServerCommand() {
                     Game.iRandomMinSkill, Game.iRandomMaxSkill);
         }
     } else if (FStrEq(pcmd, "autoskill")) {
-        if ((arg1 != nullptr) && (*arg1 != 0)) {
+        if (arg1 != nullptr && *arg1 != 0) {
 	        const int temp = std::atoi(arg1);
             if (temp == 1)
                 autoskill = true;
@@ -1533,7 +1533,7 @@ void RealBot_ServerCommand() {
         else
             std::sprintf(cMessage, "REALBOT: Auto adjust skill - disabled.");
     } else if (FStrEq(pcmd, "override_skill")) {
-        if ((arg1 != nullptr) && (*arg1 != 0)) {
+        if (arg1 != nullptr && *arg1 != 0) {
 	        const int temp = std::atoi(arg1);
             if (temp == 1)
                 Game.iOverrideBotSkill = GAME_YES;
@@ -1549,9 +1549,9 @@ void RealBot_ServerCommand() {
             std::sprintf(cMessage,
                     "REALBOT: Using default bot skill at all times.");
     } else if (FStrEq(pcmd, "skill")) {
-        if ((arg1 != nullptr) && (*arg1 != 0)) {
+        if (arg1 != nullptr && *arg1 != 0) {
 	        const int temp = std::atoi(arg1);
-            if ((temp < -1) || (temp > 10)) {
+            if (temp < -1 || temp > 10) {
                 std::sprintf(cMessage,
                         "REALBOT: Invalid argument given - default skill = %d.",
                         Game.iDefaultBotSkill);
@@ -1571,7 +1571,7 @@ void RealBot_ServerCommand() {
     else if (FStrEq(pcmd, "server")) {
         // Minimum amount of playing players... bots or not
         if (FStrEq(arg1, "players")) {
-            if ((arg2 != nullptr) && (*arg2 != 0)) {
+            if (arg2 != nullptr && *arg2 != 0) {
                 int temp = std::atoi(arg2);      // argument
                 if (temp > 31)
                     temp = 31;
@@ -1590,7 +1590,7 @@ void RealBot_ServerCommand() {
             // Broadcast what?
             if (FStrEq(arg2, "version")) {
                 // How do we broadcast version message?
-                if ((arg3 != nullptr) && (*arg3 != 0)) {
+                if (arg3 != nullptr && *arg3 != 0) {
                     int temp = std::atoi(arg3);   // argument
                     if (temp <= 0)
                         temp = 0;
@@ -1620,7 +1620,7 @@ void RealBot_ServerCommand() {
 
             } else if (FStrEq(arg2, "kills")) {
                 // How do we broadcast kills by bots?
-                if ((arg3 != nullptr) && (*arg3 != 0)) {
+                if (arg3 != nullptr && *arg3 != 0) {
                     int temp = std::atoi(arg3);   // argument
                     if (temp <= 0)
                         temp = 0;
@@ -1655,7 +1655,7 @@ void RealBot_ServerCommand() {
                 }
             } else if (FStrEq(arg2, "deaths")) {
                 // How do we broadcast deaths by bots.
-                if ((arg3 != nullptr) && (*arg3 != 0)) {
+                if (arg3 != nullptr && *arg3 != 0) {
                     int temp = std::atoi(arg3);   // argument
                     if (temp <= 0)
                         temp = 0;
@@ -1711,7 +1711,7 @@ void RealBot_ServerCommand() {
                 bool bValidArg = false;
 
                 // check for valid argument
-                if ((arg2 != nullptr) && (*arg2 != 0)) {
+                if (arg2 != nullptr && *arg2 != 0) {
 	                const int iTo = std::atoi(arg2);    // add connection TO
 
                     // Add this connection
@@ -1739,7 +1739,7 @@ void RealBot_ServerCommand() {
                 bool bValidArg = false;
 
                 // check for valid argument
-                if ((arg2 != nullptr) && (*arg2 != 0)) {
+                if (arg2 != nullptr && *arg2 != 0) {
 	                const int iTo = std::atoi(arg2);    // remove connection TO
 
                     // remove this connection
@@ -1849,11 +1849,11 @@ void RealBot_ServerCommand() {
         // Don't care whether we are close to a node...
         if (FStrEq(arg1, "connect")) {
             // check for valid argument
-            if ((arg2 != nullptr) && (*arg2 != 0) && (arg3 != nullptr)
-                && (*arg3 != 0)) {
+            if (arg2 != nullptr && *arg2 != 0 && arg3 != nullptr
+                && *arg3 != 0) {
 	            const int Node1 = std::atoi(arg2);     // add connection TO
 	            const int Node2 = std::atoi(arg3);     // add connection TO
-                if ((Node1 >= 0) && (Node2 >= 0)
+                if (Node1 >= 0 && Node2 >= 0
                     && NodeMachine.add_neighbour_node(Node1, Node2))
                     std::sprintf(cMessage,
                             "NODES EDITOR: Added connection from node %d to node %d.",
@@ -1866,11 +1866,11 @@ void RealBot_ServerCommand() {
                         "NODES EDITOR: this command requires TWO numeric arguments!");
         } else if (FStrEq(arg1, "disconnect")) {
             // check for valid argument
-            if ((arg2 != nullptr) && (*arg2 != 0) && (arg3 != nullptr)
-                && (*arg3 != 0)) {
+            if (arg2 != nullptr && *arg2 != 0 && arg3 != nullptr
+                && *arg3 != 0) {
 	            const int Node1 = std::atoi(arg2);
 	            const int Node2 = std::atoi(arg3);
-                if ((Node1 >= 0) && (Node2 >= 0)
+                if (Node1 >= 0 && Node2 >= 0
                     && NodeMachine.removeConnection(Node1, Node2))
                     std::sprintf(cMessage,
                             "NODES EDITOR: Removed connection from node %d to node %d.",
@@ -1891,7 +1891,7 @@ void RealBot_ServerCommand() {
         // Arg 1 is command:
         if (FStrEq(arg1, "dontshoot")) { // realbot debug dontshoot [1/0]
             // check for valid argument
-            if ((arg2 != nullptr) && (*arg2 != 0)) {
+            if (arg2 != nullptr && *arg2 != 0) {
 	            const int temp = std::atoi(arg2);
                 if (temp)
                     Game.bDoNotShoot = true;
@@ -1906,7 +1906,7 @@ void RealBot_ServerCommand() {
         }
             // 17/07/04
         else if (FStrEq(arg1, "pistols")) { // realbot debug pistols [1/0]
-            if ((arg2 != nullptr) && (*arg2 != 0)) {
+            if (arg2 != nullptr && *arg2 != 0) {
 	            const int temp = std::atoi(arg2);
                 if (temp)
                     Game.bPistols = true;
@@ -1926,7 +1926,7 @@ void RealBot_ServerCommand() {
             // Print information about all current bots
         {
 	        rblog("Dumping information about all bots:\n");
-            for (int iBot = 0; (iBot < 32) && (bots[iBot].bIsUsed == true); iBot++) {
+            for (int iBot = 0; iBot < 32 && bots[iBot].bIsUsed == true; iBot++) {
                 bots[iBot].Dump();
             }
 
@@ -1937,7 +1937,7 @@ void RealBot_ServerCommand() {
                 Game.bDebug = -2;
                 std::sprintf(cMessage, "RBDEBUG: Debug messages off.");
             } else {
-                if ((arg2 != nullptr) && (*arg2 != 0)) {
+                if (arg2 != nullptr && *arg2 != 0) {
 	                const int temp = std::atoi(arg2);
                     Game.bDebug = temp;
                     std::sprintf(cMessage, "RBDEBUG: Debug messages on for bot [%d].", Game.bDebug);
@@ -1974,9 +1974,9 @@ void RealBot_ServerCommand() {
                     std::sprintf(cMessage, "RBDEBUG: Drawing nodes - disabled.");
             } else if (FStrEq(arg2, "path")) {
                 int iFrom = -1, iTo = -1;
-                if ((arg3 != nullptr) && (*arg3 != 0))
+                if (arg3 != nullptr && *arg3 != 0)
                     iFrom = std::atoi(arg3);
-                if ((arg4 != nullptr) && (*arg4 != 0))
+                if (arg4 != nullptr && *arg4 != 0)
                     iTo = std::atoi(arg4);
 
                 if (iFrom > -1) {
@@ -1991,7 +1991,7 @@ void RealBot_ServerCommand() {
                     std::sprintf(cMessage, "RBDEBUG: Usage: realbot debug nodes path <fromNode> <toNode>");
                 }
             } else if (FStrEq(arg2, "drawpath")) {
-                if ((arg3 != nullptr) && (*arg3 != 0))
+                if (arg3 != nullptr && *arg3 != 0)
                     draw_nodepath = std::atoi(arg3);
                 if (draw_nodepath > -1) {
                     std::sprintf(cMessage, "RBDEBUG: Drawing path of bot id [%d].", draw_nodepath);
@@ -2065,16 +2065,16 @@ int Spawn_Post(edict_t *pent) {
 
     // is this a transparent entity ?
     if (pent->v.rendermode == kRenderTransTexture //||
-//        (pent->v.rendermode == kRenderTransAlpha && strcmp("func_illusionary", STRING(pent->v.classname)) == 0)
+	// (pent->v.rendermode == kRenderTransAlpha && strcmp("func_illusionary", STRING(pent->v.classname)) == 0)
         ) { // func_illusionary on cs_italy uses this rendermode
 
 
         pent->v.flags |= FL_WORLDBRUSH; // set WORLD BRUSH
 
-//        // this seems to enforce solidness, and hence the tracehull/line will detect it now.
-//        pent->v.solid = SOLID_BSP;
-//        pent->v.movetype = MOVETYPE_PUSHSTEP; // this seemed to be the best choice, does not do much
-//        pent->v.rendermode == kRenderNormal;
+	// this seems to enforce solidness, and hence the tracehull/line will detect it now.
+	// pent->v.solid = SOLID_BSP;
+	// pent->v.movetype = MOVETYPE_PUSHSTEP; // this seemed to be the best choice, does not do much
+	// pent->v.rendermode == kRenderNormal;
     } else {
     }
 
@@ -2091,12 +2091,12 @@ int Spawn_Post(edict_t *pent) {
         // Perhaps this fixes also the as_oilrig problem where a traceline goes through the button without
         // detecting??
         // this seems to enforce solidness, and hence the tracehull/line will detect it now.
-//        pent->v.solid = SOLID_BSP;
-//        pent->v.movetype = MOVETYPE_PUSHSTEP; // this seemed to be the best choice, does not do much
+		// pent->v.solid = SOLID_BSP;
+		// pent->v.movetype = MOVETYPE_PUSHSTEP; // this seemed to be the best choice, does not do much
 
-//        pent->v.solid = SOLID_TRIGGER;
-//        pent->v.solid = SOLID_BSP;
-//                 SERVER_PRINT("Adjusted a trigger_multiple!!\n");
+		// pent->v.solid = SOLID_TRIGGER;
+		// pent->v.solid = SOLID_BSP;
+		// SERVER_PRINT("Adjusted a trigger_multiple!!\n");
     }
 
     RETURN_META_VALUE(MRES_IGNORED, 0);
@@ -2113,7 +2113,7 @@ GetEntityAPI2(DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion) {
     gFunctionTable.pfnClientCommand = ClientCommand;
     gFunctionTable.pfnStartFrame = StartFrame;
     std::memcpy(pFunctionTable, &gFunctionTable, sizeof(DLL_FUNCTIONS));
-    return (TRUE);
+    return true;
 }
 
 // Whistler:
@@ -2121,7 +2121,7 @@ C_DLLEXPORT int
 GetEntityAPI2_Post(DLL_FUNCTIONS *pFunctionTable, int *interfaceVersion) {
     gFunctionTable_post.pfnSpawn = Spawn_Post;   // need to declare another gFunctionTable_post in the top of the dll.cpp file
     std::memcpy(pFunctionTable, &gFunctionTable_post, sizeof(DLL_FUNCTIONS));
-    return (TRUE);
+    return true;
 }
 
 // Stefan says: You where right, i did not understand it properly. But now i see the little

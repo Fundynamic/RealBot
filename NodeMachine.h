@@ -49,8 +49,8 @@ public:
 
     int add2(const Vector& vOrigin, int iType, edict_t *pEntity);
 
-    int getClosestNode(const Vector& vOrigin, float fDist, edict_t *pEdict);    // returns a close node
-    int getFurthestNode(const Vector& vOrigin, float fDist, edict_t *pEdict);    // returns a node within dist, but most far away
+    int getClosestNode(const Vector& vOrigin, float fDist, edict_t *pEdict) const;    // returns a close node
+    int getFurthestNode(const Vector& vOrigin, float fDist, const edict_t *pEdict) const;    // returns a node within dist, but most far away
     int getFreeNodeIndex() const;
 
     // -----------------
@@ -66,7 +66,7 @@ public:
 
     // -----------------
     void init();                 // Init (info)nodes
-    void save() const;                 // Save nodes on disk
+    void save() const;           // Save nodes on disk
     void load();                 // Load nodes on disk
     void save_important() const;
 
@@ -81,7 +81,7 @@ public:
 
     bool IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(int iFrom, int iTo);
 
-    bool hasAttemptedConnectionTooManyTimes(int index);
+    bool hasAttemptedConnectionTooManyTimes(int index) const;
     void IncreaseAttemptsForTroubledConnection(int index);
 
     bool ClearTroubledConnection(int iFrom, int iTo);
@@ -127,28 +127,28 @@ public:
 
     int node_look_at_hear(int iFrom, int iOrigin, edict_t* pEdict);
 	
-    int node_camp(const Vector& vOrigin, int iTeam);
+    int node_camp(const Vector& vOrigin, int iTeam) const;
 
     void vis_calculate(int iFrom);
 
     // -----------------
     bool createPath(int nodeStartIndex, int nodeTargetIndex, int botIndex, cBot *pBot, int iFlags);   // know the path
-    void path_draw(edict_t *pEntity);   // draw the path
+    void path_draw(edict_t *pEntity) const;   // draw the path
     void path_walk(cBot *pBot, float distanceMoved);   // walk the path
     void path_think(cBot *pBot, float distanceMoved);  // think about paths
     void path_clear(int botIndex);
 
     void ExecuteNearNodeLogic(cBot *pBot);
 
-    int getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex);
+    int getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex) const;
 
     // -----------------
     static void VectorToMeredian(const Vector& vOrigin, int *iX, int *iY);     // Input: origin, output X and Y Meredians
     void AddToMeredian(int iX, int iY, int iNode);
 
     // -----------------
-    void draw(edict_t *pEntity);        // Draw nodes
-    void connections(edict_t *pEntity); // Draw neighbours
+    void draw(edict_t *pEntity) const;        // Draw nodes
+    void connections(edict_t *pEntity) const; // Draw neighbours
 
     // -----------------
     void addNodesForPlayers();         // Players plot around!
@@ -167,9 +167,9 @@ public:
     // Some debugging by EVY
     void dump_goals() const;
 
-    void dump_path(int iBot, int CurrentPath);
+    void dump_path(int iBot, int CurrentPath) const;
 
-    void Draw();
+    void Draw() const;
 
     tNode *getNode(int index);
 
@@ -196,16 +196,16 @@ private:
 
     static void MarkMeredians();
 
-    void PlotNodes(int NeighbourColor, int NodeColor);
+    void PlotNodes(int NeighbourColor, int NodeColor) const;
 
-    void PlotPaths(int Tcolor, int CTcolor);
+    void PlotPaths(int Tcolor, int CTcolor) const;
 
     void PlotGoals(int GoalColor) const;
 
     static void makeAllWaypointsAvailable();
 
     static void closeNode(int nodeIndex, int parent, float cost);
-    void openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighboursFrom, int destinationNodeIndex, int botTeam);
+    void openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighboursFrom, int destinationNodeIndex, int botTeam) const;
 
     static char *getGoalTypeAsText(const tGoal &goal);
 
@@ -223,7 +223,7 @@ private:
 
     void ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, const Vector &vector);
 
-    void ExecuteDoorInteractionLogic(cBot* pBot, edict_t* pEntityHit);
+    void ExecuteDoorInteractionLogic(cBot* pBot, edict_t* pEntityHit) const;
 };
 
 #endif // NODEMACHINE_H

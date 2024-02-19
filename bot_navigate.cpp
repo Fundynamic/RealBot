@@ -54,8 +54,8 @@ enum
  * @return
  */
 float fixAngle(float angle) {
-    if (angle > 180.0f) return (angle - 360.0f);
-    if (angle < -180.0f) return (angle + 360.0f);
+    if (angle > 180.0f) return angle - 360.0f;
+    if (angle < -180.0f) return angle + 360.0f;
     return angle;
 }
 
@@ -102,7 +102,7 @@ bool BotCanJumpUp(const cBot * pBot) {
 
    // if trace hit something, return FALSE
    if (tr.flFraction < 1.0f)
-      return FALSE;
+      return false;
 
    // now check same height to one side of the bot...
    v_source =
@@ -116,7 +116,7 @@ bool BotCanJumpUp(const cBot * pBot) {
 
    // if trace hit something, return FALSE
    if (tr.flFraction < 1.0f)
-      return FALSE;
+      return false;
 
    // now check same height on the other side of the bot...
    v_source =
@@ -130,7 +130,7 @@ bool BotCanJumpUp(const cBot * pBot) {
 
    // if trace hit something, return FALSE
    if (tr.flFraction < 1.0f)
-      return FALSE;
+      return false;
 
    // now trace from head level downward to check for obstructions...
 
@@ -152,7 +152,7 @@ bool BotCanJumpUp(const cBot * pBot) {
 
    // if trace hit something, return FALSE
    if (tr.flFraction < 1.0f)
-      return FALSE;
+      return false;
 
    // now check same height to one side of the bot...
    v_source =
@@ -167,7 +167,7 @@ bool BotCanJumpUp(const cBot * pBot) {
 
    // if trace hit something, return FALSE
    if (tr.flFraction < 1.0f)
-      return FALSE;
+      return false;
 
    // now check same height on the other side of the bot...
    v_source =
@@ -182,9 +182,9 @@ bool BotCanJumpUp(const cBot * pBot) {
 
    // if trace hit something, return FALSE
    if (tr.flFraction < 1.0f)
-      return FALSE;
+      return false;
 
-   return TRUE;
+   return true;
 }
 
 bool BotCanDuckUnder(const cBot * pBot) {
