@@ -6,6 +6,7 @@ jobs:
   build_main:
     name: Build for ${{ matrix.os_short }}
     runs-on: ${{ matrix.os_version }}
+    container: ${{ matrix.container }}
 
     # skip build on '[ci skip]'
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
@@ -14,12 +15,17 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-22.04
+          - linux
           - windows-x32
         include:
-          - os: ubuntu-22.04
+          # Built inside Debian 12 (glibc 2.36) rather than on the runner image.
+          # ubuntu-latest is now 24.04 (glibc 2.39) and produces binaries that
+          # will NOT load on a Debian 12 server. Bookworm-built binaries also
+          # run on Debian 13, so this is the safe direction.
+          - os: linux
             os_short: linux
-            os_version: ubuntu-22.04
+            os_version: ubuntu-latest
+            container: debian:bookworm
             package_ext: tar.gz
             dbg_ext: dbg
             cc: clang
@@ -30,6 +36,7 @@ jobs:
           - os: windows-x32
             os_short: win32
             os_version: windows-latest
+            container: ''
             package_ext: zip
             dbg_ext: pdb
             cc: not-used
@@ -37,20 +44,26 @@ jobs:
             vs_arch: x32
             am_arch: x86
 
-
     steps:
+    # Container runs as root, so no sudo. git and ca-certificates let
+    # actions/checkout do a real clone (and therefore submodules) rather than
+    # falling back to a tarball download.
     - name: Install (Linux)
       if: runner.os == 'Linux'
       run: |
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        sudo apt-get install -y clang g++-multilib
-        echo "CC=clang" >> $GITHUB_ENV
-        echo "CXX=clang++" >> $GITHUB_ENV
+        dpkg --add-architecture i386
+        apt-get update
+        apt-get install -y --no-install-recommends \
+          clang lld \
+          gcc-multilib g++-multilib libc6-dev-i386 \
+          python3 python3-pip python3-setuptools python3-wheel \
+          git ca-certificates binutils file
+        echo "CC=${{ matrix.cc }}" >> $GITHUB_ENV
+        echo "CXX=${{ matrix.cxx }}" >> $GITHUB_ENV
 
     - name: Add msbuild to PATH (Windows)
       if: runner.os == 'Windows'
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Install (Windows)
       if: runner.os == 'Windows'
@@ -60,28 +73,47 @@ jobs:
         for /f "usebackq delims=*" %%i in (`vswhere -latest -property installationPath`) do (
           call "%%i"\Common7\Tools\vsdevcmd.bat -arch=${{ matrix.vs_arch }} -host_arch=x64
         )
-        
+
         :: Loop over all environment variables and make them global.
         for /f "delims== tokens=1,2" %%a in ('set') do (
           echo>>"%GITHUB_ENV%" %%a=%%b
         )
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
+    # Windows only: the Debian container already has python3, and setup-python
+    # would pull a build linked against the runner's newer glibc.
+    - name: Setup Python (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/setup-python@v6
       with:
         python-version: '3.12'
 
     - name: Setup ambuild
+      shell: bash
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install wheel
-        pip install git+https://github.com/alliedmodders/ambuild
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          python3 -m pip install --break-system-packages --upgrade pip wheel
+          python3 -m pip install --break-system-packages \
+            git+https://github.com/alliedmodders/ambuild
+        else
+          python -m pip install --upgrade pip wheel
+          python -m pip install git+https://github.com/alliedmodders/ambuild
+        fi
 
     - name: Fetch RealBot
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
       with:
         path: realbot
         submodules: recursive
+
+    # Catches a failed submodule clone here, with a clear message, rather than
+    # as a confusing configure error later.
+    - name: Verify checkout
+      shell: bash
+      working-directory: realbot
+      run: |
+        ls -la
+        [ -f configure.py ] || { echo "::error::configure.py missing"; exit 1; }
+        [ -f AMBuildScript ] || { echo "::error::AMBuildScript missing"; exit 1; }
 
     - name: Build Files
       shell: bash
@@ -89,25 +121,54 @@ jobs:
       run: |
         mkdir post
         cd post
-        
+
         export AM_ARCH=${{ matrix.am_arch }}
 
         python3 ../configure.py --symbol-files --enable-optimize
-        
+
         ambuild
 
-    - uses: benjlevesque/short-sha@v2.2
+    # Fails the build if the plugin needs a glibc newer than the deployment
+    # target. Worth having: when a Metamod plugin fails to dlopen() on an ABI
+    # mismatch, the server logs nothing at all - it just doesn't load.
+    - name: Check glibc ABI (Linux)
+      if: runner.os == 'Linux'
+      shell: bash
+      working-directory: realbot
+      run: |
+        MAXVER="2.36"   # Debian 12. Raise only when the servers move forward.
+        FOUND=0
+        while IFS= read -r so; do
+          FOUND=1
+          need=$(objdump -T "$so" 2>/dev/null | grep -oP 'GLIBC_[0-9.]+' \
+                 | sed 's/GLIBC_//' | sort -uV | tail -1)
+          echo "$so -> glibc ${need:-none}"
+          if [ -n "$need" ] && \
+             [ "$(printf '%s\n%s\n' "$MAXVER" "$need" | sort -V | tail -1)" != "$MAXVER" ]; then
+            echo "::error file=$so::requires glibc $need, target is $MAXVER"
+            exit 1
+          fi
+        done < <(find post -name '*.so' -type f)
+        if [ "$FOUND" != "1" ]; then
+          echo "::error::No .so files found to check - did the build produce anything?"
+          exit 1
+        fi
+
+    # Replaces benjlevesque/short-sha, which still runs on Node.js 20.
+    - name: Short SHA
       id: short-sha
+      shell: bash
+      run: echo "sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
     - name: Upload Binary
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: realbot-${{ matrix.os_short }}-${{ steps.short-sha.outputs.sha }}
         path: |
             realbot/post/*
 
     - name: Upload Debug Symbols
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: realbot-dbgsym-${{ matrix.os_short }}-${{ steps.short-sha.outputs.sha }}
         path: |
