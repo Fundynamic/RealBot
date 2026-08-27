@@ -31,7 +31,7 @@
 #define BOT_WEAPONS_H
 
 // weapon ID values for Valve's Team Fortress Classic & 1.5
-#define TF_WEAPON_UNKNOWN1       1
+/*#define TF_WEAPON_UNKNOWN1       1
 #define TF_WEAPON_UNKNOWN2       2
 #define TF_WEAPON_MEDIKIT        3
 #define TF_WEAPON_SPANNER        4
@@ -54,48 +54,52 @@
 #define TF_WEAPON_RAILGUN       21
 #define TF_WEAPON_PL            22
 #define TF_WEAPON_KNIFE         23
+*/
 
 // weapon ID values for Counter-Strike
-#define CS_WEAPON_P228           1
-#define CS_WEAPON_UNKNOWN2       2
-#define CS_WEAPON_SCOUT          3
-#define CS_WEAPON_HEGRENADE      4
-#define CS_WEAPON_XM1014         5
-#define CS_WEAPON_C4             6
-#define CS_WEAPON_MAC10          7
-#define CS_WEAPON_AUG            8
-#define CS_WEAPON_SMOKEGRENADE   9
-#define CS_WEAPON_ELITE         10
-#define CS_WEAPON_FIVESEVEN     11
-#define CS_WEAPON_UMP45         12
-#define CS_WEAPON_SG550         13
-#define CS_WEAPON_GALIL         14      // CS 1.6
-#define CS_WEAPON_FAMAS         15      // CS 1.6
-#define CS_WEAPON_USP           16
-#define CS_WEAPON_GLOCK18       17
-#define CS_WEAPON_AWP           18
-#define CS_WEAPON_MP5NAVY       19
-#define CS_WEAPON_M249          20
-#define CS_WEAPON_M3            21
-#define CS_WEAPON_M4A1          22
-#define CS_WEAPON_TMP           23
-#define CS_WEAPON_G3SG1         24
-#define CS_WEAPON_FLASHBANG     25
-#define CS_WEAPON_DEAGLE        26
-#define CS_WEAPON_SG552         27
-#define CS_WEAPON_AK47          28
-#define CS_WEAPON_KNIFE         29
-#define CS_WEAPON_P90           30
+enum : std::uint8_t
+{
+	CS_WEAPON_P228 = 1,
+	CS_WEAPON_SHIELD = 2,
+	CS_WEAPON_SCOUT = 3,
+	CS_WEAPON_HEGRENADE = 4,
+	CS_WEAPON_XM1014 = 5,
+	CS_WEAPON_C4 = 6,
+	CS_WEAPON_MAC10 = 7,
+	CS_WEAPON_AUG = 8,
+	CS_WEAPON_SMOKEGRENADE = 9,
+	CS_WEAPON_ELITE = 10,
+	CS_WEAPON_FIVESEVEN = 11,
+	CS_WEAPON_UMP45 = 12,
+	CS_WEAPON_SG550 = 13,
+	CS_WEAPON_GALIL = 14, // CS 1.6
+	CS_WEAPON_FAMAS = 15, // CS 1.6
+	CS_WEAPON_USP = 16,
+	CS_WEAPON_GLOCK18 = 17,
+	CS_WEAPON_AWP = 18,
+	CS_WEAPON_MP5NAVY = 19,
+	CS_WEAPON_M249 = 20,
+	CS_WEAPON_M3 = 21,
+	CS_WEAPON_M4A1 = 22,
+	CS_WEAPON_TMP = 23,
+	CS_WEAPON_G3SG1 = 24,
+	CS_WEAPON_FLASHBANG = 25,
+	CS_WEAPON_DEAGLE = 26,
+	CS_WEAPON_SG552 = 27,
+	CS_WEAPON_AK47 = 28,
+	CS_WEAPON_KNIFE = 29,
+	CS_WEAPON_P90 = 30,
 
 //30.8.04 redefined by frashman
-#define CS_DEFUSEKIT		    98      // old value was 99, same as SHIELD -> Bug??
+	CS_DEFUSEKIT = 98      // old value was 99, same as SHIELD -> Bug??
+};
 
 // NOT CONFIRMED
-#define CS_WEAPON_SHIELD        99      // Not used for detecting, only for
+//#define CS_WEAPON_SHIELD        99      // Not used for detecting, only for
 // bot.dll
 
 // Woah, i rule! :D, figured out all Earth Special Forces Weapon ID's..
-#define ESF_WEAPON_MELEE		1
+/*#define ESF_WEAPON_MELEE		1
 #define ESF_KIBLAST				2
 #define ESF_GALLITGUN			3
 #define ESF_KAMEHAMEHA			4
@@ -112,6 +116,7 @@
 #define ESF_DEATHBALL			15
 #define ESF_BURNINGATTACK		16
 #define ESF_SENSU				17
+*/
 
 typedef struct {
    char szClassname[64];

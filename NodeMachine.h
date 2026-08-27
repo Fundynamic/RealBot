@@ -35,7 +35,12 @@
 #ifndef NODEMACHINE_H
 #define NODEMACHINE_H
 
+#include <queue>
+#include <string>
+#include <unordered_map>
+
 #include "bot.h"
+#include "game.h"
 
 #include "NodeDataTypes.h"
 
@@ -43,15 +48,15 @@
 class cNodeMachine {
 public:
     // -----------------
-    int addNode(Vector vOrigin, edict_t *pEntity);
+    int addNode(const Vector& vOrigin, edict_t *pEntity);
 
-    int Reachable(const int iStart, const int iEnd);
+    int Reachable(int iStart, int iEnd) const;
 
-    int add2(Vector vOrigin, int iType, edict_t *pEntity);
+    int add2(const Vector& vOrigin, int iType, edict_t *pEntity);
 
-    int getClosestNode(Vector vOrigin, float fDist, edict_t *pEdict);    // returns a close node
-    int getFurthestNode(Vector vOrigin, float fDist, edict_t *pEdict);    // returns a node within dist, but most far away
-    int getFreeNodeIndex();
+    int getClosestNode(const Vector& vOrigin, float fDist, edict_t *pEdict) const;    // returns a close node
+    int getFurthestNode(const Vector& vOrigin, float fDist, const edict_t *pEdict) const;    // returns a node within dist, but most far away
+    int getFreeNodeIndex() const;
 
     // -----------------
     bool add_neighbour_node(int iNode, int iToNode);
@@ -60,28 +65,37 @@ public:
 
     bool remove_neighbour_nodes(int iNode);
 
-    int freeNeighbourNodeIndex(tNode *Node);
+    static int freeNeighbourNodeIndex(const tNode *Node);
 
-    int is_neighbour_node(tNode node, int iNode);
+    static int is_neighbour_node(const tNode& node, int iNode);
 
     // -----------------
     void init();                 // Init (info)nodes
-    void save();                 // Save nodes on disk
+
+    void initNodes();
+    void initInfoNodes();
+    void initializeNode(tNode& node);
+    void initTroubles();
+    void initPaths();
+    void initVisTable();
+    void initMeredians();
+
+    void save() const;           // Save nodes on disk
     void load();                 // Load nodes on disk
-    void save_important();
+    void save_important() const;
 
     // -----------------
-    Vector node_vector(int iNode);
+    Vector node_vector(int iNode) const;
 
     // -----------------
-    int GetTroubleIndexForConnection(int iFrom, int iTo);
+    int GetTroubleIndexForConnection(int iFrom, int iTo) const;
 
     int AddTroubledConnection(int iFrom, int iTo);
 
 
     bool IncreaseAttemptsForTroubledConnectionOrRemoveIfExceeded(int iFrom, int iTo);
 
-    bool hasAttemptedConnectionTooManyTimes(int index);
+    bool hasAttemptedConnectionTooManyTimes(int index) const;
     void IncreaseAttemptsForTroubledConnection(int index);
 
     bool ClearTroubledConnection(int iFrom, int iTo);
@@ -90,24 +104,24 @@ public:
     void setUpInitialGoals();                // find new goals and attach them to the nodes
     void updateGoals();          // update moving goals (ie hostages)
 
-    int getGoalIndexFromNode(int iNode);
+    int getGoalIndexFromNode(int iNode) const;
 
     void resetCheckedValuesForGoals();
 
     void ClearImportantGoals();
 
-    bool hasGoalWithEdict(edict_t *pEdict);
+    bool hasGoalWithEdict(edict_t *pEdict) const;
 
-    void addGoal(edict_t *pEdict, int goalType, Vector vVec);
+    void addGoal(edict_t *pEdict, int goalType, const Vector& vVec);
 
     tGoal * getRandomGoalByType(int goalType);    // return a node close to a iType goal (random)
-    bool node_float(Vector vOrigin, edict_t *pEdict);
+    static bool node_float(const Vector& vOrigin, edict_t *pEdict);
 
-    bool node_on_crate(Vector vOrigin, edict_t *pEdict);
+    static bool node_on_crate(const Vector& vOrigin, edict_t *pEdict);
 
-    int node_dangerous(int iTeam, Vector vOrigin, float fMaxDistance);
+    int node_dangerous(int iTeam, const Vector& vOrigin, float fMaxDistance);
 
-    int node_look_camp(Vector vOrigin, int iTeam, edict_t *pEdict);
+    int node_look_camp(const Vector& vOrigin, int iTeam, edict_t *pEdict);
 
     // -----------------
     void danger(int iNode, int iTeam);   // Make spot dangerous
@@ -125,30 +139,32 @@ public:
     // -----------------
     int node_cover(int iFrom, int iTo, edict_t *pEdict);
 
-    int node_look_at_hear(int iFrom, int iTo, edict_t *pEdict);
-
-    int node_camp(Vector vOrigin, int iTeam);
+    int node_look_at_hear(int iFrom, int iOrigin, edict_t* pEdict);
+	
+    int node_camp(const Vector& vOrigin, int iTeam) const;
 
     void vis_calculate(int iFrom);
 
     // -----------------
     bool createPath(int nodeStartIndex, int nodeTargetIndex, int botIndex, cBot *pBot, int iFlags);   // know the path
-    void path_draw(edict_t *pEntity);   // draw the path
+    void path_draw(edict_t *pEntity) const;   // draw the path
     void path_walk(cBot *pBot, float distanceMoved);   // walk the path
     void path_think(cBot *pBot, float distanceMoved);  // think about paths
     void path_clear(int botIndex);
 
+    bool requiresDuckJump(const Vector& vFrom, const Vector& vTo, edict_t* pEdict) const;
+
     void ExecuteNearNodeLogic(cBot *pBot);
 
-    int getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex);
+    int getNodeIndexFromBotForPath(int botIndex, int pathNodeIndex) const;
 
     // -----------------
-    void VectorToMeredian(Vector vOrigin, int *iX, int *iY);     // Input: origin, output X and Y Meredians
+    static void VectorToMeredian(const Vector& vOrigin, int *iX, int *iY);     // Input: origin, output X and Y Meredians
     void AddToMeredian(int iX, int iY, int iNode);
 
     // -----------------
-    void draw(edict_t *pEntity);        // Draw nodes
-    void connections(edict_t *pEntity); // Draw neighbours
+    void draw(edict_t *pEntity) const;        // Draw nodes
+    void connections(edict_t *pEntity) const; // Draw neighbours
 
     // -----------------
     void addNodesForPlayers();         // Players plot around!
@@ -157,57 +173,64 @@ public:
 
     // -------------------
     // From cheesemonster:
-    int GetVisibilityFromTo(int iFrom, int iTo); // BERKED
-    void ClearVisibilityTable(void);
+    int GetVisibilityFromTo(int iFrom, int iTo) const; // BERKED
+    void ClearVisibilityTable();
 
     void SetVisibilityFromTo(int iFrom, int iTo, bool bVisible);
 
-    void FreeVisibilityTable(void);
+    void FreeVisibilityTable();
 
     // Some debugging by EVY
-    void dump_goals(void);
+    void dump_goals() const;
 
-    void dump_path(int iBot, int ThisNode);
+    void dump_path(int iBot, int CurrentPath) const;
 
-    void Draw(void);
+    void Draw() const;
 
     tNode *getNode(int index);
 
     tGoal *getGoal(int index);
 
 private:
-    tNode Nodes[MAX_NODES];                              // Nodes
-    tInfoNode InfoNodes[MAX_NODES];                      // Info for Nodes (metadata)
-    tPlayer Players[32];                                 // Players to keep track of, for node plotting
-    tGoal Goals[MAX_GOALS];                              // Goals to pursue in the game
-    tMeredian Meredians[MAX_MEREDIANS][MAX_MEREDIANS];   // Meredian lookup search for Nodes, squared
+    tNode Nodes[MAX_NODES] = {};                              // Nodes
+    tInfoNode InfoNodes[MAX_NODES] = {};                      // Info for Nodes (metadata)
+    tPlayer Players[32] = {};                                 // Players to keep track of, for node plotting
+    tGoal Goals[MAX_GOALS] = {};                              // Goals to pursue in the game
+    tMeredian Meredians[MAX_MEREDIANS][MAX_MEREDIANS] = {};   // Meredian lookup search for Nodes, squared
 
-    int iPath[MAX_BOTS][MAX_PATH_NODES];                 // 32 bots, with max waypoints paths (TODO: move to bot class?)
+    int iPath[MAX_BOTS][MAX_PATH_NODES] = {};                 // 32 bots, with max waypoints paths (TODO: move to bot class?)
 
-    int iMaxUsedNodes;
+    int iMaxUsedNodes = 0;
 
-    byte iVisChecked[MAX_NODES];
-    unsigned char *cVisTable;
-    tTrouble Troubles[MAX_TROUBLE];
+    byte iVisChecked[MAX_NODES] = {};
+    std::vector<unsigned char> cVisTable;
+    tTrouble Troubles[MAX_TROUBLE] = {};
 
-    void FindMinMax(void);
+    void FindMinMax() const;
 
-    void MarkAxis(void);
+    static void MarkAxis();
 
-    void MarkMeredians(void);
+    static void MarkMeredians();
 
-    void PlotNodes(int NeighbourColor, int NodeColor);
+    void PlotNodes(unsigned char NeighbourColor, unsigned char NodeColor) const;
 
-    void PlotPaths(int Tcolor, int CTcolor);
+    void PlotPaths(unsigned char Tcolor, unsigned char CTcolor) const;
 
-    void PlotGoals(int GoalColor);
+    void PlotGoals(unsigned char color) const;
 
-    void makeAllWaypointsAvailable() const;
+    static void makeAllWaypointsAvailable();
 
-    void closeNode(int nodeIndex, int parent, float cost);
-    void openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighboursFrom, int destinationNodeIndex, int botTeam);
+    static bool isValidNodeIndex(int index);
 
-    char *getGoalTypeAsText(const tGoal &goal) const;
+    static bool isInvalidNode(int index);
+
+    void buildPath(int nodeStartIndex, int nodeTargetIndex, int botIndex, cBot* pBot);
+
+    static void closeNode(int nodeIndex, int parent, float cost);
+
+    void openNeighbourNodes(int startNodeIndex, int nodeToOpenNeighboursFrom, int destinationNodeIndex, int botTeam) const;
+
+    static std::string getGoalTypeAsText(const tGoal& goal);
 
     int getFreeGoalIndex() const;
 
@@ -215,15 +238,15 @@ private:
 
     void initGoal(int g);
 
-    bool isEntityDoor(const edict_t *pEntityHit) const;
-    bool isEntityHostage(const edict_t *pEntityHit) const;
-    bool isEntityWorldspawn(const edict_t *pEntityHit) const;
+    static bool isEntityDoor(const edict_t *pEntityHit);
+    static bool isEntityHostage(const edict_t *pEntityHit);
+    static bool isEntityWorldspawn(const edict_t *pEntityHit);
 
-    bool isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHit) const;
+    static bool isDoorThatOpensWhenPressingUseButton(const edict_t *pEntityHit);
 
-    void ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, Vector &vector);
+    void ExecuteIsStuckLogic(cBot *pBot, int currentNodeToHeadFor, const Vector &vector);
 
-    void ExecuteDoorInteractionLogic(cBot *pBot, edict_t *pS);
+    void ExecuteDoorInteractionLogic(cBot* pBot, edict_t* pEntityHit) const;
 };
 
 #endif // NODEMACHINE_H

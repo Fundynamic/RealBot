@@ -6,7 +6,7 @@
   **
   * DISCLAIMER
   *
-  * History, Information & Credits: 
+  * History, Information & Credits:
   * RealBot is based partially upon the HPB-Bot Template #3 by Botman
   * Thanks to Ditlew (NNBot), Pierre Marie Baty (RACCBOT), Tub (RB AI PR1/2/3)
   * Greg Slocum & Shivan (RB V1.0), Botman (HPB-Bot) and Aspirin (JOEBOT). And
@@ -18,9 +18,9 @@
   *
   * Pierre Marie Baty
   * Count-Floyd
-  *  
+  *
   * !! BOTS-UNITED FOREVER !!
-  *  
+  *
   * This project is open-source, it is protected under the GPL license;
   * By using this source-code you agree that you will ALWAYS release the
   * source-code with your project.
@@ -46,99 +46,99 @@ typedef struct {
 extern weapon_price_table weapons_table[32];
 
 // BOT SPECIFIC / AUDIOABLE / VISUAL PROPERTIES
-#define BOT_HEARDISTANCE    1500
-#define BOT_HEARFIREDISTANCE 2500
+constexpr int BOT_HEARDISTANCE = 1500;
+constexpr int BOT_HEARFIREDISTANCE = 2500;
 
 // define constants used to identify the MOD we are playing...
-#define VALVE_DLL        1       // Added "Half-Life DeathMatch"
-#define CSTRIKE_DLL        3       // Added "Counter-Strike"
+constexpr int VALVE_DLL = 1;       // Added "Half-Life DeathMatch";
+constexpr int CSTRIKE_DLL = 3;       // Added "Counter-Strike";
 
 // max names in rb_names.txt
-#define MAX_BOT_NAMES 100
+constexpr int MAX_BOT_NAMES = 100;
 
 // Define Join states for other mods
-#define JOIN_TEAM        1
-#define JOIN_CLASS        2
-#define JOIN_NONE        9999
+constexpr int JOIN_TEAM = 1;
+constexpr int JOIN_CLASS = 2;
+constexpr int JOIN_NONE = 9999;
 
 // fix for steam (cs 1.6 bot will crash when FL_FAKECLIENT;
 // this is fixed later again in STEAM, but leave it in anway).
-#define FL_THIRDPARTYBOT (1 << 27)
+constexpr int FL_THIRDPARTYBOT = (1 << 27);
 
 // "Own predefined" item types (attached with buying code)
-#define CS_WEAPON_ARMOR_LIGHT        199
-#define CS_WEAPON_ARMOR_HEAVY        299
+constexpr int CS_WEAPON_ARMOR_LIGHT = 199;
+constexpr int CS_WEAPON_ARMOR_HEAVY = 299;
 
 // damage tolerance
-#define CSTRIKE_MIN_DAMAGE    7
-#define CSTRIKE_MAX_DAMAGE    14
+constexpr int CSTRIKE_MIN_DAMAGE = 7;
+constexpr int CSTRIKE_MAX_DAMAGE = 14;
 
 // The type of a weapon, not mod related. You can use these prefixed names
 // for your functions
-#define SNIPER        10      // Sniper gun
-#define RIFLE        20      // Rifle
-#define HANDGUN        30      // Handgun
-#define ARMOR        40      // Armor
-#define PRIMARY        50      // Its a primary weapon (for CS Mods)
-#define SECONDARY    60      // Its a secondary weapon (for CS Mods)
-#define GRENADE        70      // Grenade (aka, HE, Flashbang, C4, etc)
-#define KNIFE        80      // Knife / Crowbar etc
-#define SHIELD        90      // Shield (CS 1.6)
-#define NONE        99      // No type
+constexpr int SNIPER = 10;      // Sniper gun;
+constexpr int RIFLE = 20;      // Rifle;
+constexpr int HANDGUN = 30;      // Handgun;
+constexpr int ARMOR = 40;      // Armor;
+constexpr int PRIMARY = 50;      // Its a primary weapon (for CS Mods);
+constexpr int SECONDARY = 60;      // Its a secondary weapon (for CS Mods)
+constexpr int GRENADE = 70;      // Grenade (aka, HE, Flashbang, C4, etc);
+constexpr int KNIFE = 80;      // Knife / Crowbar etc
+constexpr int SHIELD = 90;      // Shield (CS 1.6)
+constexpr int NONE = 99;      // No type
 
 // Strafe
 //#define STRAFE_LEFT           0
 //#define STRAFE_RIGHT  1
 
 // zooming
-#define ZOOM_NONE          0
-#define ZOOM_ONCE          1
-#define ZOOM_TWICE          2
+constexpr int ZOOM_NONE = 0;
+constexpr int ZOOM_ONCE = 1;
+constexpr int ZOOM_TWICE = 2;
 
 // instant damage (from cbase.h)
-#define DMG_CRUSH            (1 << 0)        // crushed by falling or moving object
-#define DMG_BURN            (1 << 3)        // heat burned
-#define DMG_FREEZE            (1 << 4)        // frozen
-#define DMG_FALL            (1 << 5)        // fell too far
-#define DMG_SHOCK            (1 << 8)        // electric shock
-#define DMG_DROWN            (1 << 14)       // Drowning
-#define DMG_NERVEGAS        (1 << 16)       // nerve toxins, very bad
-#define DMG_RADIATION        (1 << 18)       // radiation exposure
-#define DMG_DROWNRECOVER    (1 << 19)       // drowning recovery
-#define DMG_ACID            (1 << 20)       // toxic chemicals or acid burns
-#define DMG_SLOWBURN        (1 << 21)       // in an oven
-#define DMG_SLOWFREEZE        (1 << 22)       // in a subzero freezer
+constexpr int DMG_CRUSH = (1 << 0);        // crushed by falling or moving object
+constexpr int DMG_BURN = (1 << 3);        // heat burned
+constexpr int DMG_FREEZE = (1 << 4);        // frozen
+constexpr int DMG_FALL = (1 << 5);        // fell too far
+constexpr int DMG_SHOCK = (1 << 8);        // electric shock
+constexpr int DMG_DROWN = (1 << 14);       // Drowning
+constexpr int DMG_NERVEGAS = (1 << 16);       // nerve toxins, very bad
+constexpr int DMG_RADIATION = (1 << 18);       // radiation exposure
+constexpr int DMG_DROWNRECOVER = (1 << 19);       // drowning recovery
+constexpr int DMG_ACID = (1 << 20);             // toxic chemicals or acid burns
+constexpr int DMG_SLOWBURN = (1 << 21);       // in an oven
+constexpr int DMG_SLOWFREEZE = (1 << 22);   // in a subzero freezer; 
 
 // define some function prototypes...
-void FakeClientCommand(edict_t *pBot, char *arg1, char *arg2, char *arg3);
+void FakeClientCommand(edict_t* pBot, const char* arg1, const char* arg2, const char* arg3);
 
-#define LADDER_UNKNOWN  0
-#define LADDER_UP       1
-#define LADDER_DOWN     2
+constexpr int LADDER_UNKNOWN = 0;
+constexpr int LADDER_UP = 1;
+constexpr int LADDER_DOWN = 2;
 
-#define WANDER_LEFT  1
-#define WANDER_RIGHT 2
+constexpr int WANDER_LEFT = 1;
+constexpr int WANDER_RIGHT = 2;
 
-#define BOT_PITCH_SPEED 20
-#define BOT_YAW_SPEED 20
+constexpr int BOT_PITCH_SPEED = 30;
+constexpr int BOT_YAW_SPEED = 30;
 
-#define RESPAWN_NONE             0      // Added by Stefan
-#define RESPAWN_IDLE             1
-#define RESPAWN_NEED_TO_RESPAWN  2
-#define RESPAWN_IS_RESPAWNING    3
+constexpr int RESPAWN_NONE = 0;     // Added by Stefan;
+constexpr int RESPAWN_IDLE = 1;
+constexpr int RESPAWN_NEED_TO_RESPAWN = 2;
+constexpr int RESPAWN_IS_RESPAWNING = 3;
 
 // game start messages for CS...
-#define MSG_CS_IDLE         1
-#define MSG_CS_TEAM_SELECT  2
-#define MSG_CS_CT_SELECT    3
-#define MSG_CS_T_SELECT     4
+constexpr int MSG_CS_IDLE = 1;
+constexpr int MSG_CS_TEAM_SELECT = 2;
+constexpr int MSG_CS_CT_SELECT = 3;
+constexpr int MSG_CS_T_SELECT = 4;
 
-#define BOT_SKIN_LEN 32
-#define BOT_NAME_LEN 32
+constexpr int BOT_SKIN_LEN = 32;
+constexpr int BOT_NAME_LEN = 32;
 
-#define MAX_BOT_WHINE 100
+constexpr int MAX_BOT_WHINE = 100;
 
-#define REMEMBER_ENEMY_TIME   20        // remember for 20 seconds
+constexpr int REMEMBER_ENEMY_TIME = 20;        // remember for 20 seconds
 
 typedef struct {
     int iId;                     // weapon ID
@@ -146,10 +146,10 @@ typedef struct {
     int iAmmo1;                  // amount of ammo in primary reserve
     int iAmmo2;                  // amount of ammo in secondary reserve
 }
-        bot_current_weapon_t;
+bot_current_weapon_t;
 
 /*
- Bot is a class now 
+ Bot is a class now
  */
 class cBot {
 
@@ -159,13 +159,13 @@ private:
     int pathIndex;               // Index on theWhich node we want to move to, derived from Path
 
     // Hostages edict
-    edict_t *pBotHostage;        // the Hostage we will go after!
-    edict_t *hostage1;           // we do not
-    edict_t *hostage2;           // use
-    edict_t *hostage3;           // any array
-    edict_t *hostage4;           // here
+    edict_t* pBotHostage;        // the Hostage we will go after!
+    edict_t* hostage1;           // we do not
+    edict_t* hostage2;           // use
+    edict_t* hostage3;           // any array
+    edict_t* hostage4;           // here
 
-    edict_t *pEnemyEdict;        // Enemy edict
+    edict_t* pEnemyEdict;        // Enemy edict
 
     float fMoveToNodeTime;       // How long we should take to move to next node.
     int nodeTimeIncreasedAmount; // how many times did we increase the time to reach node?
@@ -182,19 +182,19 @@ public:
     cBot();
 
     // Hostage related
-    bool isUsingHostage(edict_t *pHostage);
-    void forgetHostage(edict_t *pHostage);
-    void rememberHostageIsFollowingMe(edict_t *pHostage);
-    void rememberWhichHostageToRescue(edict_t *pHostage);
+    bool isUsingHostage(edict_t* pHostage);
+    void forgetHostage(edict_t* pHostage);
+    void rememberHostageIsFollowingMe(edict_t* pHostage);
+    void rememberWhichHostageToRescue(edict_t* pHostage);
     void clearHostageToRescueTarget();
-    int getAmountOfHostagesBeingRescued();
-    edict_t * findHostageToRescue();         // finds a hostage to rescue
-    edict_t * getHostageToRescue();          // returns hostage state pointer
+    int getAmountOfHostagesBeingRescued() const;
+    edict_t* findHostageToRescue();         // finds a hostage to rescue
+    edict_t* getHostageToRescue() const;          // returns hostage state pointer
     bool isEscortingHostages();            // Does the bot has used any hostages yet?
     void checkOfHostagesStillFollowMe();
 
-    bool hasTimeToMoveToNode();
-    bool isDefusing();
+    bool hasTimeToMoveToNode() const;
+    bool isDefusing() const;
 
     // ------------------------
     // TIMERS
@@ -213,6 +213,7 @@ public:
 
     float f_use_timer;           // time for use button (hostage rescue, preventing to fast using)
     float fBlindedTime;          // How long it is blinded ( when > globals->time)
+    float f_breakable_attack_time; // Timer for breakable attack delay
 
     float f_max_speed;           // Max speed is the max speed it can get when holding that particular weapon
     float f_move_speed;          // The bots move speed
@@ -307,24 +308,27 @@ public:
     // Remember stuck stuff
     int iJumpTries;
     int iDuckTries;
+    int iDuckJumpTries;
+    int iUnstuckAttempts;    // Total unstuck attempts for escalation
 
     // ------------------------
     // BOOLEANS
     // ------------------------
-    bool buy_primary;
-    bool buy_secondary;
+    bool vip;
+    bool bWalkKnife;
     bool buy_ammo_primary;
     bool buy_ammo_secondary;
+    bool buy_primary;
+    bool buy_secondary;
     bool buy_armor;
-    bool buy_grenade;
-    bool buy_smokegrenade;       //31.08.04 Frashman added support for Smoke Grenade
-    bool bIsUsed;                // Bot is 'used'/'playing' (if set to true, the bot is active)
-    bool bInitialize;
     bool buy_defusekit;
-    bool bWalkKnife;             // likes to walk around with knife
-    bool vip;
-
     bool bFirstOutOfSight;
+    bool buy_grenade;
+    bool buy_smokegrenade;
+    bool bIssuedInitialRadio;
+
+    bool bInitialize;               // Has the bot been initialized yet?
+    bool bIsUsed;                   // Is this bot slot used?
 
     // ------------------------
     // HUD
@@ -335,10 +339,12 @@ public:
     char chChatSentence[160];
 
     // ------------------------
-    //
-    // ------------------------
-
-    edict_t *pEdict;             // Edict_t of the bot
+	// POINTERS
+	// ------------------------
+    edict_t* pBreakableEdict;    // Breakable edict
+    edict_t* pButtonEdict;       // button edict
+    edict_t* killer_edict;       // Killer edict
+    edict_t* pEdict;             // Edict_t of the bot
 
     char name[BOT_NAME_LEN + 1];
     char skin[BOT_SKIN_LEN + 1];
@@ -369,10 +375,6 @@ public:
     float f_bot_see_enemy_time;
     float f_bot_find_enemy_time;
 
-    edict_t *pButtonEdict;       // button edict
-
-    edict_t *killer_edict;       // Killer edict
-
     Vector vecMoveAngles;        // Vector we move to
 
 
@@ -394,29 +396,29 @@ public:
     void CheckGear();
 
     void ThinkAboutGoals();      // Think about goals
-    bool TakeCover();
+    bool TakeCover() const;
 
-    bool CarryWeapon(int iType);
+    bool CarryWeapon(int iType) const;
 
-    int CarryWeaponType();
+    int CarryWeaponType() const;
 
-    void setHeadAiming(Vector vTarget);    // Aim at vector
+    void setHeadAiming(const Vector& vTarget);    // Aim at vector
     void AimAtEnemy();
 
     void PickBestWeapon();
 
     void FireWeapon();
 
-    int ReturnTurnedAngle(float speed, float current, float ideal);
+    static vec_t ReturnTurnedAngle(float speed, float current, float ideal);
 
     int FindEnemy();
 
     float ReactionTime(int iSkill);      // Reaction time based upon skill
     void FindCover();
 
-    bool canSeeVector(Vector vDest);
+    bool canSeeVector(const Vector& vDest, edict_t* pTargetEntity = nullptr) const;
 
-    bool canSeeEntity(edict_t *pEntity);
+    bool canSeeEntity(edict_t* pEntity) const;
 
     void InteractWithFriends();
 
@@ -427,40 +429,40 @@ public:
     // Set methods
     int determineCurrentNode();
     int determineCurrentNodeWithTwoAttempts();
-    int determineCurrentNode(float range);
+    int determineCurrentNode(float range) const;
 
     // Get methods
     float getDistanceTo(int nodeIndex);
-    float getDistanceTo(Vector vDest);
+    float getDistanceTo(const Vector& vDest) const;
 
     // "is" Methods (booleans, statements, etc)
-    bool isDead();
-    bool isHeadingForGoalNode();
-    bool isEnemyAlive();         // If enemy set, is it alive? (else returns false)
-    bool isOnLadder();             // Bot on ladder or not?
+    bool isDead() const;
+    bool isHeadingForGoalNode() const;
+    bool isEnemyAlive() const;         // If enemy set, is it alive? (else returns false)
+    bool isOnLadder() const;             // Bot on ladder or not?
     bool isSeeingEnemy();          // If enemy set, can we see it? (takes blinded by flashbang into account)
-    bool isCounterTerrorist();
-    bool isTerrorist();
+    bool isCounterTerrorist() const;
+    bool isTerrorist() const;
 
     // "is" methods, related to weapons
-    bool wantsToBuyStuff();
-    bool isUsingConsole();
-    bool isOwningWeapon(int weaponId);
-    bool isHoldingWeapon(int weaponId);
-    bool ownsFavoritePrimaryWeapon();
-    bool ownsFavoriteSecondaryWeapon();
-    bool hasFavoritePrimaryWeaponPreference();
-    bool hasFavoriteSecondaryWeaponPreference();
-    bool hasPrimaryWeaponEquiped();
-    bool hasSecondaryWeaponEquiped();
-    bool hasPrimaryWeapon(int weaponId);
-    bool hasSecondaryWeapon(int weaponId);
-    bool canAfford(int weaponId);
+    bool wantsToBuyStuff() const;
+    bool isUsingConsole() const;
+    bool isOwningWeapon(int weaponId) const;
+    bool isHoldingWeapon(int weaponId) const;
+    bool ownsFavoritePrimaryWeapon() const;
+    bool ownsFavoriteSecondaryWeapon() const;
+    bool hasFavoritePrimaryWeaponPreference() const;
+    bool hasFavoriteSecondaryWeaponPreference() const;
+    bool hasPrimaryWeaponEquiped() const;
+    bool hasSecondaryWeaponEquiped() const;
+    //bool hasPrimaryWeapon(int weaponId) const;
+    //bool hasSecondaryWeapon(int weaponId) const;
+    bool canAfford(int price) const; //price muddled with weaponId? [APG]RoboCop[CL]
 
     // -------------------
     // 20/06/04 - CS 1.6 shield functions
-    bool hasShield();
-    bool hasShieldDrawn();
+    bool hasShield() const;
+    bool hasShieldDrawn() const;
 
     bool isHoldingGrenadeOrFlashbang() const;
     bool isBlindedByFlashbang() const;
@@ -468,26 +470,24 @@ public:
     // void / action methods
     void pickWeapon(int weaponId);
     void performBuyActions(int weaponIdToBuy);
-    void performBuyWeapon(const char *menuItem, const char *subMenuItem);
+    void performBuyWeapon(const char* menuItem, const char* subMenuItem);
 
     // -------------------
     void CheckAround();          // Check around body
-
     // -------------------
 
-    //
-    bool hasEnemy();
-    bool hasEnemy(edict_t * pEdict);
-    edict_t * getEnemyEdict();
+    bool hasEnemy() const;
+    bool hasEnemy(const edict_t* pEntity) const;
+    edict_t* getEnemyEdict() const;
 
-    bool hasGoal();
-    bool hasGoalIndex();
-    tGoal *getGoalData();
+    bool hasGoal() const;
+    bool hasGoalIndex() const;
+    tGoal* getGoalData() const;
     bool shouldBeWandering();
-    bool hasBomb();
+    bool hasBomb() const;
 
     // ------------
-    bool isWalkingPath();
+    bool isWalkingPath() const;
 
     void beginWalkingPath();
     void nextPathIndex();       // increases index so we know which node to walk on path
@@ -496,20 +496,18 @@ public:
     void forgetGoal();
     void forgetPath();
     void forgetEnemy();
-    void setGoalNode(tGoal *goal);
+    void setGoalNode(tGoal* goal);
     void setGoalNode(int nodeIndex);
     void setGoalNode(int nodeIndex, int iGoalIndex);
 
     int getCurrentNode();                      // the current (closest) node we are at
-    int getCurrentPathNodeToHeadFor();         // get Node from path
-    int getPreviousPathNodeToHeadFor();        // get previous Node from path
-    int getNextPathNode();                     // get next Node from path
-    int getPathIndex();
-    int getPreviousPathIndex();
+    int getCurrentPathNodeToHeadFor() const;         // get Node from path
+    int getPreviousPathNodeToHeadFor() const;        // get previous Node from path
+    int getNextPathNode() const;                     // get next Node from path
+    int getPathIndex() const;
+    int getPreviousPathIndex() const;
 
-    int getGoalNode();
-
-
+    int getGoalNode() const;
 
     void setMoveSpeed(float value);
     void setStrafeSpeed(float value, float time);
@@ -522,28 +520,28 @@ public:
     void NewRound();             // When bot enters new round
 
     // Debug -------
-    void rprint(const char *Function, const char *msg); // low
-    void rprint_normal(const char *Function, const char *msg); // normal
-    void rprint_trace(const char *Function, const char *msg); // trace
+    void rprint(const char* Function, const char* msg); // low
+    void rprint_normal(const char* Function, const char* msg); // normal
+    void rprint_trace(const char* Function, const char* msg); // trace
 
-    void rprint(const char *msg);
-    void rprint_normal(const char *msg);
-    void rprint_trace(const char *msg);
+    void rprint(const char* msg);
+    void rprint_normal(const char* msg);
+    void rprint_trace(const char* msg);
     void Dump();
 
-    bool hasHostageToRescue();
+    bool hasHostageToRescue() const;
 
-    bool canSeeHostageToRescue();
+    bool canSeeHostageToRescue() const;
 
     void checkIfHostagesAreRescued();
 
-    bool isOnSameTeamAs(cBot *pBot);
+    bool isOnSameTeamAs(const cBot* pBot) const;
 
-    bool shouldBeAbleToMove();
+    bool shouldBeAbleToMove() const;
 
-    edict_t *getEntityBetweenMeAndCurrentPathNodeToHeadFor();
+    edict_t* getEntityBetweenMeAndCurrentPathNodeToHeadFor() const;
 
-    float getDistanceToNextNode();
+    float getDistanceToNextNode() const;
 
     void setBodyToNode(int nodeIndex);
 
@@ -552,27 +550,34 @@ public:
     void setTimeToMoveToNode(float timeInSeconds);
     void increaseTimeToMoveToNode(float timeInSeconds);
 
-    float getMoveToNodeTimeRemaining();
+    float getMoveToNodeTimeRemaining() const;
 
     bool shouldActWithC4() const;
 
     int keyPressed(int key) const;
 
-    bool shouldCamp();
-    bool shouldWait();
+    bool shouldCamp() const;
+    bool shouldWait() const;
     void setTimeToWait(float timeInSeconds);
 
-    bool shouldBeAbleToInteractWithButton();
+    bool shouldBeAbleToInteractWithButton() const;
 
-    bool hasButtonToInteractWith();
-    bool hasCurrentNode();
+    bool hasButtonToInteractWith() const;
+    bool hasCurrentNode() const;
 
     bool createPath(int destinationNode, int flags);
     bool createPath(int destinationNode);
 
-    void doJump(Vector &vector);
+    void doJump(const Vector& vector);
     void doJump();
     bool isJumping();
+
+    // Experimental DuckJump added for the NodeMachine [APG]RoboCop[CL]
+    void doDuckJump(const Vector& vector);
+    void doDuckJump();
+    bool isDuckJumping();
+
+    bool isStuck() const;
 
     void doDuck();
     bool isDucking();
@@ -581,71 +586,108 @@ public:
     bool isFreezeTime() const;
 
     void rememberEnemyFound();
+private:
+    float DetermineStrafe(bool bHitForwardLeft, bool bHitForwardRight, bool bHitLeft, bool bHitRight);
 };
 
 // new UTIL.CPP functions...
-edict_t *UTIL_FindEntityInSphere(edict_t *pentStart,
-                                 const Vector &vecCenter, float flRadius);
+edict_t* UTIL_FindEntityInSphere(edict_t* pentStart,
+    const Vector& vecCenter, float flRadius);
 
-edict_t *UTIL_FindEntityByString(edict_t *pentStart,
-                                 const char *szKeyword,
-                                 const char *szValue);
+edict_t* UTIL_FindEntityByString(edict_t* pentStart,
+    const char* szKeyword,
+    const char* szValue);
 
-edict_t *UTIL_FindEntityByClassname(edict_t *pentStart,
-                                    const char *szName);
+edict_t* UTIL_FindEntityByClassname(edict_t* pentStart,
+    const char* szName);
 
-edict_t *UTIL_FindEntityByTargetname(edict_t *pentStart,
-                                     const char *szName);
+edict_t* UTIL_FindEntityByTargetname(edict_t* pentStart,
+    const char* szName);
 
-void ClientPrint(edict_t *pEdict, int msg_dest, const char *msg_name);
+void ClientPrint(edict_t* pEdict, int msg_dest, const char* msg_name);
 
-void UTIL_SayText(const char *pText, edict_t *pEdict);
+void UTIL_SayText(const char* pText, edict_t* pEdict);
 
-void UTIL_HostSay(edict_t *pEntity, int teamonly, char *message);
+void UTIL_HostSay(edict_t* pEntity, int teamonly, char* message);
 
-int UTIL_GetTeam(edict_t *pEntity);
+int UTIL_GetTeam(edict_t* pEntity);
 
-int UTIL_GetClass(edict_t *pEntity);
+int UTIL_GetClass(edict_t* pEntity);
 
-bool IsAlive(edict_t *pEdict);
+bool IsAlive(edict_t* pEdict);
 
-bool FInViewCone(Vector *pOrigin, edict_t *pEdict);
+bool FInViewCone(Vector* pOrigin, edict_t* pEdict);
 
-bool FVisible(const Vector &vecOrigin, edict_t *pEdict);
+bool FVisible(const Vector& vecOrigin, edict_t* pEdict);
 
-Vector Center(edict_t *pEdict);
+Vector Center(edict_t* pEdict);
 
-Vector GetGunPosition(edict_t *pEdict);
+Vector GetGunPosition(edict_t* pEdict);
 
-Vector VecBModelOrigin(edict_t *pEdict);
+Vector VecBModelOrigin(edict_t* pEdict);
 
-void UTIL_ShowMenu(edict_t *pEdict, int slots, int displaytime, bool needmore, char *pText);
+void UTIL_ShowMenu(edict_t* pEdict, int slots, int displaytime, bool needmore, const char* pText);
 
-void UTIL_SelectItem(edict_t *pEdict, char *item_name);
+void UTIL_SelectItem(edict_t* pEdict, const char* item_name);
 
-void UTIL_BuildFileName(char *filename, char *arg1, char *arg2);
+void UTIL_BuildFileName(char* filename, const char* arg1, const char* arg2);
 
-void UTIL_BuildFileNameRB(char *subdir, char *filename);
+void UTIL_BuildFileNameRB(const char* subdir, char* filename);
 
-unsigned short FixedUnsigned16(float value, float scale);
+unsigned short fixed_unsigned16(float value, float scale); //redundant declaration? [APG]RoboCop[CL]
 
-short FixedSigned16(float value, float scale);
+short fixed_signed16(float value, float scale); //redundant declaration? [APG]RoboCop[CL]
 
-void HUD_DrawString(int r, int g, int b, char *msg, edict_t *edict);
+void HUD_DrawString(int r, int g, int b, const char* msg, edict_t* edict);
 
-void UTIL_FixAngles(Vector *Angles);
+void UTIL_FixAngles(Vector* Angles);
 
-void UTIL_SayTextBot(const char *pText, cBot *pBot);
+void UTIL_SayTextBot(const char* pText, cBot* pBot);
 
 // combat.h
 
 // Bot specific
-int UTIL_GetBotIndex(edict_t *pEdict);
+int UTIL_GetBotIndex(edict_t* pEdict);
 
-cBot *UTIL_GetBotPointer(edict_t *pEdict);
+cBot* UTIL_GetBotPointer(edict_t* pEdict);
 
+// IniParser.ini
+void INI_Section(char input[80], char section[30]);
+void INI_Word(char input[80], char word[25]);
+int INI_WordType(char word[25], int section);
+void INI_Sentence(FILE* f, char result[80]);
+
+int INI_SectionType(char section[30], int last);
+int INI_SectionType_BUYTABLE(char section[30], int last);
+
+int INI_WordValueINT(char result[80]);
+
+float INI_WordValueFLOAT(char result[80]);
+
+void INI_WordValueCHAR(char result[80], char value[80]);
 
 // dll.cpp
+void UpdateClientData(const edict_s* ent, int sendweapons, clientdata_s* cd);
+void ProcessBotCfgFile();
 bool BotRadioAction();
+void GameDLLInit();
+
+#ifdef _WIN32
+int WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+#endif
+
+int ClientConnect(edict_t* pEntity, const char* pszName, const char* pszAddress, char szRejectReason[128]);
+
+void ClientDisconnect(edict_t* pEntity);
+void ConsoleThink(cBot* pBot);
+void ClientPutInServer(edict_t* pEntity);
+void StartFrame();
+void RealBot_ServerCommand();
+
+int Spawn(edict_t* pent);
+int Spawn_Post(edict_t* pent);
+
+// util.cpp
+void UTIL_BotSprayLogo(edict_t* pEntity, const char* logo_name);
 
 #endif                          // BOT_H

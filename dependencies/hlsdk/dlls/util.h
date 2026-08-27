@@ -74,7 +74,7 @@ inline edict_t *FIND_ENTITY_BY_TARGET(edict_t *entStart, const char *pszName)
 typedef int EOFFSET;
 
 // In case it's not alread defined
-typedef int BOOL;
+typedef int BOOL; //-V677
 
 // In case this ever changes
 #ifndef M_PI
@@ -134,7 +134,7 @@ inline entvars_t *VARS(entvars_t *pev)					{ return pev; }
 inline entvars_t *VARS(edict_t *pent)			
 { 
 	if ( !pent )
-		return NULL;
+		return nullptr;
 
 	return &pent->v; 
 }
@@ -149,8 +149,8 @@ inline void MESSAGE_BEGIN( int msg_dest, int msg_type, const float *pOrigin, ent
 // Testing the three types of "entity" for nullity
 #define eoNullEntity 0
 inline BOOL FNullEnt(EOFFSET eoffset)			{ return eoffset == 0; }
-inline BOOL FNullEnt(const edict_t* pent)	{ return pent == NULL || FNullEnt(OFFSET(pent)); }
-inline BOOL FNullEnt(entvars_t* pev)				{ return pev == NULL || FNullEnt(OFFSET(pev)); }
+inline BOOL FNullEnt(const edict_t* pent)	{ return pent == nullptr || FNullEnt(OFFSET(pent)); }
+inline BOOL FNullEnt(entvars_t* pev)				{ return pev == nullptr || FNullEnt(OFFSET(pev)); }
 
 // Testing strings for nullity
 #define iStringNull 0
@@ -159,13 +159,13 @@ inline BOOL FStringNull(int iString)			{ return iString == iStringNull; }
 #define cchMapNameMost 32
 
 // Dot products for view cone checking
-#define VIEW_FIELD_FULL		(float)-1.0 // +-180 degrees
-#define	VIEW_FIELD_WIDE		(float)-0.7 // +-135 degrees 0.1 // +-85 degrees, used for full FOV checks 
-#define	VIEW_FIELD_NARROW	(float)0.7 // +-45 degrees, more narrow check used to set up ranged attacks
-#define	VIEW_FIELD_ULTRA_NARROW	(float)0.9 // +-25 degrees, more narrow check used to set up ranged attacks
+#define VIEW_FIELD_FULL		(-1.0f) // +-180 degrees
+#define	VIEW_FIELD_WIDE		(-0.7f) // +-135 degrees 0.1 // +-85 degrees, used for full FOV checks 
+#define	VIEW_FIELD_NARROW	0.7f // +-45 degrees, more narrow check used to set up ranged attacks
+#define	VIEW_FIELD_ULTRA_NARROW	0.9f // +-25 degrees, more narrow check used to set up ranged attacks
 
 // All monsters need this data
-#define		DONT_BLEED			-1
+#define		DONT_BLEED			(-1)
 #define		BLOOD_COLOR_RED		(BYTE)247
 #define		BLOOD_COLOR_YELLOW	(BYTE)195
 #define		BLOOD_COLOR_GREEN	BLOOD_COLOR_YELLOW
@@ -197,12 +197,21 @@ typedef enum
 	} TOGGLE_STATE;
 
 // Misc useful
-inline BOOL FStrEq(const char*sz1, const char*sz2)
-	{ return (strcmp(sz1, sz2) == 0); }
+inline BOOL FStrEq(const char* sz1, const char* sz2)
+{
+	return (strcmp(sz1, sz2) == 0);
+}
 inline BOOL FClassnameIs(edict_t* pent, const char* szClassname)
-	{ return FStrEq(STRING(VARS(pent)->classname), szClassname); }
+{
+	if (FNullEnt(pent))
+		return FALSE;
+
+	return FStrEq(STRING(VARS(pent)->classname), szClassname);
+}
 inline BOOL FClassnameIs(entvars_t* pev, const char* szClassname)
-	{ return FStrEq(STRING(pev->classname), szClassname); }
+{
+	return FStrEq(STRING(pev->classname), szClassname);
+}
 
 class CBaseEntity;
 

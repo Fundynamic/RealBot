@@ -6,7 +6,7 @@
   **
   * DISCLAIMER
   *
-  * History, Information & Credits: 
+  * History, Information & Credits:
   * RealBot is based partially upon the HPB-Bot Template #3 by Botman
   * Thanks to Ditlew (NNBot), Pierre Marie Baty (RACCBOT), Tub (RB AI PR1/2/3)
   * Greg Slocum & Shivan (RB V1.0), Botman (HPB-Bot) and Aspirin (JOEBOT). And
@@ -18,9 +18,9 @@
   *
   * Pierre Marie Baty
   * Count-Floyd
-  *  
+  *
   * !! BOTS-UNITED FOREVER !!
-  *  
+  *
   * This project is open-source, it is protected under the GPL license;
   * By using this source-code you agree that you will ALWAYS release the
   * source-code with your project.
@@ -30,97 +30,123 @@
 #ifndef BOT_FUNC_H
 #define BOT_FUNC_H
 
-//prototypes of bot functions...
-void BotThink(cBot * pBot);
+  //prototypes of bot functions...
+void BotThink(cBot* pBot);
 
-void botFixIdealPitch(edict_t * pEdict);
-void botFixIdealYaw(edict_t * pEdict);
-bool BotCanJumpUp(cBot * pBot);
-bool BotCanDuckUnder(cBot * pBot);
+float fixAngle(float angle);
 
-bool EntityIsVisible(edict_t * pEntity, Vector dest);
+void botFixIdealPitch(edict_t* pEdict);
+void botFixIdealYaw(edict_t* pEdict);
+bool traceLine(const Vector& v_source, const Vector& v_dest, const edict_t* pEdict, TraceResult& tr);
+bool BotCanJumpUp(cBot* pBot);
+bool BotCanDuckUnder(cBot* pBot);
+
+bool isBotNearby(const cBot* pBot, float radius);
+void adjustBotAngle(cBot* pBot, float angle);
+bool isPathBlocked(const cBot* pBot, const Vector& v_dest);
+void BotNavigate(cBot* pBot);
+
+bool EntityIsVisible(edict_t* pEntity, const Vector& dest);
 
 // bot_func.cpp
-bool VectorIsVisible(Vector start, Vector dest, char *checkname);
-float func_distance(Vector v1, Vector v2);
+bool VectorIsVisible(const Vector& start, const Vector& dest, const char* checkname);
+float func_distance(const Vector& v1, const Vector& v2);
 
-void DrawBeam(edict_t * visibleForWho, Vector start, Vector end);
-void DrawBeam(edict_t * visibleForWho, Vector start, Vector end, int red, int green, int blue);
-void DrawBeam(edict_t * visibleForWho, Vector start, Vector end,
-              int width, int noise, int red, int green, int blue,
-              int brightness, int speed);
+void DrawBeam(edict_t* visibleForWho, const Vector& start, const Vector& end);
+void DrawBeam(edict_t* visibleForWho, const Vector& start, const Vector& end, int red, int green, int blue);
+void DrawBeam(edict_t* visibleForWho, const Vector& start, const Vector& end,
+    int width, int noise, int red, int green, int blue,
+    int brightness, int speed);
 
-cBot *getCloseFellowBot(cBot * pBot);
-edict_t * getPlayerNearbyBotInFOV(cBot * pBot);
-edict_t * getEntityNearbyBotInFOV(cBot * pBot);
+cBot* getCloseFellowBot(cBot* pBot);
+edict_t* getPlayerNearbyBotInFOV(cBot* pBot);
+edict_t* getEntityNearbyBotInFOV(cBot* pBot);
 
-bool BotShouldJump(cBot * pBot);
-bool BotShouldJumpIfStuck(cBot * pBot);
-bool BotShouldDuck(cBot * pBot);
-void TryToGetHostageTargetToFollowMe(cBot * pBot);
-Vector FUNC_CalculateAngles(cBot * pBot);
+bool isAnyPlayerNearbyBot(cBot* pBot);
+bool BotShouldJump(cBot* pBot);
+bool BotShouldJumpIfStuck(cBot* pBot);
+bool BotShouldDuck(cBot* pBot);
+bool BotShouldDuckJump(cBot* pBot);
+bool BotTryUnstuck(cBot* pBot, int totalAttempts);
+void TryToGetHostageTargetToFollowMe(cBot* pBot);
+Vector FUNC_CalculateAngles(const cBot* pBot);
 
 // New funcs
-bool FUNC_DoRadio(cBot * pBot);
+bool FUNC_DoRadio(const cBot* pBot);
 
-bool FUNC_ShouldTakeCover(cBot * pBot);
-bool FUNC_TakeCover(cBot * pBot);
+bool FUNC_ShouldTakeCover(cBot* pBot);
+bool FUNC_TakeCover(cBot* pBot);
 
-int FUNC_EdictHoldsWeapon(edict_t * pEdict);
+int FUNC_EdictHoldsWeapon(const edict_t* pEdict);
 
-int FUNC_FindFarWaypoint(cBot * pBot, Vector avoid, bool safest);
-int FUNC_FindCover(int from, int to);
-int FUNC_PlayerSpeed(edict_t * edict);
+int FUNC_FindFarWaypoint(cBot* pBot, const Vector& avoid, bool safest);
+int FUNC_FindCover(const cBot* pBot);
+int FUNC_PlayerSpeed(const edict_t* edict);
 
 bool FUNC_PlayerRuns(int speed);
-void FUNC_HearingTodo(cBot * pBot);
-void FUNC_ClearEnemyPointer(edict_t * c_pointer);
+void FUNC_HearingTodo(cBot* pBot);
+void FUNC_ClearEnemyPointer(edict_t* pPtr); //pPtr muddled with c_pointer? [APG]RoboCop[CL]
 
-bool FUNC_IsOnLadder(edict_t * pEntity);
-void FUNC_FindBreakable(cBot * pBot);
-void FUNC_CheckForBombPlanted();
+bool FUNC_IsOnLadder(const edict_t* pEntity);
+bool IsShootableBreakable(edict_t* pent);
+void FUNC_FindBreakable(cBot* pBot);
+void FUNC_AttackBreakable(cBot* pBot);
+void FUNC_CheckForBombPlanted(edict_t* pEntity);
 
-int FUNC_GiveHostage(cBot * pBot);                      // gives any hostage we still have to go for
+int FUNC_GiveHostage(cBot* pBot);                      // gives any hostage we still have to go for
 
-bool isHostageRescueable(cBot *pBot, edict_t *pHostage);
-bool isHostageRescued(cBot *pBot, edict_t *pHostage);
-bool isHostageFree(cBot * pBotWhoIsAsking, edict_t * pHostage);   // is this hostage not used by any other bot?
+bool isHostageRescueable(cBot* pBot, edict_t* pHostage);
+bool isHostageRescued(cBot* pBot, const edict_t* pHostage);
+bool isHostageFree(cBot* pBotWhoIsAsking, edict_t* pHostage);   // is this hostage not used by any other bot?
 
-int FUNC_BotEstimateHearVector(cBot * pBot, Vector v_sound);
+int FUNC_BotEstimateHearVector(cBot* pBot, const Vector& v_sound);
 
-bool FUNC_EdictIsAlive(edict_t *pEdict);
+bool FUNC_EdictIsAlive(edict_t* pEdict);
 
-bool FUNC_BotHoldsZoomWeapon(cBot * pBot);
+bool FUNC_BotHoldsZoomWeapon(cBot* pBot);
 
-int FUNC_InFieldOfView(edict_t * pEntity, Vector dest);
+int FUNC_InFieldOfView(edict_t* pEntity, const Vector& dest);
 
-bool VectorIsVisibleWithEdict(edict_t * pEdict, Vector dest,
-                              char *checkname);
+bool VectorIsVisibleWithEdict(edict_t* pEdict, const Vector& dest,
+    const char* checkname);
 
-bool BOT_DecideTakeCover(cBot * pBot);
+bool BOT_DecideTakeCover(cBot* pBot);
 
 // bot_buycode.cpp
-void BotConsole(cBot * pBot);
+int PriceWeapon(int weapon_id);
+int ListIdWeapon(int weapon_id);
 
-void rblog(char *txt);
+void BotPrepareConsoleCommandsToBuyWeapon(cBot* pBot, const char* arg1, const char* arg2);
+
+bool GoodWeaponForTeam(int weapon, int team);
+
+void BotConsole(cBot* pBot);
+void BotDecideWhatToBuy(cBot* pBot);
+
+// Buying sub-functions
+int BotBuyPrimaryWeapon(cBot* pBot);
+int BotBuySecondaryWeapon(cBot* pBot);
+int BotBuyEquipment(cBot* pBot);
+
+void rblog(const char* txt);
 
 // bot.cpp
 
 // util.cpp
-int UTIL_GiveWeaponId(const char *name);
+int UTIL_GiveWeaponId(const char* name);
 int UTIL_GiveWeaponType(int weapon_id);
-int UTIL_GetGrenadeType(edict_t * pEntity);
+int UTIL_GetGrenadeType(edict_t* pEntity);
 
-bool UTIL_IsVip(edict_t * pEntity);
+bool UTIL_IsVip(edict_t* pEntity);
 
-char *UTIL_GiveWeaponName(int id);
+const char* UTIL_GiveWeaponName(int id);
 
-void UTIL_SpeechSynth(edict_t * pEdict, char *szMessage);
-void UTIL_BotRadioMessage(cBot * pBot, int radio, char *arg1, char *arg2);
-void UTIL_BotPressKey(cBot * pBot, int type);
+void UTIL_SpeechSynth(edict_t* pEdict, const char* szMessage);
+void UTIL_BotRadioMessage(cBot* pBot, int radio, const char* arg1, const char* arg2);
+void UTIL_BotPressKey(cBot* pBot, int type);
 // bot_navigate.cpp
 
 // ..
-void CenterMessage(char *buffer);
+void CenterMessage(const char* buffer);
 
 #endif                          // BOT_FUNC_H
